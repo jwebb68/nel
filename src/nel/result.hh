@@ -35,11 +35,12 @@ class OkT
             value(other)
         {}
     public:
-        const T &getvalue() const noexcept
+        // TODO: get_value or deref operator for value access?
+        const T &get_value() const noexcept
         {
             return this->value;
         }
-        T getvalue() noexcept
+        T get_value() noexcept
         {
             return this->value;
         }
@@ -63,11 +64,12 @@ class ErrT
             value(other)
         {}
     public:
-        const E &getvalue() const noexcept
+        // TODO: get_value or deref operator for value access?
+        const E &get_value() const noexcept
         {
             return this->value;
         }
-        E getvalue() noexcept
+        E get_value() noexcept
         {
             return this->value;
         }
@@ -177,46 +179,46 @@ class ResultT
 
         OptionalT<T> ok() const noexcept
         {
-            if (this->tag == OK) return this->ok_.getvalue();
+            if (this->tag == OK) return this->ok_.get_value();
             return None();
         }
         OptionalT<E> err() const noexcept
         {
-            if (this->tag == ERR) return this->err_.getvalue();
+            if (this->tag == ERR) return this->err_.get_value();
             return None();
         }
 
         const T &unwrap() const noexcept
         {
-            if (this->tag == OK) return this->ok_.getvalue();
+            if (this->tag == OK) return this->ok_.get_value();
             std::terminate();
         }
         T unwrap() noexcept
         {
-            if (this->tag == OK) return this->ok_.getvalue();
+            if (this->tag == OK) return this->ok_.get_value();
             std::terminate();
         }
 
         const T &unwrap_err() const noexcept
         {
-            if (this->tag == ERR) return this->err_.getvalue();
+            if (this->tag == ERR) return this->err_.get_value();
             std::terminate();
         }
         T unwrap_err() noexcept
         {
-            if (this->tag == ERR) return this->err_.getvalue();
+            if (this->tag == ERR) return this->err_.get_value();
             std::terminate();
         }
 
         const T &unwrap_or(const T &other) const noexcept
         {
-            if (this->tag == OK) return this->ok_.getvalue();
+            if (this->tag == OK) return this->ok_.get_value();
             return other;
         }
 
         T unwrap_or(const T &other) noexcept
         {
-            if (this->tag == OK) return this->ok_.getvalue();
+            if (this->tag == OK) return this->ok_.get_value();
             return other;
         }
 
