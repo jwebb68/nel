@@ -24,6 +24,7 @@ LDLIBS+=-lpthread
 
 # note: don't prefix ./ in dirnames
 srcdir:=src/nel
+testdir:=tests
 builddir:=build/$(shell uname -m)-$(shell uname -s)
 
 ###########################################
@@ -42,14 +43,14 @@ CHECK_TARGETS+=$(builddir)/test-result
 #SRCS+=$(srcdir)/scheduler.cc
 
 CHECK_SRCS:= #Makefile
-CHECK_SRCS+=$(srcdir)/test_optional.cc
-CHECK_SRCS+=$(srcdir)/test_result.cc
+CHECK_SRCS+=$(testdir)/test_optional.cc
+CHECK_SRCS+=$(testdir)/test_result.cc
 
 OBJS:=$(SRCS:.cc=.o)
 CHECK_OBJS:=$(CHECK_SRCS:.cc=.o)
 
 OBJS:=$(patsubst $(srcdir)/%,$(builddir)/%,$(OBJS))
-CHECK_OBJS:=$(patsubst $(srcdir)/%,$(builddir)/%,$(CHECK_OBJS))
+CHECK_OBJS:=$(patsubst $(testdir)/%,$(builddir)/%,$(CHECK_OBJS))
 
 .PHONY: all distclean clean compile check lint
 
@@ -83,7 +84,6 @@ $(builddir):
 $(builddir)/test-optional: $(builddir)/test_optional.o
 	$(LINK.cc) $^ $(LOADLIBES) $(LDLIBS) -o $@
 
-
 $(builddir)/test-result: $(builddir)/test_result.o
 	 $(LINK.cc) $^ $(LOADLIBES) $(LDLIBS) -o $@
 
@@ -111,6 +111,11 @@ $(builddir)/%.o : $(srcdir)/%.c $(DEPDIR)/%.d | $(DEPDIR)  $(builddir)
 $(builddir)/%.o : $(srcdir)/%.cc
 $(builddir)/%.o : $(srcdir)/%.cc $(DEPDIR)/%.d | $(DEPDIR)  $(builddir)
 	$(COMPILE.cc) $(OUTPUT_OPTION) $<
+	$(POSTCOMPILE)
+
+$(builddir)/%.o : $(testdir)/%.cc
+$(builddir)/%.o : $(testdir)/%.cc $(DEPDIR)/%.d | $(DEPDIR)  $(builddir)
+	$(COMPILE.cc) -O0 -g $(OUTPUT_OPTION) $<
 	$(POSTCOMPILE)
 
 $(builddir)/%.o : $(srcdir)/%.cxx

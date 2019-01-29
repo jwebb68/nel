@@ -2,8 +2,6 @@
 #include "result.hh" //nel::ResultT
 
 
-// ==================================================================
-
 typedef enum
 {
     NOERROR,
