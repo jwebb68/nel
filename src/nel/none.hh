@@ -4,17 +4,17 @@
 namespace nel
 {
 
-    class NoneT;
+class NoneT;
 
 
-    class NoneT
-    {
-        public:
-    };
-    NoneT None() noexcept
-    {
-        return NoneT();
-    }
+class NoneT
+{
+    public:
+};
+NoneT None() noexcept
+{
+    return NoneT();
+}
 
 
 }

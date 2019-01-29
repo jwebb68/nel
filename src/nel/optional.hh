@@ -3,8 +3,13 @@
 
 namespace nel
 {
+
+template<typename T>
+class SomeT;
+
 template<typename T>
 class OptionalT;
+
 }
 
 
@@ -15,6 +20,7 @@ class OptionalT;
 
 namespace nel
 {
+
 template<typename T>
 class SomeT
 {
@@ -47,13 +53,13 @@ class OptionalT
     private:
         enum
         {
-            NONE=0,
+            NONE = 0,
             SOME
         } tag;
         union
         {
-                SomeT<T> some;
-                NoneT none;
+            SomeT<T> some;
+            NoneT none;
         };
 
     public:

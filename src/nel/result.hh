@@ -3,6 +3,7 @@
 
 namespace nel
 {
+
 template<typename T>
 class OkT;
 
@@ -82,14 +83,15 @@ template<typename T, typename E>
 class ResultT
 {
     private:
-        enum {
-            OK=0,
+        enum
+        {
+            OK = 0,
             ERR
         } tag;
         union
         {
-                OkT<T> ok_;
-                ErrT<E> err_;
+            OkT<T> ok_;
+            ErrT<E> err_;
         };
 
     public:
@@ -150,7 +152,7 @@ class ResultT
         }
         bool operator!=(const OkT<T> &other) const
         {
-            return ! ((*this) == other);
+            return !((*this) == other);
         }
 
         bool operator==(const ErrT<E> &other) const
@@ -160,7 +162,7 @@ class ResultT
         }
         bool operator!=(const ErrT<T> &other) const
         {
-            return ! ((*this) == other);
+            return !((*this) == other);
         }
 
     public:
