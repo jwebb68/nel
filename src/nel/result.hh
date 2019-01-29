@@ -10,7 +10,7 @@ template<typename E>
 class ErrT;
 
 template<typename T, typename E>
-class Result;
+class ResultT;
 
 }
 
@@ -79,7 +79,7 @@ ErrT<E> Err(const E &v) noexcept
 
 
 template<typename T, typename E>
-class Result
+class ResultT
 {
     private:
         enum {
@@ -93,7 +93,7 @@ class Result
         };
 
     public:
-        ~Result() noexcept
+        ~ResultT() noexcept
         {
             switch (this->tag)
             {
@@ -111,7 +111,7 @@ class Result
             }
         }
 
-        Result(const Result<T,E> &other) noexcept:
+        ResultT(const ResultT<T, E> &other) noexcept:
             tag(other.tag)
         {
             switch (other.tag)
@@ -131,12 +131,12 @@ class Result
         }
 
 
-        Result(const OkT<T> &ok) noexcept:
+        ResultT(const OkT<T> &ok) noexcept:
             tag(OK),
             ok_(ok)
         {}
 
-        Result(const ErrT<E> &err) noexcept:
+        ResultT(const ErrT<E> &err) noexcept:
             tag(ERR),
             err_(err)
         {}

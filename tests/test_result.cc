@@ -10,12 +10,12 @@ typedef enum
 } fail_type;
 
 
-nel::Result<int, fail_type> foo(int v)
+nel::ResultT<int, fail_type> foo(int v)
 {
     return nel::Ok(v);
 }
 
-nel::Result<int, fail_type> bar(fail_type w)
+nel::ResultT<int, fail_type> bar(fail_type w)
 {
     return nel::Err(w);
 }
