@@ -48,7 +48,7 @@ extern "C"
 int test_err_unwrap_or()
 {
     auto ret = bar(EENOENT);
-    auto got = ret.unwrap();
+    auto got = ret.unwrap_or(5);
     return got;
 }
 
