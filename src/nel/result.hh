@@ -19,7 +19,7 @@ class ResultT;
 
 #include <cassert> // assert()
 #include <exception> //std::terminate
-
+#include <utility> //std::move
 
 namespace nel
 {
@@ -134,7 +134,24 @@ class ResultT
             }
         }
 
+        constexpr ResultT(ResultT<T, E> &&other) noexcept:
+            tag(std::move(other.tag))
+        {
+            switch (this->tag)
+            {
+                case OK:
+                    this->ok_ = std::move(other.ok_);
+                    break;
 
+                case ERR:
+                    this->err_ = std::move(other.err_);
+                    break;
+
+                default:
+                    assert(false);
+                    break;
+            }
+        }
 
         constexpr ResultT(const OkT<T> &ok) noexcept:
             tag(OK),
