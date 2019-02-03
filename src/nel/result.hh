@@ -29,9 +29,9 @@ class OkT
     private:
         T value;
     public:
-        OkT() noexcept
+        constexpr OkT() noexcept
         {}
-        explicit OkT(const T &other) noexcept:
+        constexpr explicit OkT(const T &other) noexcept:
             value(other)
         {}
     public:
@@ -46,7 +46,7 @@ class OkT
         }
 };
 template<typename T>
-OkT<T> Ok(const T &v) noexcept
+constexpr OkT<T> Ok(const T &v) noexcept
 {
     return OkT<T>(v);
 }
@@ -58,9 +58,9 @@ class ErrT
     private:
         E value;
     public:
-        ErrT() noexcept
+        constexpr ErrT() noexcept
         {}
-        explicit ErrT(const E &other) noexcept:
+        constexpr explicit ErrT(const E &other) noexcept:
             value(other)
         {}
     public:
@@ -75,7 +75,7 @@ class ErrT
         }
 };
 template<typename E>
-ErrT<E> Err(const E &v) noexcept
+constexpr ErrT<E> Err(const E &v) noexcept
 {
     return ErrT<E>(v);
 }
@@ -115,10 +115,10 @@ class ResultT
             }
         }
 
-        ResultT(const ResultT<T, E> &other) noexcept:
+        constexpr ResultT(const ResultT<T, E> &other) noexcept:
             tag(other.tag)
         {
-            switch (other.tag)
+            switch (this->tag)
             {
                 case OK:
                     this->ok_ = other.ok_;
@@ -135,54 +135,55 @@ class ResultT
         }
 
 
-        ResultT(const OkT<T> &ok) noexcept:
+
+        constexpr ResultT(const OkT<T> &ok) noexcept:
             tag(OK),
             ok_(ok)
         {}
 
-        ResultT(const ErrT<E> &err) noexcept:
+        constexpr ResultT(const ErrT<E> &err) noexcept:
             tag(ERR),
             err_(err)
         {}
 
 
     public:
-        bool operator==(const OkT<T> &other) const
+        constexpr bool operator==(const OkT<T> &other) const
         {
             if (this->tag != OK) return false;
             return this->ok_ == other;
         }
-        bool operator!=(const OkT<T> &other) const
+        constexpr bool operator!=(const OkT<T> &other) const
         {
             return !((*this) == other);
         }
 
-        bool operator==(const ErrT<E> &other) const
+        constexpr bool operator==(const ErrT<E> &other) const
         {
             if (this->tag != ERR) return false;
             return this->err_ == other;
         }
-        bool operator!=(const ErrT<T> &other) const
+        constexpr bool operator!=(const ErrT<T> &other) const
         {
             return !((*this) == other);
         }
 
     public:
-        bool is_ok() const noexcept
+        constexpr bool is_ok() const noexcept
         {
             return this->tag == OK;
         }
-        bool is_err() const noexcept
+        constexpr bool is_err() const noexcept
         {
             return this->tag == ERR;
         }
 
-        OptionalT<T> ok() const noexcept
+        constexpr OptionalT<T> ok() const noexcept
         {
             if (this->tag == OK) return this->ok_.get_value();
             return None();
         }
-        OptionalT<E> err() const noexcept
+        constexpr OptionalT<E> err() const noexcept
         {
             if (this->tag == ERR) return this->err_.get_value();
             return None();

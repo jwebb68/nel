@@ -27,7 +27,7 @@ class SomeT
     private:
         T value;
     public:
-        explicit SomeT(const T &other) noexcept:
+        constexpr explicit SomeT(const T &other) noexcept:
             value(other)
         {}
     public:
@@ -42,7 +42,7 @@ class SomeT
         }
 };
 template<typename T>
-SomeT<T> Some(const T &other) noexcept
+constexpr SomeT<T> Some(const T &other) noexcept
 {
     return SomeT<T>(other);
 }
@@ -82,10 +82,10 @@ class OptionalT
             }
         }
 
-        OptionalT(const OptionalT<T> &other) noexcept:
+        constexpr OptionalT(const OptionalT<T> &other) noexcept:
             tag(other.tag)
         {
-            switch (other.tag)
+            switch (this->tag)
             {
                 case SOME:
                     this->some = other.some;
@@ -107,23 +107,23 @@ class OptionalT
             none()
         {}
 
-        OptionalT(const NoneT &) noexcept:
+        constexpr OptionalT(const NoneT &) noexcept:
             tag(NONE),
             none()
         {}
 
-        OptionalT(const SomeT<T> &v) noexcept:
+        constexpr OptionalT(const SomeT<T> &v) noexcept:
             tag(SOME),
             some(v)
         {}
 
     public:
-        bool is_some() const noexcept
+        constexpr bool is_some() const noexcept
         {
             return this->tag == SOME;
         }
 
-        bool is_none() const noexcept
+        constexpr bool is_none() const noexcept
         {
             return this->tag == NONE;
 
@@ -153,7 +153,7 @@ class OptionalT
 
 };
 template<typename T>
-OptionalT<T> Optional(const T &other) noexcept
+constexpr OptionalT<T> Optional(const T &other) noexcept
 {
     return OptionalT<T>(other);
 }

@@ -11,11 +11,10 @@ class NoneT
 {
     public:
 };
-NoneT None() noexcept
+constexpr NoneT None() noexcept
 {
     return NoneT();
 }
-
 
 }
 
