@@ -12,9 +12,15 @@
 
 #define UNUSED(x) ((void)(x))
 
+// to prevent clang optimising through function pointers
+// to prevent clang doing tail-call-optimisations prevent recursive
+// functions being TCOd.
 #define noinline __attribute__ ((noinline))
 
+// prevent clang from inlining the control/timeref functions even
+// though called by function pointer.
 volatile int a = 0;
+
 noinline int timeref(int c, int d, int err)
 {
     UNUSED(c);
