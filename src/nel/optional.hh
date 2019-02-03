@@ -17,6 +17,7 @@ class OptionalT;
 
 #include <cassert> // assert()
 #include <exception> //std::terminate
+#include <utility> //std::move
 
 namespace nel
 {
@@ -102,7 +103,28 @@ class OptionalT
             }
         }
 
-        OptionalT() noexcept:
+        constexpr OptionalT(OptionalT<T> &&other) noexcept:
+            tag(std::move(other.tag))
+        {
+            switch (this->tag)
+            {
+                case SOME:
+                    this->some = std::move(other.some);
+                    break;
+
+                case NONE:
+                    this->none = std::move(other.none);
+                    break;
+
+                default:
+                    assert(false);
+                    break;
+
+            }
+        }
+
+
+        constexpr OptionalT() noexcept:
             tag(NONE),
             none()
         {}
