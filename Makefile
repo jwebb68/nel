@@ -13,19 +13,22 @@ sysconfdir ?= $(prefix)/etc
 INSTALL=install -c
 
 CFLAGS+=-std=c99
-CXXFLAGS=-std=c++11
+#CXXFLAGS=-std=c++11
 #CXXFLAGS=-std=c++14
+CXXFLAGS=-std=c++17
 CPPFLAGS+=-Wpedantic -Wall -Wextra -Werror
 CPPFLAGS+=-O2
 CPPFLAGS+=-g
 CPPFLAGS+=-I$(srcdir)
+CPPFLAGS+=-fno-optimize-sibling-calls
+#CPPFLAGS+=-fno-inline
 
 LDLIBS+=-lpthread
 
 # note: don't prefix ./ in dirnames
 srcdir:=src/nel
 testdir:=tests
-builddir:=build/$(shell uname -m)-$(shell uname -s)
+builddir:=build/$(shell uname -m)-$(shell uname -s)-$(CXX)
 
 ###########################################
 
@@ -34,7 +37,8 @@ TARGETS:=
 CHECK_TARGETS:= #Makefile
 CHECK_TARGETS+=$(builddir)/test-optional
 CHECK_TARGETS+=$(builddir)/test-result
-
+CHECK_TARGETS+=$(builddir)/test-performance
+CHECK_TARGETS+=$(builddir)/test_performance.s
 #SRCS:=$(srcdir)/actorref.cc
 #SRCS+=$(srcdir)/actorcontext.cc
 #SRCS+=$(srcdir)/actor.cc
@@ -45,6 +49,7 @@ CHECK_TARGETS+=$(builddir)/test-result
 CHECK_SRCS:= #Makefile
 CHECK_SRCS+=$(testdir)/test_optional.cc
 CHECK_SRCS+=$(testdir)/test_result.cc
+CHECK_SRCS+=$(testdir)/test_performance.cc
 
 OBJS:=$(SRCS:.cc=.o)
 CHECK_OBJS:=$(CHECK_SRCS:.cc=.o)
@@ -87,6 +92,10 @@ $(builddir)/test-optional: $(builddir)/test_optional.o
 $(builddir)/test-result: $(builddir)/test_result.o
 	 $(LINK.cc) $^ $(LOADLIBES) $(LDLIBS) -o $@
 
+$(builddir)/test-performance: $(builddir)/test_performance.o
+	 $(LINK.cc) $^ $(LOADLIBES) $(LDLIBS) -o $@
+
+#$(builddir)/test_performance.s: $(srcdir)/test_performance.cc
 
 ### handle auto deps generation for makefile ###
 
@@ -115,8 +124,12 @@ $(builddir)/%.o : $(srcdir)/%.cc $(DEPDIR)/%.d | $(DEPDIR)  $(builddir)
 
 $(builddir)/%.o : $(testdir)/%.cc
 $(builddir)/%.o : $(testdir)/%.cc $(DEPDIR)/%.d | $(DEPDIR)  $(builddir)
-	$(COMPILE.cc) -O0 -g $(OUTPUT_OPTION) $<
+	$(COMPILE.cc) -O2 -g0 $(OUTPUT_OPTION) $<
 	$(POSTCOMPILE)
+
+$(builddir)/%.s : $(testdir)/%.cc
+$(builddir)/%.s : $(testdir)/%.cc $(DEPDIR)/%.d | $(DEPDIR)  $(builddir)
+	$(COMPILE.cc) -O2 -g0 -S $(OUTPUT_OPTION) $<
 
 $(builddir)/%.o : $(srcdir)/%.cxx
 $(builddir)/%.o : $(srcdir)/%.cxx $(DEPDIR)/%.d | $(DEPDIR) $(builddir)
