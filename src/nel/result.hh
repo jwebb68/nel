@@ -225,8 +225,8 @@ class ResultT
 
 };
 
-#define nel_result_try(r) {if (r.is_err()) return r;}while(0);
-
+//#define nel_result_try(r) {if (r.is_err()) return r;}while(0);
+#define nel_result_try(r) ((r).is_ok()?(r).unwrap(): return (r))
 }
 
 
