@@ -20,8 +20,9 @@ CPPFLAGS+=-Wpedantic -Wall -Wextra -Werror
 CPPFLAGS+=-O2
 CPPFLAGS+=-g
 CPPFLAGS+=-I$(srcdir)
-CPPFLAGS+=-fno-optimize-sibling-calls
+#CPPFLAGS+=-fno-optimize-sibling-calls
 #CPPFLAGS+=-fno-inline
+#CPPFLAGS+=-flto
 
 LDLIBS+=-lpthread
 
@@ -39,6 +40,13 @@ CHECK_TARGETS+=$(builddir)/test-optional
 CHECK_TARGETS+=$(builddir)/test-result
 CHECK_TARGETS+=$(builddir)/test-performance
 CHECK_TARGETS+=$(builddir)/test_performance.s
+CHECK_TARGETS+=$(builddir)/test_perf_int.s
+CHECK_TARGETS+=$(builddir)/test_perf_except_split.s
+CHECK_TARGETS+=$(builddir)/test_perf_except.s
+CHECK_TARGETS+=$(builddir)/test_perf_nelresult.s
+CHECK_TARGETS+=$(builddir)/test_perf_timeref.s
+CHECK_TARGETS+=$(builddir)/test_perf_tuple_stdopt.s
+CHECK_TARGETS+=$(builddir)/test_performance.s
 #SRCS:=$(srcdir)/actorref.cc
 #SRCS+=$(srcdir)/actorcontext.cc
 #SRCS+=$(srcdir)/actor.cc
@@ -50,6 +58,12 @@ CHECK_SRCS:= #Makefile
 CHECK_SRCS+=$(testdir)/test_optional.cc
 CHECK_SRCS+=$(testdir)/test_result.cc
 CHECK_SRCS+=$(testdir)/test_performance.cc
+CHECK_SRCS+=$(testdir)/test_perf_int.cc
+CHECK_SRCS+=$(testdir)/test_perf_except_split.cc
+CHECK_SRCS+=$(testdir)/test_perf_except.cc
+CHECK_SRCS+=$(testdir)/test_perf_nelresult.cc
+CHECK_SRCS+=$(testdir)/test_perf_timeref.cc
+CHECK_SRCS+=$(testdir)/test_perf_tuple_stdopt.cc
 
 OBJS:=$(SRCS:.cc=.o)
 CHECK_OBJS:=$(CHECK_SRCS:.cc=.o)
@@ -92,6 +106,12 @@ $(builddir)/test-optional: $(builddir)/test_optional.o
 $(builddir)/test-result: $(builddir)/test_result.o
 	 $(LINK.cc) $^ $(LOADLIBES) $(LDLIBS) -o $@
 
+$(builddir)/test-performance: $(builddir)/test_perf_int.o
+$(builddir)/test-performance: $(builddir)/test_perf_except_split.o
+$(builddir)/test-performance: $(builddir)/test_perf_except.o
+$(builddir)/test-performance: $(builddir)/test_perf_nelresult.o
+$(builddir)/test-performance: $(builddir)/test_perf_timeref.o
+$(builddir)/test-performance: $(builddir)/test_perf_tuple_stdopt.o
 $(builddir)/test-performance: $(builddir)/test_performance.o
 	 $(LINK.cc) $^ $(LOADLIBES) $(LDLIBS) -o $@
 
