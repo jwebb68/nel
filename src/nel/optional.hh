@@ -34,6 +34,10 @@ class Some
             value_(val)
         {}
 
+        Some(T &&val) noexcept:
+            value_(std::move(val))
+        {}
+
     public:
         // TODO: unwrap or deref operator for value_ access?
         const T &unwrap() const noexcept
@@ -112,9 +116,19 @@ class Optional
             none_()
         {}
 
+        Optional(None &&) noexcept:
+            tag_(NONE),
+            none_()
+        {}
+
         Optional(const Some<T> &v) noexcept:
             tag_(SOME),
             some_(v)
+        {}
+
+        Optional(Some<T> &&v) noexcept:
+            tag_(SOME),
+            some_(std::move(v))
         {}
 
     public:

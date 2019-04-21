@@ -36,6 +36,10 @@ class Ok
             value_(ok)
         {}
 
+        Ok(T &&ok) noexcept:
+            value_(std::move(ok))
+        {}
+
     public:
         const T &unwrap() const noexcept
         {
@@ -61,6 +65,10 @@ class Err
 
         explicit Err(const E &err) noexcept:
             value_(err)
+        {}
+
+        Err(E &&err) noexcept:
+            value_(std::move(err))
         {}
 
     public:
@@ -131,15 +139,43 @@ class Result
             }
         }
 
+        Result(Result<T, E> &&other) noexcept:
+            tag_(std::move(other.tag_))
+        {
+            switch (this->tag_)
+            {
+                case OK:
+                    this->ok_ = std::move(other.ok_);
+                    break;
+
+                case ERR:
+                    this->err_ = std::move(other.err_);
+                    break;
+
+                default:
+                    std::terminate();
+                    break;
+            }
+        }
 
         Result(const Ok<T> &ok) noexcept:
             tag_(OK),
             ok_(ok)
         {}
 
+        Result(Ok<T> &&ok) noexcept:
+            tag_(OK),
+            ok_(std::move(ok))
+        {}
+
         Result(const Err<E> &err) noexcept:
             tag_(ERR),
             err_(err)
+        {}
+
+        Result(Err<E> &&err) noexcept:
+            tag_(ERR),
+            err_(std::move(err))
         {}
 
     public:
