@@ -24,23 +24,23 @@ template<typename T>
 class SomeT
 {
     private:
-        T value;
+        T value_;
 
     public:
         explicit SomeT(const T &other) noexcept:
-            value(other)
+            value_(other)
         {}
 
     public:
-        // TODO: get_value or deref operator for value access?
+        // TODO: get_value or deref operator for value_ access?
         const T &get_value() const noexcept
         {
-            return this->value;
+            return this->value_;
         }
 
         T get_value() noexcept
         {
-            return this->value;
+            return this->value_;
         }
 };
 template<typename T>
@@ -58,25 +58,25 @@ class OptionalT
         {
             NONE = 0,
             SOME
-        } tag;
+        } tag_;
 
         union
         {
-            SomeT<T> some;
-            NoneT none;
+            SomeT<T> some_;
+            NoneT none_;
         };
 
     public:
         ~OptionalT() noexcept
         {
-            switch (this->tag)
+            switch (this->tag_)
             {
                 case SOME:
-                    this->some.SomeT<T>::~SomeT();
+                    this->some_.SomeT<T>::~SomeT();
                     break;
 
                 case NONE:
-                    this->none.NoneT::~NoneT();
+                    this->none_.NoneT::~NoneT();
                     break;
 
                 default:
@@ -86,16 +86,16 @@ class OptionalT
         }
 
         OptionalT(const OptionalT<T> &other) noexcept:
-            tag(other.tag)
+            tag_(other.tag_)
         {
-            switch (other.tag)
+            switch (other.tag_)
             {
                 case SOME:
-                    this->some = other.some;
+                    this->some_ = other.some_;
                     break;
 
                 case NONE:
-                    this->none = other.none;
+                    this->none_ = other.none_;
                     break;
 
                 default:
@@ -106,52 +106,53 @@ class OptionalT
         }
 
         OptionalT() noexcept:
-            tag(NONE),
-            none()
+            tag_(NONE),
+            none_()
         {}
 
         OptionalT(const NoneT &) noexcept:
-            tag(NONE),
-            none()
+            tag_(NONE),
+            none_()
         {}
 
         OptionalT(const SomeT<T> &v) noexcept:
-            tag(SOME),
-            some(v)
+            tag_(SOME),
+            some_(v)
         {}
 
     public:
         bool is_some() const noexcept
         {
-            return this->tag == SOME;
+            return this->tag_ == SOME;
         }
 
         bool is_none() const noexcept
         {
-            return this->tag == NONE;
+            return this->tag_ == NONE;
+
         }
 
         const T &unwrap() const noexcept
         {
-            if (this->tag == SOME) return this->some.get_value();
+            if (this->tag_ == SOME) return this->some_.get_value();
             std::terminate();
         }
 
         T unwrap()  noexcept
         {
-            if (this->tag == SOME) return this->some.get_value();
+            if (this->tag_ == SOME) return this->some_.get_value();
             std::terminate();
         }
 
         const T &unwrap_or(const T &other) const noexcept
         {
-            if (this->tag == SOME) return this->some.get_value();
+            if (this->tag_ == SOME) return this->some_.get_value();
             return other;
         }
 
         T unwrap_or(const T &other) noexcept
         {
-            if (this->tag == SOME) return this->some.get_value();
+            if (this->tag_ == SOME) return this->some_.get_value();
             return other;
         }
 };
