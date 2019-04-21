@@ -32,13 +32,13 @@ class SomeT
         {}
 
     public:
-        // TODO: get_value or deref operator for value_ access?
-        const T &get_value() const noexcept
+        // TODO: unwrap or deref operator for value_ access?
+        const T &unwrap() const noexcept
         {
             return this->value_;
         }
 
-        T get_value() noexcept
+        T unwrap() noexcept
         {
             return this->value_;
         }
@@ -134,25 +134,25 @@ class OptionalT
 
         const T &unwrap() const noexcept
         {
-            if (this->tag_ == SOME) return this->some_.get_value();
+            if (this->tag_ == SOME) return this->some_.unwrap();
             std::terminate();
         }
 
         T unwrap()  noexcept
         {
-            if (this->tag_ == SOME) return this->some_.get_value();
+            if (this->tag_ == SOME) return this->some_.unwrap();
             std::terminate();
         }
 
         const T &unwrap_or(const T &other) const noexcept
         {
-            if (this->tag_ == SOME) return this->some_.get_value();
+            if (this->tag_ == SOME) return this->some_.unwrap();
             return other;
         }
 
         T unwrap_or(const T &other) noexcept
         {
-            if (this->tag_ == SOME) return this->some_.get_value();
+            if (this->tag_ == SOME) return this->some_.unwrap();
             return other;
         }
 };
