@@ -26,16 +26,19 @@ class SomeT
 {
     private:
         T value;
+
     public:
         explicit SomeT(const T &other) noexcept:
             value(other)
         {}
+
     public:
         // TODO: get_value or deref operator for value access?
         const T &get_value() const noexcept
         {
             return this->value;
         }
+
         T get_value() noexcept
         {
             return this->value;
@@ -57,6 +60,7 @@ class OptionalT
             NONE = 0,
             SOME
         } tag;
+
         union
         {
             SomeT<T> some;
@@ -126,7 +130,6 @@ class OptionalT
         bool is_none() const noexcept
         {
             return this->tag == NONE;
-
         }
 
         const T &unwrap() const noexcept
@@ -134,6 +137,7 @@ class OptionalT
             if (this->tag == SOME) return this->some.get_value();
             std::terminate();
         }
+
         T unwrap()  noexcept
         {
             if (this->tag == SOME) return this->some.get_value();
@@ -145,12 +149,12 @@ class OptionalT
             if (this->tag == SOME) return this->some.get_value();
             return other;
         }
+
         T unwrap_or(const T &other) noexcept
         {
             if (this->tag == SOME) return this->some.get_value();
             return other;
         }
-
 };
 template<typename T>
 OptionalT<T> Optional(const T &other) noexcept

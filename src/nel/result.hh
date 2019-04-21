@@ -28,18 +28,22 @@ class OkT
 {
     private:
         T value;
+
     public:
         OkT() noexcept
         {}
+
         explicit OkT(const T &other) noexcept:
             value(other)
         {}
+
     public:
         // TODO: get_value or deref operator for value access?
         const T &get_value() const noexcept
         {
             return this->value;
         }
+
         T get_value() noexcept
         {
             return this->value;
@@ -57,22 +61,27 @@ class ErrT
 {
     private:
         E value;
+
     public:
         ErrT() noexcept
         {}
+
         explicit ErrT(const E &other) noexcept:
             value(other)
         {}
+
     public:
         // TODO: get_value or deref operator for value access?
         const E &get_value() const noexcept
         {
             return this->value;
         }
+
         E get_value() noexcept
         {
             return this->value;
         }
+
 };
 template<typename E>
 ErrT<E> Err(const E &v) noexcept
@@ -90,6 +99,7 @@ class ResultT
             OK = 0,
             ERR
         } tag;
+
         union
         {
             OkT<T> ok_;
@@ -134,7 +144,6 @@ class ResultT
             }
         }
 
-
         ResultT(const OkT<T> &ok) noexcept:
             tag(OK),
             ok_(ok)
@@ -145,13 +154,13 @@ class ResultT
             err_(err)
         {}
 
-
     public:
         bool operator==(const OkT<T> &other) const
         {
             if (this->tag != OK) return false;
             return this->ok_ == other;
         }
+
         bool operator!=(const OkT<T> &other) const
         {
             return !((*this) == other);
@@ -162,6 +171,7 @@ class ResultT
             if (this->tag != ERR) return false;
             return this->err_ == other;
         }
+
         bool operator!=(const ErrT<T> &other) const
         {
             return !((*this) == other);
@@ -172,6 +182,7 @@ class ResultT
         {
             return this->tag == OK;
         }
+
         bool is_err() const noexcept
         {
             return this->tag == ERR;
@@ -182,6 +193,7 @@ class ResultT
             if (this->tag == OK) return this->ok_.get_value();
             return None();
         }
+
         OptionalT<E> err() const noexcept
         {
             if (this->tag == ERR) return this->err_.get_value();
@@ -193,6 +205,7 @@ class ResultT
             if (this->tag == OK) return this->ok_.get_value();
             std::terminate();
         }
+
         T unwrap() noexcept
         {
             if (this->tag == OK) return this->ok_.get_value();
@@ -204,6 +217,7 @@ class ResultT
             if (this->tag == ERR) return this->err_.get_value();
             std::terminate();
         }
+
         T unwrap_err() noexcept
         {
             if (this->tag == ERR) return this->err_.get_value();
@@ -221,7 +235,6 @@ class ResultT
             if (this->tag == OK) return this->ok_.get_value();
             return other;
         }
-
 };
 
 #define nel_result_try(r) {if (r.is_err()) return r;}while(0);
