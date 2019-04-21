@@ -5,10 +5,10 @@ namespace nel
 {
 
 template<typename T>
-class SomeT;
+class Some;
 
 template<typename T>
-class OptionalT;
+class Optional;
 
 }
 
@@ -21,14 +21,17 @@ namespace nel
 {
 
 template<typename T>
-class SomeT
+class Some
 {
     private:
         T value_;
 
     public:
-        explicit SomeT(const T &other) noexcept:
-            value_(other)
+        // template arg deduction came in in c++17
+        // so for earlier, need a make_ func.
+        // or use c++17 or later.
+        explicit Some(const T &val) noexcept:
+            value_(val)
         {}
 
     public:
@@ -43,40 +46,35 @@ class SomeT
             return this->value_;
         }
 };
-template<typename T>
-SomeT<T> Some(const T &other) noexcept
-{
-    return SomeT<T>(other);
-}
 
 
 template<typename T>
-class OptionalT
+class Optional
 {
     private:
         enum
         {
-            NONE = 0,
+            NONE,
             SOME
         } tag_;
 
         union
         {
-            SomeT<T> some_;
-            NoneT none_;
+            Some<T> some_;
+            None none_;
         };
 
     public:
-        ~OptionalT() noexcept
+        ~Optional() noexcept
         {
             switch (this->tag_)
             {
                 case SOME:
-                    this->some_.SomeT<T>::~SomeT();
+                    this->some_.Some<T>::~Some();
                     break;
 
                 case NONE:
-                    this->none_.NoneT::~NoneT();
+                    this->none_.None::~None();
                     break;
 
                 default:
@@ -85,7 +83,7 @@ class OptionalT
             }
         }
 
-        OptionalT(const OptionalT<T> &other) noexcept:
+        Optional(const Optional<T> &other) noexcept:
             tag_(other.tag_)
         {
             switch (other.tag_)
@@ -101,21 +99,20 @@ class OptionalT
                 default:
                     std::terminate();
                     break;
-
             }
         }
 
-        OptionalT() noexcept:
+        Optional() noexcept:
             tag_(NONE),
             none_()
         {}
 
-        OptionalT(const NoneT &) noexcept:
+        Optional(const None &) noexcept:
             tag_(NONE),
             none_()
         {}
 
-        OptionalT(const SomeT<T> &v) noexcept:
+        Optional(const Some<T> &v) noexcept:
             tag_(SOME),
             some_(v)
         {}
@@ -129,7 +126,6 @@ class OptionalT
         bool is_none() const noexcept
         {
             return this->tag_ == NONE;
-
         }
 
         const T &unwrap() const noexcept
@@ -156,11 +152,6 @@ class OptionalT
             return other;
         }
 };
-template<typename T>
-OptionalT<T> Optional(const T &other) noexcept
-{
-    return OptionalT<T>(other);
-}
 
 }
 

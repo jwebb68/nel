@@ -13,8 +13,9 @@ sysconfdir ?= $(prefix)/etc
 INSTALL=install -c
 
 CFLAGS+=-std=c99
-CXXFLAGS=-std=c++11
+#CXXFLAGS=-std=c++11
 #CXXFLAGS=-std=c++14
+CXXFLAGS=-std=c++17
 CPPFLAGS+=-Wpedantic -Wall -Wextra -Werror
 CPPFLAGS+=-O2
 CPPFLAGS+=-g

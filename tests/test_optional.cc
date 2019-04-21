@@ -1,11 +1,11 @@
 #include "optional.hh"
 
 
-nel::OptionalT<int> foo_some()
+nel::Optional<int> foo_some()
 {
     return nel::Some(1);
 }
-nel::OptionalT<int> foo_none()
+nel::Optional<int> foo_none()
 {
     return nel::None();
 }

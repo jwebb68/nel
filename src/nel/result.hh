@@ -5,13 +5,13 @@ namespace nel
 {
 
 template<typename T>
-class OkT;
+class Ok;
 
 template<typename E>
-class ErrT;
+class Err;
 
 template<typename T, typename E>
-class ResultT;
+class Result;
 
 }
 
@@ -23,16 +23,16 @@ class ResultT;
 namespace nel
 {
 template<typename T>
-class OkT
+class Ok
 {
     private:
         T value_;
 
     public:
-        OkT() noexcept
+        Ok() noexcept
         {}
 
-        explicit OkT(const T &ok) noexcept:
+        explicit Ok(const T &ok) noexcept:
             value_(ok)
         {}
 
@@ -47,24 +47,19 @@ class OkT
             return this->value_;
         }
 };
-template<typename T>
-OkT<T> Ok(const T &v) noexcept
-{
-    return OkT<T>(v);
-}
 
 
 template<typename E>
-class ErrT
+class Err
 {
     private:
         E value_;
 
     public:
-        ErrT() noexcept
+        Err() noexcept
         {}
 
-        explicit ErrT(const E &err) noexcept:
+        explicit Err(const E &err) noexcept:
             value_(err)
         {}
 
@@ -80,40 +75,35 @@ class ErrT
             return this->value_;
         }
 };
-template<typename E>
-ErrT<E> Err(const E &v) noexcept
-{
-    return ErrT<E>(v);
-}
 
 
 template<typename T, typename E>
-class ResultT
+class Result
 {
     private:
         enum
         {
-            OK = 0,
+            OK,
             ERR
         } tag_;
 
         union
         {
-            OkT<T> ok_;
-            ErrT<E> err_;
+            Ok<T> ok_;
+            Err<E> err_;
         };
 
     public:
-        ~ResultT() noexcept
+        ~Result() noexcept
         {
             switch (this->tag_)
             {
                 case OK:
-                    this->ok_.OkT<T>::~OkT();
+                    this->ok_.Ok<T>::~Ok();
                     break;
 
                 case ERR:
-                    this->err_.ErrT<E>::~ErrT();
+                    this->err_.Err<E>::~Err();
                     break;
 
                 default:
@@ -122,7 +112,7 @@ class ResultT
             }
         }
 
-        ResultT(const ResultT<T, E> &other) noexcept:
+        Result(const Result<T, E> &other) noexcept:
             tag_(other.tag_)
         {
             switch (other.tag_)
@@ -142,35 +132,35 @@ class ResultT
         }
 
 
-        ResultT(const OkT<T> &ok) noexcept:
+        Result(const Ok<T> &ok) noexcept:
             tag_(OK),
             ok_(ok)
         {}
 
-        ResultT(const ErrT<E> &err) noexcept:
+        Result(const Err<E> &err) noexcept:
             tag_(ERR),
             err_(err)
         {}
 
     public:
-        bool operator==(const OkT<T> &other) const
+        bool operator==(const Ok<T> &other) const
         {
             if (this->tag_ != OK) return false;
             return this->ok_ == other;
         }
 
-        bool operator!=(const OkT<T> &other) const
+        bool operator!=(const Ok<T> &other) const
         {
             return !((*this) == other);
         }
 
-        bool operator==(const ErrT<E> &other) const
+        bool operator==(const Err<E> &other) const
         {
             if (this->tag_ != ERR) return false;
             return this->err_ == other;
         }
 
-        bool operator!=(const ErrT<T> &other) const
+        bool operator!=(const Err<T> &other) const
         {
             return !((*this) == other);
         }
@@ -186,13 +176,13 @@ class ResultT
             return this->tag_ == ERR;
         }
 
-        OptionalT<T> ok() const noexcept
+        Optional<T> ok() const noexcept
         {
             if (this->tag_ == OK) return this->ok_.unwrap();
             return None();
         }
 
-        OptionalT<E> err() const noexcept
+        Optional<E> err() const noexcept
         {
             if (this->tag_ == ERR) return this->err_.unwrap();
             return None();

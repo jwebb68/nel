@@ -4,20 +4,13 @@
 namespace nel
 {
 
-class NoneT;
+class None;
 
-
-class NoneT
+class None
 {
     public:
 };
-NoneT None() noexcept
-{
-    return NoneT();
-}
-
 
 }
-
 
 #endif//NEL_NONE_HH
