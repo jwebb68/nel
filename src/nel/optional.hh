@@ -15,7 +15,6 @@ class OptionalT;
 
 #include "none.hh"
 
-#include <cassert> // assert()
 #include <exception> //std::terminate
 
 namespace nel
@@ -81,7 +80,7 @@ class OptionalT
                     break;
 
                 default:
-                    assert(false);
+                    std::terminate();
                     break;
             }
         }
@@ -100,7 +99,7 @@ class OptionalT
                     break;
 
                 default:
-                    assert(false);
+                    std::terminate();
                     break;
 
             }

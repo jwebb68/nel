@@ -17,7 +17,6 @@ class ResultT;
 
 #include "optional.hh" //nel::OptionalT
 
-#include <cassert> // assert()
 #include <exception> //std::terminate
 
 
@@ -120,7 +119,7 @@ class ResultT
                     break;
 
                 default:
-                    assert(false);
+                    std::terminate();
                     break;
             }
         }
@@ -139,7 +138,7 @@ class ResultT
                     break;
 
                 default:
-                    assert(false);
+                    std::terminate();
                     break;
             }
         }
