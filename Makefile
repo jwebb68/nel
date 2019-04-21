@@ -66,6 +66,9 @@ clean:
 	$(RM) -r $(CHECK_TARGETS)
 	$(RM) -r $(CHECK_OBJS)
 
+format:
+	astyle --project=.astylerc -r '*.cc' '*.hh'
+
 # gnu make manul says check target is to self-test the program, but the program must be already built (i.e. don't build prog as a dep).
 # if this is the case then it cannot be a function-level test (i.e. tests functions)
 # it must then be a functional test of the app/program.
