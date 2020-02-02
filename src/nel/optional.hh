@@ -5,15 +5,10 @@ namespace nel
 {
 
 template<typename T>
-class SomeT;
-
-template<typename T>
-class OptionalT;
+class Optional;
 
 }
 
-
-#include "none.hh"
 
 #include <exception> //std::terminate
 
@@ -21,38 +16,38 @@ namespace nel
 {
 
 template<typename T>
-class SomeT
+class Optional
 {
-    private:
-        T value_;
-
     public:
-        explicit SomeT(const T &other) noexcept:
-            value_(other)
-        {}
-
-    public:
-        // TODO: unwrap or deref operator for value_ access?
-        const T &unwrap() const noexcept
+        class Some
         {
-            return this->value_;
-        }
+            private:
+                T value_;
 
-        T unwrap() noexcept
+            public:
+                explicit Some(const T &other) noexcept:
+                    value_(other)
+                {}
+
+            public:
+                // TODO: unwrap or deref operator for value_ access?
+                const T &unwrap() const noexcept
+                {
+                    return this->value_;
+                }
+
+                T unwrap() noexcept
+                {
+                    return this->value_;
+                }
+        };
+
+        class None
         {
-            return this->value_;
-        }
-};
-template<typename T>
-SomeT<T> Some(const T &other) noexcept
-{
-    return SomeT<T>(other);
-}
+            public:
+                None() {}
+        };
 
-
-template<typename T>
-class OptionalT
-{
     private:
         enum
         {
@@ -62,21 +57,21 @@ class OptionalT
 
         union
         {
-            SomeT<T> some_;
-            NoneT none_;
+            Some some_;
+            // None none_;
         };
 
     public:
-        ~OptionalT() noexcept
+        ~Optional() noexcept
         {
             switch (this->tag_)
             {
                 case SOME:
-                    this->some_.SomeT<T>::~SomeT();
+                    this->some_.Some::~Some();
                     break;
 
                 case NONE:
-                    this->none_.NoneT::~NoneT();
+                    // this->none_.None::~None();
                     break;
 
                 default:
@@ -85,7 +80,7 @@ class OptionalT
             }
         }
 
-        OptionalT(const OptionalT<T> &other) noexcept:
+        Optional(const Optional &other) noexcept:
             tag_(other.tag_)
         {
             switch (other.tag_)
@@ -95,7 +90,7 @@ class OptionalT
                     break;
 
                 case NONE:
-                    this->none_ = other.none_;
+                    // this->none_ = other.none_;
                     break;
 
                 default:
@@ -105,17 +100,17 @@ class OptionalT
             }
         }
 
-        OptionalT() noexcept:
-            tag_(NONE),
-            none_()
+        Optional(void) noexcept:
+            tag_(NONE)
+            //, none_()
         {}
 
-        OptionalT(const NoneT &) noexcept:
-            tag_(NONE),
-            none_()
+        Optional(const None &) noexcept:
+            tag_(NONE)
+            // , none_()
         {}
 
-        OptionalT(const SomeT<T> &v) noexcept:
+        Optional(const Some &v) noexcept:
             tag_(SOME),
             some_(v)
         {}
@@ -129,38 +124,32 @@ class OptionalT
         bool is_none() const noexcept
         {
             return this->tag_ == NONE;
-
         }
 
         const T &unwrap() const noexcept
         {
-            if (this->tag_ == SOME) return this->some_.unwrap();
-            std::terminate();
+            if (!this->is_some()) std::terminate();
+            return this->some_.unwrap();
         }
 
         T unwrap()  noexcept
         {
-            if (this->tag_ == SOME) return this->some_.unwrap();
-            std::terminate();
+            if (!this->is_some()) std::terminate();
+            return this->some_.unwrap();
         }
 
         const T &unwrap_or(const T &other) const noexcept
         {
-            if (this->tag_ == SOME) return this->some_.unwrap();
+            if (this->is_some()) return this->some_.unwrap();
             return other;
         }
 
         T unwrap_or(const T &other) noexcept
         {
-            if (this->tag_ == SOME) return this->some_.unwrap();
+            if (this->is_some()) return this->some_.unwrap();
             return other;
         }
 };
-template<typename T>
-OptionalT<T> Optional(const T &other) noexcept
-{
-    return OptionalT<T>(other);
-}
 
 }
 

@@ -10,14 +10,14 @@ typedef enum
 } fail_type;
 
 
-nel::ResultT<int, fail_type> foo(int v)
+nel::Result<int, fail_type> foo(int v)
 {
-    return nel::Ok(v);
+    return nel::Result<int, fail_type>::Ok(v);
 }
 
-nel::ResultT<int, fail_type> bar(fail_type w)
+nel::Result<int, fail_type> bar(fail_type w)
 {
-    return nel::Err(w);
+    return nel::Result<int, fail_type>::Err(w);
 }
 
 #define UNUSED(x) ((void)(x))
@@ -25,14 +25,14 @@ nel::ResultT<int, fail_type> bar(fail_type w)
 extern "C"
 void test_ok_ctor()
 {
-    auto ret = nel::Ok(1);
+    auto ret = nel::Result<int, fail_type>::Ok(1);
     UNUSED(ret);
 }
 
 extern "C"
 void test_err_ctor()
 {
-    auto ret = nel::Err(EENOENT);
+    auto ret = nel::Result<int, fail_type>::Err(EENOENT);
     UNUSED(ret);
 }
 

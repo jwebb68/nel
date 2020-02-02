@@ -4,14 +4,8 @@
 namespace nel
 {
 
-template<typename T>
-class OkT;
-
-template<typename E>
-class ErrT;
-
 template<typename T, typename E>
-class ResultT;
+class Result;
 
 }
 
@@ -22,74 +16,60 @@ class ResultT;
 
 namespace nel
 {
-template<typename T>
-class OkT
-{
-    private:
-        T value_;
-
-    public:
-        OkT() noexcept
-        {}
-
-        explicit OkT(const T &ok) noexcept:
-            value_(ok)
-        {}
-
-    public:
-        const T &unwrap() const noexcept
-        {
-            return this->value_;
-        }
-
-        T unwrap() noexcept
-        {
-            return this->value_;
-        }
-};
-template<typename T>
-OkT<T> Ok(const T &v) noexcept
-{
-    return OkT<T>(v);
-}
-
-
-template<typename E>
-class ErrT
-{
-    private:
-        E value_;
-
-    public:
-        ErrT() noexcept
-        {}
-
-        explicit ErrT(const E &err) noexcept:
-            value_(err)
-        {}
-
-    public:
-        // TODO: unwrap or deref operator for value access?
-        const E &unwrap() const noexcept
-        {
-            return this->value_;
-        }
-
-        E unwrap() noexcept
-        {
-            return this->value_;
-        }
-};
-template<typename E>
-ErrT<E> Err(const E &v) noexcept
-{
-    return ErrT<E>(v);
-}
-
 
 template<typename T, typename E>
-class ResultT
+class Result
 {
+    public:
+        class Ok
+        {
+            private:
+                T value_;
+
+            public:
+                Ok() noexcept {}
+
+                explicit Ok(const T &ok) noexcept:
+                    value_(ok)
+                {}
+
+            public:
+                const T &unwrap() const noexcept
+                {
+                    return this->value_;
+                }
+
+                T unwrap() noexcept
+                {
+                    return this->value_;
+                }
+        };
+
+        class Err
+        {
+            private:
+                E value_;
+
+            public:
+                Err() noexcept {}
+
+                explicit Err(const E &err) noexcept:
+                    value_(err)
+                {}
+
+            public:
+                // TODO: unwrap or deref operator for value access?
+                const E &unwrap() const noexcept
+                {
+                    return this->value_;
+                }
+
+                E unwrap() noexcept
+                {
+                    return this->value_;
+                }
+        };
+
     private:
         enum
         {
@@ -99,21 +79,21 @@ class ResultT
 
         union
         {
-            OkT<T> ok_;
-            ErrT<E> err_;
+            Ok ok_;
+            Err err_;
         };
 
     public:
-        ~ResultT() noexcept
+        ~Result() noexcept
         {
             switch (this->tag_)
             {
                 case OK:
-                    this->ok_.OkT<T>::~OkT();
+                    this->ok_.Ok::~Ok();
                     break;
 
                 case ERR:
-                    this->err_.ErrT<E>::~ErrT();
+                    this->err_.Err::~Err();
                     break;
 
                 default:
@@ -122,55 +102,54 @@ class ResultT
             }
         }
 
-        ResultT(const ResultT<T, E> &other) noexcept:
-            tag_(other.tag_)
-        {
-            switch (other.tag_)
-            {
-                case OK:
-                    this->ok_ = other.ok_;
-                    break;
+        // Result(const Result &other) noexcept:
+        //     tag_(other.tag_)
+        // {
+        //     switch (other.tag_)
+        //     {
+        //         case OK:
+        //             this->ok_ = other.ok_;
+        //             break;
 
-                case ERR:
-                    this->err_ = other.err_;
-                    break;
+        //         case ERR:
+        //             this->err_ = other.err_;
+        //             break;
 
-                default:
-                    std::terminate();
-                    break;
-            }
-        }
+        //         default:
+        //             std::terminate();
+        //             break;
+        //     }
+        // }
 
-
-        ResultT(const OkT<T> &ok) noexcept:
+        Result(const Ok &ok) noexcept:
             tag_(OK),
             ok_(ok)
         {}
 
-        ResultT(const ErrT<E> &err) noexcept:
+        Result(const Err &err) noexcept:
             tag_(ERR),
             err_(err)
         {}
 
     public:
-        bool operator==(const OkT<T> &other) const
+        bool operator==(const Ok &other) const
         {
-            if (this->tag_ != OK) return false;
+            if (!this->is_ok()) return false;
             return this->ok_ == other;
         }
 
-        bool operator!=(const OkT<T> &other) const
+        bool operator!=(const Ok &other) const
         {
             return !((*this) == other);
         }
 
-        bool operator==(const ErrT<E> &other) const
+        bool operator==(const Err &other) const
         {
-            if (this->tag_ != ERR) return false;
+            if (!this->is_err()) return false;
             return this->err_ == other;
         }
 
-        bool operator!=(const ErrT<T> &other) const
+        bool operator!=(const Err &other) const
         {
             return !((*this) == other);
         }
@@ -186,56 +165,61 @@ class ResultT
             return this->tag_ == ERR;
         }
 
-        OptionalT<T> ok() const noexcept
+        operator bool() const
         {
-            if (this->tag_ == OK) return this->ok_.unwrap();
-            return None();
+            return this->is_ok();
         }
 
-        OptionalT<E> err() const noexcept
+        Optional<T> ok() const noexcept
         {
-            if (this->tag_ == ERR) return this->err_.unwrap();
-            return None();
+            return (this->is_ok()) ? this->ok_.unwrap() : Optional<T>::None();
+        }
+
+        Optional<E> err() const noexcept
+        {
+            return (this->is_err()) ? this->err_.unwrap() : Optional<T>::None();
         }
 
         const T &unwrap() const noexcept
         {
-            if (this->tag_ == OK) return this->ok_.unwrap();
-            std::terminate();
+            if (!this->is_ok()) std::terminate();
+            return this->ok_.unwrap();
         }
 
         T unwrap() noexcept
         {
-            if (this->tag_ == OK) return this->ok_.unwrap();
-            std::terminate();
+            if (!this->is_ok()) std::terminate();
+            return this->ok_.unwrap();
         }
 
         const T &unwrap_err() const noexcept
         {
-            if (this->tag_ == ERR) return this->err_.unwrap();
-            std::terminate();
+            if (!this->is_err()) std::terminate();
+            return this->err_.unwrap();
         }
 
         T unwrap_err() noexcept
         {
-            if (this->tag_ == ERR) return this->err_.unwrap();
-            std::terminate();
+            if (!this->is_err()) std::terminate();
+            return this->err_.unwrap();
         }
 
         const T &unwrap_or(const T &other) const noexcept
         {
-            if (this->tag_ == OK) return this->ok_.unwrap();
-            return other;
+            return (this->is_ok()) ? this->ok_.unwrap() : other;
         }
 
         T unwrap_or(const T &other) noexcept
         {
-            if (this->tag_ == OK) return this->ok_.unwrap();
-            return other;
+            return (this->is_ok()) ? this->ok_.unwrap() : other;
         }
 };
 
-#define nel_result_try(r) {if (r.is_err()) return r;}while(0);
+#define NEL_RESULT_TRY(f) \
+    ({ auto v = std::move(f); \
+        if (v.is_err()) return std::move(v);  \
+        v.unwrap(); \
+    })
 
 }
 
