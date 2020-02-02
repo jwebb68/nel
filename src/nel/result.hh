@@ -12,7 +12,7 @@ class Result;
 #include "optional.hh" //nel::OptionalT
 
 #include <exception> //std::terminate
-
+#include <functional> //std::function
 
 namespace nel
 {
@@ -212,6 +212,22 @@ class Result
         T unwrap_or(const T &other) noexcept
         {
             return (this->is_ok()) ? this->ok_.unwrap() : other;
+        }
+
+        template<class U>
+        Result<U, E> map(std::function<U (const T &)> fn) const noexcept
+        {
+            return (this->is_ok()) ?
+                   Result<U, E>(typename Result<U, E>::Ok(fn(this->ok_.unwrap()))) :
+                   Result<U, E>(typename Result<U, E>::Err(this->err_.unwrap()));
+        }
+
+        template<class F>
+        Result<T, F> map_err(std::function<F(const E &)> fn) const noexcept
+        {
+            return (this->is_err()) ?
+                   Result<T, F>(typename Result<T, F>::Err(fn(this->err_.unwrap()))) :
+                   Result<T, F>(typename Result<T, F>::Ok(this->ok_.unwrap()));
         }
 };
 
