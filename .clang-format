@@ -1,0 +1,79 @@
+BasedOnStyle: LLVM
+IndentWidth: 4
+
+ColumnLimit: 80
+Language : Cpp
+
+AlignAfterOpenBracket: Align
+AlignConsecutiveAssignments: false
+AlignConsecutiveDeclarations: false
+#AlignConsecutiveMacros: false
+AlignEscapedNewlines: DontAlign
+AlignOperands: true
+AlignTrailingComments: false
+#AllowAllArgumentsOnNextLine: false
+#AllowAllConstructorInitializersOnNextLine: false
+AllowAllParametersOfDeclarationOnNextLine: false
+#AllowShortBlocksOnASingleLine: Empty
+AllowShortBlocksOnASingleLine: true
+AllowShortCaseLabelsOnASingleLine: false
+AllowShortFunctionsOnASingleLine: Empty
+AllowShortIfStatementsOnASingleLine: true
+#AllowShortLambdasOnASingleLine: empty
+AllowShortLoopsOnASingleLine: true
+
+AlwaysBreakAfterReturnType: None
+AlwaysBreakBeforeMultilineStrings: false
+AlwaysBreakTemplateDeclarations: Yes
+BinPackArguments: false
+BinPackParameters: false
+
+BreakBeforeBraces: Attach
+BreakBeforeTernaryOperators: false
+BreakConstructorInitializers: AfterColon
+BreakInheritanceList: AfterColon
+BreakStringLiterals: true
+CompactNamespaces: false
+ConstructorInitializerAllOnOneLineOrOnePerLine: false
+Cpp11BracedListStyle: true
+#DeriveLineEnding: false
+DerivePointerAlignment: false
+FixNamespaceComments: true
+
+IncludeBlocks: Regroup
+IndentCaseLabels: true
+#IndentGotoLabels: false
+IndentPPDirectives: AfterHash
+IndentWrappedFunctionNames: false
+KeepEmptyLinesAtTheStartOfBlocks: false
+NamespaceIndentation: None
+
+PenaltyBreakBeforeFirstCallParameter: 10000
+
+PointerAlignment: Right
+
+ReflowComments: true
+
+SortIncludes: true
+SpaceAfterCStyleCast: false
+#SpaceAfterLogicalNot: false
+SpaceAfterTemplateKeyword: false
+SpaceBeforeAssignmentOperators: true
+SpaceBeforeCpp11BracedList: true
+SpaceBeforeCtorInitializerColon: false
+SpaceBeforeInheritanceColon: false
+SpaceBeforeParens: ControlStatements
+SpaceBeforeRangeBasedForLoopColon: true
+#SpaceBeforeSquareBrackets: false
+#SpaceInEmptyBlock: false
+SpaceInEmptyParentheses: false
+SpacesInAngles: false
+SpacesInCStyleCastParentheses: false
+#SpacesInConditionalStatement: false
+SpacesInContainerLiterals: false
+SpacesInParentheses: false
+SpacesInSquareBrackets: false
+Standard: Auto
+
+#UseCRLF: false
+UseTab: Never
