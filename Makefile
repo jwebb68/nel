@@ -117,6 +117,7 @@ src:=$(filter-out $(testsrc),$(foreach f,$(modls),$(wildcard $(f)/src/*.c $(f)/s
 obj:=
 clean:=
 dep:=
+rtests:=
 
 # $1 = modl, $2 = config
 define mk_modl
@@ -305,7 +306,7 @@ $(if $(filter $(1)/src/test_main.c,$(testsrc)),build/$(2)/tests/test_$(1): | bui
 $(if $(filter $(1)/src/test_main.c,$(testsrc)),build/$(2)/tests/test_$(1): LDFLAGS += $($(2)_LDFLAGS))
 $(if $(filter $(1)/src/test_main.c,$(testsrc)),build/$(2)/tests/test_$(1): LDLIBS += $($(2)_LDLIBS))
 $(if $(filter $(1)/src/test_main.c,$(testsrc)),build/$(2)/tests/test_$(1): $(patsubst $(1)/src/test_%.c,build/$(2)/obj/tests/$(1)/test_%.o,$(filter $(1)/src/test_%.c,$(testsrc))); $$(LINK.o) $$^ $$(LOADLIBES) $$(LDLIBS) -o $$@)
-$(if $(filter $(1)/src/test_main.c,$(testsrc)),test: build/$(2)/tests/test_$(1))
+$(if $(filter $(1)/src/test_main.c,$(testsrc)),rtests+= build/$(2)/tests/test_$(1))
 $(if $(filter $(1)/src/test_main.c,$(testsrc)),clean += build/$(2)/tests/test_$(1))
 
 $(if $(filter $(1)/src/test_main.cc,$(testsrc)),build/$(2)/tests/test_$(1): | build/$(2)/tests)
@@ -313,7 +314,7 @@ $(if $(filter $(1)/src/test_main.cc,$(testsrc)),build/$(2)/tests/test_$(1): LDFL
 $(if $(filter $(1)/src/test_main.cc,$(testsrc)),build/$(2)/tests/test_$(1): LDLIBS += $($(2)_LDLIBS))
 $(if $(filter $(1)/src/test_main.cc,$(testsrc)),build/$(2)/tests/test_$(1): CC=$(CXX))
 $(if $(filter $(1)/src/test_main.cc,$(testsrc)),build/$(2)/tests/test_$(1): $(patsubst $(1)/src/test_%.cc,build/$(2)/obj/tests/$(1)/test_%.o,$(filter $(1)/src/test_%.cc,$(testsrc))); $$(LINK.o) $$^ $$(LOADLIBES) $$(LDLIBS) -o $$@)
-$(if $(filter $(1)/src/test_main.cc,$(testsrc)),test: build/$(2)/tests/test_$(1) )
+$(if $(filter $(1)/src/test_main.cc,$(testsrc)),rtests+= build/$(2)/tests/test_$(1) )
 $(if $(filter $(1)/src/test_main.cc,$(testsrc)),clean += build/$(2)/tests/test_$(1))
 
 endef
@@ -337,10 +338,18 @@ examples:
 clean:
 	$(RM) $(clean)
 
+
+.PNONY: $(addprefix run_,$(rtests))
+$(foreach d,$(rtests),$(eval run_$(d): $(d)))
+
+$(addprefix run_,$(rtests)):
+	$(patsubst run_%,%,$@) -b
+
+
+
 .PHONY: test tests
-tests: test
-test:
-	$^
+tests: $(addprefix run_,$(rtests))
+test: tests
 
 distclean: clean
 distclean:
