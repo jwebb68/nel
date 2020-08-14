@@ -241,11 +241,11 @@ $(if $(filter examples/$(1).cc,$(examples_src)), build/$(2)/examples/$(1): CC = 
 $(if $(filter examples/$(1).c,$(examples_src)), build/$(2)/examples/$(1): $(patsubst examples/$(1).c,build/$(2)/obj/examples/$(1).o,$(filter examples/$(1).c,$(examples_src))) | build/$(2)/examples; $$(LINK.o) $$^ $$(LOADLIBES) $$(LDLIBS) -o $$@)
 $(if $(filter examples/$(1).cc,$(examples_src)), build/$(2)/examples/$(1): $(patsubst examples/$(1).cc,build/$(2)/obj/examples/$(1).o,$(filter examples/$(1).cc,$(examples_src))) | build/$(2)/examples; $$(LINK.o) $$^ $$(LOADLIBES) $$(LDLIBS) -o $$@)
 
-$(if $(filter examples/$(1).c,$(examples_src)),build/$(2)/examples/$(1): $(foreach m,$(modls),$($(m)_targ)))
+$(if $(filter examples/$(1).c,$(examples_src)),build/$(2)/examples/$(1): $(foreach m,$(modls),$(filter %.a %.so,$($(m)_targ))))
 $(if $(filter examples/$(1).c,$(examples_src)),examples: build/$(2)/examples/$(1))
 $(if $(filter examples/$(1).c,$(examples_src)),clean += build/$(2)/examples/$(1))
 
-$(if $(filter examples/$(1).cc,$(examples_src)),build/$(2)/examples/$(1):  $(foreach m,$(modls),$($(m)_targ)))
+$(if $(filter examples/$(1).cc,$(examples_src)),build/$(2)/examples/$(1):  $(foreach m,$(modls),$(filter %.a %.so,$($(m)_targ))))
 $(if $(filter examples/$(1).cc,$(examples_src)),examples: build/$(2)/examples/$(1))
 $(if $(filter examples/$(1).cc,$(examples_src)),clean += build/$(2)/examples/$(1))
 
