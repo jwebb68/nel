@@ -40,8 +40,8 @@ CFLAGS += -Werror -Wall -Wextra
 CXXFLAGS += -fno-exceptions
 
 # CFLAGS additionals for debug
-debug_CFLAGS := -O0 -g
-debug_CXXFLAGS := -O0 -g
+debug_CFLAGS := -Og -g
+debug_CXXFLAGS := -Og -g
 debug_CPPFLAGS := -DDEBUG
 debug_LDFLAGS:=
 
