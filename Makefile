@@ -36,8 +36,8 @@ $(error allowed configs: debug, release)
 endif
 
 #CFLAGS already defined
-CFLAGS += -Werror -Wall -Wextra
-CXXFLAGS += -fno-exceptions
+CFLAGS += -Werror -Wall -Wextra -Wpedantic
+CXXFLAGS += -fno-exceptions -Werror -Wall -Wextra -Wpedantic -std=c++17
 
 # CFLAGS additionals for debug
 debug_CFLAGS := -Og -g
