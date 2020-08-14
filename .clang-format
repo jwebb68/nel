@@ -4,6 +4,7 @@ IndentWidth: 4
 ColumnLimit: 80
 Language : Cpp
 
+AccessModifierOffset: 0
 AlignAfterOpenBracket: Align
 AlignConsecutiveAssignments: false
 AlignConsecutiveDeclarations: false
@@ -14,13 +15,14 @@ AlignTrailingComments: false
 #AllowAllArgumentsOnNextLine: false
 #AllowAllConstructorInitializersOnNextLine: false
 AllowAllParametersOfDeclarationOnNextLine: false
-#AllowShortBlocksOnASingleLine: Empty
-AllowShortBlocksOnASingleLine: true
+#AllowShortBlocksOnASingleLine: Never
+AllowShortBlocksOnASingleLine: false
 AllowShortCaseLabelsOnASingleLine: false
-AllowShortFunctionsOnASingleLine: Empty
-AllowShortIfStatementsOnASingleLine: true
+#AllowShortFunctionsOnASingleLine: never
+AllowShortFunctionsOnASingleLine: false
+AllowShortIfStatementsOnASingleLine: false
 #AllowShortLambdasOnASingleLine: empty
-AllowShortLoopsOnASingleLine: true
+AllowShortLoopsOnASingleLine: false
 
 AlwaysBreakAfterReturnType: None
 AlwaysBreakBeforeMultilineStrings: false
@@ -28,10 +30,13 @@ AlwaysBreakTemplateDeclarations: Yes
 BinPackArguments: false
 BinPackParameters: false
 
+#BitFieldColonSpacingStyle: After
+
+#BinaryOperatorStyle: All
 BreakBeforeBraces: Attach
-BreakBeforeTernaryOperators: false
-BreakConstructorInitializers: AfterColon
-BreakInheritanceList: AfterColon
+BreakBeforeTernaryOperators: true
+BreakConstructorInitializers: BeforeColon
+BreakInheritanceList: BeforeColon
 BreakStringLiterals: true
 CompactNamespaces: false
 ConstructorInitializerAllOnOneLineOrOnePerLine: false
@@ -42,9 +47,11 @@ FixNamespaceComments: true
 
 IncludeBlocks: Regroup
 IndentCaseLabels: true
+#IndentExternBlockStyle: NoIndent
 #IndentGotoLabels: false
 IndentPPDirectives: AfterHash
 IndentWrappedFunctionNames: false
+#TrailingCommaStyle: true
 KeepEmptyLinesAtTheStartOfBlocks: false
 NamespaceIndentation: None
 

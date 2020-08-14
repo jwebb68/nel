@@ -348,6 +348,7 @@ distclean:
 
 .PHONY: format
 format:
-	env -u NIX_CFLAGS_COMPILE clang-format -style=file -i $(allsrc) $(allhdr)
+	astyle --project -I -n  $(allsrc) $(allhdr)
+	#env -u NIX_CFLAGS_COMPILE clang-format -style=file -i $(allsrc) $(allhdr)
 
 -include $(dep)

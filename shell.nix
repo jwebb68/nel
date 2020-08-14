@@ -12,7 +12,7 @@ stdenv.mkDerivation {
   nativeBuildInputs = [
     pkgs.gnumake42
     # astyle-3.1
-    #pkgs.astyle
+    pkgs.astyle
     # for clang-format
     pkgs.clang-tools
     pkgs.catch2
