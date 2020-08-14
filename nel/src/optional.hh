@@ -12,8 +12,6 @@ class Optional;
 #include "log.hh"
 #include <utility> // std::move
 
-#define ARG_UNUSED(arg) ((void)(arg))
-
 namespace nel {
 
 /**
@@ -62,175 +60,49 @@ namespace nel {
 template<typename T>
 class Optional {
     public:
-        // A tag class for the Some case for optional.
-        // May be moved to outside the optional class as all Some<T> are the same
-        // and not really specialised to Optional.
-        // Only in Optional to be in it's namespace.
-        // Ah, maybe not, Some in one namespace may be different in another..
-        // but not within nel.
-        class Some {
-            private:
-                T value_;
-
-            public:
-                // Default constructor.
-                // Don't want this as there is no default for a Some.
-                // You must specify a value.
-                Some(void) = delete;
-
-                // shouldn't need these but..
-                // Some(Some const &) = delete;
-                // Some &operator=(Some const &) const = delete;
-
-
-                // shouldn't these be defaulted
-#if 1
-                constexpr Some(Some &&) noexcept = default;
-                constexpr Some &operator=(Some &&) noexcept = default;
-#else
-                constexpr Some(Some &&o) noexcept
-                    : value_(std::move(o.value_))
-                {
-                }
-                constexpr Some &operator=(Some &&o) noexcept
-                {
-                    value_ = std::move(o.value_);
-                    return *this;
-                }
-#endif
-                // Wrapping constructor.
-                // Must specify if it's to be wrapped in a Some.
-                // i.e. being explicit.
-                explicit constexpr  Some(T &&val) noexcept: value_(std::move(val))
-                {
-                }
-                template<typename ...Args>
-                explicit constexpr Some(Args &&...args) noexcept: value_(std::forward<Args>
-                            (args)...)
-                {
-                }
-
-
-                // do I need to define the ass-move? will compiler not just use the
-                // ctor-move?
-                constexpr Some &operator=(T &&val) const noexcept
-                {
-                    this->value_ = std::move(val);
-                    return *this;
-                }
-
-            public:
-                // Contained value access
-                // Note no return via copy, as members may not be copyable.
-                // note no return via copy, copy may be expensive.
-                // Note no access via reference, accessing the contained must invalidate
-                // the container. i.e value extract/unwrap invalidates the container.
-                constexpr T &&unwrap(void) noexcept
-                {
-                    return std::move(this->value_);
-                }
-
-            public:
-                // Comparision operators
-                // Implemented in terms of the operator on the type,
-                // as some types may have more optimal impls of that oper than the
-                // negation of it's opposite.
-                constexpr bool operator==(Some const &o) const
-                {
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
-                    return this->value_ == o.value_;
-#pragma GCC diagnostic pop
-                }
-                constexpr bool operator!=(Some const &o) const
-                {
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
-                    return this->value_ != o.value_;
-#pragma GCC diagnostic pop
-                }
-
-            public:
-                // friend std::ostream &operator<<(std::ostream &outs, Some const &val) {
-                //     outs << "Some(" << val.value_ << ")";
-                //     return outs;
-                // }
-                friend Log &operator<<(Log &outs, Some const &val)
-                {
-                    outs << "Some(" << val.value_ << ")";
-                    return outs;
-                }
-        };
-
-        // A tag class for the Some case for optional.
-        // May be moved to outside the optional class as all None<T> are the same
-        // and not really specialised to Optional.
-        // Also, could be a simpleton.. c.f. nullptr, nullopt
-        // Only in Optional to be in it's namespace.
-        class None {
-            public:
-                constexpr None(void)
-                {
-                }
-
-                // shouldn't these be defaulted
-#if 1
-                constexpr None(None &&) noexcept = default;
-                constexpr None &operator=(None &&) noexcept = default;
-#else
-                constexpr None(None &&o) noexcept {}
-                constexpr None &operator=(None &&o) noexcept
-                {
-                    return *this;
-                }
-#endif
-
-            public:
-                // // Comparision operators
-                // bool operator==(None const &o) const {
-                //     ARG_UNUSED(o);
-                //     return true;
-                // }
-                // bool operator!=(None const &o) const {
-                //     ARG_UNUSED(o);
-                //     return false;
-                // }
-
-            public:
-                // friend std::ostream &operator<<(std::ostream &outs, None const &val) {
-                //     ARG_UNUSED(val);
-                //     outs << "None";
-                //     return outs;
-                // }
-                friend Log &operator<<(Log &outs, None const &val)
-                {
-                    ARG_UNUSED(val);
-                    outs << "None";
-                    return outs;
-                }
-        };
+        typedef T SomeT;
 
     private:
         // Tagged enum thing
         // Similar to std::variant but without the exception throwing behaviour.
         // maybe make into a nel::Variant ?
         enum Tag { INVAL = 0, NONE, SOME } tag_;
+        template<enum Tag>
+        struct Phantom {};
+
+        // use union to disable certain default methods on SomeT
         union {
-            Some some_;
-            None none_;
+            SomeT some_;
         };
+
+        constexpr Optional(Phantom<NONE> const) noexcept
+            : tag_(NONE)
+        {
+        }
+        constexpr Optional(Phantom<SOME> const, SomeT &&v) noexcept
+            : tag_(SOME)
+            , some_(std::move(v))
+        {
+        }
+
+        template<typename ...Args>
+        constexpr Optional(Phantom<SOME> const, Args &&...args) noexcept
+            : tag_(SOME)
+            , some_(std::forward<Args>(args)...)
+        {
+        }
+
 
     public:
         ~Optional(void) noexcept
         {
-            switch (this->tag_) {
+            switch (tag_) {
                 case SOME:
-                    this->some_.~Some();
+                    some_.~SomeT();
                     return;
                     break;
 
                 case NONE:
-                    this->none_.~None();
                     return;
                     break;
 
@@ -244,153 +116,145 @@ class Optional {
             // But, want to abort/panic if a unhandled case is encountered
             // at runtime, much how a default hander would work if it was
             // present.
-            nel::log << "invalid  Optional: tag=" << this->tag_ << "\n";
+            nel::log << "invalid  Optional: tag=" << tag_ << "\n";
             std::abort();
         }
 
         // Default constructor.
         // Don't want this as there is no default for an optional.
-        // You must specify a value, even if it's a None (i.e. being explicit).
-        // really? Default to None?
+        // i.e. require a value, even if it's a None (i.e. being explicit).
+        // really? Default to None/Inval?
+        // But use of move-ctor madates an inval state, so can have a default.
         //Optional(void) = delete;
-        constexpr Optional(void) noexcept: tag_(INVAL) {}
+        constexpr Optional(void) noexcept
+            : tag_(INVAL)
+        {}
 
-        constexpr Optional(None &&) noexcept: tag_(NONE), none_()
+        // don't want copy semanitics here, use move instead.
+        constexpr Optional(Optional const &o) = delete;
+        constexpr Optional &operator=(Optional const &o) const = delete;
+
+        constexpr Optional(Optional &&o) noexcept
+            : tag_(std::move(o.tag_))
         {
+            o.tag_ = INVAL;
+            switch (tag_) {
+                case SOME:
+                    new (&some_) SomeT(std::move(o.some_));
+                    return;
+                    break;
+                case NONE:
+                    return;
+                    break;
+                case INVAL:
+                    return;
+                    break;
+            }
+            //std::cerr << "invalid Optional: tag=" << tag_ << std::endl;
+            nel::log << "invalid  Optional: tag=" << tag_ << "\n";
+            std::abort();
         }
-
-        constexpr Optional(Some &&v) noexcept: tag_(SOME), some_(std::move(v))
+        constexpr Optional &operator=(Optional &&o) noexcept
         {
-        }
-
 #if 1
-        Optional(Optional const &other) = delete;
-        Optional const &operator=(Optional const &other) const noexcept = delete;
+            // If same tag, use ass-move oper on type directly..
+            // maybe type has more efficient move for it's impl.
+            if (tag_ == o.tag_) {
+                o.tag_ = INVAL;
+                switch (tag_) {
+                    case SOME:
+                        some_ = std::move(o.some_);
+                        return *this;
+                        break;
+                    case NONE:
+                        return *this;
+                        break;
+                    case INVAL:
+                        return *this;
+                        break;
+                }
+                std::abort();
+            } else {
+                // destruct and move, more efficient than move+swap
+                // esp if move is copy+wipe.
+                // but only if moving does not throw.
+                this->~Optional();
+                new (this) Optional(std::move(o));
+            }
 #else
-        constexpr Optional(Optional const &other) noexcept: tag_(other.tag_)
-        {
-            switch (this->tag_) {
-                case SOME:
-                    this->some_ = other.some_;
-                    return;
-                    break;
-                case NONE:
-                    this->none_ = None();
-                    return;
-                    break;
-                case INVAL:
-                    return;
-                    break;
-            }
-            //std::cerr << "not  Optional: " << this->tag_ << std::endl;
-            nel::log << "invalid  Optional: tag=" << this->tag_ << "\n";
-            std::abort();
-        }
-        constexpr Optional const &operator=(Optional const &other) const noexcept
-        {
-            if (this != &other) {
-                Optional t(other);
-                std::swap(*this, t);
-            }
+            // This is slow, depends on how eff a move and destroy and swap is for T.
+            // if swap is a move, then does 1 move (the ctor-move), + 3 moves (the swap) = 4 moves.
+            // if move is a copy+wipe, then becomes 4 copies+4 wipes.
+            // if swap is a byteswap, then has to iter the memblock once.
+            Optional t(std::move(o));
+            swap(t);
+#endif
             return *this;
         }
-#endif
 
-        constexpr Optional(Optional &&other) noexcept
-        {
-            new (&this->tag_) Tag(std::move(other.tag_));
-            other.tag_ = INVAL;
-            // at -Og: compiler is having issues with union
-            // thinks that all values in union must be inited, which is incorrect
-            // only 1 must be.
-            // it's complaining that some_ is not initialised when none_ is being initialised.
-            // initing all would cause overwrites..
-            switch (this->tag_) {
-                case SOME:
-                    // compiler reports some_ may be uninitialised
-                    // it is correct, some_ IS uninitialised
-                    // I'm calling placement new to initialise it.
-                    // and no, initialising it to a value before calling pl.new is
-                    // incorrect.. pl new is meant to operate on uninit values so to init them.
-                    // as tag_ wasn't picked up then 1. poss error 2.maybe that it's a union...
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
-                    new (&this->some_) Some(std::move(other.some_));
-#pragma GCC diagnostic pop
-                    return;
-                    break;
-                case NONE:
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
-                    new (&this->none_) None(std::move(other.none_));
-#pragma GCC diagnostic pop
-                    return;
-                    break;
-                case INVAL:
-                    return;
-                    break;
-            }
-            //std::cerr << "invalid Optional: tag=" << this->tag_ << std::endl;
-            nel::log << "invalid  Optional: tag=" << this->tag_ << "\n";
-            std::abort();
-        }
-
-        constexpr Optional &operator=(Optional &&other) noexcept
-        {
 #if 0
-            // destruct self, cleaning up/releasing any resources in union.
-            this->~Optional();
-            // move-construct other into self?
-            // is this exception safe?
-            // move shouldn't be allocing any resources so should be a byteswap.
-            // maybe explcitly do that?
-            new (this) Optional(std::move(other));
-#else
-            // prob better than dtuct+move-ctuct as no point where this is uninit.
-            // also, ass-move of type uses ass-move of members.
-            Optional t(std::move(*this));
-            this->tag_ = std::move(other.tag_);
-            other.tag_ = INVAL;
-            switch (this->tag_) {
-                case SOME:
-                    this->some_ = std::move(other.some_);
-                    return *this;
-                    break;
-                case NONE:
-                    this->none_ = std::move(other.none_);
-                    return *this;
-                    break;
-                case INVAL:
-                    return *this;
-                    break;
-            }
-            //std::cerr << "invalid Optional: tag=" << this->tag_ << std::endl;
-            nel::log << "invalid  Optional: tag=" << this->tag_ << "\n";
-            std::abort();
+        void swap(Optional &o) noexcept
+        {
+            // hacky, not by member, so bite me.
+            mymemswap((uint8_t *)this, (uint8_t *)&o, sizeof(*this));
+        }
 #endif
-            return *this;
+
+    public:
+        /**
+         * Create an optional set to none.
+         *
+         * @returns an Optional 'wrapping' a None
+         */
+        constexpr static Optional None(void) noexcept
+        {
+            return Optional(Phantom<NONE>());
+        }
+
+        /**
+         * Create an optional set to Some, using the value given.
+         *
+         * @returns an Optional 'wrapping' the value given.
+         */
+        constexpr static Optional Some(T &&val) noexcept
+        {
+            return Optional(Phantom<SOME>(), std::move(val));
+        }
+
+        /**
+         * Create an optional set to Some, creating the value to use used inplace.
+         *
+         * @returns an Optional 'wrapping' the value created from the values given.
+         */
+        template<typename ...Args>
+        static constexpr Optional Some(Args &&...args) noexcept
+        {
+            return Optional(Phantom<SOME>(), std::forward<Args>(args)...);
         }
 
     public:
-        // wrapped value checking without consuming the value.
         /**
          * Determine if the container contains a Some.
          *
          * @returns true if container contains a Some, false otherwise.
+         *
+         * The optional is not consumed by the operation.
          */
         constexpr bool is_some(void) const noexcept
         {
-            return this->tag_ == SOME;
+            return tag_ == SOME;
         }
 
         /**
          * Determine if the container contains a None.
          *
          * @returns true if container contains a None, false otherwise.
+         *
+         * The optional is not consumed by the operation.
          */
         constexpr bool is_none(void) const noexcept
         {
-            return this->tag_ == NONE;
+            return tag_ == NONE;
         }
 
     public:
@@ -402,57 +266,72 @@ class Optional {
         /**
          * Extract and return the contained value if a Some, consuming the optional.
          *
+         * @returns value contained by the Optional if it's a 'Some'.
+         *
          * If the optional does not contain a Some, then abort/panic.
          */
         constexpr T unwrap(void) noexcept
         {
-            if (!this->is_some()) {
+            if (!is_some()) {
                 abort();
             };
             tag_ = INVAL;
-            return this->some_.unwrap();
+            return std::move(some_);
         }
 
         /**
          * Extract and return the contained value if a Some, consuming the optional.
          *
-         * If the optional does not contain a Some, then return `other`, which will
-         * also be consumed.
+         * @param other The value to return if optional is not a Some.
+         *
+         * @returns if Some, consumes and returns the value contained by the Optional.
+         * @returns if not Some, consumes and returns `other`.
          */
         constexpr T unwrap_or(T &&other) noexcept
         {
             bool const is_some = this->is_some();
             tag_ = INVAL;
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
-            return is_some ? this->some_.unwrap() : other;
-#pragma GCC diagnostic pop
+            return is_some ? std::move(some_) : std::move(other);
         }
+
+
+        /**
+         * Extract and return the contained value if a Some, consuming the optional.
+         *
+         * @returns if Some, consumes and returns the value contained by the Optional.
+         * @returns if not Some, consumes args and creates value to return.
+         */
         template<typename ...Args>
         constexpr T unwrap_or(Args &&...args) noexcept
         {
             bool const is_some = this->is_some();
             tag_ = INVAL;
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
-            return is_some ? this->some_.unwrap() : T(std::forward<Args>(args)...);
-#pragma GCC diagnostic pop
+            return is_some ? std::move(some_) : T(std::forward<Args>(args)...);
         }
 
         // Why no access via references?
-        // this allows copying of value which I want to prevent.
+        // this infers copying of value which I want to prevent.
 
     public:
         // Comparision operators
         // Implemented in terms of the operator on the type,
         // as some types may have more optimal impls of that oper than the
         // negation of it's opposite.
+        /**
+         * Is this equal by value to the optional given?
+         *
+         * @param o The other optional to compare to.
+         * @returns true if equal by value, false otherwise.
+         *
+         * `this` is not consumed by the operation.
+         * `o` is not consumed by the operation.
+         */
         constexpr bool operator==(Optional const &o) const noexcept
         {
-            if (this->tag_ == o.tag_) {
-                switch (this->tag_) {
+            if (tag_ == o.tag_) {
+                switch (tag_) {
                     case SOME:
-                        return this->some_ == o.some_;
+                        return some_ == o.some_;
                         break;
                     case NONE:
                         return true;
@@ -466,12 +345,21 @@ class Optional {
             return false;
         }
 
+        /**
+         * Is this not equal by value to the result given?
+         *
+         * @param o The other result to compare to.
+         * @returns true if not equal by value, false otherwise.
+         *
+         * `this` is not consumed by the operation.
+         * `o` is not consumed by the operation.
+         */
         constexpr bool operator!=(Optional const &o) const noexcept
         {
-            if (this->tag_ == o.tag_) {
-                switch (this->tag_) {
+            if (tag_ == o.tag_) {
+                switch (tag_) {
                     case SOME:
-                        return this->some_ != o.some_;
+                        return some_ != o.some_;
                         break;
                     case NONE:
                         return false;
@@ -485,45 +373,25 @@ class Optional {
             return true;
         }
 
-        constexpr bool operator==(const Some &val) const noexcept
-        {
-            return this->is_some() && this->some_ == val;
-        }
-
-        constexpr bool operator!=(const Some &val) const noexcept
-        {
-            return !this->is_some() || this->some_ != val;
-        }
-
-        constexpr bool operator==(const None &val) const noexcept
-        {
-            ((void)(val));
-            return this->is_none();
-        }
-
-        constexpr bool operator!=(const None &val) const noexcept
-        {
-            ((void)(val));
-            return !this->is_none();
-        }
-
     public:
         //friend std::ostream &operator<<(std::ostream &outs, Optional const &val) {
-        friend Log &operator<<(Log &outs, Optional const &val)
+        friend Log &operator<<(Log &outs, Optional const &val) noexcept
         {
-            outs << "Optional(";
             switch (val.tag_) {
                 case NONE:
-                    outs << val.none_;
+                    outs << "Optional(" << "None" << ")";
+                    return outs;
                     break;
                 case SOME:
-                    outs << val.some_;
+                    outs << "Optional(" << "Some(" << val.some_ << ")" << ")";
+                    return outs;
                     break;
                 case INVAL:
-                    outs << "Inval";
+                    outs << "Optional(" << "Inval" << ")";
+                    return outs;
                     break;
             }
-            outs << ")";
+            outs << "Optional(" << "Unknown" << ")";
             return outs;
         }
 };
@@ -532,23 +400,23 @@ class Optional {
 // Optional<T>.
 // Only present as Some is defined in Optional.
 template<typename T>
-constexpr Optional<T> Some(T &&v)
+constexpr Optional<T> Some(T &&v) noexcept
 {
-    return typename Optional<T>::Some(std::move(v));
+    return Optional<T>::Some(std::move(v));
 }
 template<typename T, typename ...Args>
-constexpr Optional<T> Some(Args &&...v)
+constexpr Optional<T> Some(Args &&...v) noexcept
 {
-    return typename Optional<T>::Some(std::forward<Args>(v)...);
+    return Optional<T>::Some(std::forward<Args>(v)...);
 }
 
 // Helper function to allow creating a None without need to prefix with
 // Optional<T>.
 // Only present as None is defined in Optional.
 template<typename T>
-constexpr Optional<T> None(void)
+constexpr Optional<T> None(void) noexcept
 {
-    return typename Optional<T>::None();
+    return Optional<T>::None();
 }
 
 } // namespace nel
