@@ -788,10 +788,12 @@ TEST_CASE("optional::None auto into Optional", "[optional]")
 
 struct Foo {
     public:
-        ~Foo(void) {
+        ~Foo(void)
+        {
             this->dtor_called = true;
         }
-        Foo(bool &dtor_called): dtor_called(dtor_called) {
+        Foo(bool &dtor_called): dtor_called(dtor_called)
+        {
         }
 
     private:

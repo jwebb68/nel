@@ -89,9 +89,11 @@ class Optional {
                 constexpr Some &operator=(Some &&) noexcept = default;
 #else
                 constexpr Some(Some &&o) noexcept
-                    : value_(std::move(o.value_)) {
+                    : value_(std::move(o.value_))
+                {
                 }
-                constexpr Some &operator=(Some &&o) noexcept {
+                constexpr Some &operator=(Some &&o) noexcept
+                {
                     value_ = std::move(o.value_);
                     return *this;
                 }
@@ -99,17 +101,20 @@ class Optional {
                 // Wrapping constructor.
                 // Must specify if it's to be wrapped in a Some.
                 // i.e. being explicit.
-                explicit constexpr  Some(T &&val) noexcept: value_(std::move(val)) {
+                explicit constexpr  Some(T &&val) noexcept: value_(std::move(val))
+                {
                 }
                 template<typename ...Args>
                 explicit constexpr Some(Args &&...args) noexcept: value_(std::forward<Args>
-                            (args)...) {
+                            (args)...)
+                {
                 }
 
 
                 // do I need to define the ass-move? will compiler not just use the
                 // ctor-move?
-                constexpr Some &operator=(T &&val) const noexcept {
+                constexpr Some &operator=(T &&val) const noexcept
+                {
                     this->value_ = std::move(val);
                     return *this;
                 }
@@ -120,7 +125,8 @@ class Optional {
                 // note no return via copy, copy may be expensive.
                 // Note no access via reference, accessing the contained must invalidate
                 // the container. i.e value extract/unwrap invalidates the container.
-                constexpr T &&unwrap(void) noexcept {
+                constexpr T &&unwrap(void) noexcept
+                {
                     return std::move(this->value_);
                 }
 
@@ -129,13 +135,15 @@ class Optional {
                 // Implemented in terms of the operator on the type,
                 // as some types may have more optimal impls of that oper than the
                 // negation of it's opposite.
-                constexpr bool operator==(Some const &o) const {
+                constexpr bool operator==(Some const &o) const
+                {
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
                     return this->value_ == o.value_;
 #pragma GCC diagnostic pop
                 }
-                constexpr bool operator!=(Some const &o) const {
+                constexpr bool operator!=(Some const &o) const
+                {
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
                     return this->value_ != o.value_;
@@ -147,7 +155,8 @@ class Optional {
                 //     outs << "Some(" << val.value_ << ")";
                 //     return outs;
                 // }
-                friend Log &operator<<(Log &outs, Some const &val) {
+                friend Log &operator<<(Log &outs, Some const &val)
+                {
                     outs << "Some(" << val.value_ << ")";
                     return outs;
                 }
@@ -160,7 +169,8 @@ class Optional {
         // Only in Optional to be in it's namespace.
         class None {
             public:
-                constexpr None(void) {
+                constexpr None(void)
+                {
                 }
 
                 // shouldn't these be defaulted
@@ -169,7 +179,8 @@ class Optional {
                 constexpr None &operator=(None &&) noexcept = default;
 #else
                 constexpr None(None &&o) noexcept {}
-                constexpr None &operator=(None &&o) noexcept {
+                constexpr None &operator=(None &&o) noexcept
+                {
                     return *this;
                 }
 #endif
@@ -191,7 +202,8 @@ class Optional {
                 //     outs << "None";
                 //     return outs;
                 // }
-                friend Log &operator<<(Log &outs, None const &val) {
+                friend Log &operator<<(Log &outs, None const &val)
+                {
                     ARG_UNUSED(val);
                     outs << "None";
                     return outs;
@@ -209,7 +221,8 @@ class Optional {
         };
 
     public:
-        ~Optional(void) noexcept {
+        ~Optional(void) noexcept
+        {
             switch (this->tag_) {
                 case SOME:
                     this->some_.~Some();
@@ -242,17 +255,20 @@ class Optional {
         //Optional(void) = delete;
         constexpr Optional(void) noexcept: tag_(INVAL) {}
 
-        constexpr Optional(None &&) noexcept: tag_(NONE), none_() {
+        constexpr Optional(None &&) noexcept: tag_(NONE), none_()
+        {
         }
 
-        constexpr Optional(Some &&v) noexcept: tag_(SOME), some_(std::move(v)) {
+        constexpr Optional(Some &&v) noexcept: tag_(SOME), some_(std::move(v))
+        {
         }
 
 #if 1
         Optional(Optional const &other) = delete;
         Optional const &operator=(Optional const &other) const noexcept = delete;
 #else
-        constexpr Optional(Optional const &other) noexcept: tag_(other.tag_) {
+        constexpr Optional(Optional const &other) noexcept: tag_(other.tag_)
+        {
             switch (this->tag_) {
                 case SOME:
                     this->some_ = other.some_;
@@ -270,7 +286,8 @@ class Optional {
             nel::log << "invalid  Optional: tag=" << this->tag_ << "\n";
             std::abort();
         }
-        constexpr Optional const &operator=(Optional const &other) const noexcept {
+        constexpr Optional const &operator=(Optional const &other) const noexcept
+        {
             if (this != &other) {
                 Optional t(other);
                 std::swap(*this, t);
@@ -279,7 +296,8 @@ class Optional {
         }
 #endif
 
-        constexpr Optional(Optional &&other) noexcept {
+        constexpr Optional(Optional &&other) noexcept
+        {
             new (&this->tag_) Tag(std::move(other.tag_));
             other.tag_ = INVAL;
             // at -Og: compiler is having issues with union
@@ -317,7 +335,8 @@ class Optional {
             std::abort();
         }
 
-        constexpr Optional &operator=(Optional &&other) noexcept {
+        constexpr Optional &operator=(Optional &&other) noexcept
+        {
 #if 0
             // destruct self, cleaning up/releasing any resources in union.
             this->~Optional();
@@ -359,7 +378,8 @@ class Optional {
          *
          * @returns true if container contains a Some, false otherwise.
          */
-        constexpr bool is_some(void) const noexcept {
+        constexpr bool is_some(void) const noexcept
+        {
             return this->tag_ == SOME;
         }
 
@@ -368,7 +388,8 @@ class Optional {
          *
          * @returns true if container contains a None, false otherwise.
          */
-        constexpr bool is_none(void) const noexcept {
+        constexpr bool is_none(void) const noexcept
+        {
             return this->tag_ == NONE;
         }
 
@@ -383,7 +404,8 @@ class Optional {
          *
          * If the optional does not contain a Some, then abort/panic.
          */
-        constexpr T unwrap(void) noexcept {
+        constexpr T unwrap(void) noexcept
+        {
             if (!this->is_some()) {
                 abort();
             };
@@ -397,7 +419,8 @@ class Optional {
          * If the optional does not contain a Some, then return `other`, which will
          * also be consumed.
          */
-        constexpr T unwrap_or(T &&other) noexcept {
+        constexpr T unwrap_or(T &&other) noexcept
+        {
             bool const is_some = this->is_some();
             tag_ = INVAL;
 #pragma GCC diagnostic push
@@ -406,7 +429,8 @@ class Optional {
 #pragma GCC diagnostic pop
         }
         template<typename ...Args>
-        constexpr T unwrap_or(Args &&...args) noexcept {
+        constexpr T unwrap_or(Args &&...args) noexcept
+        {
             bool const is_some = this->is_some();
             tag_ = INVAL;
 #pragma GCC diagnostic push
@@ -423,7 +447,8 @@ class Optional {
         // Implemented in terms of the operator on the type,
         // as some types may have more optimal impls of that oper than the
         // negation of it's opposite.
-        constexpr bool operator==(Optional const &o) const noexcept {
+        constexpr bool operator==(Optional const &o) const noexcept
+        {
             if (this->tag_ == o.tag_) {
                 switch (this->tag_) {
                     case SOME:
@@ -441,7 +466,8 @@ class Optional {
             return false;
         }
 
-        constexpr bool operator!=(Optional const &o) const noexcept {
+        constexpr bool operator!=(Optional const &o) const noexcept
+        {
             if (this->tag_ == o.tag_) {
                 switch (this->tag_) {
                     case SOME:
@@ -459,27 +485,32 @@ class Optional {
             return true;
         }
 
-        constexpr bool operator==(const Some &val) const noexcept {
+        constexpr bool operator==(const Some &val) const noexcept
+        {
             return this->is_some() && this->some_ == val;
         }
 
-        constexpr bool operator!=(const Some &val) const noexcept {
+        constexpr bool operator!=(const Some &val) const noexcept
+        {
             return !this->is_some() || this->some_ != val;
         }
 
-        constexpr bool operator==(const None &val) const noexcept {
+        constexpr bool operator==(const None &val) const noexcept
+        {
             ((void)(val));
             return this->is_none();
         }
 
-        constexpr bool operator!=(const None &val) const noexcept {
+        constexpr bool operator!=(const None &val) const noexcept
+        {
             ((void)(val));
             return !this->is_none();
         }
 
     public:
         //friend std::ostream &operator<<(std::ostream &outs, Optional const &val) {
-        friend Log &operator<<(Log &outs, Optional const &val) {
+        friend Log &operator<<(Log &outs, Optional const &val)
+        {
             outs << "Optional(";
             switch (val.tag_) {
                 case NONE:

@@ -75,9 +75,11 @@ class Result {
                 Ok &operator=(Ok const &) const = delete;
 
                 constexpr Ok(Ok &&o) noexcept
-                    : value_(std::move(o.value_)) {
+                    : value_(std::move(o.value_))
+                {
                 }
-                constexpr Ok &operator=(Ok &&o) noexcept {
+                constexpr Ok &operator=(Ok &&o) noexcept
+                {
                     value_ = std::move(o.value_);
                     return *this;
                 }
@@ -85,13 +87,15 @@ class Result {
             public:
                 // No implicit conversions.. if you want an Ok, then specify.
                 explicit constexpr Ok(T &&val) noexcept
-                    : value_(std::move(val)) {
+                    : value_(std::move(val))
+                {
                 }
 
                 // inplace contruct..
                 template<typename ...Args>
                 explicit constexpr Ok(Args &&...args) noexcept
-                    : value_(std::forward<Args>(args)...) {
+                    : value_(std::forward<Args>(args)...)
+                {
                 }
 
             public:
@@ -100,7 +104,8 @@ class Result {
                 // note no return via copy, copy may be expensive.
                 // Note no access via reference, accessing the contained must invalidate
                 // the container. i.e value extract/unwrap invalidates the container.
-                constexpr T &&unwrap(void) noexcept {
+                constexpr T &&unwrap(void) noexcept
+                {
                     return std::move(this->value_);
                 }
 
@@ -109,16 +114,19 @@ class Result {
                 // Implemented in terms of the operator on the type,
                 // as some types may have more optimal impls of that oper than the
                 // negation of it's opposite.
-                constexpr bool operator==(const Ok &other) const noexcept {
+                constexpr bool operator==(const Ok &other) const noexcept
+                {
                     return this->value_ == other.value_;
                 }
-                constexpr bool operator!=(const Ok &other) const noexcept {
+                constexpr bool operator!=(const Ok &other) const noexcept
+                {
                     return this->value_ != other.value_;
                 }
 
             public:
                 //friend std::ostream &operator<<(std::ostream &outs, Ok const &val) {
-                friend Log &operator<<(Log &outs, Ok const &val) {
+                friend Log &operator<<(Log &outs, Ok const &val)
+                {
                     outs << "Ok(" << val.value_ << ")";
                     return outs;
                 }
@@ -145,9 +153,11 @@ class Result {
                 Err &operator=(Err const &) const = delete;
 
                 constexpr Err(Err &&o) noexcept
-                    : value_(std::move(o.value_)) {
+                    : value_(std::move(o.value_))
+                {
                 }
-                constexpr Err &operator=(Err &&o) noexcept {
+                constexpr Err &operator=(Err &&o) noexcept
+                {
                     value_ = std::move(o.value_);
                     return *this;
                 }
@@ -155,13 +165,15 @@ class Result {
             public:
                 // No implicit conversions.. if you want an Err, then specify.
                 explicit constexpr Err(E &&val) noexcept
-                    : value_(std::move(val)) {
+                    : value_(std::move(val))
+                {
                 }
 
                 // inplace construct
                 template<typename ...Args>
                 explicit constexpr Err(Args &&...args) noexcept
-                    : value_(std::forward<Args>(args)...) {
+                    : value_(std::forward<Args>(args)...)
+                {
                 }
 
             public:
@@ -170,7 +182,8 @@ class Result {
                 // note no return via copy, copy may be expensive.
                 // Note no access via reference, accessing the contained must invalidate
                 // the container. i.e value extract/unwrap invalidates the container.
-                constexpr E &&unwrap(void) noexcept {
+                constexpr E &&unwrap(void) noexcept
+                {
                     return std::move(this->value_);
                 }
 
@@ -182,16 +195,19 @@ class Result {
                 // Implemented in terms of the operator on the type,
                 // as some types may have more optimal impls of that oper than the
                 // negation of it's opposite.
-                constexpr bool operator==(const Err &other) const noexcept {
+                constexpr bool operator==(const Err &other) const noexcept
+                {
                     return this->value_ == other.value_;
                 }
-                constexpr bool operator!=(const Err &other) const noexcept {
+                constexpr bool operator!=(const Err &other) const noexcept
+                {
                     return this->value_ != other.value_;
                 }
 
             public:
                 //friend std::ostream &operator<<(std::ostream &outs, Err const &val) {
-                friend Log &operator<<(Log &outs, Err const &val) {
+                friend Log &operator<<(Log &outs, Err const &val)
+                {
                     outs << "Err(" << val.value_ << ")";
                     return outs;
                 }
@@ -209,22 +225,26 @@ class Result {
                     : value_(INVAL) {}
                 constexpr Tag(Values const v) noexcept
                     : value_(v) {}
-                constexpr Tag &operator=(Values const &v) noexcept {
+                constexpr Tag &operator=(Values const &v) noexcept
+                {
                     // simple type, does not need swapping..
                     value_ = v;
                     return *this;
                 }
                 constexpr Tag(Tag &&o) noexcept
-                    : value_(std::move(o.value_)) {
+                    : value_(std::move(o.value_))
+                {
                     o.value_ = INVAL;
                 }
-                constexpr Tag &operator=(Tag &&o) noexcept {
+                constexpr Tag &operator=(Tag &&o) noexcept
+                {
                     value_ = std::move(o.value_);
                     o.value_ = INVAL;
                     return *this;
                 }
             public:
-                constexpr bool operator==(Tag const &o) const noexcept {
+                constexpr bool operator==(Tag const &o) const noexcept
+                {
                     return value_ == o.value_;
                 }
             public:
@@ -238,7 +258,8 @@ class Result {
         };
 
     public:
-        ~Result(void) noexcept {
+        ~Result(void) noexcept
+        {
             switch (this->tag_.value_) {
                 case Tag::OK:
                     this->ok_.~Ok();
@@ -272,7 +293,8 @@ class Result {
         Result &operator=(Result const &) const = delete;
 #else
         constexpr Result(Result const &o):
-            tag_(o.tag_) {
+            tag_(o.tag_)
+        {
             switch (o.tag_.value_) {
                 case Tag::OK:
                     new (&this->ok_) Ok(o.ok_);
@@ -289,7 +311,8 @@ class Result {
             //std::cerr << "invalid Result: tag=" << this->tag_ << std::endl;
             std::abort();
         };
-        constexpr Result &operator=(Result const &o) {
+        constexpr Result &operator=(Result const &o)
+        {
             //#if 0
             if (this != &o) {
                 if (tag_ == o.tag_) {
@@ -331,7 +354,8 @@ class Result {
         // }
 
         constexpr Result(Result &&o) noexcept
-            : tag_(std::move(o.tag_)) {
+            : tag_(std::move(o.tag_))
+        {
             switch (this->tag_.value_) {
                 case Tag::OK:
                     new (&this->ok_) Ok(std::move(o.ok_));
@@ -348,7 +372,8 @@ class Result {
             //std::cerr << "invalid Result: tag=" << this->tag_ << std::endl;
             std::abort();
         }
-        constexpr Result &operator=(Result &&o) noexcept {
+        constexpr Result &operator=(Result &&o) noexcept
+        {
             //#if 1
             if (tag_ == o.tag_) {
                 tag_ = std::move(o.tag_);
@@ -388,14 +413,16 @@ class Result {
     public:
         // // Consume and wrap the given ok value.
         constexpr Result(Ok &&v) noexcept
-            : tag_(Tag::OK), ok_(std::move(v)) {
+            : tag_(Tag::OK), ok_(std::move(v))
+        {
         }
         // Result needs to construct Ok inplace as well..
         // prob better to not have OK as sep type then, merely a create func.
 
         // Consume and wrap the given err value.
         constexpr Result(Err &&v) noexcept
-            : tag_(Tag::ERR), err_(std::move(v)) {
+            : tag_(Tag::ERR), err_(std::move(v))
+        {
         }
         // Result needs to construct Err inplace as well..
 
@@ -404,7 +431,8 @@ class Result {
         // Implemented in terms of the operator on the type,
         // as some types may have more optimal impls of that oper than the
         // negation of it's opposite.
-        constexpr bool operator==(const Result<T, E> &o) const noexcept {
+        constexpr bool operator==(const Result<T, E> &o) const noexcept
+        {
             if (this->tag_ == o.tag_) {
                 switch (this->tag_.value_) {
                     case Tag::OK:
@@ -422,7 +450,8 @@ class Result {
             return false;
         }
 
-        constexpr bool operator!=(const Result<T, E> &o) const noexcept {
+        constexpr bool operator!=(const Result<T, E> &o) const noexcept
+        {
             if (this->tag_ == o.tag_) {
                 switch (this->tag_.value_) {
                     case Tag::OK:
@@ -440,19 +469,23 @@ class Result {
             return true;
         }
 
-        constexpr bool operator==(const Ok &val) const noexcept {
+        constexpr bool operator==(const Ok &val) const noexcept
+        {
             return this->is_ok() && this->ok_ == val;
         }
 
-        constexpr bool operator!=(const Ok &val) const noexcept {
+        constexpr bool operator!=(const Ok &val) const noexcept
+        {
             return !this->is_ok() || this->ok_ != val;
         }
 
-        constexpr bool operator==(const Err &val) const noexcept {
+        constexpr bool operator==(const Err &val) const noexcept
+        {
             return this->is_err() && this->err_ == val;
         }
 
-        constexpr bool operator!=(const Err &val) const noexcept {
+        constexpr bool operator!=(const Err &val) const noexcept
+        {
             return !this->is_err() || this->err_ != val;
         }
 
@@ -464,7 +497,8 @@ class Result {
          *
          * value is not consumed by this op.
          */
-        constexpr bool is_ok(void) const noexcept {
+        constexpr bool is_ok(void) const noexcept
+        {
             return this->tag_.value_ == Tag::OK;
         }
 
@@ -475,7 +509,8 @@ class Result {
          *
          * value is not consumed by this op.
          */
-        bool is_err(void) const noexcept {
+        bool is_err(void) const noexcept
+        {
             return this->tag_.value_ == Tag::ERR;
         }
 
@@ -485,7 +520,8 @@ class Result {
          * optional::None.
          * The result is consumed and invalidated after.
          */
-        constexpr Optional<T> ok(void) noexcept {
+        constexpr Optional<T> ok(void) noexcept
+        {
             bool const is_ok = this->is_ok();
             tag_ = Tag::INVAL;
             return is_ok ? Some(this->ok_.unwrap()) :
@@ -498,7 +534,8 @@ class Result {
          * optional::None.
          * The result is consumed and invalidated after.
          */
-        constexpr Optional<E> err(void) noexcept {
+        constexpr Optional<E> err(void) noexcept
+        {
             bool const is_err = this->is_err();
             tag_ = Tag::INVAL;
             return is_err ? Some(this->err_.unwrap()) :
@@ -511,7 +548,8 @@ class Result {
          *
          * If the result does not contain an Ok, then abort/panic.
          */
-        constexpr T unwrap(void) noexcept {
+        constexpr T unwrap(void) noexcept
+        {
             if (!this->is_ok()) {
                 std::abort();
             };
@@ -524,7 +562,8 @@ class Result {
          *
          * If the result does not contain an Err, then abort/panic.
          */
-        constexpr E unwrap_err(void) noexcept {
+        constexpr E unwrap_err(void) noexcept
+        {
             if (!this->is_err()) {
                 std::abort();
             };
@@ -538,13 +577,15 @@ class Result {
          * If the result does not contain an Ok, then return `other`, which will
          * also be consumed.
          */
-        constexpr T unwrap_or(T &&other) noexcept {
+        constexpr T unwrap_or(T &&other) noexcept
+        {
             bool const is_ok = this->is_ok();
             tag_ = Tag::INVAL;
             return is_ok ? this->ok_.unwrap() : std::move(other);
         }
         template<typename ...Args>
-        constexpr T unwrap_or(Args &&...args) noexcept {
+        constexpr T unwrap_or(Args &&...args) noexcept
+        {
             bool const is_ok = this->is_ok();
             tag_ = Tag::INVAL;
             return is_ok ? this->ok_.unwrap() : T(std::forward<Args>(args)...);
@@ -556,13 +597,15 @@ class Result {
          * If the result does not contain an Err, then return `other`, which will
          * also be consumed.
          */
-        constexpr E unwrap_err_or(E &&other) noexcept {
+        constexpr E unwrap_err_or(E &&other) noexcept
+        {
             bool const is_err = this->is_err();
             tag_ = Tag::INVAL;
             return is_err ? this->err_.unwrap() : std::move(other);
         }
         template<typename ...Args>
-        constexpr T unwrap_err_or(Args &&...args) noexcept {
+        constexpr T unwrap_err_or(Args &&...args) noexcept
+        {
             bool const is_err = this->is_err();
             tag_ = Tag::INVAL;
             return is_err ? this->err_.unwrap() : E(std::forward<Args>(args)...);
@@ -582,7 +625,8 @@ class Result {
          */
         // would this be better as a free func?
         template<class U>
-        constexpr Result<U, E> map(std::function < U(T &&) > fn) noexcept {
+        constexpr Result<U, E> map(std::function < U(T &&) > fn) noexcept
+        {
             // TODO: remove need to explictly cast to result in each of the
             //       branches.. i.e. the Result<U,E>() bit.
             // i.e.:
@@ -610,7 +654,8 @@ class Result {
          */
         // would this be better as a free func?
         template<class F>
-        constexpr Result<T, F> map_err(std::function < F(E &&) > fn) noexcept {
+        constexpr Result<T, F> map_err(std::function < F(E &&) > fn) noexcept
+        {
             // TODO: remove need to explictly cast to result in each of the
             //       branches.. i.e. the Result<U,E>() bit.
             // i.e.
@@ -631,7 +676,8 @@ class Result {
 
     public:
         //friend std::ostream &operator<<(std::ostream &outs, Result const &val) {
-        friend Log &operator<<(Log &outs, Result const &val) {
+        friend Log &operator<<(Log &outs, Result const &val)
+        {
             outs << "Result(";
             switch (val.tag_) {
                 case Tag::OK:
