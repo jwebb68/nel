@@ -1,7 +1,7 @@
 BasedOnStyle: LLVM
 IndentWidth: 4
 
-ColumnLimit: 80
+ColumnLimit: 100
 Language : Cpp
 
 AccessModifierOffset: 0
@@ -18,28 +18,24 @@ AllowAllParametersOfDeclarationOnNextLine: false
 #AllowShortBlocksOnASingleLine: Never
 AllowShortBlocksOnASingleLine: false
 AllowShortCaseLabelsOnASingleLine: false
-#AllowShortFunctionsOnASingleLine: never
-AllowShortFunctionsOnASingleLine: false
+AllowShortFunctionsOnASingleLine: Empty
 AllowShortIfStatementsOnASingleLine: false
 #AllowShortLambdasOnASingleLine: empty
 AllowShortLoopsOnASingleLine: false
-
 AlwaysBreakAfterReturnType: None
 AlwaysBreakBeforeMultilineStrings: false
 AlwaysBreakTemplateDeclarations: Yes
 BinPackArguments: false
 BinPackParameters: false
-
 #BitFieldColonSpacingStyle: After
-
 #BinaryOperatorStyle: All
-BreakBeforeBraces: Attach
+BreakBeforeBraces: Linux
 BreakBeforeTernaryOperators: true
-BreakConstructorInitializers: BeforeColon
-BreakInheritanceList: BeforeColon
+BreakConstructorInitializers: BeforeComma
+BreakInheritanceList: BeforeComma
 BreakStringLiterals: true
 CompactNamespaces: false
-ConstructorInitializerAllOnOneLineOrOnePerLine: false
+ConstructorInitializerAllOnOneLineOrOnePerLine: true
 Cpp11BracedListStyle: true
 #DeriveLineEnding: false
 DerivePointerAlignment: false
