@@ -6,10 +6,32 @@
 #define UNUSED(arg) ((void)(arg))
 
 typedef enum _Error { NOERROR = 0, FAIL, NOENT } Error;
+nel::Log &operator<<(nel::Log &outs, Error const &v)
+{
+    switch (v) {
+        case NOERROR:
+            outs << "NOERROR";
+            return outs;
+            break;
+        case FAIL:
+            outs << "FAIL";
+            return outs;
+            break;
+        case NOENT:
+            outs << "NOENT";
+            return outs;
+            break;
+    }
+    std::abort();
+    return outs;
+}
+
+typedef nel::Result<int, Error> TestResult;
+
 
 TEST_CASE("Result::Ok for ok must produce ok", "[optional]")
 {
-    auto res = nel::Result<int, Error>(nel::Result<int, Error>::Ok(1));
+    auto res = TestResult::Ok(1);
 
     REQUIRE(res.is_ok());
     REQUIRE(!res.is_err());
@@ -18,7 +40,7 @@ TEST_CASE("Result::Ok for ok must produce ok", "[optional]")
 }
 TEST_CASE("Result::Err for err must produce err", "[optional]")
 {
-    auto res = nel::Result<int, Error>(nel::Result<int, Error>::Err(FAIL));
+    auto res = TestResult::Err(FAIL);
 
     REQUIRE(!res.is_ok());
     REQUIRE(res.is_err());
@@ -29,9 +51,9 @@ TEST_CASE("Result::Err for err must produce err", "[optional]")
 
 TEST_CASE("std::move(Result)-ctor for ok must move ok to dest", "[optional]")
 {
-    auto res = nel::Result<int, Error>(nel::Result<int, Error>::Ok(1));
+    auto res = TestResult::Ok(1);
 
-    auto res2 = nel::Result<int, Error>(std::move(res));
+    auto res2 = std::move(res);
 
     REQUIRE(res2.is_ok());
     REQUIRE(!res2.is_err());
@@ -43,9 +65,9 @@ TEST_CASE("std::move(Result)-ctor for ok must move ok to dest", "[optional]")
 
 TEST_CASE("std::move(Result)-ctor for err must move err to dest", "[optional]")
 {
-    auto res = nel::Result<int, Error>(nel::Result<int, Error>::Err(FAIL));
+    auto res = TestResult::Err(FAIL);
 
-    auto res2 = nel::Result<int, Error>(std::move(res));
+    auto res2 = std::move(res);
 
     REQUIRE(!res2.is_ok());
     REQUIRE(res2.is_err());
@@ -58,9 +80,9 @@ TEST_CASE("std::move(Result)-ctor for err must move err to dest", "[optional]")
 TEST_CASE("std::move(Result)-ctor for inval must move inval to dest",
           "[optional]")
 {
-    auto res = nel::Result<int, Error>(nel::Result<int, Error>::Err(FAIL));
-    auto res2 = nel::Result<int, Error>(std::move(res));
-    auto res3 = nel::Result<int, Error>(std::move(res));
+    auto res = TestResult::Err(FAIL);
+    auto res2 = std::move(res);
+    auto res3 = std::move(res);
 
     REQUIRE(!res3.is_ok());
     REQUIRE(!res3.is_err());
@@ -69,8 +91,8 @@ TEST_CASE("std::move(Result)-ctor for inval must move inval to dest",
 
 TEST_CASE("std::move(Result)-ctor for ok must invalidate src", "[optional]")
 {
-    auto res = nel::Result<int, Error>(nel::Result<int, Error>::Ok(1));
-    auto res2 = nel::Result<int, Error>(std::move(res));
+    auto res = TestResult::Ok(1);
+    auto res2 = std::move(res);
 
     REQUIRE(!res.is_ok());
     REQUIRE(!res.is_err());
@@ -78,8 +100,8 @@ TEST_CASE("std::move(Result)-ctor for ok must invalidate src", "[optional]")
 
 TEST_CASE("std::move(Result)-ctor for err must invalidate src", "[optional]")
 {
-    auto res = nel::Result<int, Error>(nel::Result<int, Error>::Err(FAIL));
-    auto res2 = nel::Result<int, Error>(std::move(res));
+    auto res = TestResult::Err(FAIL);
+    auto res2 = std::move(res);
 
     REQUIRE(!res.is_ok());
     REQUIRE(!res.is_err());
@@ -87,9 +109,9 @@ TEST_CASE("std::move(Result)-ctor for err must invalidate src", "[optional]")
 
 TEST_CASE("std::move(Result)-ctor for inval must invalidate src", "[optional]")
 {
-    auto res = nel::Result<int, Error>(nel::Result<int, Error>::Err(FAIL));
-    auto res2 = nel::Result<int, Error>(std::move(res));
-    auto res3 = nel::Result<int, Error>(std::move(res));
+    auto res = TestResult::Err(FAIL);
+    auto res2 = std::move(res);
+    auto res3 = std::move(res);
 
     REQUIRE(!res.is_ok());
     REQUIRE(!res.is_err());
@@ -98,9 +120,9 @@ TEST_CASE("std::move(Result)-ctor for inval must invalidate src", "[optional]")
 
 TEST_CASE("std::move(Result)-ass for ok must move ok val to dest", "[optional]")
 {
-    auto res = nel::Result<int, Error>(nel::Result<int, Error>::Ok(1));
-    auto res2 = nel::Result<int, Error>(nel::Result<int, Error>::Ok(2));
+    auto res = TestResult::Ok(1);
 
+    auto res2 = TestResult::Ok(2);
     res2 = std::move(res);
 
     REQUIRE(res2.is_ok());
@@ -113,9 +135,9 @@ TEST_CASE("std::move(Result)-ass for ok must move ok val to dest", "[optional]")
 TEST_CASE("std::move(Result)-ass for err must move err val to dest",
           "[optional]")
 {
-    auto res = nel::Result<int, Error>(nel::Result<int, Error>::Err(FAIL));
-    auto res2 = nel::Result<int, Error>(nel::Result<int, Error>::Ok(2));
+    auto res = TestResult::Err(FAIL);
 
+    auto res2 = TestResult::Ok(2);
     res2 = std::move(res);
 
     REQUIRE(!res2.is_ok());
@@ -128,22 +150,23 @@ TEST_CASE("std::move(Result)-ass for err must move err val to dest",
 TEST_CASE("std::move(Result)-ass for inval must move inval to dest",
           "[optional]")
 {
-    auto res = nel::Result<int, Error>(nel::Result<int, Error>::Err(FAIL));
-    auto res2 = nel::Result<int, Error>(nel::Result<int, Error>::Ok(2));
-    auto res3 = nel::Result<int, Error>(nel::Result<int, Error>::Ok(3));
-
+    auto res = TestResult::Err(FAIL);
+    auto res2 = TestResult::Ok(2);
     res2 = std::move(res);
+
+    auto res3 = TestResult::Ok(3);
+
     res3 = std::move(res);
 
-    REQUIRE(!res.is_ok());
-    REQUIRE(!res.is_err());
+    REQUIRE(!res3.is_ok());
+    REQUIRE(!res3.is_err());
 }
 
 
 TEST_CASE("std::move(Result)-ass for ok must invalidate src", "[optional]")
 {
-    auto res = nel::Result<int, Error>(nel::Result<int, Error>::Ok(1));
-    auto res2 = nel::Result<int, Error>(nel::Result<int, Error>::Ok(2));
+    auto res = TestResult::Ok(1);
+    auto res2 = TestResult::Ok(2);
 
     res2 = std::move(res);
 
@@ -153,8 +176,8 @@ TEST_CASE("std::move(Result)-ass for ok must invalidate src", "[optional]")
 
 TEST_CASE("std::move(Result)-ass for err must invalidate src", "[optional]")
 {
-    auto res = nel::Result<int, Error>(nel::Result<int, Error>::Err(FAIL));
-    auto res2 = nel::Result<int, Error>(nel::Result<int, Error>::Ok(2));
+    auto res = TestResult::Err(FAIL);
+    auto res2 = TestResult::Ok(2);
 
     res2 = std::move(res);
 
@@ -164,11 +187,12 @@ TEST_CASE("std::move(Result)-ass for err must invalidate src", "[optional]")
 
 TEST_CASE("std::move(Result)-ass for inval must invalidate src", "[optional]")
 {
-    auto res = nel::Result<int, Error>(nel::Result<int, Error>::Err(FAIL));
-    auto res2 = nel::Result<int, Error>(nel::Result<int, Error>::Ok(2));
-    auto res3 = nel::Result<int, Error>(nel::Result<int, Error>::Ok(3));
-
+    auto res = TestResult::Err(FAIL);
+    auto res2 = TestResult::Ok(2);
     res2 = std::move(res);
+
+    auto res3 = TestResult::Ok(3);
+
     res3 = std::move(res);
 
     REQUIRE(!res.is_ok());
@@ -178,7 +202,7 @@ TEST_CASE("std::move(Result)-ass for inval must invalidate src", "[optional]")
 
 TEST_CASE("Result.ok for ok must produce ok val", "[optional]")
 {
-    auto res = nel::Result<int, Error>(nel::Result<int, Error>::Ok(1));
+    auto res = TestResult::Ok(1);
     auto val = res.ok();
 
     REQUIRE(val.unwrap() == 1);
@@ -186,7 +210,7 @@ TEST_CASE("Result.ok for ok must produce ok val", "[optional]")
 
 TEST_CASE("Result.ok for ok must not produce none", "[optional]")
 {
-    auto res = nel::Result<int, Error>(nel::Result<int, Error>::Ok(1));
+    auto res = TestResult::Ok(1);
     auto val = res.ok();
 
     REQUIRE(val.is_some());
@@ -195,7 +219,7 @@ TEST_CASE("Result.ok for ok must not produce none", "[optional]")
 
 TEST_CASE("Result.ok for err must produce none", "[optional]")
 {
-    auto res = nel::Result<int, Error>(nel::Result<int, Error>::Err(FAIL));
+    auto res = TestResult::Err(FAIL);
     auto val = res.ok();
 
     REQUIRE(!val.is_some());
@@ -204,7 +228,7 @@ TEST_CASE("Result.ok for err must produce none", "[optional]")
 
 TEST_CASE("Result.ok for inval must produce none", "[optional]")
 {
-    auto res = nel::Result<int, Error>(nel::Result<int, Error>::Err(FAIL));
+    auto res = TestResult::Err(FAIL);
     auto res2 = std::move(res);
     auto val = res.ok();
 
@@ -214,7 +238,7 @@ TEST_CASE("Result.ok for inval must produce none", "[optional]")
 
 TEST_CASE("Result.ok for ok must invalidate src", "[optional]")
 {
-    auto res = nel::Result<int, Error>(nel::Result<int, Error>::Ok(1));
+    auto res = TestResult::Ok(1);
 
     auto val = res.ok();
     UNUSED(val);
@@ -226,7 +250,7 @@ TEST_CASE("Result.ok for ok must invalidate src", "[optional]")
 
 TEST_CASE("Result.ok for err must invalidate src", "[optional]")
 {
-    auto res = nel::Result<int, Error>(nel::Result<int, Error>::Err(FAIL));
+    auto res = TestResult::Err(FAIL);
 
     auto val = res.ok();
     UNUSED(val);
@@ -238,7 +262,7 @@ TEST_CASE("Result.ok for err must invalidate src", "[optional]")
 
 TEST_CASE("Result.ok for inval must invalidate src", "[optional]")
 {
-    auto res = nel::Result<int, Error>(nel::Result<int, Error>::Err(FAIL));
+    auto res = TestResult::Err(FAIL);
     auto res2 = std::move(res);
 
     auto val = res.ok();
@@ -252,7 +276,7 @@ TEST_CASE("Result.ok for inval must invalidate src", "[optional]")
 
 TEST_CASE("Result.err for ok must produce none", "[optional]")
 {
-    auto res = nel::Result<int, Error>(nel::Result<int, Error>::Ok(1));
+    auto res = TestResult::Ok(1);
     auto val = res.err();
 
     REQUIRE(val.is_none());
@@ -261,7 +285,7 @@ TEST_CASE("Result.err for ok must produce none", "[optional]")
 
 TEST_CASE("Result.err for err must produce err val", "[optional]")
 {
-    auto res = nel::Result<int, Error>(nel::Result<int, Error>::Err(FAIL));
+    auto res = TestResult::Err(FAIL);
     auto val = res.err();
 
     REQUIRE(val.unwrap() == FAIL);
@@ -269,7 +293,7 @@ TEST_CASE("Result.err for err must produce err val", "[optional]")
 
 TEST_CASE("Result.err for err must not produce none", "[optional]")
 {
-    auto res = nel::Result<int, Error>(nel::Result<int, Error>::Err(FAIL));
+    auto res = TestResult::Err(FAIL);
     auto val = res.err();
 
     REQUIRE(!val.is_none());
@@ -278,7 +302,7 @@ TEST_CASE("Result.err for err must not produce none", "[optional]")
 
 TEST_CASE("Result.err for inval must produce none", "[optional]")
 {
-    auto res = nel::Result<int, Error>(nel::Result<int, Error>::Ok(1));
+    auto res = TestResult::Ok(1);
     auto res2 = std::move(res);
     auto val = res.err();
 
@@ -288,7 +312,7 @@ TEST_CASE("Result.err for inval must produce none", "[optional]")
 
 TEST_CASE("Result.err for ok must invalidate src", "[optional]")
 {
-    auto res = nel::Result<int, Error>(nel::Result<int, Error>::Ok(1));
+    auto res = TestResult::Ok(1);
 
     auto val = res.err();
     UNUSED(val);
@@ -299,7 +323,7 @@ TEST_CASE("Result.err for ok must invalidate src", "[optional]")
 
 TEST_CASE("Result.err for err must invalidate src", "[optional]")
 {
-    auto res = nel::Result<int, Error>(nel::Result<int, Error>::Err(FAIL));
+    auto res = TestResult::Err(FAIL);
 
     auto val = res.err();
     UNUSED(val);
@@ -310,7 +334,7 @@ TEST_CASE("Result.err for err must invalidate src", "[optional]")
 
 TEST_CASE("Result.err for inval must invalidate src", "[optional]")
 {
-    auto res = nel::Result<int, Error>(nel::Result<int, Error>::Err(FAIL));
+    auto res = TestResult::Err(FAIL);
     auto res2 = std::move(res);
 
     auto val = res.err();
@@ -323,21 +347,21 @@ TEST_CASE("Result.err for inval must invalidate src", "[optional]")
 
 TEST_CASE("Result.is_ok for ok must give true", "[optional]")
 {
-    auto res = nel::Result<int, Error>(nel::Result<int, Error>::Ok(1));
+    auto res = TestResult::Ok(1);
 
     REQUIRE(res.is_ok());
 }
 
 TEST_CASE("Result.is_ok for err must give false", "[optional]")
 {
-    auto res = nel::Result<int, Error>(nel::Result<int, Error>::Err(FAIL));
+    auto res = TestResult::Err(FAIL);
 
     REQUIRE(!res.is_ok());
 }
 
 TEST_CASE("Result.is_ok for inval must give false", "[optional]")
 {
-    auto res = nel::Result<int, Error>(nel::Result<int, Error>::Ok(1));
+    auto res = TestResult::Ok(1);
     auto res2 = std::move(res);
 
     REQUIRE(!res.is_ok());
@@ -346,7 +370,7 @@ TEST_CASE("Result.is_ok for inval must give false", "[optional]")
 
 TEST_CASE("Result.is_ok for ok must not alter src", "[optional]")
 {
-    auto res = nel::Result<int, Error>(nel::Result<int, Error>::Ok(1));
+    auto res = TestResult::Ok(1);
 
     auto is_ok = res.is_ok();
     UNUSED(is_ok);
@@ -356,7 +380,7 @@ TEST_CASE("Result.is_ok for ok must not alter src", "[optional]")
 
 TEST_CASE("Result.is_ok for err must not alter src", "[optional]")
 {
-    auto res = nel::Result<int, Error>(nel::Result<int, Error>::Err(FAIL));
+    auto res = TestResult::Err(FAIL);
 
     auto is_ok = res.is_ok();
     UNUSED(is_ok);
@@ -366,7 +390,7 @@ TEST_CASE("Result.is_ok for err must not alter src", "[optional]")
 
 TEST_CASE("Result.is_ok for inval must not alter src", "[optional]")
 {
-    auto res = nel::Result<int, Error>(nel::Result<int, Error>::Ok(1));
+    auto res = TestResult::Ok(1);
     auto res2 = std::move(res);
 
     auto is_ok = res.is_ok();
@@ -381,21 +405,21 @@ TEST_CASE("Result.is_ok for inval must not alter src", "[optional]")
 
 TEST_CASE("Result.is_err for ok must give false", "[optional]")
 {
-    auto res = nel::Result<int, Error>(nel::Result<int, Error>::Ok(1));
+    auto res = TestResult::Ok(1);
 
     REQUIRE(!res.is_err());
 }
 
 TEST_CASE("Result.is_err for err must give true", "[optional]")
 {
-    auto res = nel::Result<int, Error>(nel::Result<int, Error>::Err(FAIL));
+    auto res = TestResult::Err(FAIL);
 
     REQUIRE(res.is_err());
 }
 
 TEST_CASE("Result.is_err for inval must give false", "[optional]")
 {
-    auto res = nel::Result<int, Error>(nel::Result<int, Error>::Ok(1));
+    auto res = TestResult::Ok(1);
     auto res2 = std::move(res);
 
     REQUIRE(!res.is_err());
@@ -404,7 +428,7 @@ TEST_CASE("Result.is_err for inval must give false", "[optional]")
 
 TEST_CASE("Result.unwrap for Ok must give ok value", "[optional]")
 {
-    auto res = nel::Result<int, Error>(nel::Result<int, Error>::Ok(1));
+    auto res = TestResult::Ok(1);
 
     auto val = res.unwrap();
 
@@ -413,7 +437,7 @@ TEST_CASE("Result.unwrap for Ok must give ok value", "[optional]")
 
 TEST_CASE("Result.unwrap for Ok must invalidate src", "[optional]")
 {
-    auto res = nel::Result<int, Error>(nel::Result<int, Error>::Ok(1));
+    auto res = TestResult::Ok(1);
 
     auto val = res.unwrap();
     UNUSED(val);
@@ -424,7 +448,7 @@ TEST_CASE("Result.unwrap for Ok must invalidate src", "[optional]")
 
 // TEST_CASE("Result.unwrap for err aborts", "[optional]")
 // {
-//     auto res = nel::Result<int, Error>(nel::Result<int, Error>::Err(FAIL));
+//     auto res = TestResult::Err(FAIL);
 //     auto val = res.unwrap();
 
 //     // don't know how to test aborts
@@ -433,7 +457,7 @@ TEST_CASE("Result.unwrap for Ok must invalidate src", "[optional]")
 
 // TEST_CASE("Result.unwrap for inval aborts", "[optional]")
 // {
-//     auto res = nel::Result<int, Error>(nel::Result<int, Error>::Ok(1));
+//     auto res = TestResult::Ok(1);
 //     auto res2 = std::move(res);
 
 //     auto val = res.unwrap();
@@ -444,7 +468,7 @@ TEST_CASE("Result.unwrap for Ok must invalidate src", "[optional]")
 
 TEST_CASE("Result.unwrap_err for err must give err value", "[optional]")
 {
-    auto res = nel::Result<int, Error>(nel::Result<int, Error>::Err(FAIL));
+    auto res = TestResult::Err(FAIL);
 
     auto val = res.unwrap_err();
 
@@ -453,7 +477,7 @@ TEST_CASE("Result.unwrap_err for err must give err value", "[optional]")
 
 TEST_CASE("Result.unwrap_err for err must invalidate src", "[optional]")
 {
-    auto res = nel::Result<int, Error>(nel::Result<int, Error>::Err(FAIL));
+    auto res = TestResult::Err(FAIL);
 
     auto val = res.unwrap_err();
     UNUSED(val);
@@ -464,7 +488,7 @@ TEST_CASE("Result.unwrap_err for err must invalidate src", "[optional]")
 
 // TEST_CASE("Result.unwrap_err for ok aborts", "[optional]")
 // {
-//     auto res = nel::Result<int, Error>(nel::Result<int, Error>::Ok(1));
+//     auto res = TestResult::Ok(1);
 
 //     auto val = res.unwrap_err();
 
@@ -474,7 +498,7 @@ TEST_CASE("Result.unwrap_err for err must invalidate src", "[optional]")
 
 // TEST_CASE("Result.unwrap_err for inval aborts", "[optional]")
 // {
-//     auto res = nel::Result<int, Error>(nel::Result<int, Error>::Ok(1));
+//     auto res = TestResult::Ok(1);
 //     auto res2 = std::move(res);
 
 //     auto val = res.unwrap();
@@ -485,7 +509,7 @@ TEST_CASE("Result.unwrap_err for err must invalidate src", "[optional]")
 
 TEST_CASE("Result.unwrap_or for ok must give ok value", "[optional]")
 {
-    auto res = nel::Result<int, Error>(nel::Result<int, Error>::Ok(1));
+    auto res = TestResult::Ok(1);
 
     auto val = res.unwrap_or(2);
 
@@ -494,7 +518,7 @@ TEST_CASE("Result.unwrap_or for ok must give ok value", "[optional]")
 
 TEST_CASE("Result.unwrap_or for err must give or value", "[optional]")
 {
-    auto res = nel::Result<int, Error>(nel::Result<int, Error>::Err(FAIL));
+    auto res = TestResult::Err(FAIL);
 
     auto val = res.unwrap_or(2);
 
@@ -503,7 +527,7 @@ TEST_CASE("Result.unwrap_or for err must give or value", "[optional]")
 
 TEST_CASE("Result.unwrap_or for invalid must give or value", "[optional]")
 {
-    auto res = nel::Result<int, Error>(nel::Result<int, Error>::Err(FAIL));
+    auto res = TestResult::Err(FAIL);
     auto res2 = std::move(res);
 
     auto val = res.unwrap_or(2);
@@ -513,7 +537,7 @@ TEST_CASE("Result.unwrap_or for invalid must give or value", "[optional]")
 
 TEST_CASE("Result.unwrap_or for ok must invalidate src", "[optional]")
 {
-    auto res = nel::Result<int, Error>(nel::Result<int, Error>::Ok(1));
+    auto res = TestResult::Ok(1);
 
     auto val = res.unwrap_or(2);
     UNUSED(val);
@@ -524,7 +548,7 @@ TEST_CASE("Result.unwrap_or for ok must invalidate src", "[optional]")
 
 TEST_CASE("Result.unwrap_or for err must invalidate src", "[optional]")
 {
-    auto res = nel::Result<int, Error>(nel::Result<int, Error>::Err(FAIL));
+    auto res = TestResult::Err(FAIL);
 
     auto val = res.unwrap_or(2);
     UNUSED(val);
@@ -535,7 +559,7 @@ TEST_CASE("Result.unwrap_or for err must invalidate src", "[optional]")
 
 TEST_CASE("Result.unwrap_or for invalid must stay invalid", "[optional]")
 {
-    auto res = nel::Result<int, Error>(nel::Result<int, Error>::Err(FAIL));
+    auto res = TestResult::Err(FAIL);
     auto res2 = std::move(res);
 
     auto val = res.unwrap_or(2);
@@ -548,7 +572,7 @@ TEST_CASE("Result.unwrap_or for invalid must stay invalid", "[optional]")
 
 TEST_CASE("Result.unwrap_err_or for ok must give or value", "[optional]")
 {
-    auto res = nel::Result<int, Error>(nel::Result<int, Error>::Ok(1));
+    auto res = TestResult::Ok(1);
 
     auto val = res.unwrap_err_or(FAIL);
 
@@ -557,7 +581,7 @@ TEST_CASE("Result.unwrap_err_or for ok must give or value", "[optional]")
 
 TEST_CASE("Result.unwrap_err_or for err must give err value", "[optional]")
 {
-    auto res = nel::Result<int, Error>(nel::Result<int, Error>::Err(FAIL));
+    auto res = TestResult::Err(FAIL);
 
     auto val = res.unwrap_err_or(NOENT);
 
@@ -566,7 +590,7 @@ TEST_CASE("Result.unwrap_err_or for err must give err value", "[optional]")
 
 TEST_CASE("Result.unwrap_err_or for invalid must give or value", "[optional]")
 {
-    auto res = nel::Result<int, Error>(nel::Result<int, Error>::Err(FAIL));
+    auto res = TestResult::Err(FAIL);
     auto res2 = std::move(res);
 
     auto val = res.unwrap_err_or(NOENT);
@@ -576,7 +600,7 @@ TEST_CASE("Result.unwrap_err_or for invalid must give or value", "[optional]")
 
 TEST_CASE("Result.unwrap_err_or for ok must invalidate src", "[optional]")
 {
-    auto res = nel::Result<int, Error>(nel::Result<int, Error>::Ok(1));
+    auto res = TestResult::Ok(1);
 
     auto val = res.unwrap_err_or(FAIL);
     UNUSED(val);
@@ -587,7 +611,7 @@ TEST_CASE("Result.unwrap_err_or for ok must invalidate src", "[optional]")
 
 TEST_CASE("Result.unwrap_err_or for err must invalidate src", "[optional]")
 {
-    auto res = nel::Result<int, Error>(nel::Result<int, Error>::Err(FAIL));
+    auto res = TestResult::Err(FAIL);
 
     auto val = res.unwrap_err_or(NOENT);
     UNUSED(val);
@@ -598,7 +622,7 @@ TEST_CASE("Result.unwrap_err_or for err must invalidate src", "[optional]")
 
 TEST_CASE("Result.unwrap_err_or for invalid must invalidate src", "[optional]")
 {
-    auto res = nel::Result<int, Error>(nel::Result<int, Error>::Err(FAIL));
+    auto res = TestResult::Err(FAIL);
     auto res2 = std::move(res);
 
     auto val = res.unwrap_err_or(NOENT);
@@ -618,7 +642,7 @@ bool map1(const int &e)
 
 TEST_CASE("Result.map for ok must change ok val", "[optional]")
 {
-    auto res = nel::Result<int, Error>(nel::Result<int, Error>::Ok(1));
+    auto res = TestResult::Ok(1);
 
     // TODO: nasty, want bool to be auto-inferred as it's the return type of
     // map1, i.e. want res.map(map1).unwrap();
@@ -631,7 +655,7 @@ TEST_CASE("Result.map for ok must change ok val", "[optional]")
 
 TEST_CASE("Result.map for err must not change err val", "[optional]")
 {
-    auto res = nel::Result<int, Error>(nel::Result<int, Error>::Err(FAIL));
+    auto res = TestResult::Err(FAIL);
 
     // TODO: nasty, want bool to be auto-inferred as it's the return type of
     // map1, i.e. want res.map(map1).unwrap();
@@ -644,7 +668,7 @@ TEST_CASE("Result.map for err must not change err val", "[optional]")
 
 TEST_CASE("Result.map for inval must stay inval", "[optional]")
 {
-    auto res = nel::Result<int, Error>(nel::Result<int, Error>::Err(FAIL));
+    auto res = TestResult::Err(FAIL);
     auto res2 = std::move(res);
 
     // TODO: nasty, want bool to be auto-inferred as it's the return type of
@@ -658,7 +682,7 @@ TEST_CASE("Result.map for inval must stay inval", "[optional]")
 
 TEST_CASE("Result.map for ok must invalidate src", "[optional]")
 {
-    auto res = nel::Result<int, Error>(nel::Result<int, Error>::Ok(1));
+    auto res = TestResult::Ok(1);
 
     // TODO: nasty, want bool to be auto-inferred as it's the return type of
     // map1, i.e. want res.map(map1).unwrap();
@@ -671,7 +695,7 @@ TEST_CASE("Result.map for ok must invalidate src", "[optional]")
 
 TEST_CASE("Result.map for err must invalidate src", "[optional]")
 {
-    auto res = nel::Result<int, Error>(nel::Result<int, Error>::Err(FAIL));
+    auto res = TestResult::Err(FAIL);
 
     // TODO: nasty, want bool to be auto-inferred as it's the return type of
     // map1, i.e. want res.map(map1).unwrap();
@@ -684,7 +708,7 @@ TEST_CASE("Result.map for err must invalidate src", "[optional]")
 
 TEST_CASE("Result.map for inval must invalidate src", "[optional]")
 {
-    auto res = nel::Result<int, Error>(nel::Result<int, Error>::Err(FAIL));
+    auto res = TestResult::Err(FAIL);
     auto res2 = std::move(res);
 
     // TODO: nasty, want bool to be auto-inferred as it's the return type of
@@ -708,7 +732,7 @@ const char *map2(const Error &e)
 
 TEST_CASE("Result.map_err for ok must not change ok val", "[optional]")
 {
-    auto res = nel::Result<int, Error>(nel::Result<int, Error>::Ok(1));
+    auto res = TestResult::Ok(1);
 
     // TODO: nasty, want bool to be auto-inferred as it's the return type of
     // map1, i.e. want res.map(map1).unwrap();
@@ -721,7 +745,7 @@ TEST_CASE("Result.map_err for ok must not change ok val", "[optional]")
 
 TEST_CASE("Result.map_err for err must change err val", "[optional]")
 {
-    auto res = nel::Result<int, Error>(nel::Result<int, Error>::Err(FAIL));
+    auto res = TestResult::Err(FAIL);
 
     // TODO: nasty, want bool to be auto-inferred as it's the return type of
     // map1, i.e. want res.map(map1).unwrap();
@@ -734,7 +758,7 @@ TEST_CASE("Result.map_err for err must change err val", "[optional]")
 
 TEST_CASE("Result.map_err for inval must stay inval", "[optional]")
 {
-    auto res = nel::Result<int, Error>(nel::Result<int, Error>::Err(FAIL));
+    auto res = TestResult::Err(FAIL);
     auto res2 = std::move(res);
 
     // TODO: nasty, want bool to be auto-inferred as it's the return type of
@@ -747,7 +771,7 @@ TEST_CASE("Result.map_err for inval must stay inval", "[optional]")
 
 TEST_CASE("Result.map_err for ok must invalidate src", "[optional]")
 {
-    auto res = nel::Result<int, Error>(nel::Result<int, Error>::Ok(1));
+    auto res = TestResult::Ok(1);
 
     // TODO: nasty, want bool to be auto-inferred as it's the return type of
     // map1, i.e. want res.map(map1).unwrap();
@@ -760,7 +784,7 @@ TEST_CASE("Result.map_err for ok must invalidate src", "[optional]")
 
 TEST_CASE("Result.map_err for err must invalidate src", "[optional]")
 {
-    auto res = nel::Result<int, Error>(nel::Result<int, Error>::Err(FAIL));
+    auto res = TestResult::Err(FAIL);
 
     // TODO: nasty, want bool to be auto-inferred as it's the return type of
     // map1, i.e. want res.map(map1).unwrap();
@@ -773,7 +797,7 @@ TEST_CASE("Result.map_err for err must invalidate src", "[optional]")
 
 TEST_CASE("Result.map_err for inval must invalidate src", "[optional]")
 {
-    auto res = nel::Result<int, Error>(nel::Result<int, Error>::Err(FAIL));
+    auto res = TestResult::Err(FAIL);
     auto res2 = std::move(res);
 
     // TODO: nasty, want bool to be auto-inferred as it's the return type of
@@ -789,7 +813,7 @@ TEST_CASE("Result.map_err for inval must invalidate src", "[optional]")
 
 nel::Result<int, Error> foo_ok(void)
 {
-    return nel::Result<int, Error>::Ok(1);
+    return TestResult::Ok(1);
 }
 TEST_CASE("Result::Ok auto convert to Result", "[optional]")
 {
@@ -800,7 +824,7 @@ TEST_CASE("Result::Ok auto convert to Result", "[optional]")
 
 nel::Result<int, Error> foo_err(void)
 {
-    return nel::Result<int, Error>::Err(FAIL);
+    return TestResult::Err(FAIL);
 }
 TEST_CASE("Result::Err auto convert to Result", "[optional]")
 {
@@ -871,30 +895,30 @@ TEST_CASE("result::~dtor for err, must call err dtor", "[optional]")
 
 TEST_CASE("Result::eq for ok with ok must give true", "[optional]")
 {
-    auto res1 = nel::Result<int, Error>(nel::Result<int, Error>::Ok(2));
+    auto res1 = TestResult::Ok(2);
 
-    REQUIRE(res1 == nel::Result<int, Error>::Ok(2));
+    REQUIRE(res1 == TestResult::Ok(2));
 }
 
 TEST_CASE("Result::eq for ok with diff ok must give false", "[optional]")
 {
-    auto res1 = nel::Result<int, Error>(nel::Result<int, Error>::Ok(2));
+    auto res1 = TestResult::Ok(2);
 
-    REQUIRE(!(res1 == nel::Result<int, Error>::Ok(3)));
+    REQUIRE(!(res1 == TestResult::Ok(3)));
 }
 
 TEST_CASE("Result::eq for ok with err must give false", "[optional]")
 {
-    auto res1 = nel::Result<int, Error>(nel::Result<int, Error>::Ok(2));
+    auto res1 = TestResult::Ok(2);
 
-    REQUIRE(!(res1 == nel::Result<int, Error>::Err(FAIL)));
+    REQUIRE(!(res1 == TestResult::Err(FAIL)));
 }
 
 TEST_CASE("Result::eq for ok with inval must give false", "[optional]")
 {
-    auto res1 = nel::Result<int, Error>(nel::Result<int, Error>::Ok(1));
+    auto res1 = TestResult::Ok(1);
 
-    auto res2 = nel::Result<int, Error>(nel::Result<int, Error>::Ok(2));
+    auto res2 = TestResult::Ok(2);
     auto res3 = std::move(res2);
 
     REQUIRE(!(res1 == res2));
@@ -903,9 +927,9 @@ TEST_CASE("Result::eq for ok with inval must give false", "[optional]")
 
 TEST_CASE("Result::eq for ok with ok must not alter src", "[optional]")
 {
-    auto res1 = nel::Result<int, Error>(nel::Result<int, Error>::Ok(2));
+    auto res1 = TestResult::Ok(2);
 
-    auto is_eq = res1 == nel::Result<int, Error>::Ok(2);
+    auto is_eq = res1 == TestResult::Ok(2);
     UNUSED(is_eq);
 
     REQUIRE(res1.unwrap() == 2);
@@ -913,9 +937,9 @@ TEST_CASE("Result::eq for ok with ok must not alter src", "[optional]")
 
 TEST_CASE("Result::eq for ok with diff ok must not alter src", "[optional]")
 {
-    auto res1 = nel::Result<int, Error>(nel::Result<int, Error>::Ok(2));
+    auto res1 = TestResult::Ok(2);
 
-    auto is_eq = res1 == nel::Result<int, Error>::Ok(3);
+    auto is_eq = res1 == TestResult::Ok(3);
     UNUSED(is_eq);
 
     REQUIRE(res1.unwrap() == 2);
@@ -923,9 +947,9 @@ TEST_CASE("Result::eq for ok with diff ok must not alter src", "[optional]")
 
 TEST_CASE("Result::eq for ok with err must not alter src", "[optional]")
 {
-    auto res1 = nel::Result<int, Error>(nel::Result<int, Error>::Ok(2));
+    auto res1 = TestResult::Ok(2);
 
-    auto is_eq = res1 == nel::Result<int, Error>::Err(FAIL);
+    auto is_eq = res1 == TestResult::Err(FAIL);
     UNUSED(is_eq);
 
     REQUIRE(res1.unwrap() == 2);
@@ -933,9 +957,9 @@ TEST_CASE("Result::eq for ok with err must not alter src", "[optional]")
 
 TEST_CASE("Result::eq for ok with inval must not alter src", "[optional]")
 {
-    auto res1 = nel::Result<int, Error>(nel::Result<int, Error>::Ok(2));
+    auto res1 = TestResult::Ok(2);
 
-    auto res2 = nel::Result<int, Error>(nel::Result<int, Error>::Ok(1));
+    auto res2 = TestResult::Ok(1);
     auto res3 = std::move(res2);
 
     auto is_eq = res1 == res2;
@@ -948,30 +972,30 @@ TEST_CASE("Result::eq for ok with inval must not alter src", "[optional]")
 
 TEST_CASE("Result::eq for err with ok must give false", "[optional]")
 {
-    auto res1 = nel::Result<int, Error>(nel::Result<int, Error>::Err(FAIL));
+    auto res1 = TestResult::Err(FAIL);
 
-    REQUIRE(!(res1 == nel::Result<int, Error>::Ok(1)));
+    REQUIRE(!(res1 == TestResult::Ok(1)));
 }
 
 TEST_CASE("Result::eq for err with err must give true", "[optional]")
 {
-    auto res1 = nel::Result<int, Error>(nel::Result<int, Error>::Err(FAIL));
+    auto res1 = TestResult::Err(FAIL);
 
-    REQUIRE(res1 == nel::Result<int, Error>::Err(FAIL));
+    REQUIRE(res1 == TestResult::Err(FAIL));
 }
 
 TEST_CASE("Result::eq for err with diff err must give false", "[optional]")
 {
-    auto res1 = nel::Result<int, Error>(nel::Result<int, Error>::Err(NOENT));
+    auto res1 = TestResult::Err(NOENT);
 
-    REQUIRE(!(res1 == nel::Result<int, Error>::Err(FAIL)));
+    REQUIRE(!(res1 == TestResult::Err(FAIL)));
 }
 
 TEST_CASE("Result::eq for err with inval must give false", "[optional]")
 {
-    auto res1 = nel::Result<int, Error>(nel::Result<int, Error>::Err(FAIL));
+    auto res1 = TestResult::Err(FAIL);
 
-    auto res2 = nel::Result<int, Error>(nel::Result<int, Error>::Err(NOENT));
+    auto res2 = TestResult::Err(NOENT);
     auto res3 = std::move(res2);
 
     REQUIRE(!(res1 == res2));
@@ -980,9 +1004,9 @@ TEST_CASE("Result::eq for err with inval must give false", "[optional]")
 
 TEST_CASE("Result::eq for err with ok must not alter src", "[optional]")
 {
-    auto res1 = nel::Result<int, Error>(nel::Result<int, Error>::Err(FAIL));
+    auto res1 = TestResult::Err(FAIL);
 
-    auto is_eq = res1 == nel::Result<int, Error>::Ok(1);
+    auto is_eq = res1 == TestResult::Ok(1);
     UNUSED(is_eq);
 
     REQUIRE(res1.unwrap_err() == FAIL);
@@ -990,9 +1014,9 @@ TEST_CASE("Result::eq for err with ok must not alter src", "[optional]")
 
 TEST_CASE("Result::eq for err with err must not alter src", "[optional]")
 {
-    auto res1 = nel::Result<int, Error>(nel::Result<int, Error>::Err(FAIL));
+    auto res1 = TestResult::Err(FAIL);
 
-    auto is_eq = res1 == nel::Result<int, Error>::Err(FAIL);
+    auto is_eq = res1 == TestResult::Err(FAIL);
     UNUSED(is_eq);
 
     REQUIRE(res1.unwrap_err() == FAIL);
@@ -1000,9 +1024,9 @@ TEST_CASE("Result::eq for err with err must not alter src", "[optional]")
 
 TEST_CASE("Result::eq for err with diff err must not alter src", "[optional]")
 {
-    auto res1 = nel::Result<int, Error>(nel::Result<int, Error>::Err(FAIL));
+    auto res1 = TestResult::Err(FAIL);
 
-    auto is_eq = res1 == nel::Result<int, Error>::Err(NOENT);
+    auto is_eq = res1 == TestResult::Err(NOENT);
     UNUSED(is_eq);
 
     REQUIRE(res1.unwrap_err() == FAIL);
@@ -1010,9 +1034,9 @@ TEST_CASE("Result::eq for err with diff err must not alter src", "[optional]")
 
 TEST_CASE("Result::eq for err with inval must not alter src", "[optional]")
 {
-    auto res1 = nel::Result<int, Error>(nel::Result<int, Error>::Err(FAIL));
+    auto res1 = TestResult::Err(FAIL);
 
-    auto res2 = nel::Result<int, Error>(nel::Result<int, Error>::Err(NOENT));
+    auto res2 = TestResult::Err(NOENT);
     auto res3 = std::move(res2);
 
     auto is_eq = res1 == res2;
@@ -1025,26 +1049,26 @@ TEST_CASE("Result::eq for err with inval must not alter src", "[optional]")
 
 TEST_CASE("Result::eq for inval with ok must give false", "[optional]")
 {
-    auto res1 = nel::Result<int, Error>(nel::Result<int, Error>::Err(FAIL));
+    auto res1 = TestResult::Err(FAIL);
     auto res2 = std::move(res1);
 
-    REQUIRE(!(res1 == nel::Result<int, Error>::Ok(1)));
+    REQUIRE(!(res1 == TestResult::Ok(1)));
 }
 
 TEST_CASE("Result::eq for inval with err must give false", "[optional]")
 {
-    auto res1 = nel::Result<int, Error>(nel::Result<int, Error>::Err(FAIL));
+    auto res1 = TestResult::Err(FAIL);
     auto res2 = std::move(res1);
 
-    REQUIRE(!(res1 == nel::Result<int, Error>::Err(FAIL)));
+    REQUIRE(!(res1 == TestResult::Err(FAIL)));
 }
 
 TEST_CASE("Result::eq for inval with inval must give true", "[optional]")
 {
-    auto res1 = nel::Result<int, Error>(nel::Result<int, Error>::Ok(2));
+    auto res1 = TestResult::Ok(2);
     auto res2 = std::move(res1);
 
-    auto res3 = nel::Result<int, Error>(nel::Result<int, Error>::Err(FAIL));
+    auto res3 = TestResult::Err(FAIL);
     auto res4 = std::move(res3);
 
     REQUIRE(res1 == res3);
@@ -1053,10 +1077,10 @@ TEST_CASE("Result::eq for inval with inval must give true", "[optional]")
 
 TEST_CASE("Result::eq for inval with ok must not alter src", "[optional]")
 {
-    auto res1 = nel::Result<int, Error>(nel::Result<int, Error>::Err(FAIL));
+    auto res1 = TestResult::Err(FAIL);
     auto res2 = std::move(res1);
 
-    auto is_eq = res1 == nel::Result<int, Error>::Ok(1);
+    auto is_eq = res1 == TestResult::Ok(1);
     UNUSED(is_eq);
 
     REQUIRE(!res1.is_ok());
@@ -1065,10 +1089,10 @@ TEST_CASE("Result::eq for inval with ok must not alter src", "[optional]")
 
 TEST_CASE("Result::eq for inval with err must not alter src", "[optional]")
 {
-    auto res1 = nel::Result<int, Error>(nel::Result<int, Error>::Err(FAIL));
+    auto res1 = TestResult::Err(FAIL);
     auto res2 = std::move(res1);
 
-    auto is_eq = res1 == nel::Result<int, Error>::Err(FAIL);
+    auto is_eq = res1 == TestResult::Err(FAIL);
     UNUSED(is_eq);
 
     REQUIRE(!res1.is_ok());
@@ -1077,10 +1101,10 @@ TEST_CASE("Result::eq for inval with err must not alter src", "[optional]")
 
 TEST_CASE("Result::eq for inval with inval must not alter src", "[optional]")
 {
-    auto res1 = nel::Result<int, Error>(nel::Result<int, Error>::Ok(2));
+    auto res1 = TestResult::Ok(2);
     auto res2 = std::move(res1);
 
-    auto res3 = nel::Result<int, Error>(nel::Result<int, Error>::Err(FAIL));
+    auto res3 = TestResult::Err(FAIL);
     auto res4 = std::move(res3);
 
     auto is_eq = res1 == res3;
@@ -1093,30 +1117,30 @@ TEST_CASE("Result::eq for inval with inval must not alter src", "[optional]")
 
 TEST_CASE("Result::neq for ok with ok must give false", "[optional]")
 {
-    auto res1 = nel::Result<int, Error>(nel::Result<int, Error>::Ok(2));
+    auto res1 = TestResult::Ok(2);
 
-    REQUIRE(!(res1 != nel::Result<int, Error>::Ok(2)));
+    REQUIRE(!(res1 != TestResult::Ok(2)));
 }
 
 TEST_CASE("Result::neq for ok with diff ok must give true", "[optional]")
 {
-    auto res1 = nel::Result<int, Error>(nel::Result<int, Error>::Ok(2));
+    auto res1 = TestResult::Ok(2);
 
-    REQUIRE(res1 != nel::Result<int, Error>::Ok(3));
+    REQUIRE(res1 != TestResult::Ok(3));
 }
 
 TEST_CASE("Result::neq for ok with err must give true", "[optional]")
 {
-    auto res1 = nel::Result<int, Error>(nel::Result<int, Error>::Ok(2));
+    auto res1 = TestResult::Ok(2);
 
-    REQUIRE(res1 != nel::Result<int, Error>::Err(FAIL));
+    REQUIRE(res1 != TestResult::Err(FAIL));
 }
 
 TEST_CASE("Result::neq for ok with inval must give true", "[optional]")
 {
-    auto res1 = nel::Result<int, Error>(nel::Result<int, Error>::Ok(2));
+    auto res1 = TestResult::Ok(2);
 
-    auto res2 = nel::Result<int, Error>(nel::Result<int, Error>::Ok(2));
+    auto res2 = TestResult::Ok(2);
     auto res3 = std::move(res2);
 
     REQUIRE(res1 != res2);
@@ -1125,9 +1149,9 @@ TEST_CASE("Result::neq for ok with inval must give true", "[optional]")
 
 TEST_CASE("Result::neq for ok with ok must not alter src", "[optional]")
 {
-    auto res1 = nel::Result<int, Error>(nel::Result<int, Error>::Ok(2));
+    auto res1 = TestResult::Ok(2);
 
-    auto is_neq = res1 != nel::Result<int, Error>::Ok(2);
+    auto is_neq = res1 != TestResult::Ok(2);
     UNUSED(is_neq);
 
     REQUIRE(res1.unwrap() == 2);
@@ -1135,9 +1159,9 @@ TEST_CASE("Result::neq for ok with ok must not alter src", "[optional]")
 
 TEST_CASE("Result::neq for ok with diff ok must not alter src", "[optional]")
 {
-    auto res1 = nel::Result<int, Error>(nel::Result<int, Error>::Ok(2));
+    auto res1 = TestResult::Ok(2);
 
-    auto is_neq = res1 != nel::Result<int, Error>::Ok(3);
+    auto is_neq = res1 != TestResult::Ok(3);
     UNUSED(is_neq);
 
     REQUIRE(res1.unwrap() == 2);
@@ -1145,9 +1169,9 @@ TEST_CASE("Result::neq for ok with diff ok must not alter src", "[optional]")
 
 TEST_CASE("Result::neq for ok with err must not alter src", "[optional]")
 {
-    auto res1 = nel::Result<int, Error>(nel::Result<int, Error>::Ok(2));
+    auto res1 = TestResult::Ok(2);
 
-    auto is_neq = res1 != nel::Result<int, Error>::Err(FAIL);
+    auto is_neq = res1 != TestResult::Err(FAIL);
     UNUSED(is_neq);
 
     REQUIRE(res1.unwrap() == 2);
@@ -1155,9 +1179,9 @@ TEST_CASE("Result::neq for ok with err must not alter src", "[optional]")
 
 TEST_CASE("Result::neq for ok with inval must not alter src", "[optional]")
 {
-    auto res1 = nel::Result<int, Error>(nel::Result<int, Error>::Ok(2));
+    auto res1 = TestResult::Ok(2);
 
-    auto res2 = nel::Result<int, Error>(nel::Result<int, Error>::Ok(3));
+    auto res2 = TestResult::Ok(3);
     auto res3 = std::move(res2);
 
     auto is_neq = res1 != res2;
@@ -1169,30 +1193,30 @@ TEST_CASE("Result::neq for ok with inval must not alter src", "[optional]")
 
 TEST_CASE("Result::neq for err with ok must give true", "[optional]")
 {
-    auto res1 = nel::Result<int, Error>(nel::Result<int, Error>::Err(FAIL));
+    auto res1 = TestResult::Err(FAIL);
 
-    REQUIRE(res1 != nel::Result<int, Error>::Ok(1));
+    REQUIRE(res1 != TestResult::Ok(1));
 }
 
 TEST_CASE("Result::neq for err with err must give false", "[optional]")
 {
-    auto res1 = nel::Result<int, Error>(nel::Result<int, Error>::Err(FAIL));
+    auto res1 = TestResult::Err(FAIL);
 
-    REQUIRE(!(res1 != nel::Result<int, Error>::Err(FAIL)));
+    REQUIRE(!(res1 != TestResult::Err(FAIL)));
 }
 
 TEST_CASE("Result::neq for err with diff err must give true", "[optional]")
 {
-    auto res1 = nel::Result<int, Error>(nel::Result<int, Error>::Err(NOENT));
+    auto res1 = TestResult::Err(NOENT);
 
-    REQUIRE(res1 != nel::Result<int, Error>::Err(FAIL));
+    REQUIRE(res1 != TestResult::Err(FAIL));
 }
 
 TEST_CASE("Result::neq for err with inval must give true", "[optional]")
 {
-    auto res1 = nel::Result<int, Error>(nel::Result<int, Error>::Err(FAIL));
+    auto res1 = TestResult::Err(FAIL);
 
-    auto res2 = nel::Result<int, Error>(nel::Result<int, Error>::Ok(2));
+    auto res2 = TestResult::Ok(2);
     auto res3 = std::move(res2);
 
     REQUIRE(res1 != res2);
@@ -1201,9 +1225,9 @@ TEST_CASE("Result::neq for err with inval must give true", "[optional]")
 
 TEST_CASE("Result::neq for err with ok must not alter src", "[optional]")
 {
-    auto res1 = nel::Result<int, Error>(nel::Result<int, Error>::Err(FAIL));
+    auto res1 = TestResult::Err(FAIL);
 
-    auto is_neq = res1 != nel::Result<int, Error>::Ok(1);
+    auto is_neq = res1 != TestResult::Ok(1);
     UNUSED(is_neq);
 
     REQUIRE(res1.unwrap_err() == FAIL);
@@ -1211,9 +1235,9 @@ TEST_CASE("Result::neq for err with ok must not alter src", "[optional]")
 
 TEST_CASE("Result::neq for err with err must not alter src", "[optional]")
 {
-    auto res1 = nel::Result<int, Error>(nel::Result<int, Error>::Err(FAIL));
+    auto res1 = TestResult::Err(FAIL);
 
-    auto is_neq = res1 != nel::Result<int, Error>::Err(FAIL);
+    auto is_neq = res1 != TestResult::Err(FAIL);
     UNUSED(is_neq);
 
     REQUIRE(res1.unwrap_err() == FAIL);
@@ -1221,9 +1245,9 @@ TEST_CASE("Result::neq for err with err must not alter src", "[optional]")
 
 TEST_CASE("Result::neq for err with diff err must not alter src", "[optional]")
 {
-    auto res1 = nel::Result<int, Error>(nel::Result<int, Error>::Err(FAIL));
+    auto res1 = TestResult::Err(FAIL);
 
-    auto is_neq = res1 != nel::Result<int, Error>::Err(NOENT);
+    auto is_neq = res1 != TestResult::Err(NOENT);
     UNUSED(is_neq);
 
     REQUIRE(res1.unwrap_err() == FAIL);
@@ -1231,9 +1255,9 @@ TEST_CASE("Result::neq for err with diff err must not alter src", "[optional]")
 
 TEST_CASE("Result::neq for err with inval must not alter src", "[optional]")
 {
-    auto res1 = nel::Result<int, Error>(nel::Result<int, Error>::Err(FAIL));
+    auto res1 = TestResult::Err(FAIL);
 
-    auto res2 = nel::Result<int, Error>(nel::Result<int, Error>::Ok(2));
+    auto res2 = TestResult::Ok(2);
     auto res3 = std::move(res2);
 
     auto is_neq = res1 != res2;
@@ -1245,26 +1269,26 @@ TEST_CASE("Result::neq for err with inval must not alter src", "[optional]")
 
 TEST_CASE("Result::neq for inval with ok must give true", "[optional]")
 {
-    auto res1 = nel::Result<int, Error>(nel::Result<int, Error>::Ok(1));
+    auto res1 = TestResult::Ok(1);
     auto res2 = std::move(res1);
 
-    REQUIRE(res1 != nel::Result<int, Error>::Ok(1));
+    REQUIRE(res1 != TestResult::Ok(1));
 }
 
 TEST_CASE("Result::neq for inval with err must give true", "[optional]")
 {
-    auto res1 = nel::Result<int, Error>(nel::Result<int, Error>::Err(FAIL));
+    auto res1 = TestResult::Err(FAIL);
     auto res2 = std::move(res1);
 
-    REQUIRE(res1 != nel::Result<int, Error>::Err(FAIL));
+    REQUIRE(res1 != TestResult::Err(FAIL));
 }
 
 TEST_CASE("Result::neq for inval with inval must give false", "[optional]")
 {
-    auto res1 = nel::Result<int, Error>(nel::Result<int, Error>::Ok(2));
+    auto res1 = TestResult::Ok(2);
     auto res2 = std::move(res1);
 
-    auto res3 = nel::Result<int, Error>(nel::Result<int, Error>::Err(FAIL));
+    auto res3 = TestResult::Err(FAIL);
     auto res4 = std::move(res3);
 
     REQUIRE(!(res1 != res3));
@@ -1273,10 +1297,10 @@ TEST_CASE("Result::neq for inval with inval must give false", "[optional]")
 
 TEST_CASE("Result::neq for inval with ok must not alter src", "[optional]")
 {
-    auto res1 = nel::Result<int, Error>(nel::Result<int, Error>::Err(FAIL));
+    auto res1 = TestResult::Err(FAIL);
     auto res2 = std::move(res1);
 
-    auto is_neq = res1 != nel::Result<int, Error>::Ok(1);
+    auto is_neq = res1 != TestResult::Ok(1);
     UNUSED(is_neq);
 
     REQUIRE(!res1.is_ok());
@@ -1285,10 +1309,10 @@ TEST_CASE("Result::neq for inval with ok must not alter src", "[optional]")
 
 TEST_CASE("Result::neq for inval with err must not alter src", "[optional]")
 {
-    auto res1 = nel::Result<int, Error>(nel::Result<int, Error>::Err(FAIL));
+    auto res1 = TestResult::Err(FAIL);
     auto res2 = std::move(res1);
 
-    auto is_neq = res1 != nel::Result<int, Error>::Err(FAIL);
+    auto is_neq = res1 != TestResult::Err(FAIL);
     UNUSED(is_neq);
 
     REQUIRE(!res1.is_ok());
@@ -1297,10 +1321,10 @@ TEST_CASE("Result::neq for inval with err must not alter src", "[optional]")
 
 TEST_CASE("Result::neq for inval with inval must not alter src", "[optional]")
 {
-    auto res1 = nel::Result<int, Error>(nel::Result<int, Error>::Ok(2));
+    auto res1 = TestResult::Ok(2);
     auto res2 = std::move(res1);
 
-    auto res3 = nel::Result<int, Error>(nel::Result<int, Error>::Err(FAIL));
+    auto res3 = TestResult::Err(FAIL);
     auto res4 = std::move(res3);
 
     auto is_neq = res1 != res4;
