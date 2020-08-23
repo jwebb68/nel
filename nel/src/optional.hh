@@ -8,9 +8,13 @@ class Optional;
 
 }
 
-#include <cstdlib> // abort
 #include "log.hh"
-#include <utility> // std::move
+#include "element.hh"
+#include "panic.hh"
+
+#include <utility> // std::move, std::forward
+#include <new>  // new (*) T(...)
+#include <cstdlib> //abort
 
 namespace nel {
 
@@ -60,9 +64,11 @@ namespace nel {
 template<typename T>
 class Optional {
     public:
-        typedef T SomeT;
-
     private:
+        // need to use class/struct as references cannot be used in unions
+        // so this is possible: Optional<Foo &>
+        typedef Element<T> SomeT;
+
         // Tagged enum thing
         // Similar to std::variant but without the exception throwing behaviour.
         // maybe make into a nel::Variant ?
@@ -79,7 +85,7 @@ class Optional {
             : tag_(NONE)
         {
         }
-        constexpr Optional(Phantom<SOME> const, SomeT &&v) noexcept
+        constexpr Optional(Phantom<SOME> const, T &&v) noexcept
             : tag_(SOME)
             , some_(std::move(v))
         {
@@ -116,8 +122,9 @@ class Optional {
             // But, want to abort/panic if a unhandled case is encountered
             // at runtime, much how a default hander would work if it was
             // present.
-            nel::log << "invalid  Optional: tag=" << tag_ << "\n";
-            std::abort();
+            //  if this is present then iteration may not collapse into a tight loop.
+            nel_panic("invalid Optional");
+            //nel::abort();
         }
 
         // Default constructor.
@@ -150,9 +157,7 @@ class Optional {
                     return;
                     break;
             }
-            //std::cerr << "invalid Optional: tag=" << tag_ << std::endl;
-            nel::log << "invalid  Optional: tag=" << tag_ << "\n";
-            std::abort();
+            nel_panic("invalid Optional");
         }
         constexpr Optional &operator=(Optional &&o) noexcept
         {
@@ -173,7 +178,7 @@ class Optional {
                         return *this;
                         break;
                 }
-                std::abort();
+                nel_panic("invalid Optional");
             } else {
                 // destruct and move, more efficient than move+swap
                 // esp if move is copy+wipe.
@@ -196,7 +201,7 @@ class Optional {
         void swap(Optional &o) noexcept
         {
             // hacky, not by member, so bite me.
-            mymemswap((uint8_t *)this, (uint8_t *)&o, sizeof(*this));
+            memswap((uint8_t *)this, (uint8_t *)&o, sizeof(*this));
         }
 #endif
 
@@ -211,15 +216,15 @@ class Optional {
             return Optional(Phantom<NONE>());
         }
 
-        /**
-         * Create an optional set to Some, using the value given.
-         *
-         * @returns an Optional 'wrapping' the value given.
-         */
-        constexpr static Optional Some(T &&val) noexcept
-        {
-            return Optional(Phantom<SOME>(), std::move(val));
-        }
+        // /**
+        //  * Create an optional set to Some, using the value given.
+        //  *
+        //  * @returns an Optional 'wrapping' the value given.
+        //  */
+        // constexpr static Optional Some(T &&val) noexcept
+        // {
+        //     return Optional(Phantom<SOME>(), std::move(val));
+        // }
 
         /**
          * Create an optional set to Some, creating the value to use used inplace.
@@ -270,13 +275,20 @@ class Optional {
          *
          * If the optional does not contain a Some, then abort/panic.
          */
-        constexpr T unwrap(void) noexcept
+        T unwrap(void) noexcept
         {
             if (!is_some()) {
-                abort();
+                nel_panic("not a Some");
+                //abort();
             };
             tag_ = INVAL;
-            return std::move(some_);
+            return some_.unwrap();
+        }
+
+        T unwrap_unchecked(void) noexcept
+        {
+            tag_ = INVAL;
+            return some_.unwrap();
         }
 
         /**
@@ -287,11 +299,11 @@ class Optional {
          * @returns if Some, consumes and returns the value contained by the Optional.
          * @returns if not Some, consumes and returns `other`.
          */
-        constexpr T unwrap_or(T &&other) noexcept
+        T unwrap_or(T &&other) noexcept
         {
             bool const is_some = this->is_some();
             tag_ = INVAL;
-            return is_some ? std::move(some_) : std::move(other);
+            return is_some ? some_.unwrap() : std::move(other);
         }
 
 
@@ -302,11 +314,11 @@ class Optional {
          * @returns if not Some, consumes args and creates value to return.
          */
         template<typename ...Args>
-        constexpr T unwrap_or(Args &&...args) noexcept
+        T unwrap_or(Args &&...args) noexcept
         {
             bool const is_some = this->is_some();
             tag_ = INVAL;
-            return is_some ? std::move(some_) : T(std::forward<Args>(args)...);
+            return is_some ? some_.unwrap() : T(std::forward<Args>(args)...);
         }
 
         // Why no access via references?
@@ -340,7 +352,8 @@ class Optional {
                         return true;
                         break;
                 }
-                std::abort();
+                //std::abort();
+                nel_panic("invalid Optional");
             }
             return false;
         }
@@ -368,7 +381,8 @@ class Optional {
                         return false;
                         break;
                 }
-                std::abort();
+                //std::abort();
+                nel_panic("invalid Optional");
             }
             return true;
         }
@@ -383,7 +397,7 @@ class Optional {
                     return outs;
                     break;
                 case SOME:
-                    outs << "Optional(" << "Some(" << val.some_ << ")" << ")";
+                    outs << "Optional(" << "Some(" << val.some_.get() << ")" << ")";
                     return outs;
                     break;
                 case INVAL:
@@ -396,28 +410,6 @@ class Optional {
         }
 };
 
-// Helper function to allow creating a Some without need to prefix with
-// Optional<T>.
-// Only present as Some is defined in Optional.
-template<typename T>
-constexpr Optional<T> Some(T &&v) noexcept
-{
-    return Optional<T>::Some(std::move(v));
-}
-template<typename T, typename ...Args>
-constexpr Optional<T> Some(Args &&...v) noexcept
-{
-    return Optional<T>::Some(std::forward<Args>(v)...);
-}
-
-// Helper function to allow creating a None without need to prefix with
-// Optional<T>.
-// Only present as None is defined in Optional.
-template<typename T>
-constexpr Optional<T> None(void) noexcept
-{
-    return Optional<T>::None();
-}
 
 } // namespace nel
 
