@@ -46,10 +46,13 @@ debug_CXXFLAGS := -Og -g
 debug_CPPFLAGS := -DDEBUG
 debug_LDFLAGS:=
 
-release_CFLAGS := -O3
-release_CXXFLAGS := -O3
+release_CFLAGS := -O3 -g
+release_CXXFLAGS := -O3 -g
 release_CPPFLAGS := -DRELEASE
-release_LDFLAGS:= --lto
+#release_LDFLAGS:= --lto
+#release_CFLAGS += --lto
+#release_CXXFLAGS += --lto
+
 minsize_CFLAGS := -Os -g
 minsize_CXXFLAGS := -Os -g
 minsize_CPPFLAGS := -DRELEASE
@@ -215,6 +218,8 @@ examples+=$(patsubst examples/%.cc,%,$(wildcard examples/*.cc))
 
 examples_src:=$(wildcard examples/*.c examples/*.cc)
 
+examples_deps:=nel
+
 # $1 = example name $2 = config
 define mk_example
 clean += $(patsubst examples/$(1).c,build/$(2)/obj/examples/$(1).o,$(filter examples/$(1).c,$(examples_src)))
@@ -260,11 +265,11 @@ $(if $(filter examples/$(1).cc,$(examples_src)),build/$(2)/examples/$(1):  $(for
 $(if $(filter examples/$(1).cc,$(examples_src)),examples: build/$(2)/examples/$(1))
 $(if $(filter examples/$(1).cc,$(examples_src)),clean += build/$(2)/examples/$(1))
 
-$(if $(filter examples/$(1).c,$(examples_src)),build/$(2)/examples/$(1).s: build/$(2)/examples/$(1); objdump -S $$< > $$@)
+$(if $(filter examples/$(1).c,$(examples_src)),build/$(2)/examples/$(1).s: build/$(2)/examples/$(1); objdump -Sr $$< > $$@)
 $(if $(filter examples/$(1).c,$(examples_src)),examples: build/$(2)/examples/$(1).s)
 $(if $(filter examples/$(1).c,$(examples_src)),clean += build/$(2)/examples/$(1).s)
 
-$(if $(filter examples/$(1).cc,$(examples_src)),build/$(2)/examples/$(1).s: build/$(2)/examples/$(1); objdump -S $$< > $$@)
+$(if $(filter examples/$(1).cc,$(examples_src)),build/$(2)/examples/$(1).s: build/$(2)/examples/$(1); objdump -Sr $$< > $$@)
 $(if $(filter examples/$(1).cc,$(examples_src)),examples: build/$(2)/examples/$(1).s)
 $(if $(filter examples/$(1).cc,$(examples_src)),clean += build/$(2)/examples/$(1).s)
 
