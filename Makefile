@@ -28,6 +28,7 @@
 allowed_configs:=
 allowed_configs+=debug
 allowed_configs+=release
+allowed_configs+=minsize
 ifeq ($(origin configs), undefined)
 configs:=$(allowed_configs)
 endif
@@ -37,7 +38,7 @@ endif
 
 #CFLAGS already defined
 CFLAGS += -Werror -Wall -Wextra -Wpedantic
-CXXFLAGS += -fno-exceptions -Werror -Wall -Wextra -Wpedantic -std=c++17
+CXXFLAGS += -Werror -Wall -Wextra -Wpedantic -std=c++17 -fno-exceptions
 
 # CFLAGS additionals for debug
 debug_CFLAGS := -Og -g
@@ -49,6 +50,13 @@ release_CFLAGS := -O3
 release_CXXFLAGS := -O3
 release_CPPFLAGS := -DRELEASE
 release_LDFLAGS:= --lto
+minsize_CFLAGS := -Os -g
+minsize_CXXFLAGS := -Os -g
+minsize_CPPFLAGS := -DRELEASE
+minsize_LDFLAGS:=
+#minsize_LDFLAGS+= --lto
+#minsize_CFLAGS += --lto
+#minsize_CXXFLAGS += --lto
 
 # $(config)_CFLAGS += -O3
 # $(config)_CXXFLAGS += -O3
@@ -66,6 +74,9 @@ nel_release_CFLAGS :=
 nel_release_CPPFLAGS :=
 nel_release_CXXFLAGS :=
 
+nel_minsize_CFLAGS :=
+nel_minsize_CPPFLAGS :=
+nel_minsize_CXXFLAGS :=
 
 nel_DEPS:=
 
