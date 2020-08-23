@@ -318,6 +318,10 @@ $(if $(filter $(1)/src/test_%.c,$(testsrc)),dep += $(patsubst $(1)/src/test_%.c,
 $(if $(filter $(1)/src/test_%.cc,$(testsrc)),dep += $(patsubst $(1)/src/test_%.cc,build/$(2)/dep/tests/$(1)/test_%.d,$(filter $(1)/src/test_%.cc,$(testsrc))))
 $(if $(filter $(1)/src/test_%.s,$(testsrc)),dep +=$(patsubst $(1)/src/test_%.s,build/$(2)/dep/tests/$(1)/test_%.d,$(filter $(1)/src/test_%.s,$(testsrc))))
 
+$(if $(filter $(1)/src/test_%.s,$(testsrc)),build/$(2)/tests/test_$(1): $(foreach m,$(modls),$(filter %.a %.so,$($(m)_targ))))
+$(if $(filter $(1)/src/test_%.c,$(testsrc)),build/$(2)/tests/test_$(1): $(foreach m,$(modls),$(filter %.a %.so,$($(m)_targ))))
+$(if $(filter $(1)/src/test_%.cc,$(testsrc)),build/$(2)/tests/test_$(1): $(foreach m,$(modls),$(filter %.a %.so,$($(m)_targ))))
+
 $(if $(filter $(1)/src/test_main.c,$(testsrc)),build/$(2)/tests/test_$(1): | build/$(2)/tests)
 $(if $(filter $(1)/src/test_main.c,$(testsrc)),build/$(2)/tests/test_$(1): LDFLAGS += $($(2)_LDFLAGS))
 $(if $(filter $(1)/src/test_main.c,$(testsrc)),build/$(2)/tests/test_$(1): LDLIBS += $($(2)_LDLIBS))
@@ -353,6 +357,7 @@ examples:
 .PHONY: clean
 clean:
 	$(RM) $(clean)
+	find . -name '*.orig' -delete
 
 
 .PNONY: $(addprefix run_,$(rtests))
