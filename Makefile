@@ -437,7 +437,6 @@ $(addprefix run_,$(rtests)):
 tests: $(addprefix run_,$(rtests))
 test: tests
 
-distclean: clean
 distclean:
 	$(RM) -r build
 
@@ -446,4 +445,6 @@ format:
 	astyle --project -I -n  $(allsrc) $(allhdr)
 	#env -u NIX_CFLAGS_COMPILE clang-format -style=file -i $(allsrc) $(allhdr)
 
+ifneq ($(MAKECMDGOALS),distclean)
 -include $(dep)
+endif
