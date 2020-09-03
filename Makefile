@@ -22,8 +22,62 @@
 # TODO: rewrite in C++ and not makefile.. (or rust for portability/self-containment)
 
 .SUFFIXES:
-.SUFFIXES: .c .cc .a .o
+.SUFFIXES: c cc a o
 
+# toolchains
+# GCC
+# CLANG
+# ARM
+TOOLCHAIN ?= native
+
+ifeq ($(TOOLCHAIN),native)
+OBJDUMP=objdump
+CC=cc
+CXX=c++
+AR=ar
+AS=as
+LINK=$(CC)
+
+else ifeq ($(TOOLCHAIN),gnu)
+
+OBJDUMP=objdump
+CC=gcc
+CXX=g++
+AR=ar
+AS=as
+LINK=$(CC)
+
+else ifeq ($(TOOLCHAIN),clang)
+
+OBJDUMP=objdump
+CC=clang
+CXX=clang++
+AR=ar
+AS=as
+LINK=$(CC)
+
+else ifeq ($(TOOLCHAIN),arm)
+
+CC=arm-none-eabi-gcc
+CXX=arm-none-eabi-g++
+OBJDUMP=arm-none-eabi-objdump
+LDFLAGS+=--specs=nosys.specs
+AR=arm-none-eabi-ar
+AS=arm-none-eabi-as
+LINK=$(CC)
+
+else
+
+$(error TOOLCHAIN='$(TOOLCHAIN)' not supported)
+
+endif
+
+
+# Redefine link operation as not able to assign CC to $(CXX) in build rules.
+# every attempt does not reassign to CC, just uses CC which messes up C++ linking
+# but reassigning into another var works..
+# ie. CC= $(CXX) doesn't, LINK=$(CXX) does..
+LINK.o = $(LINK) $(LDFLAGS) $(TARGET_ARCH)
 
 allowed_configs:=
 allowed_configs+=debug
@@ -197,7 +251,7 @@ $(if $(filter $(1)/src/main.c,$(src)),$(1)_targ := build/$(2)/$(1))
 $(if $(filter $(1)/src/main.cc,$(src)),build/$(2)/$(1): | build/$(2))
 $(if $(filter $(1)/src/main.cc,$(src)),build/$(2)/$(1): LDFLAGS += $($(2)_LDFLAGS))
 $(if $(filter $(1)/src/main.cc,$(src)),build/$(2)/$(1): LDLIBS += $($(2)_LDLIBS))
-$(if $(filter $(1)/src/main.cc,$(src)),build/$(2)/$(1): CC = $(CXX))
+$(if $(filter $(1)/src/main.cc,$(src)),build/$(2)/$(1): LINK = $(CXX))
 $(if $(filter $(1)/src/main.cc,$(src)),build/$(2)/$(1): $(patsubst $(1)/src/%.cc,build/$(2)/obj/$(1)/%.o,$(filter $(1)/src/%.cc,$(src))); $$(LINK.o) $$^ $$(LOADLIBES) $$(LDLIBS) -o $$@)
 $(if $(filter $(1)/src/main.cc,$(src)),build/$(2)/$(1): $(foreach m,$($(1)_DEP),$$($(m)_targ)))
 $(if $(filter $(1)/src/main.cc,$(src)),build: build/$(2)/$(1))
@@ -236,7 +290,9 @@ $(if $(filter examples/$(1).c,$(examples_src)),$(patsubst examples/$(1).c,build/
 $(if $(filter examples/$(1).cc,$(examples_src)),$(patsubst examples/$(1).cc,build/$(2)/dep/examples/$(1).d,$(filter examples/$(1).cc,$(examples_src))): CPPFLAGS +=  $($(2)_CPPFLAGS) $(foreach m,$(modls),-I$(m)/src))
 
 $(if $(filter examples/$(1).c,$(examples_src)),$(patsubst examples/$(1).c,build/$(2)/dep/examples/$(1).d,$(filter examples/$(1).c,$(examples_src))): build/$(2)/dep/examples/%.d: examples/%.c | build/$(2)/dep/examples; $$(COMPILE.c)  -MM -MT $$(patsubst examples/$(1).c,build/$(2)/obj/examples/$(1).o,$$<) -o $$@ $$<)
+$(if $(filter examples/$(1).c,$(examples_src)), clean += $(patsubst examples/$(1).c,build/$(2)/dep/examples/$(1).d,$(filter examples/$(1).c,$(examples_src))))
 $(if $(filter examples/$(1).cc,$(examples_src)),$(patsubst examples/$(1).cc,build/$(2)/dep/examples/$(1).d,$(filter examples/$(1).cc,$(examples_src))): build/$(2)/dep/examples/%.d: examples/%.cc | build/$(2)/dep/examples; $$(COMPILE.cc) -MM -MT $$(patsubst examples/$(1).cc,build/$(2)/obj/examples/$(1).o,$$<) -o $$@ $$<)
+$(if $(filter examples/$(1).cc,$(examples_src)), clean += $(patsubst examples/$(1).cc,build/$(2)/dep/examples/$(1).d,$(filter examples/$(1).cc,$(examples_src))))
 
 $(if $(filter $(1)/src/%.c,$(src)),dep += $(patsubst $(1)/src/%.c,build/$(2)/dep/$(1)/%.d,$(filter $(1)/src/%.c,$(src))))
 $(if $(filter $(1)/src/%.cc,$(src)),dep += $(patsubst $(1)/src/%.cc,build/$(2)/dep/$(1)/%.d,$(filter $(1)/src/%.cc,$(src))))
@@ -249,27 +305,25 @@ $(if $(filter examples/$(1).c,$(examples_src)),$(patsubst examples/$(1).c,build/
 $(if $(filter examples/$(1).cc,$(examples_src)),$(patsubst examples/$(1).cc,build/$(2)/obj/examples/$(1).o,$(filter examples/$(1).cc,$(examples_src))): build/$(2)/obj/examples/%.o: examples/%.cc | build/$(2)/obj/examples; $$(COMPILE.cc) -o $$@ $$<)
 
 $(if $(filter examples/$(1).c,$(examples_src)), build/$(2)/examples/$(1): LDFLAGS += $($(2)_LDFLAGS))
-$(if $(filter examples/$(1).cc,$(examples_src)), build/$(2)/examples/$(1): LDFLAGS += $($(2)_LDFLAGS))
 $(if $(filter examples/$(1).c,$(examples_src)), build/$(2)/examples/$(1): LDLIBS += $($(2)_LDLIBS))
-$(if $(filter examples/$(1).cc,$(examples_src)), build/$(2)/examples/$(1): LDLIBS += $($(2)_LDLIBS))
-$(if $(filter examples/$(1).cc,$(examples_src)), build/$(2)/examples/$(1): CC = $(CXX))
-
 $(if $(filter examples/$(1).c,$(examples_src)), build/$(2)/examples/$(1): $(patsubst examples/$(1).c,build/$(2)/obj/examples/$(1).o,$(filter examples/$(1).c,$(examples_src))) | build/$(2)/examples; $$(LINK.o) $$^ $$(LOADLIBES) $$(LDLIBS) -o $$@)
-$(if $(filter examples/$(1).cc,$(examples_src)), build/$(2)/examples/$(1): $(patsubst examples/$(1).cc,build/$(2)/obj/examples/$(1).o,$(filter examples/$(1).cc,$(examples_src))) | build/$(2)/examples; $$(LINK.o) $$^ $$(LOADLIBES) $$(LDLIBS) -o $$@)
-
 $(if $(filter examples/$(1).c,$(examples_src)),build/$(2)/examples/$(1): $(foreach m,$(modls),$(filter %.a %.so,$($(m)_targ))))
 $(if $(filter examples/$(1).c,$(examples_src)),examples: build/$(2)/examples/$(1))
 $(if $(filter examples/$(1).c,$(examples_src)),clean += build/$(2)/examples/$(1))
 
+$(if $(filter examples/$(1).cc,$(examples_src)), build/$(2)/examples/$(1): LDFLAGS += $($(2)_LDFLAGS))
+$(if $(filter examples/$(1).cc,$(examples_src)), build/$(2)/examples/$(1): LDLIBS += $($(2)_LDLIBS))
+$(if $(filter examples/$(1).cc,$(examples_src)), build/$(2)/examples/$(1): LINK = $(CXX))
+$(if $(filter examples/$(1).cc,$(examples_src)), build/$(2)/examples/$(1): $(patsubst examples/$(1).cc,build/$(2)/obj/examples/$(1).o,$(filter examples/$(1).cc,$(examples_src))) | build/$(2)/examples; $$(LINK.o) $$^ $$(LOADLIBES) $$(LDLIBS) -o $$@)
 $(if $(filter examples/$(1).cc,$(examples_src)),build/$(2)/examples/$(1):  $(foreach m,$(modls),$(filter %.a %.so,$($(m)_targ))))
 $(if $(filter examples/$(1).cc,$(examples_src)),examples: build/$(2)/examples/$(1))
 $(if $(filter examples/$(1).cc,$(examples_src)),clean += build/$(2)/examples/$(1))
 
-$(if $(filter examples/$(1).c,$(examples_src)),build/$(2)/examples/$(1).s: build/$(2)/examples/$(1); objdump -Sr $$< > $$@)
+$(if $(filter examples/$(1).c,$(examples_src)),build/$(2)/examples/$(1).s: build/$(2)/examples/$(1); $(OBJDUMP) -Sr $$< > $$@)
 $(if $(filter examples/$(1).c,$(examples_src)),examples: build/$(2)/examples/$(1).s)
 $(if $(filter examples/$(1).c,$(examples_src)),clean += build/$(2)/examples/$(1).s)
 
-$(if $(filter examples/$(1).cc,$(examples_src)),build/$(2)/examples/$(1).s: build/$(2)/examples/$(1); objdump -Sr $$< > $$@)
+$(if $(filter examples/$(1).cc,$(examples_src)),build/$(2)/examples/$(1).s: build/$(2)/examples/$(1); $(OBJDUMP) -Sr $$< > $$@)
 $(if $(filter examples/$(1).cc,$(examples_src)),examples: build/$(2)/examples/$(1).s)
 $(if $(filter examples/$(1).cc,$(examples_src)),clean += build/$(2)/examples/$(1).s)
 
@@ -332,7 +386,7 @@ $(if $(filter $(1)/src/test_main.c,$(testsrc)),clean += build/$(2)/tests/test_$(
 $(if $(filter $(1)/src/test_main.cc,$(testsrc)),build/$(2)/tests/test_$(1): | build/$(2)/tests)
 $(if $(filter $(1)/src/test_main.cc,$(testsrc)),build/$(2)/tests/test_$(1): LDFLAGS += $($(2)_LDFLAGS))
 $(if $(filter $(1)/src/test_main.cc,$(testsrc)),build/$(2)/tests/test_$(1): LDLIBS += $($(2)_LDLIBS))
-$(if $(filter $(1)/src/test_main.cc,$(testsrc)),build/$(2)/tests/test_$(1): CC=$(CXX))
+$(if $(filter $(1)/src/test_main.cc,$(testsrc)),build/$(2)/tests/test_$(1): LINK = $(CXX))
 $(if $(filter $(1)/src/test_main.cc,$(testsrc)),build/$(2)/tests/test_$(1): $(patsubst $(1)/src/test_%.cc,build/$(2)/obj/tests/$(1)/test_%.o,$(filter $(1)/src/test_%.cc,$(testsrc))); $$(LINK.o) $$^ $$(LOADLIBES) $$(LDLIBS) -o $$@)
 $(if $(filter $(1)/src/test_main.cc,$(testsrc)),rtests+= build/$(2)/tests/test_$(1) )
 $(if $(filter $(1)/src/test_main.cc,$(testsrc)),clean += build/$(2)/tests/test_$(1))
