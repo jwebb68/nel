@@ -388,6 +388,291 @@ class Optional {
 };
 
 
+template<>
+class Optional<void> {
+    public:
+        typedef void SomeT;
+
+    private:
+        // Tagged enum thing
+        // Similar to std::variant but without the exception throwing behaviour.
+        // maybe make into a nel::Variant ?
+        enum Tag { INVAL = 0, NONE, SOME } tag_;
+        template<enum Tag>
+        struct Phantom {};
+
+        constexpr Optional(Phantom<NONE> const) noexcept
+            : tag_(NONE)
+        {
+        }
+        constexpr Optional(Phantom<SOME> const) noexcept
+            : tag_(SOME)
+        {
+        }
+
+
+    public:
+        ~Optional(void) noexcept
+        {
+            switch (tag_) {
+                case SOME:
+                    return;
+                    break;
+                case NONE:
+                    return;
+                    break;
+                case INVAL:
+                    return;
+                    break;
+            }
+            nel_panic("invalid Optional");
+        }
+
+        // Default constructor.
+        // Don't want this as there is no default for an optional.
+        // i.e. require a value, even if it's a None (i.e. being explicit).
+        // really? Default to None/Inval?
+        // But use of move-ctor madates an inval state, so can have a default.
+        //Optional(void) = delete;
+        constexpr Optional(void) noexcept
+            : tag_(INVAL)
+        {}
+
+        // don't want copy semanitics here, use move instead.
+        constexpr Optional(Optional const &o) = delete;
+        constexpr Optional &operator=(Optional const &o) const = delete;
+
+        constexpr Optional(Optional &&o) noexcept
+            : tag_(std::move(o.tag_))
+        {
+            o.tag_ = INVAL;
+            switch (tag_) {
+                case SOME:
+                    return;
+                    break;
+                case NONE:
+                    return;
+                    break;
+                case INVAL:
+                    return;
+                    break;
+            }
+            nel_panic("invalid Optional");
+        }
+        constexpr Optional &operator=(Optional &&o) noexcept
+        {
+#if 1
+            // If same tag, use ass-move oper on type directly..
+            // maybe type has more efficient move for it's impl.
+            if (tag_ == o.tag_) {
+                o.tag_ = INVAL;
+                switch (tag_) {
+                    case SOME:
+                        return *this;
+                        break;
+                    case NONE:
+                        return *this;
+                        break;
+                    case INVAL:
+                        return *this;
+                        break;
+                }
+                nel_panic("invalid Optional");
+            } else {
+                // destruct and move, more efficient than move+swap
+                // esp if move is copy+wipe.
+                // but only if moving does not throw.
+                this->~Optional();
+                new (this) Optional(std::move(o));
+            }
+#else
+            // This is slow, depends on how eff a move and destroy and swap is for T.
+            // if swap is a move, then does 1 move (the ctor-move), + 3 moves (the swap) = 4 moves.
+            // if move is a copy+wipe, then becomes 4 copies+4 wipes.
+            // if swap is a byteswap, then has to iter the memblock once.
+            Optional t(std::move(o));
+            swap(t);
+#endif
+            return *this;
+        }
+
+#if 0
+        void swap(Optional &o) noexcept
+        {
+            // hacky, not by member, so bite me.
+            memswap((uint8_t *)this, (uint8_t *)&o, sizeof(*this));
+        }
+#endif
+
+    public:
+        /**
+         * Create an optional set to none.
+         *
+         * @returns an Optional 'wrapping' a None
+         */
+        constexpr static Optional None(void) noexcept
+        {
+            return Optional(Phantom<NONE>());
+        }
+
+        /**
+         * Create an optional set to Some, creating the value to use used inplace.
+         *
+         * @returns an Optional 'wrapping' the value created from the values given.
+         */
+        constexpr static Optional Some(void) noexcept
+        {
+            return Optional(Phantom<SOME>());
+        }
+
+    public:
+        /**
+         * Determine if the container contains a Some.
+         *
+         * @returns true if container contains a Some, false otherwise.
+         *
+         * The optional is not consumed by the operation.
+         */
+        constexpr bool is_some(void) const noexcept
+        {
+            return tag_ == SOME;
+        }
+
+        /**
+         * Determine if the container contains a None.
+         *
+         * @returns true if container contains a None, false otherwise.
+         *
+         * The optional is not consumed by the operation.
+         */
+        constexpr bool is_none(void) const noexcept
+        {
+            return tag_ == NONE;
+        }
+
+    public:
+        // contained value extraction with consumption
+        // i..e extracting invalidates the container.
+        // prob not expected C++ i.e. values being invalidated by use
+        // and more acess by const ref or copy-out.
+
+        /**
+         * Extract and return the contained value if a Some, consuming the optional.
+         *
+         * @returns value contained by the Optional if it's a 'Some'.
+         *
+         * If the optional does not contain a Some, then abort/panic.
+         */
+        void unwrap(void) noexcept
+        {
+            nel_panic_ifnot(is_some(), "not a Some");
+            tag_ = INVAL;
+        }
+
+        /**
+         * Extract and return the contained value if a Some, consuming the optional.
+         *
+         * @param other The value to return if optional is not a Some.
+         *
+         * @returns if Some, consumes and returns the value contained by the Optional.
+         * @returns if not Some, consumes and returns `other`.
+         */
+        void unwrap_or(void) noexcept
+        {
+            tag_ = INVAL;
+        }
+
+
+        // Why no access via references?
+        // this infers copying of value which I want to prevent.
+
+    public:
+        // Comparision operators
+        // Implemented in terms of the operator on the type,
+        // as some types may have more optimal impls of that oper than the
+        // negation of it's opposite.
+        /**
+         * Is this equal by value to the optional given?
+         *
+         * @param o The other optional to compare to.
+         * @returns true if equal by value, false otherwise.
+         *
+         * `this` is not consumed by the operation.
+         * `o` is not consumed by the operation.
+         */
+        constexpr bool operator==(Optional const &o) const noexcept
+        {
+            if (tag_ == o.tag_) {
+                switch (tag_) {
+                    case SOME:
+                        return true;
+                        break;
+                    case NONE:
+                        return true;
+                        break;
+                    case INVAL:
+                        return true;
+                        break;
+                }
+                //std::abort();
+                nel_panic("invalid Optional");
+            }
+            return false;
+        }
+
+        /**
+         * Is this not equal by value to the result given?
+         *
+         * @param o The other result to compare to.
+         * @returns true if not equal by value, false otherwise.
+         *
+         * `this` is not consumed by the operation.
+         * `o` is not consumed by the operation.
+         */
+        constexpr bool operator!=(Optional const &o) const noexcept
+        {
+            if (tag_ == o.tag_) {
+                switch (tag_) {
+                    case SOME:
+                        return false;
+                        break;
+                    case NONE:
+                        return false;
+                        break;
+                    case INVAL:
+                        return false;
+                        break;
+                }
+                //std::abort();
+                nel_panic("invalid Optional");
+            }
+            return true;
+        }
+
+    public:
+        //friend std::ostream &operator<<(std::ostream &outs, Optional const &val) {
+        friend Log &operator<<(Log &outs, Optional const &val) noexcept
+        {
+            switch (val.tag_) {
+                case NONE:
+                    outs << "Optional(" << "None" << ")";
+                    return outs;
+                    break;
+                case SOME:
+                    outs << "Optional(" << "Some(" << ")" << ")";
+                    return outs;
+                    break;
+                case INVAL:
+                    outs << "Optional(" << "Inval" << ")";
+                    return outs;
+                    break;
+            }
+            outs << "Optional(" << "Unknown" << ")";
+            return outs;
+        }
+};
+
+
 } // namespace nel
 
 #endif // NEL_OPTIONAL_HH
