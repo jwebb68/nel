@@ -273,10 +273,7 @@ class Optional {
          */
         SomeT unwrap(void) noexcept
         {
-            if (!is_some()) {
-                nel_panic("not a Some");
-                //abort();
-            };
+            nel_panic_ifnot(is_some(), "not a Some");
             tag_ = INVAL;
             return some_.unwrap();
         }
