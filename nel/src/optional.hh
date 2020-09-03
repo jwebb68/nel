@@ -67,7 +67,7 @@ class Optional {
     private:
         // need to use class/struct as references cannot be used in unions
         // so this is possible: Optional<Foo &>
-        typedef Element<T> SomeT;
+        typedef T SomeT;
 
         // Tagged enum thing
         // Similar to std::variant but without the exception throwing behaviour.
@@ -78,33 +78,33 @@ class Optional {
 
         // use union to disable certain default methods on SomeT
         union {
-            SomeT some_;
+            Element<SomeT> some_;
         };
 
         constexpr Optional(Phantom<NONE> const) noexcept
             : tag_(NONE)
         {
         }
-        constexpr Optional(Phantom<SOME> const, T &&v) noexcept
+
+        Optional(Phantom<SOME> const, SomeT &&v) noexcept
             : tag_(SOME)
             , some_(std::move(v))
         {
         }
 
         template<typename ...Args>
-        constexpr Optional(Phantom<SOME> const, Args &&...args) noexcept
+        Optional(Phantom<SOME> const, Args &&...args) noexcept
             : tag_(SOME)
             , some_(std::forward<Args>(args)...)
         {
         }
-
 
     public:
         ~Optional(void) noexcept
         {
             switch (tag_) {
                 case SOME:
-                    some_.~SomeT();
+                    some_.~Element<SomeT>();
                     return;
                     break;
 
@@ -122,9 +122,15 @@ class Optional {
             // But, want to abort/panic if a unhandled case is encountered
             // at runtime, much how a default hander would work if it was
             // present.
-            //  if this is present then iteration may not collapse into a tight loop.
-            nel_panic("invalid Optional");
-            //nel::abort();
+
+            // for gcc/clang minsize: if this not nell:abort,  then iteration may not collapse into a tight loop.
+            // it's the  need for arguments that's doing it.
+            // for O3: does not affect and iteration collapses into tight loop
+            // TODO: look into stack trace dumper on fail.
+            // but would still like a message..
+            // for arm:minsize: if panic, then does not collapse (func with arg issue)
+            //nel_panic("invalid optional");
+            nel::abort();
         }
 
         // Default constructor.
@@ -147,7 +153,7 @@ class Optional {
             o.tag_ = INVAL;
             switch (tag_) {
                 case SOME:
-                    new (&some_) SomeT(std::move(o.some_));
+                    new (&some_) Element<SomeT>(std::move(o.some_));
                     return;
                     break;
                 case NONE:
@@ -216,23 +222,13 @@ class Optional {
             return Optional(Phantom<NONE>());
         }
 
-        // /**
-        //  * Create an optional set to Some, using the value given.
-        //  *
-        //  * @returns an Optional 'wrapping' the value given.
-        //  */
-        // constexpr static Optional Some(T &&val) noexcept
-        // {
-        //     return Optional(Phantom<SOME>(), std::move(val));
-        // }
-
         /**
          * Create an optional set to Some, creating the value to use used inplace.
          *
          * @returns an Optional 'wrapping' the value created from the values given.
          */
         template<typename ...Args>
-        static constexpr Optional Some(Args &&...args) noexcept
+        static Optional Some(Args &&...args) noexcept
         {
             return Optional(Phantom<SOME>(), std::forward<Args>(args)...);
         }
@@ -275,7 +271,7 @@ class Optional {
          *
          * If the optional does not contain a Some, then abort/panic.
          */
-        T unwrap(void) noexcept
+        SomeT unwrap(void) noexcept
         {
             if (!is_some()) {
                 nel_panic("not a Some");
@@ -285,40 +281,24 @@ class Optional {
             return some_.unwrap();
         }
 
-        T unwrap_unchecked(void) noexcept
-        {
-            tag_ = INVAL;
-            return some_.unwrap();
-        }
-
-        /**
-         * Extract and return the contained value if a Some, consuming the optional.
-         *
-         * @param other The value to return if optional is not a Some.
-         *
-         * @returns if Some, consumes and returns the value contained by the Optional.
-         * @returns if not Some, consumes and returns `other`.
-         */
-        T unwrap_or(T &&other) noexcept
-        {
-            bool const is_some = this->is_some();
-            tag_ = INVAL;
-            return is_some ? some_.unwrap() : std::move(other);
-        }
-
-
         /**
          * Extract and return the contained value if a Some, consuming the optional.
          *
          * @returns if Some, consumes and returns the value contained by the Optional.
          * @returns if not Some, consumes args and creates value to return.
          */
-        template<typename ...Args>
-        T unwrap_or(Args &&...args) noexcept
+        SomeT unwrap_or(SomeT &&v) noexcept
         {
             bool const is_some = this->is_some();
             tag_ = INVAL;
-            return is_some ? some_.unwrap() : T(std::forward<Args>(args)...);
+            return is_some ? some_.unwrap() : std::move(v);
+        }
+        template<typename ...Args>
+        SomeT unwrap_or(Args &&...args) noexcept
+        {
+            bool const is_some = this->is_some();
+            tag_ = INVAL;
+            return is_some ? some_.unwrap() : SomeT(std::forward<Args>(args)...);
         }
 
         // Why no access via references?
