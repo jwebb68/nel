@@ -83,11 +83,12 @@ allowed_configs:=
 allowed_configs+=debug
 allowed_configs+=release
 allowed_configs+=minsize
+allowed_configs+=fast
 ifeq ($(origin configs), undefined)
 configs:=$(allowed_configs)
 endif
 ifneq ($(filter-out $(allowed_configs),$(configs)),)
-$(error allowed configs: debug, release)
+$(error allowed configs: $(allowed_configs))
 endif
 
 #CFLAGS already defined
@@ -98,26 +99,32 @@ CXXFLAGS += -Werror -Wall -Wextra -Wpedantic -std=c++17 -fno-exceptions
 debug_CFLAGS := -Og -g
 debug_CXXFLAGS := -Og -g
 debug_CPPFLAGS := -DDEBUG
-debug_LDFLAGS:=
+#debug_LDFLAGS:=
 
 release_CFLAGS := -O3 -g
 release_CXXFLAGS := -O3 -g
 release_CPPFLAGS := -DRELEASE
-#release_LDFLAGS:= --lto
+#release_LDFLAGS:=
+#release_LDFLAGS += --lto
 #release_CFLAGS += --lto
 #release_CXXFLAGS += --lto
 
 minsize_CFLAGS := -Os -g
 minsize_CXXFLAGS := -Os -g
 minsize_CPPFLAGS := -DRELEASE
-minsize_LDFLAGS:=
+#minsize_LDFLAGS:=
 #minsize_LDFLAGS+= --lto
 #minsize_CFLAGS += --lto
 #minsize_CXXFLAGS += --lto
 
-# $(config)_CFLAGS += -O3
-# $(config)_CXXFLAGS += -O3
-# $(config)_CPPFLAGS += -Ifoo
+fast_CFLAGS := -Ofast -g
+fast_CXXFLAGS := -Ofast -g
+fast_CPPFLAGS := -DRELEASE
+#minsize_LDFLAGS:=
+#minsize_LDFLAGS+= --lto
+#minsize_CFLAGS += --lto
+#minsize_CXXFLAGS += --lto
+
 # 'global' additionals for compoent
 
 nel_CXXFLAGS :=
@@ -134,6 +141,10 @@ nel_release_CXXFLAGS :=
 nel_minsize_CFLAGS :=
 nel_minsize_CPPFLAGS :=
 nel_minsize_CXXFLAGS :=
+
+nel_fast_CFLAGS :=
+nel_fast_CPPFLAGS :=
+nel_fast_CXXFLAGS :=
 
 nel_DEPS:=
 
