@@ -209,7 +209,7 @@ class Result {
          *
          * @returns a Result 'wrapping' the value given as an ok value.
          */
-        static Result Ok(T &&val) noexcept
+        static Result Ok(OkT &&val) noexcept
         {
             return Result(Phantom<OK>(), std::move(val));
         }
@@ -234,7 +234,7 @@ class Result {
          *
          * @returns a Result 'wrapping' the value given as an err value.
          */
-        static Result Err(E &&val) noexcept
+        static Result Err(ErrT &&val) noexcept
         {
             return Result(Phantom<ERR>(), std::move(val));
         }
