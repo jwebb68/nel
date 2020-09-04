@@ -211,7 +211,7 @@ class Result {
          */
         static Result Ok(OkT &&val) noexcept
         {
-            return Result(Phantom<OK>(), std::move(val));
+            return Result(Phantom<OK>(), std::forward<OkT>(val));
         }
 
         /**
@@ -236,7 +236,7 @@ class Result {
          */
         static Result Err(ErrT &&val) noexcept
         {
-            return Result(Phantom<ERR>(), std::move(val));
+            return Result(Phantom<ERR>(), std::forward<ErrT>(val));
         }
 
         /**
