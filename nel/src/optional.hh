@@ -515,7 +515,8 @@ class Optional<void> {
          *
          * @returns an Optional 'wrapping' a None
          */
-        constexpr static Optional None(void) noexcept
+        // cannot be constexpr since struct has non-trivial dtor..
+        static Optional None(void) noexcept
         {
             return Optional(Phantom<NONE>());
         }
@@ -525,7 +526,8 @@ class Optional<void> {
          *
          * @returns an Optional 'wrapping' the value created from the values given.
          */
-        constexpr static Optional Some(void) noexcept
+        // cannot be constexpr since struct has non-trivial dtor..
+        static Optional Some(void) noexcept
         {
             return Optional(Phantom<SOME>());
         }
