@@ -88,7 +88,7 @@ class Optional {
 
         Optional(Phantom<SOME> const, SomeT &&v) noexcept
             : tag_(SOME)
-            , some_(std::move(v))
+            , some_(std::forward<SomeT>(v))
         {
         }
 
@@ -227,6 +227,10 @@ class Optional {
          *
          * @returns an Optional 'wrapping' the value created from the values given.
          */
+        static Optional Some(SomeT &&v) noexcept
+        {
+            return Optional(Phantom<SOME>(), std::forward<SomeT>(v));
+        }
         template<typename ...Args>
         static Optional Some(Args &&...args) noexcept
         {
@@ -289,6 +293,7 @@ class Optional {
             bool const is_some = this->is_some();
             tag_ = INVAL;
             return is_some ? some_.unwrap() : std::move(v);
+//            return is_some ? some_.unwrap() : std::forward<SomeT>(v);
         }
         template<typename ...Args>
         SomeT unwrap_or(Args &&...args) noexcept

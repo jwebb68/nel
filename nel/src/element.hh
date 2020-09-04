@@ -26,39 +26,33 @@ struct Element {
         Element(Element &&o) = default;
         Element &operator=(Element &&o) = default;
     public:
-        Element(T &&v)
-            : value_(std::move(v))
+        Element(T &&v) noexcept
+            : value_(std::forward<T>(v))
         {}
 
-        template<typename ...Args> Element(Args &&...args)
+        template<typename ...Args> Element(Args &&...args) noexcept
             : value_(std::forward<Args>(args)...)
         {}
     public:
-        T unwrap(void)
+        T unwrap(void) noexcept
         {
-            return std::move(value_);
+            return std::forward<T>(value_);
         }
-        constexpr bool operator==(Element const &o) const
+        constexpr bool operator==(Element const &o) const noexcept
         {
-            return value_ == o.value_;
+            return this == &o || value_ == o.value_;
         }
-        constexpr bool operator!=(Element const &o) const
+        constexpr bool operator!=(Element const &o) const noexcept
         {
-            return value_ != o.value_;
+            return this != &o && value_ != o.value_;
         }
-        // T &get(void)
-        // {
-        //     return value_;
-        // }
-        T const &get(void) const
+
+        T const &get(void) const noexcept
         {
             return value_;
         }
-        // T &operator*(void)
-        // {
-        //     return value_;
-        // }
-        T const &operator*(void) const
+
+        T const &operator*(void) const noexcept
         {
             return value_;
         }

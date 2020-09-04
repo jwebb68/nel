@@ -13,8 +13,8 @@ namespace nel {
 
 class Log {
     public:
-        friend Log &operator<<(Log &outs, char const *v);
-        friend Log &operator<<(Log &outs, size_t const v);
+        friend Log &operator<<(Log &outs, char const *v) noexcept;
+        friend Log &operator<<(Log &outs, size_t const v) noexcept;
 };
 
 extern Log log;

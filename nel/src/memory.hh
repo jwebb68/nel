@@ -4,12 +4,48 @@
 #include <cstdint> // uint8_t
 #include <cstddef> // size_t
 
+#include <utility> // std::move, std::swap
+
 namespace nel {
 
-void memcpy(uint8_t *const d, uint8_t const *const s, size_t const n);
-void memset(uint8_t *const d, uint8_t const s, size_t const n);
-void memmove(uint8_t *const d, uint8_t *const s, size_t const n);
-void memswap(uint8_t *const d, uint8_t *const s, size_t const n);
+void memcpy(uint8_t *const d, uint8_t const *const s, size_t const n) noexcept;
+void memset(uint8_t *const d, uint8_t const s, size_t const n) noexcept;
+void memmove(uint8_t *const d, uint8_t *const s, size_t const n) noexcept;
+void memswap(uint8_t *const d, uint8_t *const s, size_t const n) noexcept;
+
+
+template<typename T>
+void memmove(T *d, T *s, size_t n) noexcept
+{
+    for (size_t i = 0; i < n; ++i) {
+        d[i] = std::move(s[i]);
+    }
+}
+
+template<typename T>
+void memcpy(T *const d, T const *const s, size_t n) noexcept
+{
+    for (size_t i = 0; i < n; ++i) {
+        d[i] = s[i];
+    }
+}
+
+template<typename T>
+void memset(T *const d, T const &s, size_t n) noexcept
+{
+    for (size_t i = 0; i < n; ++i) {
+        d[i] = s;
+    }
+}
+
+template<typename T>
+void memswap(T *const d, T *const s, size_t n) noexcept
+{
+    for (size_t i = 0; i < n; ++i) {
+        std::swap(*d, *s);
+    }
+}
+
 
 }
 

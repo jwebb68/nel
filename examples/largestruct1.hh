@@ -31,7 +31,10 @@ struct U8Buf {
             return *this;
         }
 
-        explicit U8Buf(uint8_t const f) {
+        // explicit U8Buf(uint8_t const f) {
+        //     nel::memset(data_, f, N);
+        // }
+        constexpr U8Buf(uint8_t const f) {
             nel::memset(data_, f, N);
         }
 
@@ -50,8 +53,14 @@ struct U8Buf {
         }
 
         friend nel::Log &operator<<(nel::Log &outs, U8Buf const &val) {
-            NEL_UNUSED(val);
-            outs << "U8Buf<" << N << ">";
+            outs << "U8Buf<" << val.len() << ">{";
+            if (val.len() > 0) {
+                outs  << val.data_[0];
+                for (size_t i = 1; i < val.len(); ++i) {
+                    outs << " " << val.data_[i];
+                }
+            }
+            outs << "}";
             return outs;
         }
 };

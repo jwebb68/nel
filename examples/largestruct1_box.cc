@@ -2,9 +2,9 @@
 #include "defs.hh"
 #include "largestruct1.hh"
 
-#include "box.hh"
+#include "heaped/box.hh"
 
-typedef nel::Box<U8Buf<256>> Box1;
+typedef nel::heaped::Box<U8Buf<256>> Box1;
 
 nel::Log &operator<<(nel::Log &outs, Box1 const &v) {
     NEL_UNUSED(v);

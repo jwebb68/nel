@@ -2,11 +2,11 @@
 #include "defs.hh"
 #include "largestruct1.hh"
 
-#include "rc.hh"
+#include "heaped/rc.hh"
 
 #include <utility> // std::move
 
-typedef nel::RC<U8Buf<256>> RC1;
+typedef nel::heaped::RC<U8Buf<256>> RC1;
 
 nel::Log &operator<<(nel::Log &outs, RC1 const &v) {
     NEL_UNUSED(v);
