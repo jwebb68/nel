@@ -86,11 +86,13 @@ class Optional {
         {
         }
 
+
         Optional(Phantom<SOME> const, SomeT &&v) noexcept
             : tag_(SOME)
             , some_(std::forward<SomeT>(v))
         {
         }
+
 
         template<typename ...Args>
         Optional(Phantom<SOME> const, Args &&...args) noexcept
@@ -98,6 +100,7 @@ class Optional {
             , some_(std::forward<Args>(args)...)
         {
         }
+
 
     public:
         ~Optional(void) noexcept
@@ -123,7 +126,8 @@ class Optional {
             // at runtime, much how a default hander would work if it was
             // present.
 
-            // for gcc/clang minsize: if this not nell:abort,  then iteration may not collapse into a tight loop.
+            // for gcc/clang minsize: if this not nell:abort,
+            // then iteration may not collapse into a tight loop.
             // it's the  need for arguments that's doing it.
             // for O3: does not affect and iteration collapses into tight loop
             // TODO: look into stack trace dumper on fail.
@@ -165,6 +169,8 @@ class Optional {
             }
             nel_panic("invalid Optional");
         }
+
+
         constexpr Optional &operator=(Optional &&o) noexcept
         {
 #if 1
@@ -222,20 +228,24 @@ class Optional {
             return Optional(Phantom<NONE>());
         }
 
+
+        static Optional Some(SomeT &&v) noexcept
+        {
+            return Optional(Phantom<SOME>(), std::forward<SomeT>(v));
+        }
+
+
         /**
          * Create an optional set to Some, creating the value to use used inplace.
          *
          * @returns an Optional 'wrapping' the value created from the values given.
          */
-        static Optional Some(SomeT &&v) noexcept
-        {
-            return Optional(Phantom<SOME>(), std::forward<SomeT>(v));
-        }
         template<typename ...Args>
         static Optional Some(Args &&...args) noexcept
         {
             return Optional(Phantom<SOME>(), std::forward<Args>(args)...);
         }
+
 
     public:
         /**
@@ -250,6 +260,7 @@ class Optional {
             return tag_ == SOME;
         }
 
+
         /**
          * Determine if the container contains a None.
          *
@@ -261,6 +272,7 @@ class Optional {
         {
             return tag_ == NONE;
         }
+
 
     public:
         // contained value extraction with consumption
@@ -282,19 +294,21 @@ class Optional {
             return some_.unwrap();
         }
 
+
+        SomeT unwrap_or(SomeT &&v) noexcept
+        {
+            bool const is_some = this->is_some();
+            tag_ = INVAL;
+            return is_some ? some_.unwrap() : std::forward<SomeT>(v);
+        }
+
+
         /**
          * Extract and return the contained value if a Some, consuming the optional.
          *
          * @returns if Some, consumes and returns the value contained by the Optional.
          * @returns if not Some, consumes args and creates value to return.
          */
-        SomeT unwrap_or(SomeT &&v) noexcept
-        {
-            bool const is_some = this->is_some();
-            tag_ = INVAL;
-            return is_some ? some_.unwrap() : std::move(v);
-//            return is_some ? some_.unwrap() : std::forward<SomeT>(v);
-        }
         template<typename ...Args>
         SomeT unwrap_or(Args &&...args) noexcept
         {
@@ -340,6 +354,7 @@ class Optional {
             return false;
         }
 
+
         /**
          * Is this not equal by value to the result given?
          *
@@ -368,6 +383,7 @@ class Optional {
             }
             return true;
         }
+
 
     public:
         //friend std::ostream &operator<<(std::ostream &outs, Optional const &val) {
@@ -410,6 +426,8 @@ class Optional<void> {
             : tag_(NONE)
         {
         }
+
+
         constexpr Optional(Phantom<SOME> const) noexcept
             : tag_(SOME)
         {
@@ -433,6 +451,7 @@ class Optional<void> {
             nel_panic("invalid Optional");
         }
 
+
         // Default constructor.
         // Don't want this as there is no default for an optional.
         // i.e. require a value, even if it's a None (i.e. being explicit).
@@ -443,9 +462,11 @@ class Optional<void> {
             : tag_(INVAL)
         {}
 
+
         // don't want copy semanitics here, use move instead.
         constexpr Optional(Optional const &o) = delete;
         constexpr Optional &operator=(Optional const &o) const = delete;
+
 
         constexpr Optional(Optional &&o) noexcept
             : tag_(std::move(o.tag_))
@@ -464,6 +485,8 @@ class Optional<void> {
             }
             nel_panic("invalid Optional");
         }
+
+
         constexpr Optional &operator=(Optional &&o) noexcept
         {
 #if 1
@@ -521,6 +544,7 @@ class Optional<void> {
             return Optional(Phantom<NONE>());
         }
 
+
         /**
          * Create an optional set to Some, creating the value to use used inplace.
          *
@@ -531,6 +555,7 @@ class Optional<void> {
         {
             return Optional(Phantom<SOME>());
         }
+
 
     public:
         /**
@@ -545,6 +570,7 @@ class Optional<void> {
             return tag_ == SOME;
         }
 
+
         /**
          * Determine if the container contains a None.
          *
@@ -556,6 +582,7 @@ class Optional<void> {
         {
             return tag_ == NONE;
         }
+
 
     public:
         // contained value extraction with consumption
@@ -575,6 +602,7 @@ class Optional<void> {
             nel_panic_ifnot(is_some(), "not a Some");
             tag_ = INVAL;
         }
+
 
         /**
          * Extract and return the contained value if a Some, consuming the optional.
@@ -627,6 +655,7 @@ class Optional<void> {
             return false;
         }
 
+
         /**
          * Is this not equal by value to the result given?
          *
@@ -655,6 +684,7 @@ class Optional<void> {
             }
             return true;
         }
+
 
     public:
         //friend std::ostream &operator<<(std::ostream &outs, Optional const &val) {

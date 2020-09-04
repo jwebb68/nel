@@ -201,6 +201,7 @@ class Result {
         {
         }
 
+
     public:
         /**
          * Create a result set to Ok value, using the value given.
@@ -213,6 +214,7 @@ class Result {
         {
             return Result(Phantom<OK>(), std::forward<OkT>(val));
         }
+
 
         /**
          * Create a result set to Ok value, using the values to construct the ok value.
@@ -227,6 +229,7 @@ class Result {
             return Result(Phantom<OK>(), std::forward<Args>(args)...);
         }
 
+
         /**
          * Create a result set to Err value, using the value given.
          *
@@ -238,6 +241,7 @@ class Result {
         {
             return Result(Phantom<ERR>(), std::forward<ErrT>(val));
         }
+
 
         /**
          * Create a result set to Err value, using the values to construct the err value.
@@ -251,6 +255,7 @@ class Result {
         {
             return Result(Phantom<ERR>(), std::forward<Args>(args)...);
         }
+
 
     public:
         // Comparision operators
@@ -315,6 +320,7 @@ class Result {
             return true;
         }
 
+
     public:
         /**
          * Determine if the container contains a Ok.
@@ -360,6 +366,7 @@ class Result {
                    : Optional<OkT>::None();
         }
 
+
         /**
          * Return an optional containing the err value or none.
          *
@@ -379,6 +386,7 @@ class Result {
                    : Optional<ErrT>::None();
         }
 
+
         /**
          * Extract and return the contained value if an Ok, consuming the result.
          *
@@ -394,6 +402,7 @@ class Result {
             return ok_.unwrap();
         }
 
+
         /**
          * Extract and return the contained value if an Err, consuming the result.
          *
@@ -408,6 +417,7 @@ class Result {
             tag_ = INVAL;
             return err_.unwrap();
         }
+
 
         /**
          * Extract and return the contained value if an Ok, consuming the result.
@@ -428,6 +438,7 @@ class Result {
                    ? ok_.unwrap()
                    : std::forward<OkT>(v);
         }
+
 
         /**
          * Extract and return the contained value if an Ok, consuming the result.
@@ -450,6 +461,7 @@ class Result {
                    : OkT(std::forward<Args>(args)...);
         }
 
+
         /**
          * Extract and return the contained value if an Err, consuming the result.
          *
@@ -469,6 +481,7 @@ class Result {
                    ? err_.unwrap()
                    : std::forward<ErrT>(v);
         }
+
 
         /**
          * Extract and return the contained value if an Err, consuming the result.
@@ -490,6 +503,7 @@ class Result {
                    ? err_.unwrap()
                    : ErrT(std::forward<Args>(args)...);
         }
+
 
         /**
          * Map the result::ok to a different result::ok.
@@ -521,6 +535,7 @@ class Result {
             //std::abort();
         }
 
+
         /**
          * Map the result::err to a different result::err.
          *
@@ -551,6 +566,7 @@ class Result {
             nel_panic("invalid Result");
         }
 
+
     public:
         //friend std::ostream &operator<<(std::ostream &outs, Result const &val) {
         friend Log &operator<<(Log &outs, Result const &val)  noexcept
@@ -574,6 +590,7 @@ class Result {
         }
 };
 
+
 template<typename E>
 class Result<void, E> {
     public:
@@ -592,20 +609,24 @@ class Result<void, E> {
             Element<ErrT> err_;
         };
 
+
         constexpr Result(Phantom<OK> const) noexcept
             : tag_(OK)
         {}
+
 
         Result(Phantom<ERR> const, ErrT &&v) noexcept
             : tag_(ERR)
             , err_(std::forward<ErrT>(v))
         {}
 
+
         template<typename ...Args>
         Result(Phantom<ERR> const, Args &&...args) noexcept
             : tag_(ERR)
             , err_(std::forward<Args>(args)...)
         {}
+
 
     public:
         ~Result(void) noexcept
@@ -633,6 +654,7 @@ class Result<void, E> {
             //nel_panic("invalid Result");
         }
 
+
         Result(Result &&o) noexcept
             : tag_(std::move(o.tag_))
         {
@@ -651,6 +673,8 @@ class Result<void, E> {
             }
             nel_panic("invalid Result");
         }
+
+
         Result &operator=(Result &&o) noexcept
         {
 #if 1
@@ -703,6 +727,7 @@ class Result<void, E> {
         {
         }
 
+
     public:
         /**
          * Create a result set to Ok value, using the value given.
@@ -716,6 +741,13 @@ class Result<void, E> {
             return Result(Phantom<OK>());
         }
 
+
+        static Result Err(ErrT &&v) noexcept
+        {
+            return Result(Phantom<ERR>(), std::forward<ErrT>(v));
+        }
+
+
         /**
          * Create a result set to Err value, using the values to construct the err value.
          *
@@ -723,15 +755,12 @@ class Result<void, E> {
          *
          * @returns a Result 'wrapping' the values given to construct an Err value inplace.
          */
-        static Result Err(ErrT &&v) noexcept
-        {
-            return Result(Phantom<ERR>(), std::forward<ErrT>(v));
-        }
         template<typename ...Args>
         static Result Err(Args &&...args) noexcept
         {
             return Result(Phantom<ERR>(), std::forward<Args>(args)...);
         }
+
 
     public:
         // Comparision operators
@@ -767,6 +796,7 @@ class Result<void, E> {
             return false;
         }
 
+
         /**
          * Is this not equal by value to the result given?
          *
@@ -796,6 +826,7 @@ class Result<void, E> {
             return true;
         }
 
+
     public:
         /**
          * Determine if the container contains a Ok.
@@ -809,6 +840,7 @@ class Result<void, E> {
             return tag_ == OK;
         }
 
+
         /**
          * Determine if the container contains a Err.
          *
@@ -820,6 +852,7 @@ class Result<void, E> {
         {
             return tag_ == ERR;
         }
+
 
     public:
         /**
@@ -841,6 +874,7 @@ class Result<void, E> {
                    : Optional<OkT>::None();
         }
 
+
         /**
          * Return an optional containing the err value or none.
          *
@@ -860,6 +894,7 @@ class Result<void, E> {
                    : Optional<ErrT>::None();
         }
 
+
         /**
          * Extract and return the contained value if an Ok, consuming the result.
          *
@@ -873,6 +908,7 @@ class Result<void, E> {
             nel_panic_ifnot(is_ok(), "not an ok");
             tag_ = INVAL;
         }
+
 
         /**
          * Extract and return the contained value if an Err, consuming the result.
@@ -888,6 +924,7 @@ class Result<void, E> {
             tag_ = INVAL;
             return err_.unwrap();
         }
+
 
         /**
          * Extract and return the contained value if an Ok, consuming the result.
@@ -905,6 +942,17 @@ class Result<void, E> {
             tag_ = INVAL;
         }
 
+
+        ErrT unwrap_err_or(ErrT &&v) noexcept
+        {
+            bool const is_err = this->is_err();
+            tag_ = INVAL;
+            return is_err
+                   ? err_.unwrap()
+                   : std::forward<ErrT>(v);
+        }
+
+
         /**
          * Extract and return the contained value if an Err, consuming the result.
          *
@@ -916,14 +964,6 @@ class Result<void, E> {
          * this is consumed by the operation.
          * args are consumed by the operation if not an Err.
          */
-        ErrT unwrap_err_or(ErrT &&v) noexcept
-        {
-            bool const is_err = this->is_err();
-            tag_ = INVAL;
-            return is_err
-                   ? err_.unwrap()
-                   : std::forward<ErrT>(v);
-        }
         template<typename ...Args>
         ErrT unwrap_err_or(Args &&...args) noexcept
         {
@@ -933,6 +973,7 @@ class Result<void, E> {
                    ? err_.unwrap()
                    : E(std::forward<Args>(args)...);
         }
+
 
         /**
          * Map the result::ok to a different result::ok.
@@ -964,6 +1005,7 @@ class Result<void, E> {
             //std::abort();
         }
 
+
         /**
          * Map the result::err to a different result::err.
          *
@@ -993,6 +1035,7 @@ class Result<void, E> {
             //std::abort();
             nel_panic("invalid Result");
         }
+
 
     public:
         //friend std::ostream &operator<<(std::ostream &outs, Result const &val) {

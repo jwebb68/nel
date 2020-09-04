@@ -6,9 +6,11 @@ namespace nel {
 template<typename T>
 struct Iterator;
 
+
 template<typename I, typename U>
 //template<typename I, typename F, typename U>
 struct MappingIterator;
+
 
 template<typename I>
 struct FirstNIterator;
@@ -25,11 +27,10 @@ template<typename T>
 struct Iterator {
     public:
         typedef T ItemT;
-        //typedef T* OutT;
-        typedef T & OutT;
+        typedef T &OutT;
 
     private:
-       // won't pick up changes if realloc'd
+        // won't pick up changes if realloc'd
         ItemT *const content_;
         size_t idx_;
         size_t len_;
@@ -41,13 +42,15 @@ struct Iterator {
             , len_(len)
         {}
 
+
         Optional<OutT> next(void) noexcept
         {
             return (idx_ < len_)
-                ? Optional<OutT>::Some(content_[idx_++])
-                : Optional<OutT>::None();
+                   ? Optional<OutT>::Some(content_[idx_++])
+                   : Optional<OutT>::None();
         }
 };
+
 
 template<typename I, typename U>
 //template<typename I, typename F, typename U>
@@ -55,8 +58,9 @@ struct MappingIterator {
     public:
         typedef U ItemT;
         typedef U OutT;
-        typedef std::function< U (typename I::ItemT &&) > FnT;
+        typedef std::function < U(typename I::ItemT &&) > FnT;
         //typedef F FnT;
+
     private:
         I inner_;
         FnT fn_;
@@ -73,14 +77,17 @@ struct MappingIterator {
         {
             auto v = inner_.next();
             return v.is_none()
-                    ? v
-                    : Optional<OutT>(fn_(v.unwrap()));
+                   ? v
+                   : Optional<OutT>(fn_(v.unwrap()));
         }
 };
+
+
 template<typename I, typename U>
-MappingIterator<I,U> map_it(I it, std::function< U (typename I::ItemT &&) > fn) noexcept
+MappingIterator<I, U> map_it(I it,
+                             std::function < U(typename I::ItemT &&) > fn) noexcept
 {
-    return MappingIterator<I,U>(it, fn);
+    return MappingIterator<I, U>(it, fn);
 }
 
 
@@ -108,10 +115,12 @@ struct FirstNIterator {
             //     ? inner_.next()
             //     : Optional<typename I::ItemT>::None();
             return (current_ < limit_)
-                ? ++current_, inner_.next()
-                : Optional<OutT>::None();
+                   ? ++current_, inner_.next()
+                   : Optional<OutT>::None();
         }
 };
+
+
 template<typename I>
 FirstNIterator<I> first_n_it(I it, size_t limit) noexcept
 {

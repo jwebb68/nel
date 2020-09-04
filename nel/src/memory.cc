@@ -20,6 +20,8 @@ void memcpy(uint8_t *const d, uint8_t const *const s, size_t const n) noexcept
     // }
     std::memcpy(d, s, n);
 }
+
+
 void memset(uint8_t *const d, uint8_t const s, size_t const n) noexcept
 {
     // for (size_t i=0; i < n; ++i) {
@@ -30,6 +32,8 @@ void memset(uint8_t *const d, uint8_t const s, size_t const n) noexcept
     // }
     std::memset(d, s, n);
 }
+
+
 void memmove(uint8_t *const d, uint8_t *const s, size_t const n) noexcept
 {
     // for (size_t i=0; i < n; ++i) {
@@ -46,9 +50,11 @@ void memmove(uint8_t *const d, uint8_t *const s, size_t const n) noexcept
     // for (uint8_t *id = d, *is = s, *const e = (d + n); id != e; ++is, ++id) {
     //     *is = 0xa5;
     // }
-    memcpy(d,s,n);
+    memcpy(d, s, n);
     memset(s, 0xa5, n);
 }
+
+
 void memswap(uint8_t *const d, uint8_t *const s, size_t const n) noexcept
 {
     // for (size_t i=0; i < n; ++i) {
@@ -62,43 +68,11 @@ void memswap(uint8_t *const d, uint8_t *const s, size_t const n) noexcept
         *is = t;
     }
 }
-void memswap32i(uint32_t *const d, uint32_t *const s, size_t const n) noexcept
-{
-    for (size_t i=0; i < n; ++i) {
-        uint32_t t = d[i];
-        d[i] = s[i];
-        s[i] = t;
-    }
-}
-void memswap32p(uint32_t *const d, uint32_t *const s, size_t const n) noexcept
-{
-    for (uint32_t *id = d, *is = s, *const e = (d + n); id != e; ++is, ++id) {
-        uint32_t t = *id;
-        *id = *is;
-        *is = t;
-    }
-}
-void memswap64i(uint64_t *const d, uint64_t *const s, size_t const n) noexcept
-{
-    for (size_t i=0; i < n; ++i) {
-        uint64_t t = d[i];
-        d[i] = s[i];
-        s[i] = t;
-    }
-}
-void memswap64p(uint64_t *const d, uint64_t *const s, size_t const n) noexcept
-{
-    for (uint64_t *id = d, *is = s, *const e = (d + n); id != e; ++is, ++id) {
-        uint64_t t = *id;
-        *id = *is;
-        *is = t;
-    }
-}
 
 
 struct Alloc {
-    size_t align_;
-    uint8_t payload[1];
+        size_t align_;
+        uint8_t payload[1];
 
     public:
         static Alloc *from_payload_ptr(void *p)
@@ -116,28 +90,33 @@ struct Alloc {
             nel_assert((size_t)(u8p - u8a) == a->align_);
             return a;
         }
+
+
         void *to_payload_ptr(void)
         {
             return &payload;
         }
 };
 
+
 void free_aligned(void *p)
 {
     std::free(Alloc::from_payload_ptr(p));
 }
+
 
 static uint8_t *as_u8ptr_mut(void *p)
 {
     return reinterpret_cast<uint8_t *>(p);
 }
 
+
 void *realloc_aligned(void *oldp, size_t align, size_t size) noexcept
 {
     Alloc *olda = Alloc::from_payload_ptr(oldp);
 
     // unaligned start of allocated memory.
-    Alloc *newa = reinterpret_cast<Alloc *>(std::realloc(olda, size+align));
+    Alloc *newa = reinterpret_cast<Alloc *>(std::realloc(olda, size + align));
     if (newa == nullptr) {
         return newa;
     }
@@ -150,7 +129,7 @@ void *realloc_aligned(void *oldp, size_t align, size_t size) noexcept
         // new alloc.. or moved in realloc.
         // align to next highest al boundary.
         void *p1 = newa;
-        size_t sz2 = size+align;
+        size_t sz2 = size + align;
         uint8_t *aligneda_u8 = as_u8ptr_mut(std::align(align, size, p1, sz2));
         // TODO: handle realign fails..
         // if realign fails, object is invalid!!
@@ -167,6 +146,7 @@ void *realloc_aligned(void *oldp, size_t align, size_t size) noexcept
     }
     return newp;
 }
+
 
 void *malloc_aligned(size_t align, size_t size) noexcept
 {
