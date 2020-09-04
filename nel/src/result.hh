@@ -389,10 +389,7 @@ class Result {
          */
         OkT unwrap(void) noexcept
         {
-            if (!is_ok()) {
-                nel_panic("not an ok");
-                //std::abort();
-            };
+            nel_panic_ifnot(is_ok(), "not an ok");
             tag_ = INVAL;
             return ok_.unwrap();
         }
@@ -407,10 +404,7 @@ class Result {
          */
         ErrT unwrap_err(void) noexcept
         {
-            if (!is_err()) {
-                nel_panic("not an err");
-                //std::abort();
-            };
+            nel_panic_ifnot(is_err(), "not an err");
             tag_ = INVAL;
             return err_.unwrap();
         }
