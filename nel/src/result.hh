@@ -79,7 +79,7 @@ class Result {
 
         Result(Phantom<OK> const, OkT &&v) noexcept
             : tag_(OK)
-            , ok_(std::move(v))
+            , ok_(std::forward<OkT>(v))
         {}
 
         template<typename ...Args>
@@ -90,7 +90,7 @@ class Result {
 
         Result(Phantom<ERR> const, ErrT &&v) noexcept
             : tag_(ERR)
-            , err_(std::move(v))
+            , err_(std::forward<ErrT>(v))
         {}
 
         template<typename ...Args>
@@ -426,7 +426,7 @@ class Result {
             tag_ = INVAL;
             return is_ok
                    ? ok_.unwrap()
-                   : std::move(other);
+                   : std::forward<OkT>(v);
         }
 
         /**
@@ -467,7 +467,7 @@ class Result {
             tag_ = INVAL;
             return is_err
                    ? err_.unwrap()
-                   : std::move(o);
+                   : std::forward<ErrT>(v);
         }
 
         /**
