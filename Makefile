@@ -73,6 +73,8 @@ $(error TOOLCHAIN='$(TOOLCHAIN)' not supported)
 endif
 
 
+TARGET_TRIP:=$(CC) -dumpmachine
+
 # Redefine link operation as not able to assign CC to $(CXX) in build rules.
 # every attempt does not reassign to CC, just uses CC which messes up C++ linking
 # but reassigning into another var works..
@@ -440,6 +442,10 @@ test: tests
 distclean:
 	$(RM) -r build
 
+# clang-format does not format class/struct defs how I like them
+# with access spec 1 indent, and members 1 more indent after that
+# currently puts access spec on same level as members..
+# but then I want a full reformatter (space between functions, members etc.. managed as well).
 .PHONY: format
 format:
 	astyle --project -I -n  $(allsrc) $(allhdr)
