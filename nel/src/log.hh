@@ -5,7 +5,7 @@ namespace nel {
 
 class Log;
 
-}
+} // namespace nel
 
 #include <cstddef> // size_t
 
@@ -19,6 +19,6 @@ class Log {
 
 extern Log log;
 
-}
+} // namespace nel
 
 #endif//NEL_LOG_HH

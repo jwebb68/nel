@@ -7,8 +7,8 @@ namespace heaped {
 template<typename T>
 struct Box;
 
-}
-}
+} // namespace heaped
+} // namespace nel
 
 #include "element.hh"
 
@@ -29,11 +29,11 @@ struct Box {
         std::unique_ptr<ElementT> value_;
 
     public:
-        // no default, must create a T
+        // No default, must create a T.
         constexpr Box(void) = delete;
 
-        // no copying..
-        // can move though.
+        // No copying..
+        // Can move though.
         constexpr Box(const Box &o) = delete;
         constexpr Box &operator=(const Box &o) const = delete;
 
@@ -48,12 +48,12 @@ struct Box {
     public:
         constexpr T &operator*(void) noexcept
         {
-            nel_panic_ifnot(has_value(), "not a value");
+            nel_panic_if_not(has_value(), "not a value");
             return *value_;
         }
         constexpr T const &operator*(void) const noexcept
         {
-            nel_panic_ifnot(has_value(), "not a value");
+            nel_panic_if_not(has_value(), "not a value");
             return *value_;
         }
 
@@ -64,7 +64,7 @@ struct Box {
 
         constexpr T unwrap(void) noexcept
         {
-            nel_panic_ifnot(has_value(), "not a value");
+            nel_panic_if_not(has_value(), "not a value");
             auto t = value_;
             value_ = nullptr;
             return t->unwrap();
@@ -118,8 +118,8 @@ struct Box {
         }
 };
 
-}
-}
+} // namespace heaped
+} // namespace nel
 
 
-#endif//NEL_HEAPED_BOX_HH
+#endif // NEL_HEAPED_BOX_HH

@@ -7,8 +7,8 @@ namespace heaped {
 template<typename T>
 struct Node;
 
-}
-}
+} // namespace heaped
+} // namespace nel
 
 #include "iterator.hh"
 #include "enumerator.hh"
@@ -17,8 +17,8 @@ struct Node;
 #include "optional.hh"
 #include "panic.hh"
 
-#include <new> // inplace new
-#include <cstdlib> //std::free, std::malloc, std::realloc
+#include <new> // Inplace new
+#include <cstdlib> // std::free, std::malloc, std::realloc
 #include <utility> // std::move, std::forward
 
 namespace nel {
@@ -28,28 +28,28 @@ template<typename T>
 struct Node {
     public:
     private:
-        // number allocated
+        // Number allocated.
         size_t alloc_;
-        // number initialised
+        // Number initialised.
         size_t len_;
         // Treat as a C struct and use malloc/free to manage..
-        // meh, C++ does not like flexible arrays
+        // Meh, C++ does not like flexible arrays.
         T values_[1];
 
     public:
-        // manually do a delete,
-        // don't mix delete/new & malloc/realloc/free
-        // keep consistent with allocators
+        // Manually do a delete.
+        // Don't mix delete/new & malloc/realloc/free.
+        // Keep consistent with allocators.
 #if defined(__clang__)
 #else
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wclass-memaccess"
 #endif
-        // meh, cannot use new/delete
-        // make own using malloc/free.
-        // but, can use realloc for better growing..
+        // Meh, cannot use new/delete.
+        // Make own using malloc/free.
+        // But, can use realloc for better growing..
         // TODO: handle alignment..
-        // an aligning malloc?
+        // An aligning malloc?
         static void free(Node *old) noexcept
         {
             if (old != nullptr) {
@@ -58,12 +58,12 @@ struct Node {
             std::free(old);
         }
 
-        // want to have realloc usage (better realloc characteristics)
+        // Want to have realloc usage (better realloc characteristics)
         // which means C based impl (yuk).
-        // could rewrite allocator interaface to have a realloc func
+        // Could rewrite allocator interaface to have a realloc func
         // but why isn't this present already? (what reasoning why not?)
         // TODO: handle alignment issues here..
-        // how does C++ handle variable length structs?
+        // How does C++ handle variable length structs?
         // static bool is_aligned(void *p)
         // {
         //     size_t const align = alignof(Node);
@@ -72,26 +72,26 @@ struct Node {
         // }
         static Node *malloc(size_t capacity) noexcept
         {
-            Node *newn = realloc(nullptr, capacity);
-            newn->len_ = 0;
-            return newn;
+            Node *new_n = realloc(nullptr, capacity);
+            new_n->len_ = 0;
+            return new_n;
         }
 
-        static Node *realloc(Node *oldn, size_t new_cap) noexcept
+        static Node *realloc(Node *old_n, size_t new_cap) noexcept
         {
             // Size of region to allocate excluding align padding.
-            // assume alignof(T) is included in align of Node
+            // Assume alignof(T) is included in align of Node.
             size_t sz = sizeof(Node) - sizeof(T) + new_cap * sizeof(T);
 
-            // check that max_align is multiple of align (i.e. is realign necessary..)
-            // if it isn't, then becomes:
-            Node *newn = reinterpret_cast<Node *>(std::realloc(oldn, sz));
-            // TODO: handle (re)alloc fails
-            // remember, if realloc fails, then old is still valid..
-            nel_assert(newn != nullptr);
-            // nel_assert(is_aligned(newn));
-            newn->alloc_ = new_cap;
-            return newn;
+            // Check that max_align is multiple of align (i.e. is realign necessary..)
+            // If it isn't, then becomes:
+            Node *new_n = reinterpret_cast<Node *>(std::realloc(old_n, sz));
+            // TODO: handle (re)alloc fails.
+            // Remember, if realloc fails, then old is still valid..
+            nel_assert(new_n != nullptr);
+            // nel_assert(is_aligned(new_n));
+            new_n->alloc_ = new_cap;
+            return new_n;
         }
 #if defined(__clang__)
 #else
@@ -106,18 +106,18 @@ struct Node {
             }
         }
 
-        // no copying..
+        // No copying..
         constexpr Node(Node const &) = delete;
         constexpr Node &operator=(Node const &) const = delete;
 
-        // no moving
+        // No moving
         constexpr Node(Node &&) = delete;
         constexpr Node &operator=(Node &&) = delete;
 
         Node(std::initializer_list<T> l)
         {
-            // how to fail if not big enough
-            nel_panic_ifnot(l.size() <= capacity(), "not big enough");
+            // How to fail if not big enough.
+            nel_panic_if_not(l.size() <= capacity(), "not big enough");
             size_t i = 0;
             for (auto it = l.begin(); i < capacity() && it != l.end(); ++it, ++i) {
                 new (&values_[i]) T(std::move(*it));
@@ -136,12 +136,12 @@ struct Node {
         }
         constexpr T &operator[](size_t idx) noexcept
         {
-            nel_panic_ifnot(idx < len(), "index out of range");
+            nel_panic_if_not(idx < len(), "index out of range");
             return values_[idx];
         }
         constexpr T const &operator[](size_t idx) const noexcept
         {
-            nel_panic_ifnot(idx < len(), "index out of range");
+            nel_panic_if_not(idx < len(), "index out of range");
             return values_[idx];
         }
 
@@ -213,7 +213,7 @@ struct Node {
 
 };
 
-}
-}
+} // namespace heaped
+} // namespace nel
 
-#endif//NEL_HEAPED_NODE_HH
+#endif // NEL_HEAPED_NODE_HH

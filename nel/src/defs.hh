@@ -5,4 +5,4 @@
 #define NEL_UNUSED(arg) ((void)(arg))
 
 
-#endif//NEL_DEFS_HH
+#endif // NEL_DEFS_HH

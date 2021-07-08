@@ -15,9 +15,9 @@ template<typename I>
 struct FirstNEnumerator;
 
 
-}
+} // namespace nel
 
-#include <functional> //std::function
+#include <functional> // std::function
 
 namespace nel {
 
@@ -215,6 +215,6 @@ FirstNEnumerator<I> first_n_en(I en, size_t limit) noexcept
 }
 
 
-}
+} // namespace nel
 
-#endif//NEL_ENUMERATOR_HH
+#endif // NEL_ENUMERATOR_HH

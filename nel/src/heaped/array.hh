@@ -7,8 +7,8 @@ namespace heaped {
 template<typename T>
 struct Array;
 
-}
-}
+} // namespace heaped
+} // namespace nel
 
 #include "heaped/node.hh"
 #include "iterator.hh"
@@ -18,16 +18,16 @@ struct Array;
 namespace nel {
 namespace heaped {
 
-// fixed size array
-// all items allocd when created
-// all items deletd when destroyed
+// Fixed size array
+// All items allocd when created
+// All items deletd when destroyed
 //
 template<typename T>
 struct Array {
     public:
     private:
         typedef Node<T> ArrNode;
-        // cannot use new/delete as created using malloc/realloc.
+        // Cannot use new/delete as created using malloc/realloc.
         ArrNode *item_;
 
     public:
@@ -36,22 +36,22 @@ struct Array {
             ArrNode::free(item_);
         }
 
-        // if no init list?
-        // only if T has default cons
-        // is this default?
+        // If no init list?
+        // Only if T has default cons
+        // Is this default?
         constexpr Array(void) noexcept
             : item_(nullptr)
         {}
 
-        // initialiser list initialisation required here..
+        // Initialiser list initialisation required here..
 
-        // if type has copy, then could fill?
+        // If type has copy, then could fill?
 
-        // no copying
+        // No copying.
         constexpr Array(Array const &o) = delete;
         constexpr Array &operator=(Array const &o) = delete;
 
-        // moving allowed
+        // Moving allowed.
         constexpr Array(Array &&o) noexcept
             : item_(std::move(o.item_))
         {
@@ -70,9 +70,9 @@ struct Array {
         }
 
     public:
-        // how to convert vector to array
-        // into on vec, then need to pass Node into array using private ctor.. needs arr::friend vec
-        // from on array, then need to detach node from vec using provate func.. needs vec:friend arr
+        // How to convert vector to array ?
+        // Vector::into_arr, then need to pass Node into array using private ctor.. needs arr::friend vec
+        // Array::from(vec), then need to detach node from vec using private func.. needs vec:friend arr
         // rust: as_ptr(&self) -> *const T
         // rust: as_mut_ptr(&mut self) -> *mut T
 
@@ -86,17 +86,17 @@ struct Array {
             return (item != nullptr) ? item_->len() : 0;
         }
 
-        // move item in (idx) - use mut []
-        // move item out (idx) - use mut []
+        // Move item in (idx) - use mut []
+        // Move item out (idx) - use mut []
 
         constexpr T &operator[](int idx) noexcept
         {
-            nel_panic_ifnot(item_ != nullptr, "invalid array");
+            nel_panic_if_not(item_ != nullptr, "invalid array");
             return (*item_)[idx];
         }
         constexpr T const &operator[](int idx) const noexcept
         {
-            nel_panic_ifnot(item_ != nullptr, "invalid array");
+            nel_panic_if_not(item_ != nullptr, "invalid array");
             return (*item_)[idx];
         }
 
@@ -106,7 +106,7 @@ struct Array {
         }
         constexpr Slice<T> slice(size_t b, size_t e)
         {
-            // err N yet given differing range?
+            // Err N yet given differing range?
             return slice().slice(b,e);
         }
 
@@ -116,7 +116,7 @@ struct Array {
         }
         constexpr Slice<T const> slice(size_t b, size_t e) const
         {
-            // err N yet given differing range?
+            // Err N yet given differing range?
             return slice().slice(b,e);
         }
 
@@ -129,13 +129,13 @@ struct Array {
             return slice().iter();
         }
 
-        constexpr Enumerator<T const> enumer(void) const
+        constexpr Enumerator<T const> enumerate(void) const
         {
-            return slice().enumer();
+            return slice().enumerate();
         }
-        constexpr Enumerator<T> enumer(void)
+        constexpr Enumerator<T> enumerate(void)
         {
-            return slice().enumer();
+            return slice().enumerate();
         }
 
     public:
@@ -151,8 +151,8 @@ struct Array {
 
 };
 
-}
-}
+} // namespace heaped
+} // namespace nel
 
 
-#endif//NEL_HEAPED_ARRAY_HH
+#endif // NEL_HEAPED_ARRAY_HH

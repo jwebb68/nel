@@ -19,4 +19,4 @@ Log &operator<<(Log &outs, size_t const v) noexcept
 }
 
 
-}
+} // namespace nel

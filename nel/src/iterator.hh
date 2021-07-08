@@ -15,7 +15,7 @@ struct MappingIterator;
 template<typename I>
 struct FirstNIterator;
 
-}
+} // namespace nel
 
 #include "optional.hh"
 
@@ -30,7 +30,7 @@ struct Iterator {
         typedef T &OutT;
 
     private:
-        // won't pick up changes if realloc'd
+        // Won't pick up changes if realloc'd.
         ItemT *const content_;
         size_t idx_;
         size_t len_;
@@ -71,8 +71,8 @@ struct MappingIterator {
             , fn_(fn)
         {}
 
-        // TODO: what happens if T cannot be mapped into U?
-        // then fn returns a result, pass it on.
+        // TODO: What happens if T cannot be mapped into U?
+        // Then fn returns a result, pass it on.
         Optional<OutT> next(void) noexcept
         {
             auto v = inner_.next();
@@ -127,6 +127,6 @@ FirstNIterator<I> first_n_it(I it, size_t limit) noexcept
     return FirstNIterator<I>(it, limit);
 }
 
-}
+} // namespace nel
 
-#endif//NEL_ITERATOR_HH
+#endif // NEL_ITERATOR_HH

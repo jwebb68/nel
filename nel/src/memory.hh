@@ -47,7 +47,7 @@ void memswap(T *const d, T *const s, size_t n) noexcept
 }
 
 
-}
+} // namespace nel
 
 
 

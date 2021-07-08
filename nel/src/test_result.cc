@@ -29,7 +29,7 @@ nel::Log &operator<<(nel::Log &outs, Error const &v)
 typedef nel::Result<int, Error> TestResult;
 
 
-TEST_CASE("Result::Ok for ok must produce ok", "[optional]")
+TEST_CASE("Result::Ok for ok must produce ok", "[result]")
 {
     auto res = TestResult::Ok(1);
 
@@ -38,7 +38,7 @@ TEST_CASE("Result::Ok for ok must produce ok", "[optional]")
 
     REQUIRE(res.unwrap() == 1);
 }
-TEST_CASE("Result::Err for err must produce err", "[optional]")
+TEST_CASE("Result::Err for err must produce err", "[result]")
 {
     auto res = TestResult::Err(FAIL);
 
@@ -49,7 +49,7 @@ TEST_CASE("Result::Err for err must produce err", "[optional]")
 }
 
 
-TEST_CASE("std::move(Result)-ctor for ok must move ok to dest", "[optional]")
+TEST_CASE("std::move(Result)-ctor for ok must move ok to dest", "[result]")
 {
     auto res = TestResult::Ok(1);
 
@@ -63,7 +63,7 @@ TEST_CASE("std::move(Result)-ctor for ok must move ok to dest", "[optional]")
     REQUIRE(val == 1);
 }
 
-TEST_CASE("std::move(Result)-ctor for err must move err to dest", "[optional]")
+TEST_CASE("std::move(Result)-ctor for err must move err to dest", "[result]")
 {
     auto res = TestResult::Err(FAIL);
 
@@ -78,7 +78,7 @@ TEST_CASE("std::move(Result)-ctor for err must move err to dest", "[optional]")
 }
 
 TEST_CASE("std::move(Result)-ctor for inval must move inval to dest",
-          "[optional]")
+          "[result]")
 {
     auto res = TestResult::Err(FAIL);
     auto res2 = std::move(res);
@@ -89,7 +89,7 @@ TEST_CASE("std::move(Result)-ctor for inval must move inval to dest",
 }
 
 
-TEST_CASE("std::move(Result)-ctor for ok must invalidate src", "[optional]")
+TEST_CASE("std::move(Result)-ctor for ok must invalidate src", "[result]")
 {
     auto res = TestResult::Ok(1);
     auto res2 = std::move(res);
@@ -98,7 +98,7 @@ TEST_CASE("std::move(Result)-ctor for ok must invalidate src", "[optional]")
     REQUIRE(!res.is_err());
 }
 
-TEST_CASE("std::move(Result)-ctor for err must invalidate src", "[optional]")
+TEST_CASE("std::move(Result)-ctor for err must invalidate src", "[result]")
 {
     auto res = TestResult::Err(FAIL);
     auto res2 = std::move(res);
@@ -107,7 +107,7 @@ TEST_CASE("std::move(Result)-ctor for err must invalidate src", "[optional]")
     REQUIRE(!res.is_err());
 }
 
-TEST_CASE("std::move(Result)-ctor for inval must invalidate src", "[optional]")
+TEST_CASE("std::move(Result)-ctor for inval must invalidate src", "[result]")
 {
     auto res = TestResult::Err(FAIL);
     auto res2 = std::move(res);
@@ -118,7 +118,7 @@ TEST_CASE("std::move(Result)-ctor for inval must invalidate src", "[optional]")
 }
 
 
-TEST_CASE("std::move(Result)-ass for ok must move ok val to dest", "[optional]")
+TEST_CASE("std::move(Result)-ass for ok must move ok val to dest", "[result]")
 {
     auto res = TestResult::Ok(1);
 
@@ -133,7 +133,7 @@ TEST_CASE("std::move(Result)-ass for ok must move ok val to dest", "[optional]")
 }
 
 TEST_CASE("std::move(Result)-ass for err must move err val to dest",
-          "[optional]")
+          "[result]")
 {
     auto res = TestResult::Err(FAIL);
 
@@ -148,7 +148,7 @@ TEST_CASE("std::move(Result)-ass for err must move err val to dest",
 }
 
 TEST_CASE("std::move(Result)-ass for inval must move inval to dest",
-          "[optional]")
+          "[result]")
 {
     auto res = TestResult::Err(FAIL);
     auto res2 = TestResult::Ok(2);
@@ -163,7 +163,7 @@ TEST_CASE("std::move(Result)-ass for inval must move inval to dest",
 }
 
 
-TEST_CASE("std::move(Result)-ass for ok must invalidate src", "[optional]")
+TEST_CASE("std::move(Result)-ass for ok must invalidate src", "[result]")
 {
     auto res = TestResult::Ok(1);
     auto res2 = TestResult::Ok(2);
@@ -174,7 +174,7 @@ TEST_CASE("std::move(Result)-ass for ok must invalidate src", "[optional]")
     REQUIRE(!res.is_err());
 }
 
-TEST_CASE("std::move(Result)-ass for err must invalidate src", "[optional]")
+TEST_CASE("std::move(Result)-ass for err must invalidate src", "[result]")
 {
     auto res = TestResult::Err(FAIL);
     auto res2 = TestResult::Ok(2);
@@ -185,7 +185,7 @@ TEST_CASE("std::move(Result)-ass for err must invalidate src", "[optional]")
     REQUIRE(!res.is_err());
 }
 
-TEST_CASE("std::move(Result)-ass for inval must invalidate src", "[optional]")
+TEST_CASE("std::move(Result)-ass for inval must invalidate src", "[result]")
 {
     auto res = TestResult::Err(FAIL);
     auto res2 = TestResult::Ok(2);
@@ -200,7 +200,7 @@ TEST_CASE("std::move(Result)-ass for inval must invalidate src", "[optional]")
 }
 
 
-TEST_CASE("Result.ok for ok must produce ok val", "[optional]")
+TEST_CASE("Result.ok for ok must produce ok val", "[result]")
 {
     auto res = TestResult::Ok(1);
     auto val = res.ok();
@@ -208,7 +208,7 @@ TEST_CASE("Result.ok for ok must produce ok val", "[optional]")
     REQUIRE(val.unwrap() == 1);
 }
 
-TEST_CASE("Result.ok for ok must not produce none", "[optional]")
+TEST_CASE("Result.ok for ok must not produce none", "[result]")
 {
     auto res = TestResult::Ok(1);
     auto val = res.ok();
@@ -217,7 +217,7 @@ TEST_CASE("Result.ok for ok must not produce none", "[optional]")
     REQUIRE(!val.is_none());
 }
 
-TEST_CASE("Result.ok for err must produce none", "[optional]")
+TEST_CASE("Result.ok for err must produce none", "[result]")
 {
     auto res = TestResult::Err(FAIL);
     auto val = res.ok();
@@ -226,7 +226,7 @@ TEST_CASE("Result.ok for err must produce none", "[optional]")
     REQUIRE(val.is_none());
 }
 
-TEST_CASE("Result.ok for inval must produce none", "[optional]")
+TEST_CASE("Result.ok for inval must produce none", "[result]")
 {
     auto res = TestResult::Err(FAIL);
     auto res2 = std::move(res);
@@ -236,7 +236,7 @@ TEST_CASE("Result.ok for inval must produce none", "[optional]")
     REQUIRE(val.is_none());
 }
 
-TEST_CASE("Result.ok for ok must invalidate src", "[optional]")
+TEST_CASE("Result.ok for ok must invalidate src", "[result]")
 {
     auto res = TestResult::Ok(1);
 
@@ -248,7 +248,7 @@ TEST_CASE("Result.ok for ok must invalidate src", "[optional]")
     REQUIRE(!res.is_err());
 }
 
-TEST_CASE("Result.ok for err must invalidate src", "[optional]")
+TEST_CASE("Result.ok for err must invalidate src", "[result]")
 {
     auto res = TestResult::Err(FAIL);
 
@@ -260,7 +260,7 @@ TEST_CASE("Result.ok for err must invalidate src", "[optional]")
     REQUIRE(!res.is_err());
 }
 
-TEST_CASE("Result.ok for inval must invalidate src", "[optional]")
+TEST_CASE("Result.ok for inval must invalidate src", "[result]")
 {
     auto res = TestResult::Err(FAIL);
     auto res2 = std::move(res);
@@ -274,7 +274,7 @@ TEST_CASE("Result.ok for inval must invalidate src", "[optional]")
 }
 
 
-TEST_CASE("Result.err for ok must produce none", "[optional]")
+TEST_CASE("Result.err for ok must produce none", "[result]")
 {
     auto res = TestResult::Ok(1);
     auto val = res.err();
@@ -283,7 +283,7 @@ TEST_CASE("Result.err for ok must produce none", "[optional]")
     REQUIRE(!val.is_some());
 }
 
-TEST_CASE("Result.err for err must produce err val", "[optional]")
+TEST_CASE("Result.err for err must produce err val", "[result]")
 {
     auto res = TestResult::Err(FAIL);
     auto val = res.err();
@@ -291,7 +291,7 @@ TEST_CASE("Result.err for err must produce err val", "[optional]")
     REQUIRE(val.unwrap() == FAIL);
 }
 
-TEST_CASE("Result.err for err must not produce none", "[optional]")
+TEST_CASE("Result.err for err must not produce none", "[result]")
 {
     auto res = TestResult::Err(FAIL);
     auto val = res.err();
@@ -300,7 +300,7 @@ TEST_CASE("Result.err for err must not produce none", "[optional]")
     REQUIRE(val.is_some());
 }
 
-TEST_CASE("Result.err for inval must produce none", "[optional]")
+TEST_CASE("Result.err for inval must produce none", "[result]")
 {
     auto res = TestResult::Ok(1);
     auto res2 = std::move(res);
@@ -310,7 +310,7 @@ TEST_CASE("Result.err for inval must produce none", "[optional]")
     REQUIRE(!val.is_some());
 }
 
-TEST_CASE("Result.err for ok must invalidate src", "[optional]")
+TEST_CASE("Result.err for ok must invalidate src", "[result]")
 {
     auto res = TestResult::Ok(1);
 
@@ -321,7 +321,7 @@ TEST_CASE("Result.err for ok must invalidate src", "[optional]")
     REQUIRE(!res.is_err());
 }
 
-TEST_CASE("Result.err for err must invalidate src", "[optional]")
+TEST_CASE("Result.err for err must invalidate src", "[result]")
 {
     auto res = TestResult::Err(FAIL);
 
@@ -332,7 +332,7 @@ TEST_CASE("Result.err for err must invalidate src", "[optional]")
     REQUIRE(!res.is_err());
 }
 
-TEST_CASE("Result.err for inval must invalidate src", "[optional]")
+TEST_CASE("Result.err for inval must invalidate src", "[result]")
 {
     auto res = TestResult::Err(FAIL);
     auto res2 = std::move(res);
@@ -345,21 +345,21 @@ TEST_CASE("Result.err for inval must invalidate src", "[optional]")
 }
 
 
-TEST_CASE("Result.is_ok for ok must give true", "[optional]")
+TEST_CASE("Result.is_ok for ok must give true", "[result]")
 {
     auto res = TestResult::Ok(1);
 
     REQUIRE(res.is_ok());
 }
 
-TEST_CASE("Result.is_ok for err must give false", "[optional]")
+TEST_CASE("Result.is_ok for err must give false", "[result]")
 {
     auto res = TestResult::Err(FAIL);
 
     REQUIRE(!res.is_ok());
 }
 
-TEST_CASE("Result.is_ok for inval must give false", "[optional]")
+TEST_CASE("Result.is_ok for inval must give false", "[result]")
 {
     auto res = TestResult::Ok(1);
     auto res2 = std::move(res);
@@ -368,7 +368,7 @@ TEST_CASE("Result.is_ok for inval must give false", "[optional]")
 }
 
 
-TEST_CASE("Result.is_ok for ok must not alter src", "[optional]")
+TEST_CASE("Result.is_ok for ok must not alter src", "[result]")
 {
     auto res = TestResult::Ok(1);
 
@@ -378,7 +378,7 @@ TEST_CASE("Result.is_ok for ok must not alter src", "[optional]")
     REQUIRE(res.unwrap() == 1);
 }
 
-TEST_CASE("Result.is_ok for err must not alter src", "[optional]")
+TEST_CASE("Result.is_ok for err must not alter src", "[result]")
 {
     auto res = TestResult::Err(FAIL);
 
@@ -388,7 +388,7 @@ TEST_CASE("Result.is_ok for err must not alter src", "[optional]")
     REQUIRE(res.unwrap_err() == FAIL);
 }
 
-TEST_CASE("Result.is_ok for inval must not alter src", "[optional]")
+TEST_CASE("Result.is_ok for inval must not alter src", "[result]")
 {
     auto res = TestResult::Ok(1);
     auto res2 = std::move(res);
@@ -403,21 +403,21 @@ TEST_CASE("Result.is_ok for inval must not alter src", "[optional]")
 
 
 
-TEST_CASE("Result.is_err for ok must give false", "[optional]")
+TEST_CASE("Result.is_err for ok must give false", "[result]")
 {
     auto res = TestResult::Ok(1);
 
     REQUIRE(!res.is_err());
 }
 
-TEST_CASE("Result.is_err for err must give true", "[optional]")
+TEST_CASE("Result.is_err for err must give true", "[result]")
 {
     auto res = TestResult::Err(FAIL);
 
     REQUIRE(res.is_err());
 }
 
-TEST_CASE("Result.is_err for inval must give false", "[optional]")
+TEST_CASE("Result.is_err for inval must give false", "[result]")
 {
     auto res = TestResult::Ok(1);
     auto res2 = std::move(res);
@@ -426,7 +426,7 @@ TEST_CASE("Result.is_err for inval must give false", "[optional]")
 }
 
 
-TEST_CASE("Result.unwrap for Ok must give ok value", "[optional]")
+TEST_CASE("Result.unwrap for Ok must give ok value", "[result]")
 {
     auto res = TestResult::Ok(1);
 
@@ -435,7 +435,7 @@ TEST_CASE("Result.unwrap for Ok must give ok value", "[optional]")
     REQUIRE(val == 1);
 }
 
-TEST_CASE("Result.unwrap for Ok must invalidate src", "[optional]")
+TEST_CASE("Result.unwrap for Ok must invalidate src", "[result]")
 {
     auto res = TestResult::Ok(1);
 
@@ -446,7 +446,7 @@ TEST_CASE("Result.unwrap for Ok must invalidate src", "[optional]")
     REQUIRE(!res.is_err());
 }
 
-// TEST_CASE("Result.unwrap for err aborts", "[optional]")
+// TEST_CASE("Result.unwrap for err aborts", "[result]")
 // {
 //     auto res = TestResult::Err(FAIL);
 //     auto val = res.unwrap();
@@ -455,7 +455,7 @@ TEST_CASE("Result.unwrap for Ok must invalidate src", "[optional]")
 //     REQUIRE(true?);
 // }
 
-// TEST_CASE("Result.unwrap for inval aborts", "[optional]")
+// TEST_CASE("Result.unwrap for inval aborts", "[result]")
 // {
 //     auto res = TestResult::Ok(1);
 //     auto res2 = std::move(res);
@@ -466,7 +466,7 @@ TEST_CASE("Result.unwrap for Ok must invalidate src", "[optional]")
 //     REQUIRE(true?);
 // }
 
-TEST_CASE("Result.unwrap_err for err must give err value", "[optional]")
+TEST_CASE("Result.unwrap_err for err must give err value", "[result]")
 {
     auto res = TestResult::Err(FAIL);
 
@@ -475,7 +475,7 @@ TEST_CASE("Result.unwrap_err for err must give err value", "[optional]")
     REQUIRE(val == FAIL);
 }
 
-TEST_CASE("Result.unwrap_err for err must invalidate src", "[optional]")
+TEST_CASE("Result.unwrap_err for err must invalidate src", "[result]")
 {
     auto res = TestResult::Err(FAIL);
 
@@ -486,7 +486,7 @@ TEST_CASE("Result.unwrap_err for err must invalidate src", "[optional]")
     REQUIRE(!res.is_err());
 }
 
-// TEST_CASE("Result.unwrap_err for ok aborts", "[optional]")
+// TEST_CASE("Result.unwrap_err for ok aborts", "[result]")
 // {
 //     auto res = TestResult::Ok(1);
 
@@ -496,7 +496,7 @@ TEST_CASE("Result.unwrap_err for err must invalidate src", "[optional]")
 //     REQUIRE(true?);
 // }
 
-// TEST_CASE("Result.unwrap_err for inval aborts", "[optional]")
+// TEST_CASE("Result.unwrap_err for inval aborts", "[result]")
 // {
 //     auto res = TestResult::Ok(1);
 //     auto res2 = std::move(res);
@@ -507,7 +507,7 @@ TEST_CASE("Result.unwrap_err for err must invalidate src", "[optional]")
 //     REQUIRE(true?);
 // }
 
-TEST_CASE("Result.unwrap_or for ok must give ok value", "[optional]")
+TEST_CASE("Result.unwrap_or for ok must give ok value", "[result]")
 {
     auto res = TestResult::Ok(1);
 
@@ -516,7 +516,7 @@ TEST_CASE("Result.unwrap_or for ok must give ok value", "[optional]")
     REQUIRE(val == 1);
 }
 
-TEST_CASE("Result.unwrap_or for err must give or value", "[optional]")
+TEST_CASE("Result.unwrap_or for err must give or value", "[result]")
 {
     auto res = TestResult::Err(FAIL);
 
@@ -525,7 +525,7 @@ TEST_CASE("Result.unwrap_or for err must give or value", "[optional]")
     REQUIRE(val == 2);
 }
 
-TEST_CASE("Result.unwrap_or for invalid must give or value", "[optional]")
+TEST_CASE("Result.unwrap_or for invalid must give or value", "[result]")
 {
     auto res = TestResult::Err(FAIL);
     auto res2 = std::move(res);
@@ -535,7 +535,7 @@ TEST_CASE("Result.unwrap_or for invalid must give or value", "[optional]")
     REQUIRE(val == 2);
 }
 
-TEST_CASE("Result.unwrap_or for ok must invalidate src", "[optional]")
+TEST_CASE("Result.unwrap_or for ok must invalidate src", "[result]")
 {
     auto res = TestResult::Ok(1);
 
@@ -546,7 +546,7 @@ TEST_CASE("Result.unwrap_or for ok must invalidate src", "[optional]")
     REQUIRE(!res.is_err());
 }
 
-TEST_CASE("Result.unwrap_or for err must invalidate src", "[optional]")
+TEST_CASE("Result.unwrap_or for err must invalidate src", "[result]")
 {
     auto res = TestResult::Err(FAIL);
 
@@ -557,7 +557,7 @@ TEST_CASE("Result.unwrap_or for err must invalidate src", "[optional]")
     REQUIRE(!res.is_err());
 }
 
-TEST_CASE("Result.unwrap_or for invalid must stay invalid", "[optional]")
+TEST_CASE("Result.unwrap_or for invalid must stay invalid", "[result]")
 {
     auto res = TestResult::Err(FAIL);
     auto res2 = std::move(res);
@@ -570,7 +570,7 @@ TEST_CASE("Result.unwrap_or for invalid must stay invalid", "[optional]")
 }
 
 
-TEST_CASE("Result.unwrap_err_or for ok must give or value", "[optional]")
+TEST_CASE("Result.unwrap_err_or for ok must give or value", "[result]")
 {
     auto res = TestResult::Ok(1);
 
@@ -579,7 +579,7 @@ TEST_CASE("Result.unwrap_err_or for ok must give or value", "[optional]")
     REQUIRE(val == FAIL);
 }
 
-TEST_CASE("Result.unwrap_err_or for err must give err value", "[optional]")
+TEST_CASE("Result.unwrap_err_or for err must give err value", "[result]")
 {
     auto res = TestResult::Err(FAIL);
 
@@ -588,7 +588,7 @@ TEST_CASE("Result.unwrap_err_or for err must give err value", "[optional]")
     REQUIRE(val == FAIL);
 }
 
-TEST_CASE("Result.unwrap_err_or for invalid must give or value", "[optional]")
+TEST_CASE("Result.unwrap_err_or for invalid must give or value", "[result]")
 {
     auto res = TestResult::Err(FAIL);
     auto res2 = std::move(res);
@@ -598,7 +598,7 @@ TEST_CASE("Result.unwrap_err_or for invalid must give or value", "[optional]")
     REQUIRE(val == NOENT);
 }
 
-TEST_CASE("Result.unwrap_err_or for ok must invalidate src", "[optional]")
+TEST_CASE("Result.unwrap_err_or for ok must invalidate src", "[result]")
 {
     auto res = TestResult::Ok(1);
 
@@ -609,7 +609,7 @@ TEST_CASE("Result.unwrap_err_or for ok must invalidate src", "[optional]")
     REQUIRE(!res.is_err());
 }
 
-TEST_CASE("Result.unwrap_err_or for err must invalidate src", "[optional]")
+TEST_CASE("Result.unwrap_err_or for err must invalidate src", "[result]")
 {
     auto res = TestResult::Err(FAIL);
 
@@ -620,7 +620,7 @@ TEST_CASE("Result.unwrap_err_or for err must invalidate src", "[optional]")
     REQUIRE(!res.is_err());
 }
 
-TEST_CASE("Result.unwrap_err_or for invalid must invalidate src", "[optional]")
+TEST_CASE("Result.unwrap_err_or for invalid must invalidate src", "[result]")
 {
     auto res = TestResult::Err(FAIL);
     auto res2 = std::move(res);
@@ -640,7 +640,7 @@ bool map1(const int &e)
     return true;
 }
 
-TEST_CASE("Result.map for ok must change ok val", "[optional]")
+TEST_CASE("Result.map for ok must change ok val", "[result]")
 {
     auto res = TestResult::Ok(1);
 
@@ -653,7 +653,7 @@ TEST_CASE("Result.map for ok must change ok val", "[optional]")
     REQUIRE(val == true);
 }
 
-TEST_CASE("Result.map for err must not change err val", "[optional]")
+TEST_CASE("Result.map for err must not change err val", "[result]")
 {
     auto res = TestResult::Err(FAIL);
 
@@ -666,7 +666,7 @@ TEST_CASE("Result.map for err must not change err val", "[optional]")
     REQUIRE(val == FAIL);
 }
 
-TEST_CASE("Result.map for inval must stay inval", "[optional]")
+TEST_CASE("Result.map for inval must stay inval", "[result]")
 {
     auto res = TestResult::Err(FAIL);
     auto res2 = std::move(res);
@@ -680,7 +680,7 @@ TEST_CASE("Result.map for inval must stay inval", "[optional]")
 }
 
 
-TEST_CASE("Result.map for ok must invalidate src", "[optional]")
+TEST_CASE("Result.map for ok must invalidate src", "[result]")
 {
     auto res = TestResult::Ok(1);
 
@@ -693,7 +693,7 @@ TEST_CASE("Result.map for ok must invalidate src", "[optional]")
     REQUIRE(!res.is_err());
 }
 
-TEST_CASE("Result.map for err must invalidate src", "[optional]")
+TEST_CASE("Result.map for err must invalidate src", "[result]")
 {
     auto res = TestResult::Err(FAIL);
 
@@ -706,7 +706,7 @@ TEST_CASE("Result.map for err must invalidate src", "[optional]")
     REQUIRE(!res.is_err());
 }
 
-TEST_CASE("Result.map for inval must invalidate src", "[optional]")
+TEST_CASE("Result.map for inval must invalidate src", "[result]")
 {
     auto res = TestResult::Err(FAIL);
     auto res2 = std::move(res);
@@ -730,7 +730,7 @@ const char *map2(const Error &e)
 }
 
 
-TEST_CASE("Result.map_err for ok must not change ok val", "[optional]")
+TEST_CASE("Result.map_err for ok must not change ok val", "[result]")
 {
     auto res = TestResult::Ok(1);
 
@@ -743,7 +743,7 @@ TEST_CASE("Result.map_err for ok must not change ok val", "[optional]")
     REQUIRE(val == 1);
 }
 
-TEST_CASE("Result.map_err for err must change err val", "[optional]")
+TEST_CASE("Result.map_err for err must change err val", "[result]")
 {
     auto res = TestResult::Err(FAIL);
 
@@ -756,7 +756,7 @@ TEST_CASE("Result.map_err for err must change err val", "[optional]")
     REQUIRE(val == bar);
 }
 
-TEST_CASE("Result.map_err for inval must stay inval", "[optional]")
+TEST_CASE("Result.map_err for inval must stay inval", "[result]")
 {
     auto res = TestResult::Err(FAIL);
     auto res2 = std::move(res);
@@ -769,7 +769,7 @@ TEST_CASE("Result.map_err for inval must stay inval", "[optional]")
     REQUIRE(!res3.is_err());
 }
 
-TEST_CASE("Result.map_err for ok must invalidate src", "[optional]")
+TEST_CASE("Result.map_err for ok must invalidate src", "[result]")
 {
     auto res = TestResult::Ok(1);
 
@@ -782,7 +782,7 @@ TEST_CASE("Result.map_err for ok must invalidate src", "[optional]")
     REQUIRE(!res.is_err());
 }
 
-TEST_CASE("Result.map_err for err must invalidate src", "[optional]")
+TEST_CASE("Result.map_err for err must invalidate src", "[result]")
 {
     auto res = TestResult::Err(FAIL);
 
@@ -795,7 +795,7 @@ TEST_CASE("Result.map_err for err must invalidate src", "[optional]")
     REQUIRE(!res.is_err());
 }
 
-TEST_CASE("Result.map_err for inval must invalidate src", "[optional]")
+TEST_CASE("Result.map_err for inval must invalidate src", "[result]")
 {
     auto res = TestResult::Err(FAIL);
     auto res2 = std::move(res);
@@ -815,7 +815,7 @@ nel::Result<int, Error> foo_ok(void)
 {
     return TestResult::Ok(1);
 }
-TEST_CASE("Result::Ok auto convert to Result", "[optional]")
+TEST_CASE("Result::Ok auto convert to Result", "[result]")
 {
     auto res = foo_ok();
 
@@ -826,7 +826,7 @@ nel::Result<int, Error> foo_err(void)
 {
     return TestResult::Err(FAIL);
 }
-TEST_CASE("Result::Err auto convert to Result", "[optional]")
+TEST_CASE("Result::Err auto convert to Result", "[result]")
 {
     auto res = foo_err();
 
@@ -848,7 +848,7 @@ struct Foo {
         bool &dtor_called;
 };
 
-TEST_CASE("result::~dtor for ok, must call ok dtor", "[optional]")
+TEST_CASE("result::~dtor for ok, must call ok dtor", "[result]")
 {
     bool dtor_called = false;
     {
@@ -860,12 +860,12 @@ TEST_CASE("result::~dtor for ok, must call ok dtor", "[optional]")
     REQUIRE(dtor_called);
 }
 
-// TEST_CASE("result::~dtor for ok, err dtor not called", "[optional]")
+// TEST_CASE("result::~dtor for ok, err dtor not called", "[result]")
 // {
 // how do I do this?
 // }
 
-TEST_CASE("result::~dtor for err, must call err dtor", "[optional]")
+TEST_CASE("result::~dtor for err, must call err dtor", "[result]")
 {
     bool dtor_called = false;
     {
@@ -877,44 +877,44 @@ TEST_CASE("result::~dtor for err, must call err dtor", "[optional]")
     REQUIRE(dtor_called);
 }
 
-// TEST_CASE("result::~dtor for err ok dtor not called", "[optional]")
+// TEST_CASE("result::~dtor for err ok dtor not called", "[result]")
 // {
 // how do I do this?
 // }
 
-// TEST_CASE("result::~dtor for inval, ok not dtor called", "[optional]")
+// TEST_CASE("result::~dtor for inval, ok not dtor called", "[result]")
 // {
 // // how do I do this?
 // }
 
-// TEST_CASE("result::~dtor for inval, err not dtor called", "[optional]")
+// TEST_CASE("result::~dtor for inval, err not dtor called", "[result]")
 // {
 // // how do I do this?
 // }
 
 
-TEST_CASE("Result::eq for ok with ok must give true", "[optional]")
+TEST_CASE("Result::eq for ok with ok must give true", "[result]")
 {
     auto res1 = TestResult::Ok(2);
 
     REQUIRE(res1 == TestResult::Ok(2));
 }
 
-TEST_CASE("Result::eq for ok with diff ok must give false", "[optional]")
+TEST_CASE("Result::eq for ok with diff ok must give false", "[result]")
 {
     auto res1 = TestResult::Ok(2);
 
     REQUIRE(!(res1 == TestResult::Ok(3)));
 }
 
-TEST_CASE("Result::eq for ok with err must give false", "[optional]")
+TEST_CASE("Result::eq for ok with err must give false", "[result]")
 {
     auto res1 = TestResult::Ok(2);
 
     REQUIRE(!(res1 == TestResult::Err(FAIL)));
 }
 
-TEST_CASE("Result::eq for ok with inval must give false", "[optional]")
+TEST_CASE("Result::eq for ok with inval must give false", "[result]")
 {
     auto res1 = TestResult::Ok(1);
 
@@ -925,7 +925,7 @@ TEST_CASE("Result::eq for ok with inval must give false", "[optional]")
 }
 
 
-TEST_CASE("Result::eq for ok with ok must not alter src", "[optional]")
+TEST_CASE("Result::eq for ok with ok must not alter src", "[result]")
 {
     auto res1 = TestResult::Ok(2);
 
@@ -935,7 +935,7 @@ TEST_CASE("Result::eq for ok with ok must not alter src", "[optional]")
     REQUIRE(res1.unwrap() == 2);
 }
 
-TEST_CASE("Result::eq for ok with diff ok must not alter src", "[optional]")
+TEST_CASE("Result::eq for ok with diff ok must not alter src", "[result]")
 {
     auto res1 = TestResult::Ok(2);
 
@@ -945,7 +945,7 @@ TEST_CASE("Result::eq for ok with diff ok must not alter src", "[optional]")
     REQUIRE(res1.unwrap() == 2);
 }
 
-TEST_CASE("Result::eq for ok with err must not alter src", "[optional]")
+TEST_CASE("Result::eq for ok with err must not alter src", "[result]")
 {
     auto res1 = TestResult::Ok(2);
 
@@ -955,7 +955,7 @@ TEST_CASE("Result::eq for ok with err must not alter src", "[optional]")
     REQUIRE(res1.unwrap() == 2);
 }
 
-TEST_CASE("Result::eq for ok with inval must not alter src", "[optional]")
+TEST_CASE("Result::eq for ok with inval must not alter src", "[result]")
 {
     auto res1 = TestResult::Ok(2);
 
@@ -970,28 +970,28 @@ TEST_CASE("Result::eq for ok with inval must not alter src", "[optional]")
 
 
 
-TEST_CASE("Result::eq for err with ok must give false", "[optional]")
+TEST_CASE("Result::eq for err with ok must give false", "[result]")
 {
     auto res1 = TestResult::Err(FAIL);
 
     REQUIRE(!(res1 == TestResult::Ok(1)));
 }
 
-TEST_CASE("Result::eq for err with err must give true", "[optional]")
+TEST_CASE("Result::eq for err with err must give true", "[result]")
 {
     auto res1 = TestResult::Err(FAIL);
 
     REQUIRE(res1 == TestResult::Err(FAIL));
 }
 
-TEST_CASE("Result::eq for err with diff err must give false", "[optional]")
+TEST_CASE("Result::eq for err with diff err must give false", "[result]")
 {
     auto res1 = TestResult::Err(NOENT);
 
     REQUIRE(!(res1 == TestResult::Err(FAIL)));
 }
 
-TEST_CASE("Result::eq for err with inval must give false", "[optional]")
+TEST_CASE("Result::eq for err with inval must give false", "[result]")
 {
     auto res1 = TestResult::Err(FAIL);
 
@@ -1002,7 +1002,7 @@ TEST_CASE("Result::eq for err with inval must give false", "[optional]")
 }
 
 
-TEST_CASE("Result::eq for err with ok must not alter src", "[optional]")
+TEST_CASE("Result::eq for err with ok must not alter src", "[result]")
 {
     auto res1 = TestResult::Err(FAIL);
 
@@ -1012,7 +1012,7 @@ TEST_CASE("Result::eq for err with ok must not alter src", "[optional]")
     REQUIRE(res1.unwrap_err() == FAIL);
 }
 
-TEST_CASE("Result::eq for err with err must not alter src", "[optional]")
+TEST_CASE("Result::eq for err with err must not alter src", "[result]")
 {
     auto res1 = TestResult::Err(FAIL);
 
@@ -1022,7 +1022,7 @@ TEST_CASE("Result::eq for err with err must not alter src", "[optional]")
     REQUIRE(res1.unwrap_err() == FAIL);
 }
 
-TEST_CASE("Result::eq for err with diff err must not alter src", "[optional]")
+TEST_CASE("Result::eq for err with diff err must not alter src", "[result]")
 {
     auto res1 = TestResult::Err(FAIL);
 
@@ -1032,7 +1032,7 @@ TEST_CASE("Result::eq for err with diff err must not alter src", "[optional]")
     REQUIRE(res1.unwrap_err() == FAIL);
 }
 
-TEST_CASE("Result::eq for err with inval must not alter src", "[optional]")
+TEST_CASE("Result::eq for err with inval must not alter src", "[result]")
 {
     auto res1 = TestResult::Err(FAIL);
 
@@ -1047,7 +1047,7 @@ TEST_CASE("Result::eq for err with inval must not alter src", "[optional]")
 
 
 
-TEST_CASE("Result::eq for inval with ok must give false", "[optional]")
+TEST_CASE("Result::eq for inval with ok must give false", "[result]")
 {
     auto res1 = TestResult::Err(FAIL);
     auto res2 = std::move(res1);
@@ -1055,7 +1055,7 @@ TEST_CASE("Result::eq for inval with ok must give false", "[optional]")
     REQUIRE(!(res1 == TestResult::Ok(1)));
 }
 
-TEST_CASE("Result::eq for inval with err must give false", "[optional]")
+TEST_CASE("Result::eq for inval with err must give false", "[result]")
 {
     auto res1 = TestResult::Err(FAIL);
     auto res2 = std::move(res1);
@@ -1063,7 +1063,7 @@ TEST_CASE("Result::eq for inval with err must give false", "[optional]")
     REQUIRE(!(res1 == TestResult::Err(FAIL)));
 }
 
-TEST_CASE("Result::eq for inval with inval must give true", "[optional]")
+TEST_CASE("Result::eq for inval with inval must give true", "[result]")
 {
     auto res1 = TestResult::Ok(2);
     auto res2 = std::move(res1);
@@ -1075,7 +1075,7 @@ TEST_CASE("Result::eq for inval with inval must give true", "[optional]")
 }
 
 
-TEST_CASE("Result::eq for inval with ok must not alter src", "[optional]")
+TEST_CASE("Result::eq for inval with ok must not alter src", "[result]")
 {
     auto res1 = TestResult::Err(FAIL);
     auto res2 = std::move(res1);
@@ -1087,7 +1087,7 @@ TEST_CASE("Result::eq for inval with ok must not alter src", "[optional]")
     REQUIRE(!res1.is_err());
 }
 
-TEST_CASE("Result::eq for inval with err must not alter src", "[optional]")
+TEST_CASE("Result::eq for inval with err must not alter src", "[result]")
 {
     auto res1 = TestResult::Err(FAIL);
     auto res2 = std::move(res1);
@@ -1099,7 +1099,7 @@ TEST_CASE("Result::eq for inval with err must not alter src", "[optional]")
     REQUIRE(!res1.is_err());
 }
 
-TEST_CASE("Result::eq for inval with inval must not alter src", "[optional]")
+TEST_CASE("Result::eq for inval with inval must not alter src", "[result]")
 {
     auto res1 = TestResult::Ok(2);
     auto res2 = std::move(res1);
@@ -1115,28 +1115,28 @@ TEST_CASE("Result::eq for inval with inval must not alter src", "[optional]")
 }
 
 
-TEST_CASE("Result::neq for ok with ok must give false", "[optional]")
+TEST_CASE("Result::neq for ok with ok must give false", "[result]")
 {
     auto res1 = TestResult::Ok(2);
 
     REQUIRE(!(res1 != TestResult::Ok(2)));
 }
 
-TEST_CASE("Result::neq for ok with diff ok must give true", "[optional]")
+TEST_CASE("Result::neq for ok with diff ok must give true", "[result]")
 {
     auto res1 = TestResult::Ok(2);
 
     REQUIRE(res1 != TestResult::Ok(3));
 }
 
-TEST_CASE("Result::neq for ok with err must give true", "[optional]")
+TEST_CASE("Result::neq for ok with err must give true", "[result]")
 {
     auto res1 = TestResult::Ok(2);
 
     REQUIRE(res1 != TestResult::Err(FAIL));
 }
 
-TEST_CASE("Result::neq for ok with inval must give true", "[optional]")
+TEST_CASE("Result::neq for ok with inval must give true", "[result]")
 {
     auto res1 = TestResult::Ok(2);
 
@@ -1147,7 +1147,7 @@ TEST_CASE("Result::neq for ok with inval must give true", "[optional]")
 }
 
 
-TEST_CASE("Result::neq for ok with ok must not alter src", "[optional]")
+TEST_CASE("Result::neq for ok with ok must not alter src", "[result]")
 {
     auto res1 = TestResult::Ok(2);
 
@@ -1157,7 +1157,7 @@ TEST_CASE("Result::neq for ok with ok must not alter src", "[optional]")
     REQUIRE(res1.unwrap() == 2);
 }
 
-TEST_CASE("Result::neq for ok with diff ok must not alter src", "[optional]")
+TEST_CASE("Result::neq for ok with diff ok must not alter src", "[result]")
 {
     auto res1 = TestResult::Ok(2);
 
@@ -1167,7 +1167,7 @@ TEST_CASE("Result::neq for ok with diff ok must not alter src", "[optional]")
     REQUIRE(res1.unwrap() == 2);
 }
 
-TEST_CASE("Result::neq for ok with err must not alter src", "[optional]")
+TEST_CASE("Result::neq for ok with err must not alter src", "[result]")
 {
     auto res1 = TestResult::Ok(2);
 
@@ -1177,7 +1177,7 @@ TEST_CASE("Result::neq for ok with err must not alter src", "[optional]")
     REQUIRE(res1.unwrap() == 2);
 }
 
-TEST_CASE("Result::neq for ok with inval must not alter src", "[optional]")
+TEST_CASE("Result::neq for ok with inval must not alter src", "[result]")
 {
     auto res1 = TestResult::Ok(2);
 
@@ -1191,28 +1191,28 @@ TEST_CASE("Result::neq for ok with inval must not alter src", "[optional]")
 }
 
 
-TEST_CASE("Result::neq for err with ok must give true", "[optional]")
+TEST_CASE("Result::neq for err with ok must give true", "[result]")
 {
     auto res1 = TestResult::Err(FAIL);
 
     REQUIRE(res1 != TestResult::Ok(1));
 }
 
-TEST_CASE("Result::neq for err with err must give false", "[optional]")
+TEST_CASE("Result::neq for err with err must give false", "[result]")
 {
     auto res1 = TestResult::Err(FAIL);
 
     REQUIRE(!(res1 != TestResult::Err(FAIL)));
 }
 
-TEST_CASE("Result::neq for err with diff err must give true", "[optional]")
+TEST_CASE("Result::neq for err with diff err must give true", "[result]")
 {
     auto res1 = TestResult::Err(NOENT);
 
     REQUIRE(res1 != TestResult::Err(FAIL));
 }
 
-TEST_CASE("Result::neq for err with inval must give true", "[optional]")
+TEST_CASE("Result::neq for err with inval must give true", "[result]")
 {
     auto res1 = TestResult::Err(FAIL);
 
@@ -1223,7 +1223,7 @@ TEST_CASE("Result::neq for err with inval must give true", "[optional]")
 }
 
 
-TEST_CASE("Result::neq for err with ok must not alter src", "[optional]")
+TEST_CASE("Result::neq for err with ok must not alter src", "[result]")
 {
     auto res1 = TestResult::Err(FAIL);
 
@@ -1233,7 +1233,7 @@ TEST_CASE("Result::neq for err with ok must not alter src", "[optional]")
     REQUIRE(res1.unwrap_err() == FAIL);
 }
 
-TEST_CASE("Result::neq for err with err must not alter src", "[optional]")
+TEST_CASE("Result::neq for err with err must not alter src", "[result]")
 {
     auto res1 = TestResult::Err(FAIL);
 
@@ -1243,7 +1243,7 @@ TEST_CASE("Result::neq for err with err must not alter src", "[optional]")
     REQUIRE(res1.unwrap_err() == FAIL);
 }
 
-TEST_CASE("Result::neq for err with diff err must not alter src", "[optional]")
+TEST_CASE("Result::neq for err with diff err must not alter src", "[result]")
 {
     auto res1 = TestResult::Err(FAIL);
 
@@ -1253,7 +1253,7 @@ TEST_CASE("Result::neq for err with diff err must not alter src", "[optional]")
     REQUIRE(res1.unwrap_err() == FAIL);
 }
 
-TEST_CASE("Result::neq for err with inval must not alter src", "[optional]")
+TEST_CASE("Result::neq for err with inval must not alter src", "[result]")
 {
     auto res1 = TestResult::Err(FAIL);
 
@@ -1267,7 +1267,7 @@ TEST_CASE("Result::neq for err with inval must not alter src", "[optional]")
 }
 
 
-TEST_CASE("Result::neq for inval with ok must give true", "[optional]")
+TEST_CASE("Result::neq for inval with ok must give true", "[result]")
 {
     auto res1 = TestResult::Ok(1);
     auto res2 = std::move(res1);
@@ -1275,7 +1275,7 @@ TEST_CASE("Result::neq for inval with ok must give true", "[optional]")
     REQUIRE(res1 != TestResult::Ok(1));
 }
 
-TEST_CASE("Result::neq for inval with err must give true", "[optional]")
+TEST_CASE("Result::neq for inval with err must give true", "[result]")
 {
     auto res1 = TestResult::Err(FAIL);
     auto res2 = std::move(res1);
@@ -1283,7 +1283,7 @@ TEST_CASE("Result::neq for inval with err must give true", "[optional]")
     REQUIRE(res1 != TestResult::Err(FAIL));
 }
 
-TEST_CASE("Result::neq for inval with inval must give false", "[optional]")
+TEST_CASE("Result::neq for inval with inval must give false", "[result]")
 {
     auto res1 = TestResult::Ok(2);
     auto res2 = std::move(res1);
@@ -1295,7 +1295,7 @@ TEST_CASE("Result::neq for inval with inval must give false", "[optional]")
 }
 
 
-TEST_CASE("Result::neq for inval with ok must not alter src", "[optional]")
+TEST_CASE("Result::neq for inval with ok must not alter src", "[result]")
 {
     auto res1 = TestResult::Err(FAIL);
     auto res2 = std::move(res1);
@@ -1307,7 +1307,7 @@ TEST_CASE("Result::neq for inval with ok must not alter src", "[optional]")
     REQUIRE(!res1.is_err());
 }
 
-TEST_CASE("Result::neq for inval with err must not alter src", "[optional]")
+TEST_CASE("Result::neq for inval with err must not alter src", "[result]")
 {
     auto res1 = TestResult::Err(FAIL);
     auto res2 = std::move(res1);
@@ -1319,7 +1319,7 @@ TEST_CASE("Result::neq for inval with err must not alter src", "[optional]")
     REQUIRE(!res1.is_err());
 }
 
-TEST_CASE("Result::neq for inval with inval must not alter src", "[optional]")
+TEST_CASE("Result::neq for inval with inval must not alter src", "[result]")
 {
     auto res1 = TestResult::Ok(2);
     auto res2 = std::move(res1);

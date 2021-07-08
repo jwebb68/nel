@@ -6,7 +6,7 @@ namespace nel {
 template<typename T>
 struct Slice;
 
-}
+} // namespace nel
 
 #include "iterator.hh"
 #include "enumerator.hh"
@@ -18,7 +18,7 @@ template<typename T>
 struct Slice {
     private:
         T *const content_;
-        // implicit start at 0
+        // Implicit start at 0.
         size_t len_;
 
     public:
@@ -30,7 +30,7 @@ struct Slice {
     public:
         Slice(void) = delete;
 
-        // could copy
+        // Could copy.
         Slice(Slice const &) = delete;
         Slice &operator=(Slice const &) const = delete;
 
@@ -46,14 +46,14 @@ struct Slice {
 
         constexpr T const &operator[](size_t idx) const noexcept
         {
-            nel_panic_ifnot(idx < len(), "index out of range");
+            nel_panic_if_not(idx < len(), "index out of range");
             return content_[idx];
         }
 
 
         constexpr T &operator[](size_t idx) noexcept
         {
-            nel_panic_ifnot(idx < len(), "index out of range");
+            nel_panic_if_not(idx < len(), "index out of range");
             return content_[idx];
         }
 
@@ -108,13 +108,13 @@ struct Slice {
         }
 
 
-        constexpr Enumerator<T> enumer(void) noexcept
+        constexpr Enumerator<T> enumerate(void) noexcept
         {
             return Enumerator<T>(content_, len_);
         }
 
 
-        constexpr Enumerator<T const> const enumer(void) const noexcept
+        constexpr Enumerator<T const> const enumerate(void) const noexcept
         {
             return Enumerator<T const>(content_, len_);
         }
@@ -135,7 +135,7 @@ struct Slice {
         }
 };
 
-}
+} // namespace nel
 
 
-#endif//NEL_HEAPLESS_SLICE_HH
+#endif // NEL_HEAPLESS_SLICE_HH

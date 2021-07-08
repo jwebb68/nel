@@ -4,7 +4,7 @@
 namespace nel {
 template<typename T>
 struct Element;
-}
+} // namespace nel
 
 #include <utility> // std::move, std::forward
 
@@ -17,7 +17,7 @@ struct Element {
     public:
         ~Element(void) = default;
 
-        // what if T has a default cons?
+        // What if T has a default cons?
         // Element(void) = delete;
 
         Element(Element const &) = delete;
@@ -58,7 +58,7 @@ struct Element {
         }
 };
 
-}
+} // namespace nel
 
 
-#endif//NEL_ELEMENT_HH
+#endif // NEL_ELEMENT_HH

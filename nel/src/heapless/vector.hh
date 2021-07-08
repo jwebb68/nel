@@ -7,8 +7,8 @@ namespace heapless {
 template<typename T, size_t const N>
 struct Vector;
 
-}
-}
+} // namespace heapless
+} // namespace nel
 
 #include "log.hh"
 #include "iterator.hh"
@@ -24,12 +24,12 @@ template<typename T, size_t const N>
 struct Vector {
     public:
     private:
-        // number initialised
+        // Number initialised.
         size_t len_;
-        // must create with N uninitialised
-        // so really want only the memory allocated.
-        // will manually initialise on push_back, deinitialise on pop_back/dtruct
-        // C++: default array cons does not call default on each, but allocs uninit?
+        // Must create with N uninitialised.
+        // So really want only the memory allocated.
+        // Will manually initialise on push_back, deinitialise on pop_back/destruct
+        // C++: default array constr does not call default on each, but allocs uninit?
         T values_[N];
 
     public:
@@ -40,11 +40,11 @@ struct Vector {
             }
         }
 
-        // no copying..
+        // No copying..
         constexpr Vector(Vector const &o) = delete;
         constexpr Vector &operator=(Vector const &o) = delete;
 
-        // moving ok
+        // Moving ok
         Vector(Vector &&o) noexcept
             : len_(std::move(o.len_))
         {
@@ -55,7 +55,9 @@ struct Vector {
         }
         Vector &operator=(Vector &&o) noexcept
         {
-            // expensive to call swap on large inplace object.
+            // Expensive to call swap on large inplace object.
+            // So move to final dest.
+            // Only as move cannot fail and leave this destructed.
             this->~Vector();
             new (this) Vector(std::move(o));
             return *this;
@@ -99,20 +101,20 @@ struct Vector {
 
         constexpr T &operator[](size_t idx) noexcept
         {
-            nel_panic_ifnot(idx < len(), "index out of range");
+            nel_panic_if_not(idx < len(), "index out of range");
             return values_[idx];
         }
         constexpr T const &operator[](size_t idx) const noexcept
         {
-            nel_panic_ifnot(idx < len(), "index out of range");
+            nel_panic_if_not(idx < len(), "index out of range");
             return values_[idx];
         }
 
 
         // TODO: fail on fixed?
-        // or return Result<void, ?>
-        // and fail if over N
-        // shouldn't be errT=bool but don't know what to use..
+        // Or return Result<void, ?>
+        // And fail if over N
+        // Shouldn't be errT=bool but don't know what to use..
         //Result<void, bool> reserve(size_t new_capacity) noexcept
         void reserve(size_t new_capacity) noexcept
         {
@@ -123,11 +125,11 @@ struct Vector {
         Result<void, T> push_back(Args &&...args) noexcept
         {
             if (len() >= capacity()) {
-                // really? must one be created for err?
+                // Really? must one be created for err?
                 return Result<void, T>::Err(std::forward<Args>(args)...);
             }
-            // remember, values at len and beyond are uninitialised.
-            // so need to use new to contruct them.
+            // Remember, values at len and beyond are uninitialised.
+            // So need to use new to construct them.
             new (&values_[len()]) T(std::forward<Args>(args)...);
             len_ += 1;
             return Result<void, T>::Ok();
@@ -174,13 +176,13 @@ struct Vector {
             return slice().iter();
         }
 
-        constexpr Enumerator<T> enumer(void) noexcept
+        constexpr Enumerator<T> enumerate(void) noexcept
         {
-            return slice().enumer();
+            return slice().enumerate();
         }
-        constexpr Enumerator<T const> enumer(void) const noexcept
+        constexpr Enumerator<T const> enumerate(void) const noexcept
         {
-            return slice().enumer();
+            return slice().enumerate();
         }
 
     public:
@@ -195,9 +197,9 @@ struct Vector {
         }
 };
 
-}
-}
+} // namespace heapless
+} // namespace nel
 
 
 
-#endif//NEL_HEAPLESS_VECTOR_HH
+#endif // NEL_HEAPLESS_VECTOR_HH

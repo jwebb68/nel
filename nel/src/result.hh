@@ -6,7 +6,7 @@ namespace nel {
 template<typename T, typename E>
 class Result;
 
-}
+} // namespace nel
 
 #include "element.hh"
 #include "optional.hh"
@@ -14,7 +14,7 @@ class Result;
 #include "panic.hh"
 
 #include <utility> // std::move, std::forward
-#include <functional> //std::function
+#include <functional> // std::function
 
 namespace nel {
 
@@ -52,10 +52,10 @@ namespace nel {
  * etc.
  *
  */
-// T must implement move semanitcs
-// T may not have implement copy semanitcs
-// E must implement move semanitcs
-// E may not have implement copy semanitcs
+// T must implement move semantics
+// T may not have implement copy semantics
+// E must implement move semantics
+// E may not have implement copy semantics
 // T must implement operator==, operator!=
 // E must implement operator==, operator!=
 template<typename T, typename E>
@@ -65,9 +65,9 @@ class Result {
         typedef T OkT;
         typedef E ErrT;
 
-        // Tagged enum thing
+        // Tagged enum thing.
         // Similar to std::variant but without the exception throwing behaviour.
-        // maybe make into a nel::Variant ?
+        // Maybe make into a nel::Variant ?
         enum Tag { INVAL = 0, OK, ERR } tag_;
         template<enum Tag>
         struct Phantom {};
@@ -82,8 +82,7 @@ class Result {
             , ok_(std::forward<OkT>(v))
         {}
 
-        template<typename ...Args>
-        Result(Phantom<OK> const, Args &&...args) noexcept
+        template<typename ...Args> Result(Phantom<OK> const, Args &&...args) noexcept
             : tag_(OK)
             , ok_(std::forward<Args>(args)...)
         {}
@@ -93,8 +92,7 @@ class Result {
             , err_(std::forward<ErrT>(v))
         {}
 
-        template<typename ...Args>
-        Result(Phantom<ERR> const, Args &&...args) noexcept
+        template<typename ...Args> Result(Phantom<ERR> const, Args &&...args) noexcept
             : tag_(ERR)
             , err_(std::forward<Args>(args)...)
         {}
@@ -122,8 +120,8 @@ class Result {
             // But, want to abort/panic if a unhandled case is encountered
             // at runtime, much how a default hander would work if it was
             // present.
-            //std::cerr << "invalid Result: tag=" << tag_ << std::endl;
-            //std::abort();
+            // std::cerr << "invalid Result: tag=" << tag_ << std::endl;
+            // std::abort();
             nel_panic("invalid Result");
         }
 
@@ -144,8 +142,8 @@ class Result {
                     return;
                     break;
             }
-            //std::cerr << "invalid Result: tag=" << this->tag_ << std::endl;
-            //std::abort();
+            // std::cerr << "invalid Result: tag=" << this->tag_ << std::endl;
+            // std::abort();
             nel_panic("invalid Result");
         }
         Result &operator=(Result &&o) noexcept
@@ -174,8 +172,8 @@ class Result {
                 new (this) Result(std::move(o));
             }
 #else
-            // can be very inefficient.
-            // depends on impl of swap and dtor and m-ctor
+            // Can be very inefficient.
+            // Depends on impl of swap and dtor and m-ctor
             Result t(std::move(o));
             swap(t);
 #endif
@@ -185,16 +183,16 @@ class Result {
 #if 0
         void swap(Result &o) noexcept
         {
-            // yeah, hacky, not by-member, so bite me.
+            // Yeah, hacky, not by-member, so bite me.
             mymemswap((uint8_t *)this, (uint8_t *)&o, sizeof(*this));
         }
 #endif
 
-        // not using copy semanics, results are only moveable..
+        // Not using copy semantics, results are only moveable..
         Result(Result const &) = delete;
         Result &operator=(Result const &) const = delete;
 
-        // don't really want default ctor, but move semanitcs brought in a
+        // Don't really want default ctor, but move semantics brought in a
         // inval state, which can be used for it.
         constexpr Result(void) noexcept
             : tag_(INVAL)
@@ -260,7 +258,7 @@ class Result {
     public:
         // Comparision operators
         // Implemented in terms of the operator on the type,
-        // as some types may have more optimal impls of that oper than the
+        // as some types may have more optimal implementations of that operation than the
         // negation of it's opposite.
         /**
          * Is this equal by value to the result given?
@@ -286,7 +284,7 @@ class Result {
                         break;
                 }
                 nel_panic("invalid Result");
-                //std::abort();
+                // std::abort();
             }
             return false;
         }
@@ -315,7 +313,7 @@ class Result {
                         break;
                 }
                 nel_panic("invalid Result");
-                //std::abort();
+                // std::abort();
             }
             return true;
         }
@@ -359,7 +357,7 @@ class Result {
         {
             bool const is_ok = this->is_ok();
             tag_ = INVAL;
-            // TODO: remove need to explictly cast to Optional in each of the
+            // TODO: remove need to explicitly cast to Optional in each of the
             //       branches.. i.e. the Optional<T>:: bit.
             return is_ok
                    ? Optional<OkT>::Some(ok_.unwrap())
@@ -379,7 +377,7 @@ class Result {
         {
             bool const is_err = this->is_err();
             tag_ = INVAL;
-            // TODO: remove need to explictly cast to Optional in each of the
+            // TODO: remove need to explicitly cast to Optional in each of the
             //       branches.. i.e. the Optional<E>:: bit.
             return is_err
                    ? Optional<ErrT>::Some(err_.unwrap())
@@ -397,7 +395,7 @@ class Result {
          */
         OkT unwrap(void) noexcept
         {
-            nel_panic_ifnot(is_ok(), "not an ok");
+            nel_panic_if_not(is_ok(), "not an ok");
             tag_ = INVAL;
             return ok_.unwrap();
         }
@@ -413,7 +411,7 @@ class Result {
          */
         ErrT unwrap_err(void) noexcept
         {
-            nel_panic_ifnot(is_err(), "not an err");
+            nel_panic_if_not(is_err(), "not an err");
             tag_ = INVAL;
             return err_.unwrap();
         }
@@ -518,7 +516,7 @@ class Result {
         template<class U>
         Result<U, E> map(std::function < U(OkT &&) > fn) noexcept
         {
-            // TODO: remove need to explictly cast to result in each of the
+            // TODO: remove need to explicitly cast to result in each of the
             //       branches.. i.e. the Result<U,E>() bit.
             switch (tag_) {
                 case OK:
@@ -549,7 +547,7 @@ class Result {
         template<class F>
         Result<OkT, F> map_err(std::function < F(ErrT &&) > fn) noexcept
         {
-            // TODO: remove need to explictly cast to result in each of the
+            // TODO: remove need to explicitly cast to result in each of the
             //       branches.. i.e. the Result<U,E>() bit.
             switch (tag_) {
                 case OK:
@@ -568,7 +566,7 @@ class Result {
 
 
     public:
-        //friend std::ostream &operator<<(std::ostream &outs, Result const &val) {
+        // friend std::ostream &operator<<(std::ostream &outs, Result const &val) {
         friend Log &operator<<(Log &outs, Result const &val)  noexcept
         {
             switch (val.tag_) {
@@ -598,9 +596,9 @@ class Result<void, E> {
         typedef void OkT;
         typedef E ErrT;
 
-        // Tagged enum thing
+        // Tagged enum thing.
         // Similar to std::variant but without the exception throwing behaviour.
-        // maybe make into a nel::Variant ?
+        // Maybe make into a nel::Variant ?
         enum Tag { INVAL = 0, OK, ERR } tag_;
         template<enum Tag>
         struct Phantom {};
@@ -621,8 +619,7 @@ class Result<void, E> {
         {}
 
 
-        template<typename ...Args>
-        Result(Phantom<ERR> const, Args &&...args) noexcept
+        template<typename ...Args> Result(Phantom<ERR> const, Args &&...args) noexcept
             : tag_(ERR)
             , err_(std::forward<Args>(args)...)
         {}
@@ -651,7 +648,7 @@ class Result<void, E> {
             // at runtime, much how a default hander would work if it was
             // present.
             std::abort();
-            //nel_panic("invalid Result");
+            // nel_panic("invalid Result");
         }
 
 
@@ -692,16 +689,16 @@ class Result<void, E> {
                         return *this;
                         break;
                 }
-                //std::abort();
+                // std::abort();
                 nel_panic("invalid Result");
             } else {
-                // only safe if move-ctor guaranteed to not throw
+                // Only safe if move-ctor guaranteed to not throw/error .
                 this->~Result();
                 new (this) Result(std::move(o));
             }
 #else
-            // can be very inefficient.
-            // depends on impl of swap and dtor and m-ctor
+            // Can be very inefficient.
+            // Depends on impl of swap and dtor and m-ctor
             Result t(std::move(o));
             swap(t);
 #endif
@@ -711,16 +708,16 @@ class Result<void, E> {
 #if 0
         void swap(Result &o) noexcept
         {
-            // yeah, hacky, not by-member, so bite me.
+            // Yeah, hacky, not by-member, so bite me.
             mymemswap((uint8_t *)this, (uint8_t *)&o, sizeof(*this));
         }
 #endif
 
-        // not using copy semanics, results are only moveable..
+        // not using copy semantics, results are only moveable..
         Result(Result const &) = delete;
         Result &operator=(Result const &) const = delete;
 
-        // don't really want default ctor, but move semanitcs brought in a
+        // Don't really want default ctor, but move semantics brought in a
         // inval state, which can be used for it.
         constexpr Result(void) noexcept
             : tag_(INVAL)
@@ -765,7 +762,7 @@ class Result<void, E> {
     public:
         // Comparision operators
         // Implemented in terms of the operator on the type,
-        // as some types may have more optimal impls of that oper than the
+        // as some types may have more optimal implementations of thatoperationthan the
         // negation of it's opposite.
         /**
          * Is this equal by value to the result given?
@@ -867,7 +864,7 @@ class Result<void, E> {
         {
             bool const is_ok = this->is_ok();
             tag_ = INVAL;
-            // TODO: remove need to explictly cast to Optional in each of the
+            // TODO: remove need to explicitly cast to Optional in each of the
             //       branches.. i.e. the Optional<T>:: bit.
             return is_ok
                    ? Optional<OkT>::Some()
@@ -887,7 +884,7 @@ class Result<void, E> {
         {
             bool const is_err = this->is_err();
             tag_ = INVAL;
-            // TODO: remove need to explictly cast to Optional in each of the
+            // TODO: remove need to explicitly cast to Optional in each of the
             //       branches.. i.e. the Optional<E>:: bit.
             return is_err
                    ? Optional<ErrT>::Some(err_.unwrap())
@@ -905,7 +902,7 @@ class Result<void, E> {
          */
         void unwrap(void) noexcept
         {
-            nel_panic_ifnot(is_ok(), "not an ok");
+            nel_panic_if_not(is_ok(), "not an ok");
             tag_ = INVAL;
         }
 
@@ -920,7 +917,7 @@ class Result<void, E> {
          */
         ErrT unwrap_err(void) noexcept
         {
-            nel_panic_ifnot(is_err(), "not an err");
+            nel_panic_if_not(is_err(), "not an err");
             tag_ = INVAL;
             return err_.unwrap();
         }
@@ -988,7 +985,7 @@ class Result<void, E> {
         template<class U>
         Result<U, ErrT> map(std::function < U(void) > fn) noexcept
         {
-            // TODO: remove need to explictly cast to result in each of the
+            // TODO: remove need to explicitly cast to result in each of the
             //       branches.. i.e. the Result<U,E>() bit.
             switch (tag_) {
                 case OK:
@@ -1019,7 +1016,7 @@ class Result<void, E> {
         template<class F>
         Result<OkT, F> map_err(std::function < F(ErrT &&) > fn) noexcept
         {
-            // TODO: remove need to explictly cast to result in each of the
+            // TODO: remove need to explicitly cast to result in each of the
             //       branches.. i.e. the Result<U,E>() bit.
             switch (tag_) {
                 case OK:
@@ -1032,13 +1029,13 @@ class Result<void, E> {
                     return Result<OkT, F>();
                     break;
             }
-            //std::abort();
+            // std::abort();
             nel_panic("invalid Result");
         }
 
 
     public:
-        //friend std::ostream &operator<<(std::ostream &outs, Result const &val) {
+        // friend std::ostream &operator<<(std::ostream &outs, Result const &val) {
         friend Log &operator<<(Log &outs, Result const &val)  noexcept
         {
             switch (val.tag_) {
@@ -1061,7 +1058,7 @@ class Result<void, E> {
 };
 
 
-// calc v as a temp to keep f single eval-ed
+// Calc v as a temp to keep f single eval-ed
 #define NEL_RESULT_TRY(f) \
     __extension__ ({ \
         auto v = std::move(f); \

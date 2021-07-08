@@ -7,8 +7,8 @@ namespace heaped {
 template<typename T>
 struct Vector;
 
-}
-}
+} // namespace heaped
+} // namespace nel
 
 #include "log.hh"
 #include "heaped/node.hh"
@@ -25,21 +25,21 @@ template<typename T>
 struct Vector {
     public:
     private:
-        // may be shared between Vector<T> and Array<T> and Slice<T>?
-        // vector: dynamic
-        // array: static
-        // array from vector: move node from vector to array.
-        // vector from array: move node from vector into array,  arguably nope.
+        // May be shared between Vector<T> and Array<T> and Slice<T>?
+        // Vector: dynamic
+        // Array: static
+        // Array from vector: move node from vector to array.
+        // Vector from array: move node from vector into array,  arguably nope.
 
 
-        // don't use unique_ptr as didn't use new to alloc it.
+        // Don't use unique_ptr as didn't use new to alloc it.
         // TODO: create malloc/free unique_ptr or see if unique_ptr can be used
         // to call free directly.. (it seems to have capability to do so).
         typedef Node<T> VecNode;
         VecNode *item_;
 
     public:
-        // own an existing array
+        // Own an existing array.
         // hmm, fraught with issues that
         // Array(T *const v, size_t len)
         //     : item_(v)
@@ -53,7 +53,7 @@ struct Vector {
             : item_(nullptr)
         {}
 
-        // no copying..
+        // No copying..
         constexpr Vector(Vector const &o) = delete;
         constexpr Vector &operator=(Vector const &o) = delete;
 
@@ -76,15 +76,15 @@ struct Vector {
         constexpr Vector(std::initializer_list<T> l)
             : item_(nullptr)
         {
-            // ah, can fail...
+            // Ah, can fail...
             reserve(capacity() + l.size());
-            // maybe should be 'item_ = l' ?
+            // Maybe should be 'item_ = l' ?
             // i.e. assign.
             new (item_) VecNode(l);
         }
 
     public:
-        // for conversion to array..?
+        // For conversion to array..?
         VecNode *detach(void) noexcept
         {
             VecNode *t = item_;
@@ -116,7 +116,7 @@ struct Vector {
             }
         }
 
-        // what to return on reserve fail?
+        // What to return on reserve fail?
         // Result<void, ?> ?
         void reserve(size_t capacity) noexcept
         {
@@ -126,21 +126,21 @@ struct Vector {
             // TODO: could over alloc to some quanta, e.g. 16, 8, etc..
             // TODO: handle alignment issues here.
             if (item_ == nullptr) {
-                // no current alloc..
+                // No current alloc..
                 item_ = VecNode::malloc(cap);
             } else if (cap > item_->capacity()) {
-                // grow.. + realloc
-                // no copying of contained, so bitwise move is ok
+                // Grow.. + realloc.
+                // No copying of contained, so bitwise move is ok.
                 item_ = VecNode::realloc(item_, cap);
             } else if (cap < item_->capacity()) {
-                // shrink (release off excess..) + realloc
-                // can shrink below current inuse ?
+                // Shrink (release off excess..) + realloc.
+                // Can shrink below current in use ?
                 if (cap > item_->len()) {
-                    // no copying of contained, so bitwise move is ok
-                    // can realloc handle shrink?
+                    // No copying of contained, so bitwise move is ok.
+                    // Can realloc handle shrink?
                     item_ = VecNode::realloc(item_, cap);
                 } else {
-                    // not shrinking if same or below current inuse
+                    // Not shrinking if same or below current in use.
                 }
             } else {
                 // cap == item_->capacity()
@@ -251,7 +251,7 @@ struct Vector {
         }
 };
 
-}
-}
+} // namespace heaped
+} // namespace nel
 
-#endif//NEL_HEAPED_VECTOR_HH
+#endif // NEL_HEAPED_VECTOR_HH

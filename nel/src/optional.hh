@@ -6,7 +6,7 @@ namespace nel {
 template<typename T>
 class Optional;
 
-}
+} // namespace nel
 
 #include "log.hh"
 #include "element.hh"
@@ -43,12 +43,12 @@ namespace nel {
  *
  *    bool b6 = v1 == Some(1); // true
  *    bool b7 = v1 == Some(2); // false
- *    bool b8 = v1 == Some("haha"); // fail to compile, type mismatch
+ *    bool b8 = v1 == Some("ha ha"); // fail to compile, type mismatch
  *    bool b9 = v1 == None(); // false
  *
  *    bool b10 = v2 == Some(1); // false
  *    bool b11 = v2 == Some(2); // false
- *    bool b12 = v2 == Some("haha"); // fail to compile., type mismatch
+ *    bool b12 = v2 == Some("ha ha"); // fail to compile., type mismatch
  *    bool b13 = v2 == None(); // true
 
  *    int i = v1.unwrap();
@@ -65,18 +65,18 @@ template<typename T>
 class Optional {
     public:
     private:
-        // need to use class/struct as references cannot be used in unions
+        // Need to use class/struct as references cannot be used in unions,
         // so this is possible: Optional<Foo &>
         typedef T SomeT;
 
-        // Tagged enum thing
+        // Tagged enum thing.
         // Similar to std::variant but without the exception throwing behaviour.
-        // maybe make into a nel::Variant ?
+        // Maybe make into a nel::Variant ?
         enum Tag { INVAL = 0, NONE, SOME } tag_;
         template<enum Tag>
         struct Phantom {};
 
-        // use union to disable certain default methods on SomeT
+        // Use union to disable certain default methods on SomeT
         union {
             Element<SomeT> some_;
         };
@@ -94,8 +94,8 @@ class Optional {
         }
 
 
-        template<typename ...Args>
-        Optional(Phantom<SOME> const, Args &&...args) noexcept
+        template<typename ...Args> Optional(Phantom<SOME> const,
+                                            Args &&...args) noexcept
             : tag_(SOME)
             , some_(std::forward<Args>(args)...)
         {
@@ -126,14 +126,14 @@ class Optional {
             // at runtime, much how a default hander would work if it was
             // present.
 
-            // for gcc/clang minsize: if this not nell:abort,
+            // For gcc/clang minsize: if this not nell:abort,
             // then iteration may not collapse into a tight loop.
-            // it's the  need for arguments that's doing it.
-            // for O3: does not affect and iteration collapses into tight loop
+            // It's the  need for arguments that's doing it.
+            // For O3: does not affect and iteration collapses into tight loop
             // TODO: look into stack trace dumper on fail.
-            // but would still like a message..
-            // for arm:minsize: if panic, then does not collapse (func with arg issue)
-            //nel_panic("invalid optional");
+            // But would still like a message..
+            // For arm:minsize: if panic, then does not collapse (func with arg issue)
+            // nel_panic("invalid optional");
             nel::abort();
         }
 
@@ -141,13 +141,13 @@ class Optional {
         // Don't want this as there is no default for an optional.
         // i.e. require a value, even if it's a None (i.e. being explicit).
         // really? Default to None/Inval?
-        // But use of move-ctor madates an inval state, so can have a default.
-        //Optional(void) = delete;
+        // But use of move-ctor mandates an inval state, so can have a default.
+        // Optional(void) = delete;
         constexpr Optional(void) noexcept
             : tag_(INVAL)
         {}
 
-        // don't want copy semanitics here, use move instead.
+        // Don't want copy semantics here, use move instead.
         constexpr Optional(Optional const &o) = delete;
         constexpr Optional &operator=(Optional const &o) const = delete;
 
@@ -174,8 +174,8 @@ class Optional {
         constexpr Optional &operator=(Optional &&o) noexcept
         {
 #if 1
-            // If same tag, use ass-move oper on type directly..
-            // maybe type has more efficient move for it's impl.
+            // If same tag, use assign-move operation on type directly..
+            // Maybe type has more efficient move for it's impl.
             if (tag_ == o.tag_) {
                 o.tag_ = INVAL;
                 switch (tag_) {
@@ -192,9 +192,9 @@ class Optional {
                 }
                 nel_panic("invalid Optional");
             } else {
-                // destruct and move, more efficient than move+swap
-                // esp if move is copy+wipe.
-                // but only if moving does not throw.
+                // Destruct and move, more efficient than move+swap
+                // Esp if move is copy+wipe.
+                // But only if moving does not throw.
                 this->~Optional();
                 new (this) Optional(std::move(o));
             }
@@ -275,10 +275,10 @@ class Optional {
 
 
     public:
-        // contained value extraction with consumption
-        // i..e extracting invalidates the container.
-        // prob not expected C++ i.e. values being invalidated by use
-        // and more acess by const ref or copy-out.
+        // Contained value extraction with consumption.
+        // i.e. extracting invalidates the container.
+        // Prob not expected C++ i.e. values being invalidated by use
+        // and more access by const ref or copy-out.
 
         /**
          * Extract and return the contained value if a Some, consuming the optional.
@@ -289,7 +289,7 @@ class Optional {
          */
         SomeT unwrap(void) noexcept
         {
-            nel_panic_ifnot(is_some(), "not a Some");
+            nel_panic_if_not(is_some(), "not a Some");
             tag_ = INVAL;
             return some_.unwrap();
         }
@@ -318,12 +318,12 @@ class Optional {
         }
 
         // Why no access via references?
-        // this infers copying of value which I want to prevent.
+        // Because this allows copying of value out which I want to prevent.
 
     public:
         // Comparision operators
         // Implemented in terms of the operator on the type,
-        // as some types may have more optimal impls of that oper than the
+        // as some types may have more optimal implementations of thatoperationthan the
         // negation of it's opposite.
         /**
          * Is this equal by value to the optional given?
@@ -348,7 +348,7 @@ class Optional {
                         return true;
                         break;
                 }
-                //std::abort();
+                // std::abort();
                 nel_panic("invalid Optional");
             }
             return false;
@@ -378,7 +378,7 @@ class Optional {
                         return false;
                         break;
                 }
-                //std::abort();
+                // std::abort();
                 nel_panic("invalid Optional");
             }
             return true;
@@ -386,7 +386,7 @@ class Optional {
 
 
     public:
-        //friend std::ostream &operator<<(std::ostream &outs, Optional const &val) {
+        // friend std::ostream &operator<<(std::ostream &outs, Optional const &val) {
         friend Log &operator<<(Log &outs, Optional const &val) noexcept
         {
             switch (val.tag_) {
@@ -415,9 +415,9 @@ class Optional<void> {
         typedef void SomeT;
 
     private:
-        // Tagged enum thing
+        // Tagged enum thing.
         // Similar to std::variant but without the exception throwing behaviour.
-        // maybe make into a nel::Variant ?
+        // Maybe make into a nel::Variant ?
         enum Tag { INVAL = 0, NONE, SOME } tag_;
         template<enum Tag>
         struct Phantom {};
@@ -456,14 +456,14 @@ class Optional<void> {
         // Don't want this as there is no default for an optional.
         // i.e. require a value, even if it's a None (i.e. being explicit).
         // really? Default to None/Inval?
-        // But use of move-ctor madates an inval state, so can have a default.
-        //Optional(void) = delete;
+        // But use of move-ctor mandates an inval state, so can have a default.
+        // Optional(void) = delete;
         constexpr Optional(void) noexcept
             : tag_(INVAL)
         {}
 
 
-        // don't want copy semanitics here, use move instead.
+        // Don't want copy semantics here, use move instead.
         constexpr Optional(Optional const &o) = delete;
         constexpr Optional &operator=(Optional const &o) const = delete;
 
@@ -490,7 +490,7 @@ class Optional<void> {
         constexpr Optional &operator=(Optional &&o) noexcept
         {
 #if 1
-            // If same tag, use ass-move oper on type directly..
+            // If same tag, use ass-moveoperationon type directly..
             // maybe type has more efficient move for it's impl.
             if (tag_ == o.tag_) {
                 o.tag_ = INVAL;
@@ -507,9 +507,9 @@ class Optional<void> {
                 }
                 nel_panic("invalid Optional");
             } else {
-                // destruct and move, more efficient than move+swap
-                // esp if move is copy+wipe.
-                // but only if moving does not throw.
+                // Destruct and move, more efficient than move+swap
+                // Especially if move is copy+wipe.
+                // But only if moving does not error.
                 this->~Optional();
                 new (this) Optional(std::move(o));
             }
@@ -527,7 +527,7 @@ class Optional<void> {
 #if 0
         void swap(Optional &o) noexcept
         {
-            // hacky, not by member, so bite me.
+            // Hacky, not by member, so bite me.
             memswap((uint8_t *)this, (uint8_t *)&o, sizeof(*this));
         }
 #endif
@@ -538,7 +538,7 @@ class Optional<void> {
          *
          * @returns an Optional 'wrapping' a None
          */
-        // cannot be constexpr since struct has non-trivial dtor..
+        // Cannot be constexpr since struct has non-trivial dtor..
         static Optional None(void) noexcept
         {
             return Optional(Phantom<NONE>());
@@ -550,7 +550,7 @@ class Optional<void> {
          *
          * @returns an Optional 'wrapping' the value created from the values given.
          */
-        // cannot be constexpr since struct has non-trivial dtor..
+        // Cannot be constexpr since struct has non-trivial dtor..
         static Optional Some(void) noexcept
         {
             return Optional(Phantom<SOME>());
@@ -585,10 +585,10 @@ class Optional<void> {
 
 
     public:
-        // contained value extraction with consumption
-        // i..e extracting invalidates the container.
-        // prob not expected C++ i.e. values being invalidated by use
-        // and more acess by const ref or copy-out.
+        // Contained value extraction with consumption.
+        // i.e. extracting invalidates the container.
+        // Prob not expected C++ i.e. values being invalidated by use
+        // and more access by const ref or copy-out.
 
         /**
          * Extract and return the contained value if a Some, consuming the optional.
@@ -599,7 +599,7 @@ class Optional<void> {
          */
         void unwrap(void) noexcept
         {
-            nel_panic_ifnot(is_some(), "not a Some");
+            nel_panic_if_not(is_some(), "not a Some");
             tag_ = INVAL;
         }
 
@@ -619,12 +619,12 @@ class Optional<void> {
 
 
         // Why no access via references?
-        // this infers copying of value which I want to prevent.
+        // This infers copying of value which I want to prevent.
 
     public:
         // Comparision operators
         // Implemented in terms of the operator on the type,
-        // as some types may have more optimal impls of that oper than the
+        // as some types may have more optimal implementations of thatoperationthan the
         // negation of it's opposite.
         /**
          * Is this equal by value to the optional given?
@@ -649,7 +649,7 @@ class Optional<void> {
                         return true;
                         break;
                 }
-                //std::abort();
+                // std::abort();
                 nel_panic("invalid Optional");
             }
             return false;
@@ -679,7 +679,7 @@ class Optional<void> {
                         return false;
                         break;
                 }
-                //std::abort();
+                // std::abort();
                 nel_panic("invalid Optional");
             }
             return true;
@@ -687,7 +687,7 @@ class Optional<void> {
 
 
     public:
-        //friend std::ostream &operator<<(std::ostream &outs, Optional const &val) {
+        // friend std::ostream &operator<<(std::ostream &outs, Optional const &val) {
         friend Log &operator<<(Log &outs, Optional const &val) noexcept
         {
             switch (val.tag_) {

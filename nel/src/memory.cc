@@ -111,40 +111,40 @@ static uint8_t *as_u8ptr_mut(void *p)
 }
 
 
-void *realloc_aligned(void *oldp, size_t align, size_t size) noexcept
+void *realloc_aligned(void *old_p, size_t align, size_t size) noexcept
 {
-    Alloc *olda = Alloc::from_payload_ptr(oldp);
+    Alloc *old_a = Alloc::from_payload_ptr(old_p);
 
     // unaligned start of allocated memory.
-    Alloc *newa = reinterpret_cast<Alloc *>(std::realloc(olda, size + align));
-    if (newa == nullptr) {
-        return newa;
+    Alloc *new_a = reinterpret_cast<Alloc *>(std::realloc(old_a, size + align));
+    if (new_a == nullptr) {
+        return new_a;
     }
 
-    void *newp;
-    if (oldp != nullptr && newa == olda) {
+    void *new_p;
+    if (old_p != nullptr && new_a == old_a) {
         // reallocing and not moved in realloc.
-        newp = oldp;
+        new_p = old_p;
     } else {
         // new alloc.. or moved in realloc.
         // align to next highest al boundary.
-        void *p1 = newa;
+        void *p1 = new_a;
         size_t sz2 = size + align;
         uint8_t *aligneda_u8 = as_u8ptr_mut(std::align(align, size, p1, sz2));
         // TODO: handle realign fails..
         // if realign fails, object is invalid!!
         nel_assert(aligneda_u8 != nullptr);
-        nel_assert((aligneda_u8 + size) <= (as_u8ptr_mut(newa) + size + align));
-        if (newa != olda && aligneda_u8 != as_u8ptr_mut(newa)) {
-            // if realloced and needed aligning then move data.
+        nel_assert((aligneda_u8 + size) <= (as_u8ptr_mut(new_a) + size + align));
+        if (new_a != old_a && aligneda_u8 != as_u8ptr_mut(new_a)) {
+            // if realloc'd and needed aligning then move data.
             // more slowness, shame malloc cannot do this when allocing.
-            std::memmove(aligneda_u8, newa, size);
+            std::memmove(aligneda_u8, new_a, size);
         }
-        Alloc *aligneda = reinterpret_cast<Alloc *>(aligneda_u8);
-        aligneda->align_ = align;
-        newp = aligneda->to_payload_ptr();
+        Alloc *aligned_a = reinterpret_cast<Alloc *>(aligneda_u8);
+        aligned_a->align_ = align;
+        new_p = aligned_a->to_payload_ptr();
     }
-    return newp;
+    return new_p;
 }
 
 

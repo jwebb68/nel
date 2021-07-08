@@ -7,20 +7,20 @@ namespace heaped {
 template<typename T>
 struct RC;
 
-}
-}
+} // namespace heaped
+} // namespace nel
 
 #include "element.hh"
 
-#include <utility> //std::move, std::forward
+#include <utility> // std::move, std::forward
 
 namespace nel {
 namespace heaped {
 
 template<typename T>
 struct RC {
-        // contained value on the heap
-        // single threaded refernce counted sharing.
+        // Contained value on the heap.
+        // Single threaded reference counted sharing.
     private:
         struct Node {
             public:
@@ -28,15 +28,15 @@ struct RC {
                 Element<T> value_;
 
             public:
-                // no copying.. use refcounting
+                // No copying.. use refcounting.
                 Node(Node const &o) =  delete;
                 Node &operator=(Node const &o) =  delete;
 
-                // no moving.. use refcounting
+                // No moving.. use refcounting.
                 Node(Node &&o) =  delete;
                 Node &operator=(Node &&o) =  delete;
 
-                // value might not have a default..
+                // Value might not have a default..
                 //constexpr Node(void) = delete;
 
                 template<typename ...Args>
@@ -46,7 +46,7 @@ struct RC {
                 {}
 
             public:
-                // could be members, but then i'd end up with delete this in the release impl..
+                // Could be members, but then it'll end up with 'delete this' in the release impl..
                 // which I don't want.
                 static void grab(Node *const v) noexcept
                 {
@@ -64,9 +64,9 @@ struct RC {
                 }
                 static T unwrap(Node *const v) noexcept
                 {
-                    // value moved out from value_ on unwrap
-                    // value_ is eff. destroyed by unwrap
-                    // so release the internal bit as no longer valid.
+                    // Value moved out from value_ on unwrap().
+                    // Value_ is eff. destroyed by unwrap().
+                    // So release the internal bit as no longer valid.
                     auto o = v->value_.unwrap();
                     release(v);
                     return o;
@@ -74,9 +74,9 @@ struct RC {
         };
 
     private:
-        // cannot use box, as box would call delete on contained on delete of this
+        // Cannot use Box, as Box would call delete on contained on delete of this
         // which is not what's wanted.
-        // weak_box? //weak_ptr?
+        // weak_box? weak_ptr?
         Node *node_;
 
     public:
@@ -85,7 +85,7 @@ struct RC {
             Node::release(node_);
         }
 
-        // it's meant to be shared, so can copy this.
+        // It's meant to be shared, so can copy this.
         constexpr RC(RC const &o) noexcept
             : node_(nullptr)
         {
@@ -130,18 +130,18 @@ struct RC {
         constexpr RC(Args &&...args) noexcept
             : node_(new Node(std::forward<Args>(args)...))
         {
-            // Node created pre-grabbed
+            // Node created pre-grabbed.
         }
 
     public:
         constexpr T &operator*(void) noexcept
         {
-            nel_panic_ifnot(has_value(), "not a value");
+            nel_panic_if_not(has_value(), "not a value");
             return node_->value;
         }
         constexpr T const &operator*(void) const noexcept
         {
-            nel_panic_ifnot(has_value(), "not a value");
+            nel_panic_if_not(has_value(), "not a value");
             return node_->value;
         }
         constexpr bool has_value(void) const noexcept
@@ -150,19 +150,17 @@ struct RC {
         }
         constexpr T unwrap(void) noexcept
         {
-            nel_panic_ifnot(has_value(), "not a value");
+            nel_panic_if_not(has_value(), "not a value");
             auto o = Node::unwrap(node_);
             node_ = nullptr;
             return o;
         }
         constexpr bool operator==(RC const &o) const noexcept
         {
-            // same struct, must be same..
             return node_ == o.node_;
         }
         constexpr bool operator!=(RC const &o) const noexcept
         {
-            // same struct, must be same..
             return node_ != o.node_;
         }
         constexpr bool operator<(RC const &o) const noexcept
@@ -183,7 +181,7 @@ struct RC {
         }
 };
 
-}
-}
+} // namespace heaped
+} // namespace nel
 
-#endif//NEL_HEAPED_RC_HH
+#endif // NEL_HEAPED_RC_HH

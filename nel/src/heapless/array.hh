@@ -7,8 +7,8 @@ namespace heapless {
 template<typename T, size_t const N>
 struct Array;
 
-}
-}
+} // namespace heapless
+} // namespace nel
 
 #include "iterator.hh"
 #include "enumerator.hh"
@@ -18,9 +18,9 @@ struct Array;
 namespace nel {
 namespace heapless {
 
-// fixed size array
-// all items allocd when created
-// all items deletd when destroyed
+// Fixed size array.
+// All items allocd when created.
+// All items deletd when destroyed.
 //
 template<typename T, size_t const N>
 struct Array {
@@ -29,17 +29,17 @@ struct Array {
         T values_[N];
 
     public:
-        // does this call dtor on each values_ entry?
+        // Does this call dtor on each values_ entry?
         ~Array(void) = default;
 
-        // if no init list?
-        // only if T has default cons
-        // is this default?
+        // If no init list?
+        // Only if T has default cons
+        // Is this default?
         constexpr Array(void) = default;
 
         constexpr Array(std::initializer_list<T> l)
         {
-            // interesting
+            // Interesting
             // gcc: if init-list ctor is empty, then values are created inplace .. not.
             // gcc: creates init list in temp space, then copies into required space..
             //      todo: avoid this copying.. can I get them created inplace..
@@ -48,13 +48,13 @@ struct Array {
                 new (&values_[i]) T(std::move(*it));
             }
         }
-        // if type has copy, then could fill? use slice for that..
+        // If type has copy, then could fill? use slice for that..
 
-        // no copying
+        // No copying.
         constexpr Array(Array const &o) = delete;
         constexpr Array &operator=(Array const &o) = delete;
 
-        // moving allowed
+        // Moving allowed.
         constexpr Array(Array &&o) noexcept
         {
             for (size_t i = 0; i < N; ++i) {
@@ -63,8 +63,9 @@ struct Array {
         }
         constexpr Array &operator=(Array &&o) noexcept
         {
-            // expensive to move o to temp, then to swap o and this (using moves)
+            // Expensive to move o to temp, then to swap o and this (using moves)
             // quicker to just move o into this.
+            // Only because move cannot fail (and leave this destructed).
             ~Array();
             new (this) Array(std::move(o));
         }
@@ -75,17 +76,17 @@ struct Array {
             return N;
         }
 
-        // move item in (idx)
-        // move item out (idx)
+        // Move item in (idx).
+        // Move item out (idx).
         // [const] ref item (idx)
         constexpr T &operator[](size_t idx) noexcept
         {
-            nel_panic_ifnot(idx < len(), "index out of range");
+            nel_panic_if_not(idx < len(), "index out of range");
             return values_[idx];
         }
         constexpr T const &operator[](size_t idx) const noexcept
         {
-            nel_panic_ifnot(idx < len(), "index out of range");
+            nel_panic_if_not(idx < len(), "index out of range");
             return values_[idx];
         }
 
@@ -95,7 +96,7 @@ struct Array {
         }
         constexpr Slice<T> slice(size_t b, size_t e)
         {
-            // err N yet given differing range?
+            // Err N yet given differing range?
             return slice().slice(b,e);
         }
 
@@ -105,7 +106,7 @@ struct Array {
         }
         constexpr Slice<T const> slice(size_t b, size_t e) const
         {
-            // err N yet given differing range?
+            // Err N yet given differing range?
             return slice().slice(b,e);
         }
 
@@ -118,13 +119,13 @@ struct Array {
             return slice().iter();
         }
 
-        constexpr Enumerator<T const> enumer(void) const
+        constexpr Enumerator<T const> enumerate(void) const
         {
-            return slice().enumer();
+            return slice().enumerate();
         }
-        constexpr Enumerator<T> enumer(void)
+        constexpr Enumerator<T> enumerate(void)
         {
-            return slice().enumer();
+            return slice().enumerate();
         }
 
     public:
@@ -141,8 +142,8 @@ struct Array {
 };
 
 
-}
-}
+} // namespace heapless
+} // namespace nel
 
 
-#endif//NEL_HEAPLESS_ARRAY_HH
+#endif // NEL_HEAPLESS_ARRAY_HH
