@@ -205,13 +205,13 @@ struct Vector {
             return slice().iter();
         }
 
-        constexpr Enumerator<T const> enumer(void) const noexcept
+        constexpr Enumerator<T const> enumerate(void) const noexcept
         {
-            return slice().enumer();
+            return slice().enumerate();
         }
-        constexpr Enumerator<T> enumer(void) noexcept
+        constexpr Enumerator<T> enumerate(void) noexcept
         {
-            return slice().enumer();
+            return slice().enumerate();
         }
 
         constexpr Slice<T> slice(void) noexcept

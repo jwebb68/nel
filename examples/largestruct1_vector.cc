@@ -53,7 +53,7 @@ void ex4() {
             break;
         }
         // calls is_some() but always is_some..
-        // opt does optimse it out but is there a better way?
+        // opt does optimise it out but is there a better way?
         nel::log << e.unwrap() << "\n";
     }
 }
@@ -65,7 +65,7 @@ void ex5() {
     vec1.push_back((uint8_t)0x68);
     vec1.push_back((uint8_t)0x69);
 
-    for (auto en = vec1.enumer(); !en.is_done(); en.inc()) {
+    for (auto en = vec1.enumerate(); !en.is_done(); en.inc()) {
         // user can miss out the &, so forcing a copy/move of items being enumerated.
         auto & v = en.get();
         nel::log << v << "\n";
@@ -82,7 +82,7 @@ void ex6() {
     vec1.push_back((uint8_t)0x68);
     vec1.push_back((uint8_t)0x69);
 
-    for (auto en = vec1.enumer(); en; ++en) {
+    for (auto en = vec1.enumerate(); en; ++en) {
         auto & v = *en;
         nel::log << v << "\n";
     }
