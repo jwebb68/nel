@@ -10,7 +10,7 @@ struct Array;
 } // namespace heaped
 } // namespace nel
 
-#include "heaped/node.hh"
+#include "node.hh"
 #include "iterator.hh"
 #include "enumerator.hh"
 #include "slice.hh"
@@ -18,48 +18,101 @@ struct Array;
 namespace nel {
 namespace heaped {
 
-// Fixed size array
-// All items allocd when created
-// All items deletd when destroyed
-//
+
+/**
+ * An array of type T of fixed size
+ *
+ * The array is created and managed on the heap.
+ * Array can be moved in O(1) (no byte-moving happens)
+ * Can create an empty array: ::empty().
+ * All Items are destroyed when array is destroyed.
+ * All Items are created when array is created.
+ * size cannot be changed once created.
+ * size is not in type?
+ */
 template<typename T>
 struct Array {
     public:
     private:
-        typedef Node<T> ArrNode;
+        typedef Node<T> ArrayNode;
         // Cannot use new/delete as created using malloc/realloc.
-        ArrNode *item_;
+        ArrayNode *item_;
 
-    public:
-        ~Array(void)
-        {
-            ArrNode::free(item_);
-        }
-
-        // If no init list?
-        // Only if T has default cons
-        // Is this default?
+    protected:
+        // Need default constr so can create unassigned vars
+        // e.g Array<T> foo;
+        // but then why would you want to?
         constexpr Array(void) noexcept
             : item_(nullptr)
         {}
 
+        // How to convert vector to array ?
+        // Vector::into_arr, then need to pass Node into array using private ctor.. needs arr::friend vec
+        // Array::from(vec), then need to detach node from vec using private func.. needs vec:friend arr
+        // rust: as_ptr(&self) -> *const T
+        // rust: as_mut_ptr(&mut self) -> *mut T
+        // should vec convert to array?
+        constexpr Array(ArrayNode *const n) noexcept
+            : item_(n)
+        {}
+
+    public:
+        ~Array(void) noexcept
+        {
+            ArrayNode::free(item_);
+        }
+
+        /**
+         * Create an empty array
+         *
+         * Empty array has length 0 and no content.
+         *
+         * @returns the created array
+         */
+        static constexpr Array empty(void)
+        {
+            return Array();
+        }
+
         // Initialiser list initialisation required here..
 
-        // If type has copy, then could fill?
+
+        /**
+         * Create an array, of size n, initial value f in all entries.
+         *
+         * @param f The value to fill with.
+         * @param n The size of the array.
+         *
+         * @returns the created array
+         */
+        static constexpr Array fill(T const &f, size_t n)
+        {
+            if (n == 0) {
+                return Array::empty();
+            }
+            Array a(ArrayNode::malloc(n));
+            new (a.item_) ArrayNode(f);
+            return a;
+        }
 
         // No copying.
+        // copying an array is very expensive, so disabled.
+        // if a copy is required, then must be done explicitly.
         constexpr Array(Array const &o) = delete;
         constexpr Array &operator=(Array const &o) = delete;
 
         // Moving allowed.
+        // Moving is allowed since it's a fast O(1) op.
         constexpr Array(Array &&o) noexcept
             : item_(std::move(o.item_))
         {
             o.item_ = nullptr;
         }
 
+#if 0
         constexpr Array &operator=(Array &&o) noexcept
         {
+            // slow
             Array t(std::move(o));
             swap(t);
             return *this;
@@ -68,63 +121,97 @@ struct Array {
         {
             std::swap(item_, o.item_);
         }
+#else
+        constexpr Array &operator=(Array &&o) noexcept
+        {
+            // Fast.
+            // Move once, not twice.
+            // But only works if Array<T>(&&) does not throw/error.
+            this->~Array();
+            new (this) Array(std::move(o));
+            return *this;
+        }
+#endif
 
     public:
-        // How to convert vector to array ?
-        // Vector::into_arr, then need to pass Node into array using private ctor.. needs arr::friend vec
-        // Array::from(vec), then need to detach node from vec using private func.. needs vec:friend arr
-        // rust: as_ptr(&self) -> *const T
-        // rust: as_mut_ptr(&mut self) -> *mut T
+        /**
+         * Determine if the array is empty.
+         *
+         * @returns true if array is empty, false otherwise.
+         */
+        bool is_empty(void) const noexcept
+        {
+            return len() == 0;
+        }
 
-        constexpr Array(ArrayNode *const n) noexcept
-            : item_(n)
-        {}
-
-    public:
+        /**
+         * Return the number of items in the array.
+         */
         constexpr size_t len(void) const noexcept
         {
-            return (item != nullptr) ? item_->len() : 0;
+            return (item_ == nullptr) ? 0 : item_->len();
         }
 
         // Move item in (idx) - use mut []
         // Move item out (idx) - use mut []
 
-        constexpr T &operator[](int idx) noexcept
-        {
-            nel_panic_if_not(item_ != nullptr, "invalid array");
-            return (*item_)[idx];
-        }
-        constexpr T const &operator[](int idx) const noexcept
-        {
-            nel_panic_if_not(item_ != nullptr, "invalid array");
-            return (*item_)[idx];
-        }
+        // as array access can fail, redo to try_get() and return v or error
+        // constexpr T &operator[](int idx) noexcept
+        // {
+        //     nel_panic_if_not(item_ != nullptr, "invalid array");
+        //     return (*item_)[idx];
+        // }
+        // constexpr T const &operator[](int idx) const noexcept
+        // {
+        //     nel_panic_if_not(item_ != nullptr, "invalid array");
+        //     return (*item_)[idx];
+        // }
 
+        // maybe should be a as_slice, or operator Slice<T> ?
+        /**
+         * Cast this array into a full slice?
+         *
+         * Creates a slice from the array.
+         * Slice does not own the contents, array does (array still valid).
+         * Slice is invalidated if Array goes out of scope/destroyed.
+         */
         constexpr Slice<T> slice(void)
         {
-            return Slice<T>(values_, len());
+            return (item_ == nullptr) ?
+                Slice<T>::from(nullptr, 0) :
+                Slice<T>::from(item_->ptr(), item_->len());
         }
-        constexpr Slice<T> slice(size_t b, size_t e)
-        {
-            // Err N yet given differing range?
-            return slice().slice(b,e);
-        }
-
         constexpr Slice<T const> slice(void) const
         {
-            return Slice<T>(values_, len());
-        }
-        constexpr Slice<T const> slice(size_t b, size_t e) const
-        {
-            // Err N yet given differing range?
-            return slice().slice(b,e);
+            return (item_ == nullptr) ?
+                Slice<T const>::from(nullptr, 0) :
+                Slice<T const>::from(item_->ptr(), item_->len());
         }
 
-        constexpr Iterator<T const> iter(void) const
+        // TODO: replace subslice with try_subslice as can fail.?
+        // constexpr Slice<T> subslice(size_t b, size_t e)
+        // {
+        //     // Err N yet given differing range?
+        //     return slice().subslice(b,e);
+        // }
+        // constexpr Slice<T const> subslice(size_t b, size_t e) const
+        // {
+        //     // Err N yet given differing range?
+        //     return slice().subslice(b,e);
+        // }
+
+        /**
+         * Create an iterator over the contents of the Array.
+         *
+         * iterator is invalidated if array goes out of scope/destroyed.
+         *
+         * @returns The iterator.
+         */
+        constexpr Iterator<T> iter(void) noexcept
         {
             return slice().iter();
         }
-        constexpr Iterator<T> iter(void)
+        constexpr Iterator<T const> iter(void) const noexcept
         {
             return slice().iter();
         }
