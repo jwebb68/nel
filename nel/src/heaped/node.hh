@@ -114,6 +114,7 @@ struct Node {
         constexpr Node(Node &&) = delete;
         constexpr Node &operator=(Node &&) = delete;
 
+        // use placement new to init.
         Node(std::initializer_list<T> l)
         {
             // How to fail if not big enough.
@@ -125,6 +126,34 @@ struct Node {
             len_ = i;
         }
 
+        // use placement new to init.
+        constexpr Node(T const &f) noexcept {
+            // auto it = Slice<T>::from(values_, capacity()).iter();
+            // while (true) {
+            //     Optional<T &> v = it.next();
+            //     if (v.is_none()) { break; }
+            //     T &x= v.unwrap();
+            //     new (&x) T(f);
+            // }
+            // // cannot use slice.fill as that expects init'ed values.
+            // // and this function is
+            // for (size_t i=0;i < capacity(); ++i) {
+            //     // cannot use assign as values uninitialised.
+            //     new (&values_[i]) T(f);
+            // }
+            Slice<T>::from(values_, capacity()) \
+                .iter() \
+                .for_each(
+                // cannot use assign as values uninitialised.
+                [f] (T &e) { new (&e) T(f); }
+            );
+            // for (T *it = values_, *e = (values_ + capacity()); it != e; ++it) {
+            //     // cannot use assign as values uninitialised.
+            //     new (it) T(f);
+            // }
+            len_ = capacity();
+        }
+
     public:
         constexpr size_t capacity(void) const noexcept
         {
@@ -134,27 +163,40 @@ struct Node {
         {
             return len_;
         }
-        constexpr T &operator[](size_t idx) noexcept
-        {
-            nel_panic_if_not(idx < len(), "index out of range");
-            return values_[idx];
+        constexpr T *ptr(void) noexcept {
+            return values_;
         }
-        constexpr T const &operator[](size_t idx) const noexcept
-        {
-            nel_panic_if_not(idx < len(), "index out of range");
-            return values_[idx];
+        constexpr T const *ptr(void) const noexcept {
+            return values_;
         }
+
+        // TODO: to use try_get as index access can fail.
+        // constexpr T &operator[](size_t idx) noexcept
+        // {
+        //     nel_panic_if(idx < 0, "-ve index");
+        //     nel_panic_if_not(idx < len(), "index out of range");
+        //     return values_[idx];
+        // }
+        // constexpr T const &operator[](size_t idx) const noexcept
+        // {
+        //     nel_panic_if(idx < 0, "-ve index");
+        //     nel_panic_if_not(idx < len(), "index out of range");
+        //     return values_[idx];
+        // }
 
         constexpr bool is_empty(void) const noexcept
         {
             return len() == 0;
         }
 
+        // why would a node allow it's items to be destroyed?
+        // vector empty/clear..
         void empty(void) noexcept
         {
-            for (size_t i = 0; i < len(); ++i) {
-                values_[i].~T();
-            }
+            slice().iter().for_each([] (T &e) { e.~T(); });
+            // for (size_t i = 0; i < len(); ++i) {
+            //     values_[i].~T();
+            // }
             len_ = 0;
         }
 
@@ -168,17 +210,17 @@ struct Node {
         }
 
 
-        constexpr Slice<T> slice(size_t b, size_t e) noexcept
-        {
-            return slice().subslice(b, e);
-        }
-        constexpr Slice<T const> slice(size_t b, size_t e) const noexcept
-        {
-            return slice().subslice(b, e);
-        }
+        // TODO: rename to try_subslice as oper can fail.
+        // constexpr Slice<T> subslice(size_t b, size_t e) noexcept
+        // {
+        //     return slice().subslice(b, e);
+        // }
+        // constexpr Slice<T const> subslice(size_t b, size_t e) const noexcept
+        // {
+        //     return slice().subslice(b, e);
+        // }
 
-
-
+        // rename to try-push_back?
         template<typename ...Args>
         Result<void, T> push_back(Args &&...args) noexcept
         {
@@ -191,6 +233,7 @@ struct Node {
             return Result<void, T>::Ok();
         }
 
+        // rename to try-pop_back?
         Optional<T> pop_back(void) noexcept
         {
             if (len() == 0) {
