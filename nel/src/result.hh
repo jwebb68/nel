@@ -325,7 +325,7 @@ class Result {
          *
          * @returns true if container contains a Ok, false otherwise.
          *
-         * this is not consumed by this op.
+         * `this` is not consumed by this op.
          */
         constexpr bool is_ok(void) const noexcept
         {
@@ -337,7 +337,7 @@ class Result {
          *
          * @returns true if container contains a Err, false otherwise.
          *
-         * this is not consumed by this op.
+         * `this` is not consumed by this op.
          */
         constexpr bool is_err(void) const noexcept
         {
@@ -351,7 +351,7 @@ class Result {
          * @returns if this is a Ok, returns Optional containing a Some with the ok value.
          * @returns if this is not a Ok, returns Optional containing a None.
          *
-         * this is consumed and invalidated after.
+         * `this` is consumed and invalidated after.
          */
         Optional<OkT> ok(void) noexcept
         {
@@ -371,7 +371,7 @@ class Result {
          * @returns if this is a Err, returns Optional containing a Some with the err value.
          * @returns if this is not a Err, returns Optional containing a None.
          *
-         * this is consumed and invalidated after.
+         * `this` is consumed and invalidated after.
          */
         Optional<ErrT> err(void) noexcept
         {
@@ -391,7 +391,7 @@ class Result {
          * @return if Ok, value wrapped/contained.
          * @return if not Ok, calls abort, there is no return.
          *
-         * this is consumed by the operation.
+         * `this` is consumed by the operation.
          */
         OkT unwrap(void) noexcept
         {
@@ -402,7 +402,7 @@ class Result {
 
 
         /**
-         * Extract and return the contained value if an Err, consuming the result.
+         * Extract and return the contained value if an Err, consuming `this`.
          *
          * @return if Err, value wrapped/contained.
          * @return if not Err, calls abort, there is no return.
@@ -425,8 +425,8 @@ class Result {
          * @return if Ok, value wrapped/contained.
          * @return if not Ok, consume and return `v`.
          *
-         * this is consumed by the operation.
-         * `v` is consumed by the operation if this is an ok.
+         * `this` is consumed by the operation.
+         * `v` is consumed by the operation.
          */
         OkT unwrap_or(OkT &&v) noexcept
         {
@@ -446,8 +446,8 @@ class Result {
          * @return if Ok, value wrapped/contained.
          * @return if not Ok, consume and return an Ok value constructed by args.
          *
-         * this is consumed by the operation.
-         * args are consumed by the operation if this is an ok.
+         * `this` is consumed by the operation.
+         * `args` are consumed by the operation.
          */
         template<typename ...Args>
         OkT unwrap_or(Args &&...args) noexcept
@@ -468,8 +468,8 @@ class Result {
          * @return if Err, value wrapped/contained.
          * @return if not Err, consume and return `v`.
          *
-         * this is consumed by the operation.
-         * `v` is consumed by the operation if this is an err.
+         * `this` is consumed by the operation.
+         * `v` is consumed by the operation.
          */
         ErrT unwrap_err_or(ErrT &&v) noexcept
         {
@@ -489,8 +489,8 @@ class Result {
          * @return if Err, value wrapped/contained.
          * @return if not Err, consume and return an Err value constructed by args.
          *
-         * this is consumed by the operation.
-         * args are consumed by the operation if this is an Err.
+         * `this` is consumed by the operation.
+         * `args` are consumed by the operation.
          */
         template<typename ...Args>
         ErrT unwrap_err_or(Args &&...args) noexcept
@@ -510,7 +510,7 @@ class Result {
          * @returns if ok, result with ok value after applying fn to ok value.
          * @returns if err, result with err of same value.
          *
-         * this is consumed by the operation.
+         * `this` is consumed by the operation.
          */
         // would this be better as a free func?
         template<class U>
@@ -541,7 +541,7 @@ class Result {
          * @returns if err, result with err value after applying fn to err value.
          * @returns if ok, result with ok of same value.
          *
-         * this is consumed by the operation.
+         * `this` is consumed by the operation.
          */
         // would this be better as a free func?
         template<class F>
@@ -830,7 +830,7 @@ class Result<void, E> {
          *
          * @returns true if container contains a Ok, false otherwise.
          *
-         * this is not consumed by this op.
+         * `this` is not consumed by this op.
          */
         constexpr bool is_ok(void) const noexcept
         {
@@ -843,7 +843,7 @@ class Result<void, E> {
          *
          * @returns true if container contains a Err, false otherwise.
          *
-         * this is not consumed by this op.
+         * `this` is not consumed by this op.
          */
         constexpr bool is_err(void) const noexcept
         {
@@ -858,7 +858,7 @@ class Result<void, E> {
          * @returns if this is a Ok, returns Optional containing a Some with the ok value.
          * @returns if this is not a Ok, returns Optional containing a None.
          *
-         * this is consumed and invalidated after.
+         * `this` is consumed and invalidated after.
          */
         Optional<OkT> ok(void) noexcept
         {
@@ -878,7 +878,7 @@ class Result<void, E> {
          * @returns if this is a Err, returns Optional containing a Some with the err value.
          * @returns if this is not a Err, returns Optional containing a None.
          *
-         * this is consumed and invalidated after.
+         * `this` is consumed and invalidated after.
          */
         Optional<ErrT> err(void) noexcept
         {
@@ -898,7 +898,7 @@ class Result<void, E> {
          * @return if Ok, value wrapped/contained.
          * @return if not Ok, calls abort, there is no return.
          *
-         * this is consumed by the operation.
+         * `this` is consumed by the operation.
          */
         void unwrap(void) noexcept
         {
@@ -913,7 +913,7 @@ class Result<void, E> {
          * @return if Err, value wrapped/contained.
          * @return if not Err, calls abort, there is no return.
          *
-         * this is consumed by the operation.
+         * `this` is consumed by the operation.
          */
         ErrT unwrap_err(void) noexcept
         {
@@ -931,8 +931,8 @@ class Result<void, E> {
          * @return if Ok, value wrapped/contained.
          * @return if not Ok, consume and return `o`.
          *
-         * this is consumed by the operation.
-         * `o` is consumed by the operation if this is not an ok.
+         * `this` is consumed by the operation.
+         * `o` is consumed by the operation.
          */
         void unwrap_or(void) noexcept
         {
@@ -958,8 +958,8 @@ class Result<void, E> {
          * @return if Err, value wrapped/contained.
          * @return if not Err, consume and return an Err value constructed by args.
          *
-         * this is consumed by the operation.
-         * args are consumed by the operation if not an Err.
+         * `this` is consumed by the operation.
+         * `args` are consumed by the operation.
          */
         template<typename ...Args>
         ErrT unwrap_err_or(Args &&...args) noexcept
@@ -979,7 +979,7 @@ class Result<void, E> {
          * @returns if ok, result with ok value after applying fn to ok value.
          * @returns if err, result with err of same value.
          *
-         * this is consumed by the operation.
+         * `this` is consumed by the operation.
          */
         // would this be better as a free func?
         template<class U>
@@ -1010,7 +1010,7 @@ class Result<void, E> {
          * @returns if err, result with err value after applying fn to err value.
          * @returns if ok, result with ok of same value.
          *
-         * this is consumed by the operation.
+         * `this` is consumed by the operation.
          */
         // would this be better as a free func?
         template<class F>
