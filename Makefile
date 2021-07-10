@@ -364,14 +364,14 @@ $(if $(filter $(1)/src/test_%.c,$(testsrc)),$(patsubst $(1)/src/test_%.c,build/$
 $(if $(filter $(1)/src/test_%.cc,$(testsrc)),$(patsubst $(1)/src/test_%.cc,build/$(2)/dep/tests/$(1)/test_%.d,$(filter $(1)/src/test_%.cc,$(testsrc))): | build/$(2)/dep/tests/$(1))
 $(if $(filter $(1)/src/test_%.s,$(testsrc)),$(patsubst $(1)/src/test_%.s,build/$(2)/dep/tests/$(1)/test_%.d,$(filter $(1)/src/test_%.s,$(testsrc))): | build/$(2)/dep/tests/$(1))
 
-$(if $(filter $(1)/src/test_%.c,$(testsrc)),$(patsubst $(1)/src/test_%.c,build/$(2)/dep/tests/$(1)/test_%.d,$(filter $(1)/src/test_%.c,$(testsrc))): CPPFLAGS:=$$(CPPFLAGS) $$($(1)_CPPFLAGS) $$($(2)_CPPFLAGS) $$($(1)_$(2)_CPPFLAGS) $(foreach m,$($(1)_DEPS),-I$(m)/src))
-$(if $(filter $(1)/src/test_%.cc,$(testsrc)),$(patsubst $(1)/src/test_%.cc,build/$(2)/dep/tests/$(1)/test_%.d,$(filter $(1)/src/test_%.cc,$(testsrc))): CPPFLAGS:=$$(CPPFLAGS) $$($(1)_CPPFLAGS) $$($(2)_CPPFLAGS) $$($(1)_$(2)_CPPFLAGS) $(shell pkg-config --cflags catch2) $(foreach m,$($(1)_DEPS),-I$(m)/src))
+$(if $(filter $(1)/src/test_%.c,$(testsrc)),$(patsubst $(1)/src/test_%.c,build/$(2)/dep/tests/$(1)/test_%.d,$(filter $(1)/src/test_%.c,$(testsrc))): CPPFLAGS += $$($(1)_CPPFLAGS) $$($(2)_CPPFLAGS) $$($(1)_$(2)_CPPFLAGS)  -I$(1)/src $(foreach m,$($(1)_DEPS),-I$(m)/src))
+$(if $(filter $(1)/src/test_%.cc,$(testsrc)),$(patsubst $(1)/src/test_%.cc,build/$(2)/dep/tests/$(1)/test_%.d,$(filter $(1)/src/test_%.cc,$(testsrc))): CPPFLAGS += $$($(1)_CPPFLAGS) $$($(2)_CPPFLAGS) $$($(1)_$(2)_CPPFLAGS) $(shell pkg-config --cflags catch2) -I$(1)/src $(foreach m,$($(1)_DEPS),-I$(m)/src))
 
-$(if $(filter $(1)/src/test_%.c,$(testsrc)),$(patsubst $(1)/src/test_%.c,build/$(2)/obj/tests/$(1)/test_%.o,$(filter $(1)/src/test_%.c,$(testsrc))): CPPFLAGS:=$$(CPPFLAGS) $$($(1)_CPPFLAGS) $$($(2)_CPPFLAGS) $$($(1)_$(2)_CPPFLAGS) $(foreach m,$($(1)_DEPS),-I$(m)/src))
-$(if $(filter $(1)/src/test_%.c,$(testsrc)),$(patsubst $(1)/src/test_%.c,build/$(2)/obj/tests/$(1)/test_%.o,$(filter $(1)/src/test_%.c,$(testsrc))): CFLAGS:=$$(CFLAGS) $$($(1)_CFLAGS) $$($(2)_CFLAGS) $$($(1)_$(2)_CFLAGS))
+$(if $(filter $(1)/src/test_%.c,$(testsrc)),$(patsubst $(1)/src/test_%.c,build/$(2)/obj/tests/$(1)/test_%.o,$(filter $(1)/src/test_%.c,$(testsrc))): CPPFLAGS+=$$($(1)_CPPFLAGS) $$($(2)_CPPFLAGS) $$($(1)_$(2)_CPPFLAGS) -I$(1)/src $(foreach m,$($(1)_DEPS),-I$(m)/src))
+$(if $(filter $(1)/src/test_%.c,$(testsrc)),$(patsubst $(1)/src/test_%.c,build/$(2)/obj/tests/$(1)/test_%.o,$(filter $(1)/src/test_%.c,$(testsrc))): CFLAGS+=$$($(1)_CFLAGS) $$($(2)_CFLAGS) $$($(1)_$(2)_CFLAGS))
 
-$(if $(filter $(1)/src/test_%.cc,$(testsrc)),$(patsubst $(1)/src/test_%.cc,build/$(2)/obj/tests/$(1)/test_%.o,$(filter $(1)/src/test_%.cc,$(testsrc))): CPPFLAGS:=$$(CPPFLAGS) $$($(1)_CPPFLAGS) $$($(2)_CPPFLAGS) $$($(1)_$(2)_CPPFLAGS) $(shell pkg-config --cflags catch2) $(foreach m,$($(1)_DEPS),-I$(m)/src))
-$(if $(filter $(1)/src/test_%.cc,$(testsrc)),$(patsubst $(1)/src/test_%.cc,build/$(2)/obj/tests/$(1)/test_%.o,$(filter $(1)/src/test_%.cc,$(testsrc))): CXXFLAGS:=$$(CXXFLAGS) $$($(1)_CXXFLAGS) $$($(2)_CXXFLAGS) $$($(1)_$(2)_CXXFLAGS))
+$(if $(filter $(1)/src/test_%.cc,$(testsrc)),$(patsubst $(1)/src/test_%.cc,build/$(2)/obj/tests/$(1)/test_%.o,$(filter $(1)/src/test_%.cc,$(testsrc))): CPPFLAGS += $$($(1)_CPPFLAGS) $$($(2)_CPPFLAGS) $$($(1)_$(2)_CPPFLAGS) $(shell pkg-config --cflags catch2) -I$(1)/src $(foreach m,$($(1)_DEPS),-I$(m)/src))
+$(if $(filter $(1)/src/test_%.cc,$(testsrc)),$(patsubst $(1)/src/test_%.cc,build/$(2)/obj/tests/$(1)/test_%.o,$(filter $(1)/src/test_%.cc,$(testsrc))): CXXFLAGS += $$($(1)_CXXFLAGS) $$($(2)_CXXFLAGS) $$($(1)_$(2)_CXXFLAGS))
 
 $(if $(filter $(1)/src/test_%.c,$(testsrc)),$(patsubst $(1)/src/test_%.c,build/$(2)/obj/tests/$(1)/test_%.o,$(filter $(1)/src/test_%.c,$(testsrc))): build/$(2)/obj/tests/$(1)/test_%.o: $(1)/src/test_%.c ;$$(COMPILE.c) -o $$@  $$<)
 $(if $(filter $(1)/src/test_%.cc,$(testsrc)),$(patsubst $(1)/src/test_%.cc,build/$(2)/obj/tests/$(1)/test_%.o,$(filter $(1)/src/test_%.cc,$(testsrc))): build/$(2)/obj/tests/$(1)/test_%.o: $(1)/src/test_%.cc ;$$(COMPILE.cc) -o $$@  $$<)
