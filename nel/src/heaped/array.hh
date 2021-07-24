@@ -36,6 +36,8 @@ struct Array {
     private:
         typedef Node<T> ArrayNode;
         // Cannot use new/delete as created using malloc/realloc.
+        // and cannot use unique_ptr as using malloc/realloc.
+        // or: how can i use realloc in c++ with new/delete?
         ArrayNode *item_;
 
     protected:
@@ -46,15 +48,21 @@ struct Array {
             : item_(nullptr)
         {}
 
+        constexpr Array(ArrayNode *const n) noexcept
+            : item_(n)
+        {}
+
         // How to convert vector to array ?
         // Vector::into_arr, then need to pass Node into array using private ctor.. needs arr::friend vec
         // Array::from(vec), then need to detach node from vec using private func.. needs vec:friend arr
         // rust: as_ptr(&self) -> *const T
         // rust: as_mut_ptr(&mut self) -> *mut T
         // should vec convert to array?
-        constexpr Array(ArrayNode *const n) noexcept
-            : item_(n)
-        {}
+        // constexpr Array(Vector<T> &vec) noexcept
+        //     : item_(vec.item_)
+        // {
+        //     vec.item_ = nullptr;
+        // }
 
     public:
         ~Array(void) noexcept
@@ -69,12 +77,19 @@ struct Array {
          *
          * @returns the created array
          */
-        static constexpr Array empty(void)
+        static constexpr Array empty(void) noexcept
         {
             return Array();
         }
 
         // Initialiser list initialisation required here..
+
+
+        // create array from vec.
+        // static constexpr Array from(Vector<T> &vec) noexcept
+        // {
+        //     return Array(vec);
+        // }
 
 
         /**
@@ -146,6 +161,8 @@ struct Array {
 
         /**
          * Return the number of items in the array.
+         *
+         * @returns number of items in the array.
          */
         constexpr size_t len(void) const noexcept
         {
@@ -167,14 +184,17 @@ struct Array {
         //     return (*item_)[idx];
         // }
 
-        // maybe should be a as_slice, or operator Slice<T> ?
         /**
          * Cast this array into a full slice?
          *
          * Creates a slice from the array.
          * Slice does not own the contents, array does (array still valid).
          * Slice is invalidated if Array goes out of scope/destroyed.
+         *
+         * @returns a slice over all of the array.
          */
+        // This could be a into_slice()?, or a as_slice()? or a deref_as_slice()?
+        // or a conversion func: operator Slice<T>(void)? (but I don't want it implicit/automatic
         constexpr Slice<T> slice(void)
         {
             return (item_ == nullptr) ?

@@ -49,8 +49,23 @@ struct Iterator {
                    ? Optional<OutT>::Some(content_[idx_++])
                    : Optional<OutT>::None();
         }
+
+    public:
+        // nasty, now cannot add new ops as class is not extensible.
+        // and has to be implemented on each new iterator type.
+        void for_each(std::function < void(T &) > fn) noexcept
+        {
+            for (idx_ = 0; idx_ < len_; ++idx_) {
+                fn(content_[idx_]);
+            }
+            // for (T *it = content_, *e = content_ + len_; it != e; ++it) {
+            //     fn(*it);
+            // }
+        }
 };
 
+//x.map(mapfn).enum().for_each(..);
+//x.chain(MapIt(mapfn)).chain(EnumIt).for_each([](size_t idx, T &e) {});
 
 template<typename I, typename U>
 //template<typename I, typename F, typename U>

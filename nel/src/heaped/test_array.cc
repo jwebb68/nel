@@ -1,9 +1,7 @@
 #include "heaped/array.hh"
 
 #include <catch2/catch.hpp>
-#include <iostream>
-
-#define UNUSED(v) ((void)(v))
+//#include <iostream>
 
 
 TEST_CASE("Array::empty", "[heaped][array]")

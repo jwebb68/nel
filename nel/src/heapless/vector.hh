@@ -149,22 +149,22 @@ struct Vector {
 
         constexpr Slice<T> slice(void) noexcept
         {
-            return Slice<T>(values_, len());
+            return Slice<T>::from(values_, len());
         }
         constexpr Slice<T const> const slice(void) const noexcept
         {
-            return Slice<T const>(values_, len());
+            return Slice<T const>::from(values_, len());
         }
 
 
-        constexpr Slice<T> slice(size_t b, size_t e) noexcept
-        {
-            return slice().subslice(b, e);
-        }
-        constexpr Slice<T const> slice(size_t b, size_t e) const noexcept
-        {
-            return slice().subslice(b, e);
-        }
+        // constexpr Slice<T> slice(size_t b, size_t e) noexcept
+        // {
+        //     return slice().subslice(b, e);
+        // }
+        // constexpr Slice<T const> slice(size_t b, size_t e) const noexcept
+        // {
+        //     return slice().subslice(b, e);
+        // }
 
 
         constexpr Iterator<T> iter(void) noexcept

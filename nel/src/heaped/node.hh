@@ -202,11 +202,11 @@ struct Node {
 
         constexpr Slice<T> slice(void) noexcept
         {
-            return Slice<T>(values_, len());
+            return Slice<T>::from(values_, len());
         }
         constexpr Slice<T const> slice(void) const noexcept
         {
-            return Slice<T const>(values_, len());
+            return Slice<T const>::from(values_, len());
         }
 
 

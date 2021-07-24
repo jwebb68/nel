@@ -14,13 +14,13 @@ nel::Log &operator<<(nel::Log &outs, Box1 const &v) {
 
 void box1() {
     U8Buf<256> v = U8Buf<256>((uint8_t)0x66);
-    Box1 b(std::move(v));
+    Box1 b = Box1(std::move(v));
 
     nel::log << b << "\n";
 }
 
 void box2() {
-    Box1 b((uint8_t)0x67);
+    Box1 b = Box1((uint8_t)0x67);
 
     nel::log << b << "\n";
 }

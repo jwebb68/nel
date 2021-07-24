@@ -92,23 +92,23 @@ struct Array {
 
         constexpr Slice<T> slice(void)
         {
-            return Slice<T>(values_, len());
+            return Slice<T>::from(values_, len());
         }
-        constexpr Slice<T> slice(size_t b, size_t e)
-        {
-            // Err N yet given differing range?
-            return slice().slice(b,e);
-        }
+        // constexpr Slice<T> slice(size_t b, size_t e)
+        // {
+        //     // Err N yet given differing range?
+        //     return slice().slice(b,e);
+        // }
 
         constexpr Slice<T const> slice(void) const
         {
-            return Slice<T const>(values_, len());
+            return Slice<T const>::from(values_, len());
         }
-        constexpr Slice<T const> slice(size_t b, size_t e) const
-        {
-            // Err N yet given differing range?
-            return slice().slice(b,e);
-        }
+        // constexpr Slice<T const> subslice(size_t b, size_t e) const
+        // {
+        //     // Err N yet given differing range?
+        //     return slice().slice(b,e);
+        // }
 
         constexpr Iterator<T const> iter(void) const
         {

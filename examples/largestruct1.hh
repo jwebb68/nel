@@ -14,19 +14,19 @@ struct U8Buf {
         // default I want is create with uninitialised array..
         // maybe a uninitialised ctor then?
         //U8Buf(void) = default;
-        U8Buf(void)
+        constexpr U8Buf(void)
         {}
 
 
-        U8Buf(U8Buf const &o) {
+        constexpr U8Buf(U8Buf const &o) {
             nel::memcpy(data_, o.data_, N);
         }
 
-        U8Buf(U8Buf &&o) {
+        constexpr U8Buf(U8Buf &&o) {
             nel::memmove(data_, o.data_, N);
         }
 
-        U8Buf &operator=(U8Buf &&o) {
+        constexpr U8Buf &operator=(U8Buf &&o) {
             nel::memmove(data_, o.data_, N);
             return *this;
         }
@@ -39,11 +39,6 @@ struct U8Buf {
         }
 
     public:
-        // U8Slice slice(size_t b, size_t e) {
-        //     assert(b < e);
-        //     assert(e < N);
-        //     U8Slice(*this,
-        // }
         size_t len(void) const {
             return N;
         }

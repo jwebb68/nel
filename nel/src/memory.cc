@@ -40,18 +40,35 @@ void memmove(uint8_t *const d, uint8_t *const s, size_t const n) noexcept
     //     d[i] = s[i];
     //     s[i] = 0xa5;
     // }
+    // for (size_t i=0; i < n; ++i) {
+    //     uint8_t t = s[i];
+    //     s[i] = 0xa5;
+    //     d[i] = t;
+    // }
     // for (uint8_t *id=d, *is=s, *const e=(d+n); id != e; ++is, ++id) {
     //     *id = *is;
     //     *is = 0xa5;
     // }
+    // could use memmove followed by memset
+    // but this would be bad for the cache
+    // in that move is read(addr1) + write(addr2);
+    // and set is write(addr1).
+    // note the toggling of addr1 read(a1), write(a2), write(a1)
+    // whereas this may be better: read(a1), write(a1), write(a2)
+    // but it won't get optimised into simple instructions.
+    for (uint8_t *id=d, *is=s, *const e=(d+n); id != e; ++is, ++id) {
+        uint8_t t = *is;
+        *is = 0xa5;
+        *id = t;
+    }
     // for (uint8_t *id = d, *is = s, *const e = (d + n); id != e; ++is, ++id) {
     //     *id = *is;
     // }
     // for (uint8_t *id = d, *is = s, *const e = (d + n); id != e; ++is, ++id) {
     //     *is = 0xa5;
     // }
-    memcpy(d, s, n);
-    memset(s, 0xa5, n);
+    // memcpy(d, s, n);
+    // memset(s, 0xa5, n);
 }
 
 

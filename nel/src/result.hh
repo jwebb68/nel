@@ -114,15 +114,16 @@ class Result {
                 case INVAL:
                     return;
                     break;
+
+                // I want compile to fail if an enum case handler isn't present.
+                default:
+                    // But, want to abort/panic if a unhandled case is encountered
+                    // at runtime, much how a default hander would work if it was
+                    // present.
+                    // std::cerr << "invalid Result: tag=" << tag_ << std::endl;
+                    // std::abort();
+                    nel_panic("invalid Result");
             }
-            // No default as I want compile to fail if an enum case handler
-            // isn't present.
-            // But, want to abort/panic if a unhandled case is encountered
-            // at runtime, much how a default hander would work if it was
-            // present.
-            // std::cerr << "invalid Result: tag=" << tag_ << std::endl;
-            // std::abort();
-            nel_panic("invalid Result");
         }
 
         Result(Result &&o) noexcept
@@ -141,52 +142,21 @@ class Result {
                 case INVAL:
                     return;
                     break;
+                default:
+                    // std::cerr << "invalid Result: tag=" << this->tag_ << std::endl;
+                    // std::abort();
+                    nel_panic("invalid Result");
             }
-            // std::cerr << "invalid Result: tag=" << this->tag_ << std::endl;
-            // std::abort();
-            nel_panic("invalid Result");
         }
         Result &operator=(Result &&o) noexcept
         {
-#if 1
-            if (tag_ == o.tag_) {
-                o.tag_ = INVAL;
-                switch (tag_) {
-                    case OK:
-                        ok_ = std::move(o.ok_);
-                        return *this;
-                        break;
-                    case ERR:
-                        err_ = std::move(o.err_);
-                        return *this;
-                        break;
-                    case INVAL:
-                        return *this;
-                        break;
-                }
-                //std::abort();
-                nel_panic("invalid Result");
-            } else {
+            if (this != &o) {
                 // only safe if move-ctor guaranteed to not throw
                 this->~Result();
                 new (this) Result(std::move(o));
             }
-#else
-            // Can be very inefficient.
-            // Depends on impl of swap and dtor and m-ctor
-            Result t(std::move(o));
-            swap(t);
-#endif
             return *this;
         }
-
-#if 0
-        void swap(Result &o) noexcept
-        {
-            // Yeah, hacky, not by-member, so bite me.
-            mymemswap((uint8_t *)this, (uint8_t *)&o, sizeof(*this));
-        }
-#endif
 
         // Not using copy semantics, results are only moveable..
         Result(Result const &) = delete;
@@ -271,6 +241,7 @@ class Result {
          */
         constexpr bool operator==(Result const &o) const noexcept
         {
+            if (this == &o) { return true; }
             if (tag_ == o.tag_) {
                 switch (tag_) {
                     case OK:
@@ -282,9 +253,10 @@ class Result {
                     case INVAL:
                         return true;
                         break;
+                    default:
+                        nel_panic("invalid Result");
+                        // std::abort();
                 }
-                nel_panic("invalid Result");
-                // std::abort();
             }
             return false;
         }
@@ -300,6 +272,7 @@ class Result {
          */
         constexpr bool operator!=(Result const &o) const noexcept
         {
+            if (this == &o) { return false; }
             if (tag_ == o.tag_) {
                 switch (tag_) {
                     case OK:
@@ -311,9 +284,10 @@ class Result {
                     case INVAL:
                         return false;
                         break;
+                    default:
+                        nel_panic("invalid Result");
+                        // std::abort();
                 }
-                nel_panic("invalid Result");
-                // std::abort();
             }
             return true;
         }
@@ -528,9 +502,10 @@ class Result {
                 case INVAL:
                     return Result<U, ErrT>();
                     break;
+                default:
+                    nel_panic("invalid Result");
+                    //std::abort();
             }
-            nel_panic("invalid Result");
-            //std::abort();
         }
 
 
@@ -559,9 +534,10 @@ class Result {
                 case INVAL:
                     return Result<OkT, F>();
                     break;
+                default:
+                    //std::abort();
+                    nel_panic("invalid Result");
             }
-            //std::abort();
-            nel_panic("invalid Result");
         }
 
 
@@ -582,8 +558,9 @@ class Result {
                     outs << "Result(Inval)";
                     return outs;
                     break;
+                default:
+                    outs << "Result(Unknown)";
             }
-            outs << "Result(Unknown)";
             return outs;
         }
 };
@@ -641,14 +618,16 @@ class Result<void, E> {
                 case INVAL:
                     return;
                     break;
+
+                // No default as I want compile to fail if an enum case handler
+                // isn't present.
+                default:
+                    // But, want to abort/panic if a unhandled case is encountered
+                    // at runtime, much how a default hander would work if it was
+                    // present.
+                    std::abort();
+                    // nel_panic("invalid Result");
             }
-            // No default as I want compile to fail if an enum case handler
-            // isn't present.
-            // But, want to abort/panic if a unhandled case is encountered
-            // at runtime, much how a default hander would work if it was
-            // present.
-            std::abort();
-            // nel_panic("invalid Result");
         }
 
 
@@ -661,57 +640,27 @@ class Result<void, E> {
                     return;
                     break;
                 case ERR:
-                    new (&err_) ErrT(std::forward<ErrT>(o.err_));
+                    new (&err_) Element<ErrT>(std::forward<Element<ErrT>>(o.err_));
                     return;
                     break;
                 case INVAL:
                     return;
                     break;
+                default:
+                    nel_panic("invalid Result");
             }
-            nel_panic("invalid Result");
         }
 
 
         Result &operator=(Result &&o) noexcept
         {
-#if 1
-            if (tag_ == o.tag_) {
-                o.tag_ = INVAL;
-                switch (tag_) {
-                    case OK:
-                        return *this;
-                        break;
-                    case ERR:
-                        err_ = std::move(o.err_);
-                        return *this;
-                        break;
-                    case INVAL:
-                        return *this;
-                        break;
-                }
-                // std::abort();
-                nel_panic("invalid Result");
-            } else {
+            if (this != &o) {
                 // Only safe if move-ctor guaranteed to not throw/error .
                 this->~Result();
                 new (this) Result(std::move(o));
             }
-#else
-            // Can be very inefficient.
-            // Depends on impl of swap and dtor and m-ctor
-            Result t(std::move(o));
-            swap(t);
-#endif
             return *this;
         }
-
-#if 0
-        void swap(Result &o) noexcept
-        {
-            // Yeah, hacky, not by-member, so bite me.
-            mymemswap((uint8_t *)this, (uint8_t *)&o, sizeof(*this));
-        }
-#endif
 
         // not using copy semantics, results are only moveable..
         Result(Result const &) = delete;
@@ -775,6 +724,7 @@ class Result<void, E> {
          */
         constexpr bool operator==(Result const &o) const noexcept
         {
+            if (this == &o) { return true; }
             if (tag_ == o.tag_) {
                 switch (tag_) {
                     case OK:
@@ -786,9 +736,10 @@ class Result<void, E> {
                     case INVAL:
                         return true;
                         break;
+                    default:
+                        nel_panic("invalid Result");
+                        //std::abort();
                 }
-                nel_panic("invalid Result");
-                //std::abort();
             }
             return false;
         }
@@ -805,6 +756,7 @@ class Result<void, E> {
          */
         constexpr bool operator!=(Result const &o) const noexcept
         {
+            if (this == &o) { return false; }
             if (tag_ == o.tag_) {
                 switch (tag_) {
                     case OK:
@@ -816,9 +768,10 @@ class Result<void, E> {
                     case INVAL:
                         return false;
                         break;
+                    default:
+                        nel_panic("invalid Result");
+                        //std::abort();
                 }
-                nel_panic("invalid Result");
-                //std::abort();
             }
             return true;
         }
@@ -997,9 +950,10 @@ class Result<void, E> {
                 case INVAL:
                     return Result<U, ErrT>();
                     break;
+                default:
+                    nel_panic("invalid Result");
+                    //std::abort();
             }
-            nel_panic("invalid Result");
-            //std::abort();
         }
 
 
@@ -1028,9 +982,10 @@ class Result<void, E> {
                 case INVAL:
                     return Result<OkT, F>();
                     break;
+                default:
+                    // std::abort();
+                    nel_panic("invalid Result");
             }
-            // std::abort();
-            nel_panic("invalid Result");
         }
 
 
@@ -1051,8 +1006,9 @@ class Result<void, E> {
                     outs << "Result(Inval)";
                     return outs;
                     break;
+                default:
+                    outs << "Result(Unknown)";
             }
-            outs << "Result(Unknown)";
             return outs;
         }
 };

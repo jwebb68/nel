@@ -1,9 +1,9 @@
 
 #include "result.hh" //nel::ResultT
+#include "defs.hh" // NEL_NEL_UNUSED
 
 #include <catch2/catch.hpp>
 
-#define UNUSED(arg) ((void)(arg))
 
 typedef enum _Error { NOERROR = 0, FAIL, NOENT } Error;
 nel::Log &operator<<(nel::Log &outs, Error const &v)
@@ -21,8 +21,9 @@ nel::Log &operator<<(nel::Log &outs, Error const &v)
             outs << "NOENT";
             return outs;
             break;
+        default:
+            std::abort();
     }
-    std::abort();
     return outs;
 }
 
@@ -241,7 +242,7 @@ TEST_CASE("Result.ok for ok must invalidate src", "[result]")
     auto res = TestResult::Ok(1);
 
     auto val = res.ok();
-    UNUSED(val);
+    NEL_UNUSED(val);
 
 
     REQUIRE(!res.is_ok());
@@ -253,7 +254,7 @@ TEST_CASE("Result.ok for err must invalidate src", "[result]")
     auto res = TestResult::Err(FAIL);
 
     auto val = res.ok();
-    UNUSED(val);
+    NEL_UNUSED(val);
 
 
     REQUIRE(!res.is_ok());
@@ -266,7 +267,7 @@ TEST_CASE("Result.ok for inval must invalidate src", "[result]")
     auto res2 = std::move(res);
 
     auto val = res.ok();
-    UNUSED(val);
+    NEL_UNUSED(val);
 
 
     REQUIRE(!res.is_ok());
@@ -315,7 +316,7 @@ TEST_CASE("Result.err for ok must invalidate src", "[result]")
     auto res = TestResult::Ok(1);
 
     auto val = res.err();
-    UNUSED(val);
+    NEL_UNUSED(val);
 
     REQUIRE(!res.is_ok());
     REQUIRE(!res.is_err());
@@ -326,7 +327,7 @@ TEST_CASE("Result.err for err must invalidate src", "[result]")
     auto res = TestResult::Err(FAIL);
 
     auto val = res.err();
-    UNUSED(val);
+    NEL_UNUSED(val);
 
     REQUIRE(!res.is_ok());
     REQUIRE(!res.is_err());
@@ -338,7 +339,7 @@ TEST_CASE("Result.err for inval must invalidate src", "[result]")
     auto res2 = std::move(res);
 
     auto val = res.err();
-    UNUSED(val);
+    NEL_UNUSED(val);
 
     REQUIRE(!res.is_ok());
     REQUIRE(!res.is_err());
@@ -373,7 +374,7 @@ TEST_CASE("Result.is_ok for ok must not alter src", "[result]")
     auto res = TestResult::Ok(1);
 
     auto is_ok = res.is_ok();
-    UNUSED(is_ok);
+    NEL_UNUSED(is_ok);
 
     REQUIRE(res.unwrap() == 1);
 }
@@ -383,7 +384,7 @@ TEST_CASE("Result.is_ok for err must not alter src", "[result]")
     auto res = TestResult::Err(FAIL);
 
     auto is_ok = res.is_ok();
-    UNUSED(is_ok);
+    NEL_UNUSED(is_ok);
 
     REQUIRE(res.unwrap_err() == FAIL);
 }
@@ -394,7 +395,7 @@ TEST_CASE("Result.is_ok for inval must not alter src", "[result]")
     auto res2 = std::move(res);
 
     auto is_ok = res.is_ok();
-    UNUSED(is_ok);
+    NEL_UNUSED(is_ok);
 
     REQUIRE(!res.is_ok());
     REQUIRE(!res.is_err());
@@ -440,7 +441,7 @@ TEST_CASE("Result.unwrap for Ok must invalidate src", "[result]")
     auto res = TestResult::Ok(1);
 
     auto val = res.unwrap();
-    UNUSED(val);
+    NEL_UNUSED(val);
 
     REQUIRE(!res.is_ok());
     REQUIRE(!res.is_err());
@@ -480,7 +481,7 @@ TEST_CASE("Result.unwrap_err for err must invalidate src", "[result]")
     auto res = TestResult::Err(FAIL);
 
     auto val = res.unwrap_err();
-    UNUSED(val);
+    NEL_UNUSED(val);
 
     REQUIRE(!res.is_ok());
     REQUIRE(!res.is_err());
@@ -540,7 +541,7 @@ TEST_CASE("Result.unwrap_or for ok must invalidate src", "[result]")
     auto res = TestResult::Ok(1);
 
     auto val = res.unwrap_or(2);
-    UNUSED(val);
+    NEL_UNUSED(val);
 
     REQUIRE(!res.is_ok());
     REQUIRE(!res.is_err());
@@ -551,7 +552,7 @@ TEST_CASE("Result.unwrap_or for err must invalidate src", "[result]")
     auto res = TestResult::Err(FAIL);
 
     auto val = res.unwrap_or(2);
-    UNUSED(val);
+    NEL_UNUSED(val);
 
     REQUIRE(!res.is_ok());
     REQUIRE(!res.is_err());
@@ -563,7 +564,7 @@ TEST_CASE("Result.unwrap_or for invalid must stay invalid", "[result]")
     auto res2 = std::move(res);
 
     auto val = res.unwrap_or(2);
-    UNUSED(val);
+    NEL_UNUSED(val);
 
     REQUIRE(!res.is_ok());
     REQUIRE(!res.is_err());
@@ -603,7 +604,7 @@ TEST_CASE("Result.unwrap_err_or for ok must invalidate src", "[result]")
     auto res = TestResult::Ok(1);
 
     auto val = res.unwrap_err_or(FAIL);
-    UNUSED(val);
+    NEL_UNUSED(val);
 
     REQUIRE(!res.is_ok());
     REQUIRE(!res.is_err());
@@ -614,7 +615,7 @@ TEST_CASE("Result.unwrap_err_or for err must invalidate src", "[result]")
     auto res = TestResult::Err(FAIL);
 
     auto val = res.unwrap_err_or(NOENT);
-    UNUSED(val);
+    NEL_UNUSED(val);
 
     REQUIRE(!res.is_ok());
     REQUIRE(!res.is_err());
@@ -626,7 +627,7 @@ TEST_CASE("Result.unwrap_err_or for invalid must invalidate src", "[result]")
     auto res2 = std::move(res);
 
     auto val = res.unwrap_err_or(NOENT);
-    UNUSED(val);
+    NEL_UNUSED(val);
 
     REQUIRE(!res.is_ok());
     REQUIRE(!res.is_err());
@@ -636,7 +637,7 @@ TEST_CASE("Result.unwrap_err_or for invalid must invalidate src", "[result]")
 
 bool map1(const int &e)
 {
-    UNUSED(e);
+    NEL_UNUSED(e);
     return true;
 }
 
@@ -687,7 +688,7 @@ TEST_CASE("Result.map for ok must invalidate src", "[result]")
     // TODO: nasty, want bool to be auto-inferred as it's the return type of
     // map1, i.e. want res.map(map1).unwrap();
     auto res2 = res.map<bool>(map1);
-    UNUSED(res2);
+    NEL_UNUSED(res2);
 
     REQUIRE(!res.is_ok());
     REQUIRE(!res.is_err());
@@ -700,7 +701,7 @@ TEST_CASE("Result.map for err must invalidate src", "[result]")
     // TODO: nasty, want bool to be auto-inferred as it's the return type of
     // map1, i.e. want res.map(map1).unwrap();
     auto res2 = res.map<bool>(map1);
-    UNUSED(res2);
+    NEL_UNUSED(res2);
 
     REQUIRE(!res.is_ok());
     REQUIRE(!res.is_err());
@@ -714,7 +715,7 @@ TEST_CASE("Result.map for inval must invalidate src", "[result]")
     // TODO: nasty, want bool to be auto-inferred as it's the return type of
     // map1, i.e. want res.map(map1).unwrap();
     auto res3 = res.map<bool>(map1);
-    UNUSED(res3);
+    NEL_UNUSED(res3);
 
     REQUIRE(!res.is_ok());
     REQUIRE(!res.is_err());
@@ -725,7 +726,7 @@ TEST_CASE("Result.map for inval must invalidate src", "[result]")
 const char *bar = "bar";
 const char *map2(const Error &e)
 {
-    UNUSED(e);
+    NEL_UNUSED(e);
     return bar;
 }
 
@@ -776,7 +777,7 @@ TEST_CASE("Result.map_err for ok must invalidate src", "[result]")
     // TODO: nasty, want bool to be auto-inferred as it's the return type of
     // map1, i.e. want res.map(map1).unwrap();
     auto res2 = res.map_err<const char *>(map2);
-    UNUSED(res2);
+    NEL_UNUSED(res2);
 
     REQUIRE(!res.is_ok());
     REQUIRE(!res.is_err());
@@ -789,7 +790,7 @@ TEST_CASE("Result.map_err for err must invalidate src", "[result]")
     // TODO: nasty, want bool to be auto-inferred as it's the return type of
     // map1, i.e. want res.map(map1).unwrap();
     auto res2 = res.map_err<const char *>(map2);
-    UNUSED(res2);
+    NEL_UNUSED(res2);
 
     REQUIRE(!res.is_ok());
     REQUIRE(!res.is_err());
@@ -803,7 +804,7 @@ TEST_CASE("Result.map_err for inval must invalidate src", "[result]")
     // TODO: nasty, want bool to be auto-inferred as it's the return type of
     // map1, i.e. want res.map(map1).unwrap();
     auto res3 = res.map_err<const char *>(map2);
-    UNUSED(res3);
+    NEL_UNUSED(res3);
 
     REQUIRE(!res.is_ok());
     REQUIRE(!res.is_err());
@@ -892,7 +893,7 @@ TEST_CASE("result::~dtor for err, must call err dtor", "[result]")
 // // how do I do this?
 // }
 
-
+#if 0
 TEST_CASE("Result::eq for ok with ok must give true", "[result]")
 {
     auto res1 = TestResult::Ok(2);
@@ -930,7 +931,7 @@ TEST_CASE("Result::eq for ok with ok must not alter src", "[result]")
     auto res1 = TestResult::Ok(2);
 
     auto is_eq = res1 == TestResult::Ok(2);
-    UNUSED(is_eq);
+    NEL_UNUSED(is_eq);
 
     REQUIRE(res1.unwrap() == 2);
 }
@@ -940,7 +941,7 @@ TEST_CASE("Result::eq for ok with diff ok must not alter src", "[result]")
     auto res1 = TestResult::Ok(2);
 
     auto is_eq = res1 == TestResult::Ok(3);
-    UNUSED(is_eq);
+    NEL_UNUSED(is_eq);
 
     REQUIRE(res1.unwrap() == 2);
 }
@@ -950,7 +951,7 @@ TEST_CASE("Result::eq for ok with err must not alter src", "[result]")
     auto res1 = TestResult::Ok(2);
 
     auto is_eq = res1 == TestResult::Err(FAIL);
-    UNUSED(is_eq);
+    NEL_UNUSED(is_eq);
 
     REQUIRE(res1.unwrap() == 2);
 }
@@ -963,7 +964,7 @@ TEST_CASE("Result::eq for ok with inval must not alter src", "[result]")
     auto res3 = std::move(res2);
 
     auto is_eq = res1 == res2;
-    UNUSED(is_eq);
+    NEL_UNUSED(is_eq);
 
     REQUIRE(res1.unwrap() == 2);
 }
@@ -1007,7 +1008,7 @@ TEST_CASE("Result::eq for err with ok must not alter src", "[result]")
     auto res1 = TestResult::Err(FAIL);
 
     auto is_eq = res1 == TestResult::Ok(1);
-    UNUSED(is_eq);
+    NEL_UNUSED(is_eq);
 
     REQUIRE(res1.unwrap_err() == FAIL);
 }
@@ -1017,7 +1018,7 @@ TEST_CASE("Result::eq for err with err must not alter src", "[result]")
     auto res1 = TestResult::Err(FAIL);
 
     auto is_eq = res1 == TestResult::Err(FAIL);
-    UNUSED(is_eq);
+    NEL_UNUSED(is_eq);
 
     REQUIRE(res1.unwrap_err() == FAIL);
 }
@@ -1027,7 +1028,7 @@ TEST_CASE("Result::eq for err with diff err must not alter src", "[result]")
     auto res1 = TestResult::Err(FAIL);
 
     auto is_eq = res1 == TestResult::Err(NOENT);
-    UNUSED(is_eq);
+    NEL_UNUSED(is_eq);
 
     REQUIRE(res1.unwrap_err() == FAIL);
 }
@@ -1040,7 +1041,7 @@ TEST_CASE("Result::eq for err with inval must not alter src", "[result]")
     auto res3 = std::move(res2);
 
     auto is_eq = res1 == res2;
-    UNUSED(is_eq);
+    NEL_UNUSED(is_eq);
 
     REQUIRE(res1.unwrap_err() == FAIL);
 }
@@ -1081,7 +1082,7 @@ TEST_CASE("Result::eq for inval with ok must not alter src", "[result]")
     auto res2 = std::move(res1);
 
     auto is_eq = res1 == TestResult::Ok(1);
-    UNUSED(is_eq);
+    NEL_UNUSED(is_eq);
 
     REQUIRE(!res1.is_ok());
     REQUIRE(!res1.is_err());
@@ -1093,7 +1094,7 @@ TEST_CASE("Result::eq for inval with err must not alter src", "[result]")
     auto res2 = std::move(res1);
 
     auto is_eq = res1 == TestResult::Err(FAIL);
-    UNUSED(is_eq);
+    NEL_UNUSED(is_eq);
 
     REQUIRE(!res1.is_ok());
     REQUIRE(!res1.is_err());
@@ -1108,7 +1109,7 @@ TEST_CASE("Result::eq for inval with inval must not alter src", "[result]")
     auto res4 = std::move(res3);
 
     auto is_eq = res1 == res3;
-    UNUSED(is_eq);
+    NEL_UNUSED(is_eq);
 
     REQUIRE(!res1.is_ok());
     REQUIRE(!res1.is_err());
@@ -1152,7 +1153,7 @@ TEST_CASE("Result::neq for ok with ok must not alter src", "[result]")
     auto res1 = TestResult::Ok(2);
 
     auto is_neq = res1 != TestResult::Ok(2);
-    UNUSED(is_neq);
+    NEL_UNUSED(is_neq);
 
     REQUIRE(res1.unwrap() == 2);
 }
@@ -1162,7 +1163,7 @@ TEST_CASE("Result::neq for ok with diff ok must not alter src", "[result]")
     auto res1 = TestResult::Ok(2);
 
     auto is_neq = res1 != TestResult::Ok(3);
-    UNUSED(is_neq);
+    NEL_UNUSED(is_neq);
 
     REQUIRE(res1.unwrap() == 2);
 }
@@ -1172,7 +1173,7 @@ TEST_CASE("Result::neq for ok with err must not alter src", "[result]")
     auto res1 = TestResult::Ok(2);
 
     auto is_neq = res1 != TestResult::Err(FAIL);
-    UNUSED(is_neq);
+    NEL_UNUSED(is_neq);
 
     REQUIRE(res1.unwrap() == 2);
 }
@@ -1185,7 +1186,7 @@ TEST_CASE("Result::neq for ok with inval must not alter src", "[result]")
     auto res3 = std::move(res2);
 
     auto is_neq = res1 != res2;
-    UNUSED(is_neq);
+    NEL_UNUSED(is_neq);
 
     REQUIRE(res1.unwrap() == 2);
 }
@@ -1228,7 +1229,7 @@ TEST_CASE("Result::neq for err with ok must not alter src", "[result]")
     auto res1 = TestResult::Err(FAIL);
 
     auto is_neq = res1 != TestResult::Ok(1);
-    UNUSED(is_neq);
+    NEL_UNUSED(is_neq);
 
     REQUIRE(res1.unwrap_err() == FAIL);
 }
@@ -1238,7 +1239,7 @@ TEST_CASE("Result::neq for err with err must not alter src", "[result]")
     auto res1 = TestResult::Err(FAIL);
 
     auto is_neq = res1 != TestResult::Err(FAIL);
-    UNUSED(is_neq);
+    NEL_UNUSED(is_neq);
 
     REQUIRE(res1.unwrap_err() == FAIL);
 }
@@ -1248,7 +1249,7 @@ TEST_CASE("Result::neq for err with diff err must not alter src", "[result]")
     auto res1 = TestResult::Err(FAIL);
 
     auto is_neq = res1 != TestResult::Err(NOENT);
-    UNUSED(is_neq);
+    NEL_UNUSED(is_neq);
 
     REQUIRE(res1.unwrap_err() == FAIL);
 }
@@ -1261,7 +1262,7 @@ TEST_CASE("Result::neq for err with inval must not alter src", "[result]")
     auto res3 = std::move(res2);
 
     auto is_neq = res1 != res2;
-    UNUSED(is_neq);
+    NEL_UNUSED(is_neq);
 
     REQUIRE(res1.unwrap_err() == FAIL);
 }
@@ -1301,7 +1302,7 @@ TEST_CASE("Result::neq for inval with ok must not alter src", "[result]")
     auto res2 = std::move(res1);
 
     auto is_neq = res1 != TestResult::Ok(1);
-    UNUSED(is_neq);
+    NEL_UNUSED(is_neq);
 
     REQUIRE(!res1.is_ok());
     REQUIRE(!res1.is_err());
@@ -1313,7 +1314,7 @@ TEST_CASE("Result::neq for inval with err must not alter src", "[result]")
     auto res2 = std::move(res1);
 
     auto is_neq = res1 != TestResult::Err(FAIL);
-    UNUSED(is_neq);
+    NEL_UNUSED(is_neq);
 
     REQUIRE(!res1.is_ok());
     REQUIRE(!res1.is_err());
@@ -1328,8 +1329,9 @@ TEST_CASE("Result::neq for inval with inval must not alter src", "[result]")
     auto res4 = std::move(res3);
 
     auto is_neq = res1 != res4;
-    UNUSED(is_neq);
+    NEL_UNUSED(is_neq);
 
     REQUIRE(!res1.is_ok());
     REQUIRE(!res1.is_err());
 }
+#endif//0

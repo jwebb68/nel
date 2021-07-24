@@ -119,22 +119,21 @@ class Optional {
                     return;
                     break;
 
+                // I want compile to fail if an explicit enum case handler isn't present.
+                // But, want to abort/panic if a unhandled case is encountered
+                // at runtime, much how a default hander would work if it was
+                // present.
+                default:
+                    // For gcc/clang minsize: if this not nell:abort,
+                    // then iteration may not collapse into a tight loop.
+                    // It's the  need for arguments that's doing it.
+                    // For O3: does not affect and iteration collapses into tight loop
+                    // TODO: look into stack trace dumper on fail.
+                    // But would still like a message..
+                    // For arm:minsize: if panic, then does not collapse (func with arg issue)
+                    // nel_panic("invalid optional");
+                    nel::abort();
             }
-            // No default as I want compile to fail if an enum case handler
-            // isn't present.
-            // But, want to abort/panic if a unhandled case is encountered
-            // at runtime, much how a default hander would work if it was
-            // present.
-
-            // For gcc/clang minsize: if this not nell:abort,
-            // then iteration may not collapse into a tight loop.
-            // It's the  need for arguments that's doing it.
-            // For O3: does not affect and iteration collapses into tight loop
-            // TODO: look into stack trace dumper on fail.
-            // But would still like a message..
-            // For arm:minsize: if panic, then does not collapse (func with arg issue)
-            // nel_panic("invalid optional");
-            nel::abort();
         }
 
         // Default constructor.
@@ -166,56 +165,23 @@ class Optional {
                 case INVAL:
                     return;
                     break;
+                default:
+                    nel_panic("invalid Optional");
             }
-            nel_panic("invalid Optional");
         }
 
 
         constexpr Optional &operator=(Optional &&o) noexcept
         {
-#if 1
-            // If same tag, use assign-move operation on type directly..
-            // Maybe type has more efficient move for it's impl.
-            if (tag_ == o.tag_) {
-                o.tag_ = INVAL;
-                switch (tag_) {
-                    case SOME:
-                        some_ = std::move(o.some_);
-                        return *this;
-                        break;
-                    case NONE:
-                        return *this;
-                        break;
-                    case INVAL:
-                        return *this;
-                        break;
-                }
-                nel_panic("invalid Optional");
-            } else {
+            if (this != &o) {
                 // Destruct and move, more efficient than move+swap
                 // Esp if move is copy+wipe.
                 // But only if moving does not throw.
                 this->~Optional();
                 new (this) Optional(std::move(o));
             }
-#else
-            // This is slow, depends on how eff a move and destroy and swap is for T.
-            // if swap is a move, then does 1 move (the ctor-move), + 3 moves (the swap) = 4 moves.
-            // if move is a copy+wipe, then becomes 4 copies+4 wipes.
-            // if swap is a byteswap, then has to iter the memblock once.
-            Optional t(std::move(o));
-            swap(t);
-#endif
             return *this;
         }
-
-#if 0
-        void swap(Optional &o) noexcept
-        {
-            // hacky, not by member, so bite me.
-            memswap((uint8_t *)this, (uint8_t *)&o, sizeof(*this));
-        }
-#endif
 
     public:
         /**
@@ -336,6 +302,7 @@ class Optional {
          */
         constexpr bool operator==(Optional const &o) const noexcept
         {
+            if (this == &o) { return true; }
             if (tag_ == o.tag_) {
                 switch (tag_) {
                     case SOME:
@@ -347,9 +314,10 @@ class Optional {
                     case INVAL:
                         return true;
                         break;
+                    default:
+                        // std::abort();
+                        nel_panic("invalid Optional");
                 }
-                // std::abort();
-                nel_panic("invalid Optional");
             }
             return false;
         }
@@ -366,6 +334,7 @@ class Optional {
          */
         constexpr bool operator!=(Optional const &o) const noexcept
         {
+            if (this == &o) { return false; }
             if (tag_ == o.tag_) {
                 switch (tag_) {
                     case SOME:
@@ -377,9 +346,10 @@ class Optional {
                     case INVAL:
                         return false;
                         break;
+                    default:
+                        // std::abort();
+                        nel_panic("invalid Optional");
                 }
-                // std::abort();
-                nel_panic("invalid Optional");
             }
             return true;
         }
@@ -402,8 +372,9 @@ class Optional {
                     outs << "Optional(" << "Inval" << ")";
                     return outs;
                     break;
+                default:
+                    outs << "Optional(" << "Unknown" << ")";
             }
-            outs << "Optional(" << "Unknown" << ")";
             return outs;
         }
 };
@@ -447,8 +418,9 @@ class Optional<void> {
                 case INVAL:
                     return;
                     break;
+                default:
+                    nel_panic("invalid Optional");
             }
-            nel_panic("invalid Optional");
         }
 
 
@@ -482,55 +454,23 @@ class Optional<void> {
                 case INVAL:
                     return;
                     break;
+                default:
+                    nel_panic("invalid Optional");
             }
-            nel_panic("invalid Optional");
         }
 
 
         constexpr Optional &operator=(Optional &&o) noexcept
         {
-#if 1
-            // If same tag, use ass-moveoperationon type directly..
-            // maybe type has more efficient move for it's impl.
-            if (tag_ == o.tag_) {
-                o.tag_ = INVAL;
-                switch (tag_) {
-                    case SOME:
-                        return *this;
-                        break;
-                    case NONE:
-                        return *this;
-                        break;
-                    case INVAL:
-                        return *this;
-                        break;
-                }
-                nel_panic("invalid Optional");
-            } else {
+            if (this != &o) {
                 // Destruct and move, more efficient than move+swap
                 // Especially if move is copy+wipe.
                 // But only if moving does not error.
                 this->~Optional();
                 new (this) Optional(std::move(o));
             }
-#else
-            // This is slow, depends on how eff a move and destroy and swap is for T.
-            // if swap is a move, then does 1 move (the ctor-move), + 3 moves (the swap) = 4 moves.
-            // if move is a copy+wipe, then becomes 4 copies+4 wipes.
-            // if swap is a byteswap, then has to iter the memblock once.
-            Optional t(std::move(o));
-            swap(t);
-#endif
             return *this;
         }
-
-#if 0
-        void swap(Optional &o) noexcept
-        {
-            // Hacky, not by member, so bite me.
-            memswap((uint8_t *)this, (uint8_t *)&o, sizeof(*this));
-        }
-#endif
 
     public:
         /**
@@ -637,6 +577,7 @@ class Optional<void> {
          */
         constexpr bool operator==(Optional const &o) const noexcept
         {
+            if (this == &o) { return true; }
             if (tag_ == o.tag_) {
                 switch (tag_) {
                     case SOME:
@@ -648,9 +589,10 @@ class Optional<void> {
                     case INVAL:
                         return true;
                         break;
+                    default:
+                        // std::abort();
+                        nel_panic("invalid Optional");
                 }
-                // std::abort();
-                nel_panic("invalid Optional");
             }
             return false;
         }
@@ -667,6 +609,7 @@ class Optional<void> {
          */
         constexpr bool operator!=(Optional const &o) const noexcept
         {
+            if (this == &o) { return false; }
             if (tag_ == o.tag_) {
                 switch (tag_) {
                     case SOME:
@@ -678,9 +621,10 @@ class Optional<void> {
                     case INVAL:
                         return false;
                         break;
+                    default:
+                        // std::abort();
+                        nel_panic("invalid Optional");
                 }
-                // std::abort();
-                nel_panic("invalid Optional");
             }
             return true;
         }
@@ -703,8 +647,9 @@ class Optional<void> {
                     outs << "Optional(" << "Inval" << ")";
                     return outs;
                     break;
+                default:
+                    outs << "Optional(" << "Unknown" << ")";
             }
-            outs << "Optional(" << "Unknown" << ")";
             return outs;
         }
 };
