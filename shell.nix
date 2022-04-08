@@ -18,6 +18,8 @@ stdenv.mkDerivation {
     pkgs.catch2
     pkgs.pkg-config
 
+    # multi is not multi version of compiler, but multilib
+    #pkgs.clang_multi
     pkgs.clang
 
     #pkgs.gcc-arm-embedded-7
@@ -27,8 +29,9 @@ stdenv.mkDerivation {
 
     # pkgs.gcc7
     # pkgs.gcc8
-    # pkgs.gcc
-    pkgs.gcc_multi
+    pkgs.gcc
+    # multi is not multi version of compiler, but multilib
+    # pkgs.gcc_multi
 
   ];
   # The packages in the `buildInputs` list will be added to the PATH in our shell
