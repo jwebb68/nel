@@ -2,25 +2,28 @@ BasedOnStyle: LLVM
 IndentWidth: 4
 
 ColumnLimit: 100
-Language : Cpp
+Language: Cpp
 
-AccessModifierOffset: 0
+AccessModifierOffset: -2
 AlignAfterOpenBracket: Align
+#AlignAfterOpenBracket: BlockIndent
 AlignConsecutiveAssignments: false
 AlignConsecutiveDeclarations: false
-#AlignConsecutiveMacros: false
+AlignConsecutiveMacros: None
 AlignEscapedNewlines: DontAlign
 AlignOperands: true
 AlignTrailingComments: false
-#AllowAllArgumentsOnNextLine: false
+AllowAllArgumentsOnNextLine: false
 #AllowAllConstructorInitializersOnNextLine: false
 AllowAllParametersOfDeclarationOnNextLine: false
+AllowShortBlocksOnASingleLine: Always
 #AllowShortBlocksOnASingleLine: Never
-AllowShortBlocksOnASingleLine: false
 AllowShortCaseLabelsOnASingleLine: false
+AllowShortEnumsOnASingleLine: false
 AllowShortFunctionsOnASingleLine: Empty
-AllowShortIfStatementsOnASingleLine: false
-#AllowShortLambdasOnASingleLine: empty
+AllowShortIfStatementsOnASingleLine: true
+#AllowShortIfStatementsOnASingleLine: AllIfsAndElse
+AllowShortLambdasOnASingleLine: Inline
 AllowShortLoopsOnASingleLine: false
 AlwaysBreakAfterReturnType: None
 AlwaysBreakBeforeMultilineStrings: false
@@ -42,11 +45,14 @@ DerivePointerAlignment: false
 FixNamespaceComments: true
 
 IncludeBlocks: Regroup
+IndentAccessModifiers: true
+IndentCaseBlocks: false
 IndentCaseLabels: true
 #IndentExternBlockStyle: NoIndent
 #IndentGotoLabels: false
 IndentPPDirectives: AfterHash
 IndentWrappedFunctionNames: false
+#InsertBraces: true
 #TrailingCommaStyle: true
 KeepEmptyLinesAtTheStartOfBlocks: false
 NamespaceIndentation: None
@@ -57,7 +63,12 @@ PointerAlignment: Right
 
 ReflowComments: true
 
-SortIncludes: true
+# don't sort includes
+# since we want the common ones last within a group and there isn't enough info in the name
+# to determine that.
+# although we do want grouping of includes.
+SortIncludes: false
+
 SpaceAfterCStyleCast: false
 #SpaceAfterLogicalNot: false
 SpaceAfterTemplateKeyword: false

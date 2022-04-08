@@ -1,5 +1,5 @@
-#include "defs.hh"
 #include "optional.hh"
+#include "defs.hh"
 
 #include <catch2/catch.hpp>
 //#include <iostream>
@@ -777,14 +777,14 @@ TEST_CASE("optional::None auto into Optional", "[optional]")
 
 struct Foo {
     public:
-    ~Foo(void)
-    {
-        this->dtor_called = true;
-    }
-    Foo(bool &dtor_called): dtor_called(dtor_called) {}
+        ~Foo(void)
+        {
+            this->dtor_called = true;
+        }
+        Foo(bool &dtor_called): dtor_called(dtor_called) {}
 
     private:
-    bool &dtor_called;
+        bool &dtor_called;
 };
 
 TEST_CASE("optional::~dtor for some, must call some dtor", "[optional]")

@@ -2,10 +2,10 @@
 
 #include "panic.hh"
 
-#include <cstdlib> //std::free, std::malloc, std::realloc
 #include <cstring> // std::memcpy, std::memset
-#include <cstring> // std::memmove
+#include <cstdlib> //std::free, std::malloc, std::realloc
 #include <memory> // std::align
+#include <cstring> // std::memmove
 
 namespace nel
 {
@@ -85,30 +85,28 @@ void memswap(uint8_t *const d, uint8_t *const s, size_t const n) noexcept
 }
 
 struct Alloc {
-    size_t align_;
-    uint8_t payload[1];
+        size_t align_;
+        uint8_t payload[1];
 
     public:
-    static Alloc *from_payload_ptr(void *p)
-    {
-        if (p == nullptr) {
-            return nullptr;
+        static Alloc *from_payload_ptr(void *p)
+        {
+            if (p == nullptr) { return nullptr; }
+
+            uint8_t *u8p = reinterpret_cast<uint8_t *>(p);
+            // has previous ptr been corrupted..
+            // nasty that this needs to be stored..
+            // nasty, using offsetof.
+            uint8_t *u8a = u8p - offsetof(Alloc, payload);
+            Alloc *a = reinterpret_cast<Alloc *>(u8a);
+            nel_assert((size_t)(u8p - u8a) == a->align_);
+            return a;
         }
 
-        uint8_t *u8p = reinterpret_cast<uint8_t *>(p);
-        // has previous ptr been corrupted..
-        // nasty that this needs to be stored..
-        // nasty, using offsetof.
-        uint8_t *u8a = u8p - offsetof(Alloc, payload);
-        Alloc *a = reinterpret_cast<Alloc *>(u8a);
-        nel_assert((size_t)(u8p - u8a) == a->align_);
-        return a;
-    }
-
-    void *to_payload_ptr(void)
-    {
-        return &payload;
-    }
+        void *to_payload_ptr(void)
+        {
+            return &payload;
+        }
 };
 
 void free_aligned(void *p)
@@ -127,9 +125,7 @@ void *realloc_aligned(void *old_p, size_t align, size_t size) noexcept
 
     // unaligned start of allocated memory.
     Alloc *new_a = reinterpret_cast<Alloc *>(std::realloc(old_a, size + align));
-    if (new_a == nullptr) {
-        return new_a;
-    }
+    if (new_a == nullptr) { return new_a; }
 
     void *new_p;
     if (old_p != nullptr && new_a == old_a) {

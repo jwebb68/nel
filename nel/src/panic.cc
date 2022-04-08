@@ -19,9 +19,7 @@ namespace nel
 
 void panic_if_(char const *file_name, int line_num, char const *const msg, bool pred) noexcept
 {
-    if (pred) {
-        panic_(file_name, line_num, msg);
-    }
+    if (pred) { panic_(file_name, line_num, msg); }
 }
 
 void assert_(char const *file_name, int line_num, char const *const msg, bool pred) noexcept

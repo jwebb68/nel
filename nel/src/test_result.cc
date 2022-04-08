@@ -1,10 +1,15 @@
 
-#include "defs.hh" // NEL_NEL_UNUSED
 #include "result.hh" //nel::ResultT
+#include "defs.hh" // NEL_NEL_UNUSED
 
 #include <catch2/catch.hpp>
 
-typedef enum _Error { NOERROR = 0, FAIL, NOENT } Error;
+typedef enum _Error
+{
+    NOERROR = 0,
+    FAIL,
+    NOENT
+} Error;
 nel::Log &operator<<(nel::Log &outs, Error const &v)
 {
     switch (v) {
@@ -807,14 +812,14 @@ TEST_CASE("Result::Err auto convert to Result", "[result]")
 
 struct Foo {
     public:
-    ~Foo(void)
-    {
-        this->dtor_called = true;
-    }
-    Foo(bool &dtor_called): dtor_called(dtor_called) {}
+        ~Foo(void)
+        {
+            this->dtor_called = true;
+        }
+        Foo(bool &dtor_called): dtor_called(dtor_called) {}
 
     private:
-    bool &dtor_called;
+        bool &dtor_called;
 };
 
 TEST_CASE("result::~dtor for ok, must call ok dtor", "[result]")
