@@ -1,15 +1,14 @@
 #include "heaped/rc.hh"
 
 #include <catch2/catch.hpp>
-//#include <iostream>
 
-TEST_CASE("RC::ctor", "[heaped][rc]")
+TEST_CASE("heaped::RC::ctor", "[heaped][rc]")
 {
     auto a1 = nel::heaped::RC<int>(1);
     REQUIRE(*a1 == 1);
 }
 
-TEST_CASE("RC::copy", "[heaped][rc]")
+TEST_CASE("heaped::RC::copy", "[heaped][rc]")
 {
     // copying does not remove the value
     auto a1 = nel::heaped::RC<int>(1);
@@ -19,7 +18,7 @@ TEST_CASE("RC::copy", "[heaped][rc]")
     REQUIRE(*a2 == 1);
 }
 
-TEST_CASE("RC::move", "[heaped][rc]")
+TEST_CASE("heaped::RC::move", "[heaped][rc]")
 {
     auto a1 = nel::heaped::RC<int>(1);
     auto a2 = std::move(a1);
@@ -28,13 +27,13 @@ TEST_CASE("RC::move", "[heaped][rc]")
     REQUIRE(*a2 == 1);
 }
 
-TEST_CASE("RC::ref", "[heaped][rc]")
+TEST_CASE("heaped::RC::ref", "[heaped][rc]")
 {
     auto a1 = nel::heaped::RC<int>(1);
     REQUIRE(*a1 == 1);
 }
 
-TEST_CASE("RC::has_value", "[heaped][rc]")
+TEST_CASE("heaped::RC::has_value", "[heaped][rc]")
 {
     // rc has value initially
     auto a1 = nel::heaped::RC<int>(1);
@@ -51,7 +50,7 @@ TEST_CASE("RC::has_value", "[heaped][rc]")
     REQUIRE(!a1.has_value());
 }
 
-TEST_CASE("RC::unwrap", "[heaped][rc]")
+TEST_CASE("heaped::RC::unwrap", "[heaped][rc]")
 {
     // unwrapping returns the value in the RC.
     auto a1 = nel::heaped::RC<int>(1);

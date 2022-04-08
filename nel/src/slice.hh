@@ -80,19 +80,27 @@ struct Slice {
             return len_;
         }
 
+        /**
+         * Item access in slice.
+         *
+         * @param idx The index of the item to get.
+         *
+         * @returns reference to the item
+         * @warning Will panic if idx is out-of-range for slice
+         */
         // TODO: use try_get as index access can fail.
-        // constexpr T const &operator[](size_t idx) const noexcept
-        // {
-        //     nel_panic_if_not(idx < len(), "index out of range");
-        //     return content_[idx];
-        // }
+        constexpr T const &operator[](size_t idx) const noexcept
+        {
+            nel_panic_if_not(idx < len(), "index out of range");
+            return content_[idx];
+        }
+        constexpr T &operator[](size_t idx) noexcept
+        {
+            nel_panic_if_not(idx < len(), "index out of range");
+            return content_[idx];
+        }
 
-        // constexpr T &operator[](size_t idx) noexcept
-        // {
-        //     nel_panic_if_not(idx < len(), "index out of range");
-        //     return content_[idx];
-        // }
-
+    public:
         /**
          * fill the slice with the value given.
          */
@@ -100,26 +108,6 @@ struct Slice {
         {
             nel::memset(content_, f, len());
         }
-
-        // TODO: use try_subslice as subslicing can fail.
-        // constexpr Slice subslice(size_t b, size_t e) noexcept
-        // {
-        //     // TODO: on b or e out of range:
-        //     // - panic/return error? (implies if hence branching for checking)
-        //     // - clamp to limit? (implies if hence branching for clamping, slower)
-        //     nel_panic_if(b > e, "index swapped");
-        //     nel_panic_if(b > len_, "b index out of range");
-        //     nel_panic_if(e > len_, "e index out of range");
-        //     return Slice(content_ + b, e - b);
-        // }
-
-        // constexpr Slice const subslice(size_t b, size_t e) const noexcept
-        // {
-        //     nel_panic_if(b > e, "index swapped");
-        //     nel_panic_if(b > len_, "b index out of range");
-        //     nel_panic_if(e > len_, "e index out of range");
-        //     return Slice(content_ + b, e - b);
-        // }
 
         // TODO: use try_copy_from as operation can fail.
         // void copy_from(Slice const &o) noexcept
@@ -135,6 +123,7 @@ struct Slice {
         //     nel::memmove(content_, o.content_, len());
         // }
 
+    public:
         /**
          * Return an iterator that will iterate over the slice
          *
@@ -153,7 +142,6 @@ struct Slice {
         {
             return Enumerator<T>(content_, len_);
         }
-
         constexpr Enumerator<T const> const enumerate(void) const noexcept
         {
             return Enumerator<T const>(content_, len_);

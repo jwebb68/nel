@@ -41,9 +41,12 @@ struct Vector {
         typedef Node<T> VectorNode;
         VectorNode *item_;
 
-    protected:
+    public:
+        // default ctor is ok since it cannot throw.
+        // TODO: but is it 'correct'? i.e. must arrays be created initialised?
         constexpr Vector(void) noexcept: item_(nullptr) {}
 
+    protected:
         constexpr Vector(VectorNode *const n) noexcept: item_(n) {}
 
     public:
@@ -103,8 +106,6 @@ struct Vector {
         // }
 
     public:
-        // create vector with initial allocation.
-        // vector::with_alloc(alloc);
         /**
          * Create a vector with the initial allocation.
          *
@@ -112,9 +113,6 @@ struct Vector {
          *
          * @returns the vector.
          */
-        // constexpr Vector(size_t initial) noexcept
-        //     : item_(VectorNode::malloc(initial))
-        // {}
         static constexpr Vector with_capacity(size_t cap) noexcept
         {
             if (cap == 0) { return Vector(); }
@@ -159,9 +157,50 @@ struct Vector {
          */
         void clear(void) noexcept
         {
-            if (item_ != nullptr) { item_->empty(); }
+            if (item_ != nullptr) { item_->clear(); }
         }
 
+        /**
+         * Item access in vector.
+         *
+         * @param idx The index of the item to get.
+         *
+         * @returns reference to the item
+         * @warning Will panic if idx is out-of-range for vector
+         */
+        constexpr T &operator[](size_t idx) noexcept
+        {
+            // nel_panic_if(item_ == nullptr, "invalid vector");
+            // return *item_[idx];
+            return slice()[idx];
+        }
+        constexpr T const &operator[](size_t idx) const noexcept
+        {
+            // nel_panic_if(item_ == nullptr, "invalid vector");
+            // return *item_[idx];
+            return slice()[idx];
+        }
+
+        /**
+         * Cast this vector into a full slice?
+         *
+         * Creates a slice from the vector.
+         * Slice does not own the contents, vector does (vector is still valid).
+         * Slice is invalidated if Vector goes out of scope/destroyed.
+         *
+         * @returns a slice over the the vector.
+         */
+        constexpr Slice<T> slice(void) noexcept
+        {
+            return (item_ == nullptr) ? Slice<T>::empty() : item_->slice();
+        }
+        constexpr Slice<T const> slice(void) const noexcept
+        {
+            return (item_ == nullptr) ? Slice<T const>::empty()
+                                      : reinterpret_cast<VectorNode const *>(item_)->slice();
+        }
+
+    public:
         // What to return on reserve fail?
         // Result<void, ?> ?
         // should be a try_reserve.
@@ -227,17 +266,7 @@ struct Vector {
             return (item_ == nullptr) ? Optional<T>::None() : item_->pop_back();
         }
 
-        // constexpr T &operator[](size_t idx) noexcept
-        // {
-        //     nel_panic_if(item_ == nullptr, "invalid vector");
-        //     return *item_[idx];
-        // }
-        // constexpr T const &operator[](size_t idx) const noexcept
-        // {
-        //     nel_panic_if(item_ == nullptr, "invalid vector");
-        //     return *item_[idx];
-        // }
-
+    public:
         constexpr Iterator<T const> iter(void) const noexcept
         {
             return slice().iter();
@@ -255,27 +284,6 @@ struct Vector {
         {
             return slice().enumerate();
         }
-
-        constexpr Slice<T> slice(void) noexcept
-        {
-            return (item_ == nullptr) ? Slice<T>::empty() : item_->slice();
-        }
-
-        // constexpr Slice<T> slice(size_t b, size_t e) noexcept
-        // {
-        //     return slice().subslice(b, e);
-        // }
-
-        constexpr Slice<T const> slice(void) const noexcept
-        {
-            return (item_ == nullptr) ? Slice<T const>::empty()
-                                      : reinterpret_cast<VectorNode const *>(item_)->slice();
-        }
-
-        // constexpr Slice<T const> slice(size_t b, size_t e) const noexcept
-        // {
-        //     return slice().subslice(b, e);
-        // }
 
     public:
         friend Log &operator<<(Log &outs, Vector const &v) noexcept

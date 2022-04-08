@@ -58,14 +58,17 @@ struct Vector {
         }
         Vector &operator=(Vector &&o) noexcept
         {
-            // Expensive to call swap on large inplace object.
-            // So move to final dest.
-            // Only as move cannot fail and leave this destructed.
-            this->~Vector();
-            new (this) Vector(std::move(o));
+            if (this != &o) {
+                // Expensive to call swap on large inplace object.
+                // So move to final dest.
+                // Only as move cannot fail and leave this destructed.
+                this->~Vector();
+                new (this) Vector(std::move(o));
+            }
             return *this;
         }
 
+    public:
         constexpr Vector(void): len_(0) {}
 
         constexpr Vector(std::initializer_list<T> l)
@@ -79,19 +82,42 @@ struct Vector {
         }
 
     public:
+        /**
+         * Returns the number of items currently in the allocation
+         *
+         * The allocation is not the number in use, only the number before a reallocation occurs.
+         *
+         * @returns the current allocation amount.
+         */
         constexpr size_t capacity(void) const noexcept
         {
             return N;
         }
+
+        /**
+         * Returns the number of items currently in use.
+         *
+         * @returns the current in use count.
+         */
         constexpr size_t len(void) const noexcept
         {
             return len_;
         }
+
+        /**
+         * Determines if the vector is empty (i.e. in-use count of 0).
+         *
+         * @returns true if in-use is 0, else false.
+         */
         constexpr bool is_empty(void) const noexcept
         {
             return len_ == 0;
         }
-        void empty(void) noexcept
+
+        /**
+         * Clears the vector, i.e. removes and destroys all in-use elements.
+         */
+        void clear(void) noexcept
         {
             for (size_t i = 0; i < len(); ++i) {
                 values_[i].~T();
@@ -99,17 +125,46 @@ struct Vector {
             len_ = 0;
         }
 
+        /**
+         * Item access in vector.
+         *
+         * @param idx The index of the item to get.
+         *
+         * @returns reference to the item
+         * @warning Will panic if idx is out-of-range for vector
+         */
         constexpr T &operator[](size_t idx) noexcept
         {
-            nel_panic_if_not(idx < len(), "index out of range");
-            return values_[idx];
+            // nel_panic_if_not(idx < len(), "index out of range");
+            // return values_[idx];
+            return slice()[idx];
         }
         constexpr T const &operator[](size_t idx) const noexcept
         {
-            nel_panic_if_not(idx < len(), "index out of range");
-            return values_[idx];
+            // nel_panic_if_not(idx < len(), "index out of range");
+            // return values_[idx];
+            return slice()[idx];
         }
 
+        /**
+         * Cast this vector into a full slice?
+         *
+         * Creates a slice from the vector.
+         * Slice does not own the contents, vector does (vector is still valid).
+         * Slice is invalidated if Vector goes out of scope/destroyed.
+         *
+         * @returns a slice over the the vector.
+         */
+        constexpr Slice<T> slice(void) noexcept
+        {
+            return Slice<T>::from(values_, len());
+        }
+        constexpr Slice<T const> const slice(void) const noexcept
+        {
+            return Slice<T const>::from(values_, len());
+        }
+
+    public:
         // TODO: fail on fixed?
         // Or return Result<void, ?>
         // And fail if over N
@@ -144,24 +199,7 @@ struct Vector {
             return v;
         }
 
-        constexpr Slice<T> slice(void) noexcept
-        {
-            return Slice<T>::from(values_, len());
-        }
-        constexpr Slice<T const> const slice(void) const noexcept
-        {
-            return Slice<T const>::from(values_, len());
-        }
-
-        // constexpr Slice<T> slice(size_t b, size_t e) noexcept
-        // {
-        //     return slice().subslice(b, e);
-        // }
-        // constexpr Slice<T const> slice(size_t b, size_t e) const noexcept
-        // {
-        //     return slice().subslice(b, e);
-        // }
-
+    public:
         constexpr Iterator<T> iter(void) noexcept
         {
             return slice().iter();

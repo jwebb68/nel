@@ -67,22 +67,46 @@ struct Array {
         }
         constexpr Array &operator=(Array &&o) noexcept
         {
-            // Expensive to move o to temp, then to swap o and this (using moves)
-            // quicker to just move o into this.
-            // Only because move cannot fail (and leave this destructed).
-            ~Array();
-            new (this) Array(std::move(o));
+            if (this != &o) {
+                // Expensive to move o to temp, then to swap o and this (using moves)
+                // quicker to just move o into this.
+                // Only because move cannot fail (and leave this destructed).
+                ~Array();
+                new (this) Array(std::move(o));
+            }
+            return *this;
         }
 
     public:
+        /**
+         * Determine if the array is empty.
+         *
+         * @returns true if array is empty, false otherwise.
+         */
+        constexpr bool is_empty(void) const noexcept
+        {
+            return N == 0;
+        }
+
+        /**
+         * Return the number of items in the array.
+         *
+         * @returns number of items in the array.
+         */
         constexpr size_t len(void) const
         {
             return N;
         }
 
-        // Move item in (idx).
-        // Move item out (idx).
-        // [const] ref item (idx)
+        /**
+         * Item access in array.
+         *
+         * @param idx The index of the item to get.
+         *
+         * @returns reference to the item.
+         * @warning Will panic if idx is out-of-range for array.
+         */
+        // as array access can fail, redo to try_get() and return v or error
         constexpr T &operator[](size_t idx) noexcept
         {
             nel_panic_if_not(idx < len(), "index out of range");
@@ -94,26 +118,27 @@ struct Array {
             return values_[idx];
         }
 
+        /**
+         * Cast this array into a full slice?
+         *
+         * Creates a slice from the array.
+         * Slice does not own the contents, array does (array still valid).
+         * Slice is invalidated if Array goes out of scope/destroyed.
+         *
+         * @returns a slice over all of the array.
+         */
+        // This could be a into_slice()?, or a as_slice()? or a deref_as_slice()?
+        // or a conversion func: operator Slice<T>(void)? (but I don't want it implicit/automatic
         constexpr Slice<T> slice(void)
         {
             return Slice<T>::from(values_, len());
         }
-        // constexpr Slice<T> slice(size_t b, size_t e)
-        // {
-        //     // Err N yet given differing range?
-        //     return slice().slice(b,e);
-        // }
-
         constexpr Slice<T const> slice(void) const
         {
             return Slice<T const>::from(values_, len());
         }
-        // constexpr Slice<T const> subslice(size_t b, size_t e) const
-        // {
-        //     // Err N yet given differing range?
-        //     return slice().slice(b,e);
-        // }
 
+    public:
         constexpr Iterator<T const> iter(void) const
         {
             return slice().iter();

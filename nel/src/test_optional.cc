@@ -2,7 +2,6 @@
 #include "defs.hh"
 
 #include <catch2/catch.hpp>
-//#include <iostream>
 
 TEST_CASE("optional::Some for some must produce a some", "[optional]")
 {
@@ -357,6 +356,7 @@ TEST_CASE("Optional.eq for some with some must give true", "[optional]")
     REQUIRE(opt1 == nel::Optional<int>::Some(1));
 }
 
+
 TEST_CASE("Optional.eq for some with diff some must give false", "[optional]")
 {
     auto opt1 = nel::Optional<int>::Some(1);
@@ -364,12 +364,14 @@ TEST_CASE("Optional.eq for some with diff some must give false", "[optional]")
     REQUIRE(!(opt1 == nel::Optional<int>::Some(2)));
 }
 
+
 TEST_CASE("Optional.eq for some with none must give false", "[optional]")
 {
     auto opt1 = nel::Optional<int>::Some(1);
 
     REQUIRE(!(opt1 == nel::Optional<int>::None()));
 }
+
 
 TEST_CASE("Optional.eq for some with inval must give false", "[optional]")
 {
@@ -381,6 +383,7 @@ TEST_CASE("Optional.eq for some with inval must give false", "[optional]")
     REQUIRE(!(opt1 == opt2));
 }
 
+
 TEST_CASE("Optional.eq for some with some must not change src", "[optional]")
 {
     auto opt1 = nel::Optional<int>::Some(1);
@@ -390,6 +393,7 @@ TEST_CASE("Optional.eq for some with some must not change src", "[optional]")
 
     REQUIRE(opt1.unwrap() == 1);
 }
+
 
 TEST_CASE("Optional.eq for some with diff some must not change src",
           "[optional]")
@@ -402,6 +406,7 @@ TEST_CASE("Optional.eq for some with diff some must not change src",
     REQUIRE(opt1.unwrap() == 1);
 }
 
+
 TEST_CASE("Optional.eq for some with none must not change src", "[optional]")
 {
     auto opt1 = nel::Optional<int>::Some(1);
@@ -411,6 +416,7 @@ TEST_CASE("Optional.eq for some with none must not change src", "[optional]")
 
     REQUIRE(opt1.unwrap() == 1);
 }
+
 
 TEST_CASE("Optional.eq for some with inval must not change src", "[optional]")
 {
@@ -426,7 +432,6 @@ TEST_CASE("Optional.eq for some with inval must not change src", "[optional]")
 }
 
 
-
 TEST_CASE("Optional.eq for none with some must give false", "[optional]")
 {
     auto opt1 = nel::Optional<int>::None();
@@ -434,12 +439,14 @@ TEST_CASE("Optional.eq for none with some must give false", "[optional]")
     REQUIRE(!(opt1 == nel::Optional<int>::Some(1)));
 }
 
+
 TEST_CASE("Optional.eq for none with none must give true", "[optional]")
 {
     auto opt1 = nel::Optional<int>::None();
 
     REQUIRE(opt1 == nel::Optional<int>::None());
 }
+
 
 TEST_CASE("Optional.eq for none with inval must give false", "[optional]")
 {
@@ -452,6 +459,7 @@ TEST_CASE("Optional.eq for none with inval must give false", "[optional]")
 }
 
 
+
 TEST_CASE("Optional.eq for none with some must not change src", "[optional]")
 {
     auto opt1 = nel::Optional<int>::None();
@@ -462,6 +470,7 @@ TEST_CASE("Optional.eq for none with some must not change src", "[optional]")
     REQUIRE(opt1.is_none());
 }
 
+
 TEST_CASE("Optional.eq for none with none must not change src", "[optional]")
 {
     auto opt1 = nel::Optional<int>::None();
@@ -471,6 +480,7 @@ TEST_CASE("Optional.eq for none with none must not change src", "[optional]")
 
     REQUIRE(opt1.is_none());
 }
+
 
 TEST_CASE("Optional.eq for none with inval must not change src", "[optional]")
 {
@@ -486,6 +496,7 @@ TEST_CASE("Optional.eq for none with inval must not change src", "[optional]")
 }
 
 
+
 TEST_CASE("Optional.eq for inval with some must give false", "[optional]")
 {
     auto opt1 = nel::Optional<int>::None();
@@ -495,6 +506,7 @@ TEST_CASE("Optional.eq for inval with some must give false", "[optional]")
 }
 
 
+
 TEST_CASE("Optional.eq for inval with none must give false", "[optional]")
 {
     auto opt1 = nel::Optional<int>::None();
@@ -502,6 +514,7 @@ TEST_CASE("Optional.eq for inval with none must give false", "[optional]")
 
     REQUIRE(!(opt1 == nel::Optional<int>::None()));
 }
+
 
 TEST_CASE("Optional.eq for inval with inval must give true", "[optional]")
 {
@@ -513,6 +526,7 @@ TEST_CASE("Optional.eq for inval with inval must give true", "[optional]")
 
     REQUIRE(opt1 == opt3);
 }
+
 
 
 TEST_CASE("Optional.eq for inval with some must not change src", "[optional]")
@@ -528,6 +542,7 @@ TEST_CASE("Optional.eq for inval with some must not change src", "[optional]")
 }
 
 
+
 TEST_CASE("Optional.eq for inval with none must not change src", "[optional]")
 {
     auto opt1 = nel::Optional<int>::None();
@@ -539,6 +554,7 @@ TEST_CASE("Optional.eq for inval with none must not change src", "[optional]")
     REQUIRE(!opt1.is_some());
     REQUIRE(!opt1.is_none());
 }
+
 
 TEST_CASE("Optional.eq for inval with inval must not change src", "[optional]")
 {
@@ -556,12 +572,14 @@ TEST_CASE("Optional.eq for inval with inval must not change src", "[optional]")
 }
 
 
+
 TEST_CASE("Optional.neq for some with some must give false", "[optional]")
 {
     auto opt1 = nel::Optional<int>::Some(1);
 
     REQUIRE(!(opt1 != nel::Optional<int>::Some(1)));
 }
+
 
 TEST_CASE("Optional.neq for some with diff some must give true", "[optional]")
 {
@@ -570,12 +588,14 @@ TEST_CASE("Optional.neq for some with diff some must give true", "[optional]")
     REQUIRE(opt1 != nel::Optional<int>::Some(2));
 }
 
+
 TEST_CASE("Optional.neq for some with none must give true", "[optional]")
 {
     auto opt1 = nel::Optional<int>::Some(1);
 
     REQUIRE(opt1 != nel::Optional<int>::None());
 }
+
 
 TEST_CASE("Optional.neq for some with inval must give true", "[optional]")
 {
@@ -587,6 +607,7 @@ TEST_CASE("Optional.neq for some with inval must give true", "[optional]")
     REQUIRE(opt1 != opt2);
 }
 
+
 TEST_CASE("Optional.neq for some with some must not alter src", "[optional]")
 {
     auto opt1 = nel::Optional<int>::Some(1);
@@ -596,6 +617,7 @@ TEST_CASE("Optional.neq for some with some must not alter src", "[optional]")
 
     REQUIRE(opt1.unwrap() == 1);
 }
+
 
 TEST_CASE("Optional.neq for some with diff must not alter src", "[optional]")
 {
@@ -607,6 +629,7 @@ TEST_CASE("Optional.neq for some with diff must not alter src", "[optional]")
     REQUIRE(opt1.unwrap() == 1);
 }
 
+
 TEST_CASE("Optional.neq for some with none must not alter src", "[optional]")
 {
     auto opt1 = nel::Optional<int>::Some(1);
@@ -616,6 +639,7 @@ TEST_CASE("Optional.neq for some with none must not alter src", "[optional]")
 
     REQUIRE(opt1.unwrap() == 1);
 }
+
 
 TEST_CASE("Optional.neq for some with inval must not alter src", "[optional]")
 {
@@ -631,6 +655,7 @@ TEST_CASE("Optional.neq for some with inval must not alter src", "[optional]")
 }
 
 
+
 TEST_CASE("Optional.neq for none with some must give true", "[optional]")
 {
     auto opt1 = nel::Optional<int>::None();
@@ -638,12 +663,14 @@ TEST_CASE("Optional.neq for none with some must give true", "[optional]")
     REQUIRE(opt1 != nel::Optional<int>::Some(1));
 }
 
+
 TEST_CASE("Optional.neq for none with none must give false", "[optional]")
 {
     auto opt1 = nel::Optional<int>::None();
 
     REQUIRE(!(opt1 != nel::Optional<int>::None()));
 }
+
 
 TEST_CASE("Optional.neq for none with inval must give true", "[optional]")
 {
@@ -655,6 +682,7 @@ TEST_CASE("Optional.neq for none with inval must give true", "[optional]")
     REQUIRE(opt1 != opt2);
 }
 
+
 TEST_CASE("Optional.neq for none with some must not alter src", "[optional]")
 {
     auto opt1 = nel::Optional<int>::None();
@@ -665,6 +693,7 @@ TEST_CASE("Optional.neq for none with some must not alter src", "[optional]")
     REQUIRE(opt1.is_none());
 }
 
+
 TEST_CASE("Optional.neq for none with none must not alter src", "[optional]")
 {
     auto opt1 = nel::Optional<int>::None();
@@ -674,6 +703,7 @@ TEST_CASE("Optional.neq for none with none must not alter src", "[optional]")
 
     REQUIRE(opt1.is_none());
 }
+
 
 TEST_CASE("Optional.neq for none with inval must not alter src", "[optional]")
 {
@@ -689,7 +719,6 @@ TEST_CASE("Optional.neq for none with inval must not alter src", "[optional]")
 }
 
 
-
 TEST_CASE("Optional.neq for inval with some must give true", "[optional]")
 {
     auto opt1 = nel::Optional<int>::None();
@@ -698,6 +727,7 @@ TEST_CASE("Optional.neq for inval with some must give true", "[optional]")
     REQUIRE(opt1 != nel::Optional<int>::Some(1));
 }
 
+
 TEST_CASE("Optional.neq for inval with none must give true", "[optional]")
 {
     auto opt1 = nel::Optional<int>::None();
@@ -705,6 +735,7 @@ TEST_CASE("Optional.neq for inval with none must give true", "[optional]")
 
     REQUIRE(opt1 != nel::Optional<int>::None());
 }
+
 
 TEST_CASE("Optional.neq for inval with inval must give false", "[optional]")
 {
@@ -716,6 +747,7 @@ TEST_CASE("Optional.neq for inval with inval must give false", "[optional]")
 
     REQUIRE(!(opt1 != opt3));
 }
+
 
 TEST_CASE("Optional.neq for inval with some must not alter src", "[optional]")
 {
@@ -729,6 +761,7 @@ TEST_CASE("Optional.neq for inval with some must not alter src", "[optional]")
     REQUIRE(!opt1.is_some());
 }
 
+
 TEST_CASE("Optional.neq for inval with none must not alter src", "[optional]")
 {
     auto opt1 = nel::Optional<int>::None();
@@ -740,6 +773,7 @@ TEST_CASE("Optional.neq for inval with none must not alter src", "[optional]")
     REQUIRE(!opt1.is_none());
     REQUIRE(!opt1.is_some());
 }
+
 
 TEST_CASE("Optional.neq for inval with inval must not alter src", "[optional]")
 {
@@ -786,7 +820,6 @@ struct Foo {
     private:
         bool &dtor_called;
 };
-
 TEST_CASE("optional::~dtor for some, must call some dtor", "[optional]")
 {
     bool dtor_called = false;

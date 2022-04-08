@@ -17,6 +17,8 @@ nel::Log &operator<<(nel::Log &outs, ErrorCode const &val) {
         case ErrorCode::Failed:
             return outs << "Failed";
             break;
+        default:
+            break;
     }
     nel_panic("unknown ErrorCode");
     return outs << "?";

@@ -2,7 +2,7 @@
 
 #include <catch2/catch.hpp>
 
-TEST_CASE("vector::empty", "[heaped][vector]")
+TEST_CASE("heaped::Vector::empty", "[heaped][vector]")
 {
     // must be able to create an empty vector..
     auto a1 = nel::heaped::Vector<int>::empty();
@@ -14,7 +14,7 @@ TEST_CASE("vector::empty", "[heaped][vector]")
     // REQUIRE(a1.len() == 0);
 }
 
-TEST_CASE("vector::with_capacity", "[heaped][vector]")
+TEST_CASE("heaped::Vector::with_capacity", "[heaped][vector]")
 {
     {
         // must be able to create a vector with 0 cap..
@@ -36,7 +36,7 @@ TEST_CASE("vector::with_capacity", "[heaped][vector]")
 // how to test that Vector cannot be copied?
 // it will fail at compile time.
 
-TEST_CASE("Vector::move", "[heaped][vector]")
+TEST_CASE("heaped::Vector::move", "[heaped][vector]")
 {
     {
         // empty Vector can be moved
@@ -64,7 +64,7 @@ TEST_CASE("Vector::move", "[heaped][vector]")
     }
 }
 
-TEST_CASE("Vector::is_empty", "[heaped][vector]")
+TEST_CASE("heaped::Vector::is_empty", "[heaped][vector]")
 {
     {
         // empty vector must be empty
@@ -100,7 +100,7 @@ TEST_CASE("Vector::is_empty", "[heaped][vector]")
     }
 }
 
-TEST_CASE("Vector::capacity", "[heaped][Vector]")
+TEST_CASE("heaped::Vector::capacity", "[heaped][Vector]")
 {
     {
         // empty vector must have capacity 0
@@ -139,7 +139,7 @@ TEST_CASE("Vector::capacity", "[heaped][Vector]")
     }
 }
 
-TEST_CASE("Vector::len", "[heaped][Vector]")
+TEST_CASE("heaped::Vector::len", "[heaped][Vector]")
 {
     {
         // empty vector must have len 0
@@ -169,7 +169,7 @@ TEST_CASE("Vector::len", "[heaped][Vector]")
     }
 }
 
-TEST_CASE("Vector::clear", "[heaped][Vector]")
+TEST_CASE("heaped::Vector::clear", "[heaped][Vector]")
 {
     {
         // empty vector can be cleared
@@ -219,7 +219,7 @@ TEST_CASE("Vector::clear", "[heaped][Vector]")
     }
 }
 
-TEST_CASE("Vector::reserve", "[heaped][Vector]")
+TEST_CASE("heaped::Vector::reserve", "[heaped][Vector]")
 {
     // reserve, gives the feel of an increment, i.e. the extra capacity
     // above the current len.
@@ -274,7 +274,7 @@ TEST_CASE("Vector::reserve", "[heaped][Vector]")
 
 // should this be .into_slice()?
 // is this a conversion, or an as.
-TEST_CASE("Vector::slice()", "[heaped][Vector]")
+TEST_CASE("heaped::Vector::slice()", "[heaped][Vector]")
 {
     // full slice of empty vector is empty.
     auto a1 = nel::heaped::Vector<int>::empty();
@@ -297,7 +297,7 @@ TEST_CASE("Vector::slice()", "[heaped][Vector]")
     REQUIRE(sc2.len() == 1);
 }
 
-TEST_CASE("Vector::iter()", "[heaped][Vector]")
+TEST_CASE("heaped::Vector::iter()", "[heaped][Vector]")
 {
     // can create iter on empty vectors.
     auto a1 = nel::heaped::Vector<int>::empty();

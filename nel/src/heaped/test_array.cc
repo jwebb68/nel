@@ -1,9 +1,8 @@
 #include "heaped/array.hh"
 
 #include <catch2/catch.hpp>
-//#include <iostream>
 
-TEST_CASE("Array::empty", "[heaped][array]")
+TEST_CASE("heaped::Array::empty", "[heaped][array]")
 {
     // must be able to create an empty array..
     auto a1 = nel::heaped::Array<int>::empty();
@@ -18,7 +17,7 @@ TEST_CASE("Array::empty", "[heaped][array]")
 // how to test that array cannot be copied?
 // it will fail at compile time.
 
-TEST_CASE("Array::move", "[heaped][array]")
+TEST_CASE("heaped::Array::move", "[heaped][array]")
 {
     // empty array can be moved
     auto a1 = nel::heaped::Array<int>::empty();
@@ -39,7 +38,7 @@ TEST_CASE("Array::move", "[heaped][array]")
     // c2 = std::move(c1);
 }
 
-TEST_CASE("Array::is_empty", "[heaped][array]")
+TEST_CASE("heaped::Array::is_empty", "[heaped][array]")
 {
     // empty array must be empty
     auto a1 = nel::heaped::Array<int>::empty();
@@ -64,7 +63,7 @@ TEST_CASE("Array::is_empty", "[heaped][array]")
     REQUIRE(!c3.is_empty());
 }
 
-TEST_CASE("Array::len", "[heaped][array]")
+TEST_CASE("heaped::Array::len", "[heaped][array]")
 {
     // empty array must have len 0
     auto a1 = nel::heaped::Array<int>::empty();
@@ -92,7 +91,7 @@ TEST_CASE("Array::len", "[heaped][array]")
 
 // should this be .into_slice()?
 // is this a conversion, or an as.
-TEST_CASE("Array::slice()", "[heaped][array]")
+TEST_CASE("heaped::Array::slice()", "[heaped][array]")
 {
     // full slice of empty array is empty.
     auto a1 = nel::heaped::Array<int>::empty();
@@ -115,30 +114,7 @@ TEST_CASE("Array::slice()", "[heaped][array]")
     REQUIRE(sc2.len() == 1);
 }
 
-// TEST_CASE("Array::slice(b,e)", "[heaped][array]")
-// {
-//     // sub slice of empty array is empty.
-//     auto a1 = nel::heaped::Array<int>::empty();
-//     auto sa1 = a1.subslice(0, 1);
-//     REQUIRE(sa1.is_empty());
-
-//     auto const c1 = nel::heaped::Array<int>::empty();
-//     auto sc1 = c1.subslice(0, 1);
-//     REQUIRE(sc1.is_empty());
-
-//     // sub slice of non-empty array is not empty.
-//     auto a2 = nel::heaped::Array<int>::fill(2, 1);
-//     auto sa2 = a2.subslice(0, 1);
-//     REQUIRE(!sa2.is_empty());
-//     REQUIRE(sa2.len() == 1);
-
-//     auto const c2 = nel::heaped::Array<int>::fill(2, 1);
-//     auto sc2 = c2.subslice(0, 1);
-//     REQUIRE(!sc2.is_empty());
-//     REQUIRE(sc2.len() == 1);
-// }
-
-TEST_CASE("Array::iter()", "[heaped][array]")
+TEST_CASE("heaped::Array::iter()", "[heaped][array]")
 {
     // can create iter on empty arrays.
     auto a1 = nel::heaped::Array<int>::empty();

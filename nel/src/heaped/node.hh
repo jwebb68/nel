@@ -157,14 +157,6 @@ struct Node {
         }
 
     public:
-        constexpr size_t capacity(void) const noexcept
-        {
-            return alloc_;
-        }
-        constexpr size_t len(void) const noexcept
-        {
-            return len_;
-        }
         constexpr T *ptr(void) noexcept
         {
             return values_;
@@ -174,34 +166,33 @@ struct Node {
             return values_;
         }
 
-        // TODO: to use try_get as index access can fail.
-        // constexpr T &operator[](size_t idx) noexcept
-        // {
-        //     nel_panic_if(idx < 0, "-ve index");
-        //     nel_panic_if_not(idx < len(), "index out of range");
-        //     return values_[idx];
-        // }
-        // constexpr T const &operator[](size_t idx) const noexcept
-        // {
-        //     nel_panic_if(idx < 0, "-ve index");
-        //     nel_panic_if_not(idx < len(), "index out of range");
-        //     return values_[idx];
-        // }
+    public:
+        constexpr size_t capacity(void) const noexcept
+        {
+            return alloc_;
+        }
+        constexpr size_t len(void) const noexcept
+        {
+            return len_;
+        }
 
         constexpr bool is_empty(void) const noexcept
         {
             return len() == 0;
         }
 
-        // why would a node allow it's items to be destroyed?
-        // vector empty/clear..
-        void empty(void) noexcept
+        // TODO: to use try_get as index access can fail.
+        constexpr T &operator[](size_t idx) noexcept
         {
-            slice().iter().for_each([](T &e) { e.~T(); });
-            // for (size_t i = 0; i < len(); ++i) {
-            //     values_[i].~T();
-            // }
-            len_ = 0;
+            // nel_panic_if_not(idx < len(), "index out of range");
+            // return values_[idx];
+            return slice()[idx];
+        }
+        constexpr T const &operator[](size_t idx) const noexcept
+        {
+            // nel_panic_if_not(idx < len(), "index out of range");
+            // return values_[idx];
+            return slice()[idx];
         }
 
         constexpr Slice<T> slice(void) noexcept
@@ -213,15 +204,17 @@ struct Node {
             return Slice<T const>::from(values_, len());
         }
 
-        // TODO: rename to try_subslice as oper can fail.
-        // constexpr Slice<T> subslice(size_t b, size_t e) noexcept
-        // {
-        //     return slice().subslice(b, e);
-        // }
-        // constexpr Slice<T const> subslice(size_t b, size_t e) const noexcept
-        // {
-        //     return slice().subslice(b, e);
-        // }
+    public:
+        // why would a node allow it's items to be destroyed?
+        // vector empty/clear..
+        void clear(void) noexcept
+        {
+            iter().for_each([](T &e) { e.~T(); });
+            // for (size_t i = 0; i < len(); ++i) {
+            //     values_[i].~T();
+            // }
+            len_ = 0;
+        }
 
         // rename to try-push_back?
         template<typename... Args>
@@ -243,6 +236,25 @@ struct Node {
             values_[len_].~T();
             len_ -= 1;
             return o;
+        }
+
+    public:
+        constexpr Iterator<T const> iter(void) const noexcept
+        {
+            return slice().iter();
+        }
+        constexpr Iterator<T> iter(void) noexcept
+        {
+            return slice().iter();
+        }
+
+        constexpr Enumerator<T const> enumerate(void) const noexcept
+        {
+            return slice().enumerate();
+        }
+        constexpr Enumerator<T> enumerate(void) noexcept
+        {
+            return slice().enumerate();
         }
 
     public:

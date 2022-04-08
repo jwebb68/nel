@@ -1,9 +1,8 @@
 #include "heaped/box.hh"
 
 #include <catch2/catch.hpp>
-//#include <iostream>
 
-TEST_CASE("Box", "[heaped][box]")
+TEST_CASE("heaped::Box", "[heaped][box]")
 {
     // must be able to create an empty array..
     auto a1 = nel::heaped::Box<int>(1);
@@ -12,7 +11,7 @@ TEST_CASE("Box", "[heaped][box]")
     REQUIRE(a1.has_value());
 }
 
-TEST_CASE("Box::move", "[heaped][box]")
+TEST_CASE("heaped::Box::move", "[heaped][box]")
 {
     // must be able to move box contents from one box to another.
     auto a1 = nel::heaped::Box<int>(1);
@@ -33,7 +32,7 @@ TEST_CASE("Box::move", "[heaped][box]")
 
 // TODO: test Box copy must fail compile.
 
-TEST_CASE("Box::deref", "[heaped][box]")
+TEST_CASE("heaped::Box::deref", "[heaped][box]")
 {
     // deref must return value value put into the box.
     // mutable version
@@ -58,7 +57,7 @@ TEST_CASE("Box::deref", "[heaped][box]")
     // REQUIRE(*a1 == 2);
 }
 
-TEST_CASE("Box::has_value", "[heaped][box]")
+TEST_CASE("heaped::Box::has_value", "[heaped][box]")
 {
     // a newly created boxed always has a value.
     auto a1 = nel::heaped::Box<int>(1);
@@ -70,7 +69,7 @@ TEST_CASE("Box::has_value", "[heaped][box]")
     REQUIRE(a2.has_value());
 }
 
-TEST_CASE("Box::unwrap", "[heaped][box]")
+TEST_CASE("heaped::Box::unwrap", "[heaped][box]")
 {
     // unwrap of empty produces panic..
     // can box ever be created empty?
@@ -98,7 +97,7 @@ TEST_CASE("Box::unwrap", "[heaped][box]")
 }
 
 #if 0
-TEST_CASE("Box::eq", "[heaped][box]")
+TEST_CASE("heaped::Box::eq", "[heaped][box]")
 {
     auto a0 = nel::heaped::Box<int>(0);
     auto a1 = nel::heaped::Box<int>(1);

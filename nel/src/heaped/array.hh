@@ -17,6 +17,8 @@ struct Array;
 #include "enumerator.hh"
 #include "slice.hh"
 
+#include <cstddef> // size_t
+
 namespace nel
 {
 namespace heaped
@@ -119,9 +121,11 @@ struct Array {
 #if 0
         constexpr Array &operator=(Array &&o) noexcept
         {
-            // slow
-            Array t(std::move(o));
-            swap(t);
+            if (this != &o) {
+                // slow
+                Array t(std::move(o));
+                swap(t);
+            }
             return *this;
         }
         void swap(Array &o) noexcept
@@ -131,11 +135,13 @@ struct Array {
 #else
         constexpr Array &operator=(Array &&o) noexcept
         {
-            // Fast.
-            // Move once, not twice.
-            // But only works if Array<T>(&&) does not throw/error.
-            this->~Array();
-            new (this) Array(std::move(o));
+            if (this != &o) {
+                // Fast.
+                // Move once, not twice.
+                // But only works if Array<T>(&&) does not throw/error.
+                this->~Array();
+                new (this) Array(std::move(o));
+            }
             return *this;
         }
 #endif
@@ -161,20 +167,27 @@ struct Array {
             return (item_ == nullptr) ? 0 : item_->len();
         }
 
-        // Move item in (idx) - use mut []
-        // Move item out (idx) - use mut []
-
+        /**
+         * Item access in array.
+         *
+         * @param idx The index of the item to get.
+         *
+         * @returns reference to the item.
+         * @warning Will panic if idx is out-of-range for array.
+         */
         // as array access can fail, redo to try_get() and return v or error
-        // constexpr T &operator[](int idx) noexcept
-        // {
-        //     nel_panic_if_not(item_ != nullptr, "invalid array");
-        //     return (*item_)[idx];
-        // }
-        // constexpr T const &operator[](int idx) const noexcept
-        // {
-        //     nel_panic_if_not(item_ != nullptr, "invalid array");
-        //     return (*item_)[idx];
-        // }
+        constexpr T &operator[](size_t idx) noexcept
+        {
+            // nel_panic_if_not(item_ != nullptr, "invalid array");
+            // return (*item_)[idx];
+            return slice()[idx];
+        }
+        constexpr T const &operator[](size_t idx) const noexcept
+        {
+            // nel_panic_if_not(item_ != nullptr, "invalid array");
+            // return (*item_)[idx];
+            return slice()[idx];
+        }
 
         /**
          * Cast this array into a full slice?
@@ -189,27 +202,16 @@ struct Array {
         // or a conversion func: operator Slice<T>(void)? (but I don't want it implicit/automatic
         constexpr Slice<T> slice(void)
         {
-            return (item_ == nullptr) ? Slice<T>::from(nullptr, 0)
+            return (item_ == nullptr) ? Slice<T>::empty()
                                       : Slice<T>::from(item_->ptr(), item_->len());
         }
         constexpr Slice<T const> slice(void) const
         {
-            return (item_ == nullptr) ? Slice<T const>::from(nullptr, 0)
+            return (item_ == nullptr) ? Slice<T const>::empty()
                                       : Slice<T const>::from(item_->ptr(), item_->len());
         }
 
-        // TODO: replace subslice with try_subslice as can fail.?
-        // constexpr Slice<T> subslice(size_t b, size_t e)
-        // {
-        //     // Err N yet given differing range?
-        //     return slice().subslice(b,e);
-        // }
-        // constexpr Slice<T const> subslice(size_t b, size_t e) const
-        // {
-        //     // Err N yet given differing range?
-        //     return slice().subslice(b,e);
-        // }
-
+    public:
         /**
          * Create an iterator over the contents of the Array.
          *

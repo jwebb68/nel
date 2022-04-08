@@ -1,7 +1,6 @@
 #include "slice.hh"
 
 #include <catch2/catch.hpp>
-// #include <iostream>
 
 TEST_CASE("Slice::empty()", "[slice]")
 {
