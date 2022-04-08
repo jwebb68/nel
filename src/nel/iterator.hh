@@ -20,7 +20,6 @@ struct FirstNIterator;
 #include <nel/defs.hh>
 
 #include <functional> //std::function
-#include <cstddef> // size_t
 
 namespace nel
 {
@@ -34,11 +33,11 @@ struct Iterator {
     private:
         // Won't pick up changes if realloc'd.
         ItemT *const content_;
-        size_t idx_;
-        size_t len_;
+        Index idx_;
+        Length len_;
 
     public:
-        constexpr Iterator(ItemT p[], size_t const len) noexcept: content_(p), idx_(0), len_(len) {}
+        constexpr Iterator(ItemT p[], Length const len) noexcept: content_(p), idx_(0), len_(len) {}
 
         Optional<OutT> next(void) noexcept
         {
@@ -79,7 +78,7 @@ struct Iterator {
 };
 
 // x.map(mapfn).enum().for_each(..);
-// x.chain(MapIt(mapfn)).chain(EnumIt).for_each([](size_t idx, T &e) {});
+// x.chain(MapIt(mapfn)).chain(EnumIt).for_each([](Index idx, T &e) {});
 
 template<typename I, typename U>
 // template<typename I, typename F, typename U>
@@ -120,15 +119,15 @@ struct FirstNIterator {
 
     private:
         I inner_;
-        size_t current_;
-        size_t limit_;
+        Index current_;
+        Length limit_;
 
     public:
-        FirstNIterator(I inner, size_t limit) noexcept: inner_(inner), current_(0), limit_(limit) {}
+        FirstNIterator(I inner, Length limit) noexcept: inner_(inner), current_(0), limit_(limit) {}
 
         Optional<OutT> next(void) noexcept
         {
-            // size_t i = current_++;
+            // Index i = current_++;
             // return (i < limit_)
             //     ? inner_.next()
             //     : Optional<typename I::ItemT>::None();
@@ -137,7 +136,7 @@ struct FirstNIterator {
 };
 
 template<typename I>
-FirstNIterator<I> first_n_it(I it, size_t limit) noexcept
+FirstNIterator<I> first_n_it(I it, Length limit) noexcept
 {
     return FirstNIterator<I>(it, limit);
 }

@@ -20,8 +20,6 @@ struct Vector;
 #include <nel/result.hh>
 #include <nel/log.hh>
 
-#include <cstddef> // size_t
-
 namespace nel
 {
 namespace heaped
@@ -90,7 +88,7 @@ struct Vector {
             new (item_) VectorNode(l);
         }
 
-        static constexpr Vector fill(T const &f, size_t n)
+        static constexpr Vector fill(T const &f, Count n)
         {
             if (n == 0) { return Vector(); }
             Vector a(VectorNode::malloc(n));
@@ -115,7 +113,7 @@ struct Vector {
          *
          * @returns the vector.
          */
-        static constexpr Vector with_capacity(size_t cap) noexcept
+        static constexpr Vector with_capacity(Count cap) noexcept
         {
             if (cap == 0) { return Vector(); }
             Vector a(VectorNode::malloc(cap));
@@ -129,7 +127,7 @@ struct Vector {
          *
          * @returns the current allocation amount.
          */
-        constexpr size_t capacity(void) const noexcept
+        constexpr Count capacity(void) const noexcept
         {
             return (item_ == nullptr) ? 0 : item_->capacity();
         }
@@ -139,7 +137,7 @@ struct Vector {
          *
          * @returns the current in use count.
          */
-        constexpr size_t len(void) const noexcept
+        constexpr Length len(void) const noexcept
         {
             return (item_ == nullptr) ? 0 : item_->len();
         }
@@ -170,13 +168,13 @@ struct Vector {
          * @returns reference to the item
          * @warning Will panic if idx is out-of-range for vector
          */
-        constexpr T &operator[](size_t idx) noexcept
+        constexpr T &operator[](Index idx) noexcept
         {
             // nel_panic_if(item_ == nullptr, "invalid vector");
             // return *item_[idx];
             return slice()[idx];
         }
-        constexpr T const &operator[](size_t idx) const noexcept
+        constexpr T const &operator[](Index idx) const noexcept
         {
             // nel_panic_if(item_ == nullptr, "invalid vector");
             // return *item_[idx];
@@ -206,7 +204,7 @@ struct Vector {
         // What to return on reserve fail?
         // Result<void, ?> ?
         // should be a try_reserve.
-        void reserve(size_t capacity) noexcept
+        void reserve(Count capacity) noexcept
         {
             // TODO: overalloc to quanta..
             // TODO: could over alloc to some quanta, e.g. 16, 8, etc..
@@ -214,10 +212,10 @@ struct Vector {
             // TODO: handle alignment issues here.
             if (item_ == nullptr) {
                 // No current alloc..
-                size_t cap = capacity;
+                Count cap = capacity;
                 item_ = VectorNode::malloc(cap);
             } else {
-                size_t cap = len() + capacity;
+                Count cap = len() + capacity;
                 if (cap > item_->capacity()) {
                     // Grow.. + realloc.
                     // No copying of contained, so bitwise move is ok.

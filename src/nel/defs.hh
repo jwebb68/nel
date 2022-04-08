@@ -7,6 +7,10 @@
 namespace nel
 {
 
+typedef long unsigned int Length;
+typedef long unsigned int Index;
+typedef long unsigned int Count;
+
 } // namespace nel
 
 #endif // NEL_DEFS_HH

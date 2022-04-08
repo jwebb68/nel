@@ -1,14 +1,14 @@
 #ifndef NEL_HEAPLESS_ARRAY_HH
 #define NEL_HEAPLESS_ARRAY_HH
 
-#include <cstddef> // size_t
+#include <nel/defs.hh> //NEL_UNUSED, Length
 
 namespace nel
 {
 namespace heapless
 {
 
-template<typename T, size_t const N>
+template<typename T, Length const N>
 struct Array;
 
 } // namespace heapless
@@ -19,7 +19,6 @@ struct Array;
 #include <nel/slice.hh>
 #include <nel/log.hh>
 #include <nel/panic.hh>
-#include <nel/defs.hh> //NEL_UNUSED
 
 namespace nel
 {
@@ -35,7 +34,7 @@ namespace heapless
 // can subslice array, safely
 // can iter array
 
-template<typename T, size_t const N>
+template<typename T, Length const N>
 struct Array {
     public:
     private:
@@ -60,7 +59,7 @@ struct Array {
         static constexpr Array fill(T const &v)
         {
             Array a;
-            for (size_t i = 0; i < N; ++i) {
+            for (Index i = 0; i < N; ++i) {
                 new (&a.values_[i]) T(v);
             }
             return a;
@@ -74,7 +73,7 @@ struct Array {
             // TODO: a's dtor issues
             // TODO: is 'a' copied/moved in cost time or should this be inplace?
             Array a;
-            for (size_t i = 0; i < N; ++i) {
+            for (Index i = 0; i < N; ++i) {
                 auto r = T::try_copy(v);
                 // values_ not auto initialised
                 if (r.is_err()) {
@@ -104,7 +103,7 @@ struct Array {
             // gcc: if init-list ctor is empty, then values are created inplace .. not.
             // gcc: creates init list in temp space, then copies into required space..
             //      todo: avoid this copying.. can I get them created inplace..
-            size_t i = 0;
+            Index i = 0;
             for (auto it = l.begin(); i < N && it != l.end(); ++it, ++i) {
                 new (&values_[i]) T(std::move(*it));
             }
@@ -118,7 +117,7 @@ struct Array {
         // Moving allowed.
         constexpr Array(Array &&o) noexcept
         {
-            for (size_t i = 0; i < N; ++i) {
+            for (Index i = 0; i < N; ++i) {
                 new (&values_[i]) T(std::move(o.values_[i]));
             }
         }
@@ -150,7 +149,7 @@ struct Array {
          *
          * @returns number of items in the array.
          */
-        constexpr size_t len(void) const
+        constexpr Length len(void) const
         {
             return N;
         }
@@ -168,11 +167,11 @@ struct Array {
          * @warning Will panic if idx is out-of-range for array.
          */
         // as array access can fail, redo to try_get() and return v or error
-        constexpr T &operator[](size_t idx) noexcept
+        constexpr T &operator[](Index idx) noexcept
         {
             return slice()[idx];
         }
-        constexpr T const &operator[](size_t idx) const noexcept
+        constexpr T const &operator[](Index idx) const noexcept
         {
             return slice()[idx];
         }
@@ -228,7 +227,7 @@ struct Array {
         {
             outs << "Array<" << v.len() << ">{"
                  << "\n";
-            for (size_t i = 0; i < v.len(); ++i) {
+            for (Index i = 0; i < v.len(); ++i) {
                 outs << "[" << i << "]:" << v.values_[i] << "\n";
             }
             outs << "}";

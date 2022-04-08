@@ -19,8 +19,6 @@ struct Array;
 #include <nel/log.hh>
 #include <nel/defs.hh>
 
-#include <cstddef> // size_t
-
 namespace nel
 {
 namespace heaped
@@ -99,7 +97,7 @@ struct Array {
          *
          * @returns the created array
          */
-        static constexpr Array fill(T const &f, size_t n)
+        static constexpr Array fill(T const &f, Count n)
         {
             if (n == 0) { return Array::empty(); }
             Array a(ArrayNode::malloc(n));
@@ -164,7 +162,7 @@ struct Array {
          *
          * @returns number of items in the array.
          */
-        constexpr size_t len(void) const noexcept
+        constexpr Length len(void) const noexcept
         {
             return (item_ == nullptr) ? 0 : item_->len();
         }
@@ -178,13 +176,13 @@ struct Array {
          * @warning Will panic if idx is out-of-range for array.
          */
         // as array access can fail, redo to try_get() and return v or error
-        constexpr T &operator[](size_t idx) noexcept
+        constexpr T &operator[](Index idx) noexcept
         {
             // nel_panic_if_not(item_ != nullptr, "invalid array");
             // return (*item_)[idx];
             return slice()[idx];
         }
-        constexpr T const &operator[](size_t idx) const noexcept
+        constexpr T const &operator[](Index idx) const noexcept
         {
             // nel_panic_if_not(item_ != nullptr, "invalid array");
             // return (*item_)[idx];
@@ -244,7 +242,7 @@ struct Array {
         {
             outs << "Array(" << v.len() << "){"
                  << "\n";
-            for (size_t i = 0; i < v.len(); ++i) {
+            for (Index i = 0; i < v.len(); ++i) {
                 outs << "[" << i << "]:" << v.values_[i] << "\n";
             }
             outs << "}";

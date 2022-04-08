@@ -15,8 +15,6 @@ struct Slice;
 #include <nel/panic.hh>
 #include <nel/defs.hh>
 
-#include <cstddef> // size_t
-
 namespace nel
 {
 
@@ -25,12 +23,12 @@ struct Slice {
     private:
         T *const content_;
         // Implicit start at 0.
-        size_t len_;
+        Length len_;
 
     protected:
         constexpr Slice(void): content_(nullptr), len_(0) {}
 
-        constexpr Slice(T p[], size_t len) noexcept: content_(p), len_(len) {}
+        constexpr Slice(T p[], Length len) noexcept: content_(p), len_(len) {}
 
     public:
         /**
@@ -46,7 +44,7 @@ struct Slice {
          *
          * Slice is invalidated if p goes out of scope or is deleted/destroyed.
          */
-        static constexpr Slice from(T p[], size_t len) noexcept
+        static constexpr Slice from(T p[], Length len) noexcept
         {
             return Slice(p, len);
         }
@@ -78,7 +76,7 @@ struct Slice {
          *
          * @returns number of elements in the slice.
          */
-        constexpr size_t len(void) const noexcept
+        constexpr Length len(void) const noexcept
         {
             return len_;
         }
@@ -92,12 +90,12 @@ struct Slice {
          * @warning Will panic if idx is out-of-range for slice
          */
         // TODO: use try_get as index access can fail.
-        constexpr T const &operator[](size_t idx) const noexcept
+        constexpr T &operator[](Index idx) noexcept
         {
             nel_panic_if_not(idx < len(), "index out of range");
             return content_[idx];
         }
-        constexpr T &operator[](size_t idx) noexcept
+        constexpr T const &operator[](Index idx) const noexcept
         {
             nel_panic_if_not(idx < len(), "index out of range");
             return content_[idx];
@@ -178,7 +176,7 @@ struct Slice {
 exit:
 #else
                 outs << v.content_[0];
-                for (size_t i = 1; i < v.len(); ++i) {
+                for (Index i = 1; i < v.len(); ++i) {
                     outs << " " << v.content_[i];
                 }
 #endif

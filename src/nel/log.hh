@@ -8,8 +8,6 @@ class Log;
 
 } // namespace nel
 
-#include <cstddef> // size_t
-
 namespace nel
 {
 
@@ -17,7 +15,7 @@ class Log
 {
     public:
         friend Log &operator<<(Log &outs, char const *v) noexcept;
-        friend Log &operator<<(Log &outs, size_t const v) noexcept;
+        friend Log &operator<<(Log &outs, long unsigned int const v) noexcept;
 };
 
 extern Log log;

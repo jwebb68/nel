@@ -17,7 +17,6 @@ struct RC;
 #include <nel/defs.hh>
 
 #include <utility> // std::move, std::forward
-#include <cstddef> // size_t
 
 namespace nel
 {
@@ -31,7 +30,7 @@ struct RC {
     private:
         struct Node {
             private:
-                size_t n_refs_;
+                Count n_refs_;
                 bool has_value_;
                 Element<T> value_;
 

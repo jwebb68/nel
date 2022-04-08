@@ -5,9 +5,11 @@
 #include <nel/memory.hh>
 #include <nel/defs.hh>
 
-#include <cstddef> // size_t
+typedef long unsigned int Length;
+typedef long unsigned int Index;
 
-template<size_t const N>
+
+template<Length const N>
 struct U8Buf {
     private:
         uint8_t data_[N];
@@ -41,7 +43,7 @@ struct U8Buf {
         }
 
     public:
-        size_t len(void) const {
+        Length len(void) const {
             return N;
         }
 
@@ -53,7 +55,7 @@ struct U8Buf {
             outs << "U8Buf<" << val.len() << ">{";
             if (val.len() > 0) {
                 outs  << val.data_[0];
-                for (size_t i = 1; i < val.len(); ++i) {
+                for (Index i = 1; i < val.len(); ++i) {
                     outs << " " << val.data_[i];
                 }
             }

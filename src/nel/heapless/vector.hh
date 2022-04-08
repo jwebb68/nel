@@ -1,14 +1,14 @@
 #ifndef NEL_HEAPLESS_VECTOR_HH
 #define NEL_HEAPLESS_VECTOR_HH
 
-#include <cstddef> // size_t
+#include <nel/defs.hh> //NEL_UNUSED, Length
 
 namespace nel
 {
 namespace heapless
 {
 
-template<typename T, size_t const N>
+template<typename T, Length const N>
 struct Vector;
 
 } // namespace heapless
@@ -20,19 +20,18 @@ struct Vector;
 #include <nel/optional.hh>
 #include <nel/result.hh>
 #include <nel/log.hh>
-#include <nel/defs.hh> //NEL_UNUSED
 
 namespace nel
 {
 namespace heapless
 {
 
-template<typename T, size_t const N>
+template<typename T, Length const N>
 struct Vector {
     public:
     private:
         // Number initialised.
-        size_t len_;
+        Length len_;
         // Must create with N uninitialised.
         // So really want only the memory allocated.
         // Will manually initialise on push_back, deinitialise on pop_back/destruct
@@ -42,7 +41,7 @@ struct Vector {
     public:
         ~Vector(void)
         {
-            for (size_t i = 0; i < len(); ++i) {
+            for (Index i = 0; i < len(); ++i) {
                 values_[i].~T();
             }
         }
@@ -55,7 +54,7 @@ struct Vector {
         Vector(Vector &&o) noexcept: len_(std::move(o.len_))
         {
             o.len_ = 0;
-            for (size_t i = 0; i < len(); ++i) {
+            for (Index i = 0; i < len(); ++i) {
                 new (&values_[i]) T(std::move(o.values_[i]));
             }
         }
@@ -82,7 +81,7 @@ struct Vector {
 
         constexpr Vector(std::initializer_list<T> l)
         {
-            size_t i = 0;
+            Index i = 0;
             for (auto it = l.begin(); i < capacity() && it != l.end(); ++it, ++i) {
                 new (&values_[i]) T(std::move(*it));
             }
@@ -98,7 +97,7 @@ struct Vector {
          *
          * @returns the current allocation amount.
          */
-        constexpr size_t capacity(void) const noexcept
+        constexpr Count capacity(void) const noexcept
         {
             return N;
         }
@@ -108,7 +107,7 @@ struct Vector {
          *
          * @returns the current in use count.
          */
-        constexpr size_t len(void) const noexcept
+        constexpr Length len(void) const noexcept
         {
             return len_;
         }
@@ -128,7 +127,7 @@ struct Vector {
          */
         void clear(void) noexcept
         {
-            for (size_t i = 0; i < len(); ++i) {
+            for (Index i = 0; i < len(); ++i) {
                 values_[i].~T();
             }
             len_ = 0;
@@ -142,27 +141,23 @@ struct Vector {
          * @returns reference to the item
          * @warning Will panic if idx is out-of-range for vector
          */
-        constexpr T &operator[](size_t idx) noexcept
+        constexpr T &operator[](Index idx) noexcept
         {
-            // nel_panic_if_not(idx < len(), "index out of range");
-            // return values_[idx];
             return slice()[idx];
         }
-        constexpr T const &operator[](size_t idx) const noexcept
+        constexpr T const &operator[](Index idx) const noexcept
         {
-            // nel_panic_if_not(idx < len(), "index out of range");
-            // return values_[idx];
             return slice()[idx];
         }
 
         /**
-         * Cast this vector into a full slice?
+         * Cast this array into a full slice?
          *
-         * Creates a slice from the vector.
-         * Slice does not own the contents, vector does (vector is still valid).
-         * Slice is invalidated if Vector goes out of scope/destroyed.
+         * Creates a slice from the array.
+         * Slice does not own the contents, array does (array still valid).
+         * Slice is invalidated if Array goes out of scope/destroyed.
          *
-         * @returns a slice over the the vector.
+         * @returns a slice over all of the array.
          */
         constexpr Slice<T> slice(void) noexcept
         {
@@ -173,13 +168,14 @@ struct Vector {
             return Slice<T const>::from(values_, len());
         }
 
-    public:
         // TODO: fail on fixed?
         // Or return Result<void, ?>
-        // And fail if over N
+        // And fail if not N
+        // i.e. reserve(0) on cap of 4 does what?
         // Shouldn't be errT=bool but don't know what to use..
-        // Result<void, bool> reserve(size_t new_capacity) noexcept
-        void reserve(size_t new_capacity) noexcept
+        // for heaped err would be from mem-allocator
+        // Result<void, bool> reserve(Count new_capacity) noexcept
+        void reserve(Count new_capacity) noexcept
         {
             NEL_UNUSED(new_capacity);
         }
@@ -216,7 +212,6 @@ struct Vector {
         // remove_at?/pop_at?
         // sort ?
 
-    public:
         constexpr Iterator<T> iter(void) noexcept
         {
             return slice().iter();
@@ -240,7 +235,7 @@ struct Vector {
         {
             outs << "Vector<" << N << ">(" << v.len() << "){"
                  << "\n";
-            for (size_t i = 0; i < v.len(); ++i) {
+            for (Index i = 0; i < v.len(); ++i) {
                 outs << "[" << i << "]:" << v.values_[i] << "\n";
             }
             outs << "}";

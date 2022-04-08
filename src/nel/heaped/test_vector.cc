@@ -173,7 +173,7 @@ TEST_CASE("heaped::Vector::clear", "[heaped][Vector]")
 {
     {
         // empty vector can be cleared
-        size_t cap;
+        nel::Count cap;
         auto a1 = nel::heaped::Vector<int>::empty();
         cap = a1.capacity();
         a1.clear();
@@ -188,7 +188,7 @@ TEST_CASE("heaped::Vector::clear", "[heaped][Vector]")
 
     {
         // vector filled to length 0 must have len 0
-        size_t cap;
+        nel::Count cap;
         auto a2 = nel::heaped::Vector<int>::fill(2, 0);
         cap = a2.capacity();
         a2.clear();
@@ -204,7 +204,7 @@ TEST_CASE("heaped::Vector::clear", "[heaped][Vector]")
 
     {
         // vector filled to length >0 must have len of length
-        size_t cap;
+        nel::Count cap;
         auto a3 = nel::heaped::Vector<int>::fill(2, 1);
         cap = a3.capacity();
         a3.clear();

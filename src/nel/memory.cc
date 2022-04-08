@@ -9,9 +9,9 @@
 namespace nel
 {
 
-void memcpy(uint8_t *const d, uint8_t const *const s, size_t const n) noexcept
+void memcpy(uint8_t *const d, uint8_t const *const s, Length const n) noexcept
 {
-    // for (size_t i=0; i < n; ++i) {
+    // for (Index i=0; i < n; ++i) {
     //     d[i] = s[i];
     // }
     // uint8_t const *is = s;
@@ -21,9 +21,9 @@ void memcpy(uint8_t *const d, uint8_t const *const s, size_t const n) noexcept
     std::memcpy(d, s, n);
 }
 
-void memset(uint8_t *const d, uint8_t const s, size_t const n) noexcept
+void memset(uint8_t *const d, uint8_t const s, Length const n) noexcept
 {
-    // for (size_t i=0; i < n; ++i) {
+    // for (Index i=0; i < n; ++i) {
     //     d[i] = s;
     // }
     // for (uint8_t *id = d, *const e = (d + n); id != e; ++id) {
@@ -32,13 +32,13 @@ void memset(uint8_t *const d, uint8_t const s, size_t const n) noexcept
     std::memset(d, s, n);
 }
 
-void memmove(uint8_t *const d, uint8_t *const s, size_t const n) noexcept
+void memmove(uint8_t *const d, uint8_t *const s, Length const n) noexcept
 {
-    // for (size_t i=0; i < n; ++i) {
+    // for (Index i=0; i < n; ++i) {
     //     d[i] = s[i];
     //     s[i] = 0xa5;
     // }
-    // for (size_t i=0; i < n; ++i) {
+    // for (Index i=0; i < n; ++i) {
     //     uint8_t t = s[i];
     //     s[i] = 0xa5;
     //     d[i] = t;
@@ -69,9 +69,9 @@ void memmove(uint8_t *const d, uint8_t *const s, size_t const n) noexcept
     memset(s, 0xa5, n);
 }
 
-void memswap(uint8_t *const d, uint8_t *const s, size_t const n) noexcept
+void memswap(uint8_t *const d, uint8_t *const s, Length const n) noexcept
 {
-    // for (size_t i=0; i < n; ++i) {
+    // for (Index i=0; i < n; ++i) {
     //     uint8_t t = d[i];
     //     d[i] = s[i];
     //     s[i] = t;
@@ -84,7 +84,7 @@ void memswap(uint8_t *const d, uint8_t *const s, size_t const n) noexcept
 }
 
 struct Alloc {
-        size_t align_;
+        Length align_;
         uint8_t payload[1];
 
     public:
@@ -98,7 +98,7 @@ struct Alloc {
             // nasty, using offsetof.
             uint8_t *u8a = u8p - offsetof(Alloc, payload);
             Alloc *a = reinterpret_cast<Alloc *>(u8a);
-            nel_assert((size_t)(u8p - u8a) == a->align_);
+            nel_assert((Length)(u8p - u8a) == a->align_);
             return a;
         }
 
@@ -118,7 +118,7 @@ static uint8_t *as_u8ptr_mut(void *p)
     return reinterpret_cast<uint8_t *>(p);
 }
 
-void *realloc_aligned(void *old_p, size_t align, size_t size) noexcept
+void *realloc_aligned(void *old_p, Length align, Length size) noexcept
 {
     Alloc *old_a = Alloc::from_payload_ptr(old_p);
 
@@ -134,7 +134,7 @@ void *realloc_aligned(void *old_p, size_t align, size_t size) noexcept
         // new alloc.. or moved in realloc.
         // align to next highest al boundary.
         void *p1 = new_a;
-        size_t sz2 = size + align;
+        Length sz2 = size + align;
         uint8_t *aligneda_u8 = as_u8ptr_mut(std::align(align, size, p1, sz2));
         // TODO: handle realign fails..
         // if realign fails, object is invalid!!
@@ -152,7 +152,7 @@ void *realloc_aligned(void *old_p, size_t align, size_t size) noexcept
     return new_p;
 }
 
-void *malloc_aligned(size_t align, size_t size) noexcept
+void *malloc_aligned(Length align, Length size) noexcept
 {
     return realloc_aligned(nullptr, align, size);
 }

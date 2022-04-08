@@ -18,7 +18,6 @@ struct FirstNEnumerator;
 #include <nel/defs.hh>
 
 #include <functional> // std::function
-#include <cstddef> // size_t
 
 namespace nel
 {
@@ -33,11 +32,11 @@ struct Enumerator {
         // shared ?
         //  won't pick up changes if realloc'd
         T *const content_;
-        size_t idx_;
-        size_t len_;
+        Index idx_;
+        Length len_;
 
     public:
-        Enumerator(T p[], size_t const len) noexcept: content_(p), idx_(0), len_(len) {}
+        Enumerator(T p[], Length const len) noexcept: content_(p), idx_(0), len_(len) {}
 
         constexpr bool is_done(void) const noexcept
         {
@@ -135,11 +134,11 @@ struct FirstNEnumerator {
 
     private:
         I inner_;
-        size_t current_;
-        size_t limit_;
+        Index current_;
+        Length limit_;
 
     public:
-        FirstNEnumerator(I &inner, size_t limit) noexcept: inner_(inner), current_(0), limit_(limit)
+        FirstNEnumerator(I &inner, Length limit) noexcept: inner_(inner), current_(0), limit_(limit)
         {
         }
 
@@ -177,7 +176,7 @@ struct FirstNEnumerator {
 };
 
 template<typename I>
-FirstNEnumerator<I> first_n_en(I en, size_t limit) noexcept
+FirstNEnumerator<I> first_n_en(I en, Length limit) noexcept
 {
     return FirstNEnumerator<I>(en, limit);
 }

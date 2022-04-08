@@ -26,7 +26,7 @@ nel::Log &operator<<(nel::Log &outs, ErrorCode const &val) {
 
 
 //typedef uint16_t Lineno;
-typedef size_t Lineno;
+typedef long unsigned int Lineno;
 struct Error {
     // tot=16
     private:

@@ -24,7 +24,6 @@ struct Node;
 #include <new> // Inplace new
 #include <utility> // std::move, std::forward
 #include <cstdlib> // std::free, std::malloc, std::realloc
-#include <cstddef> // size_t
 
 namespace nel
 {
@@ -36,9 +35,9 @@ struct Node {
     public:
     private:
         // Number allocated.
-        size_t alloc_;
+        Length alloc_;
         // Number initialised.
-        size_t len_;
+        Length len_;
         // Treat as a C struct and use malloc/free to manage..
         // Meh, C++ does not like flexible arrays.
         T values_[1];
@@ -71,22 +70,22 @@ struct Node {
         // How does C++ handle variable length structs?
         // static bool is_aligned(void *p)
         // {
-        //     size_t const align = alignof(Node);
+        //     Length const align = alignof(Node);
         //     // p % alignment == 0?
-        //     return ((size_t)p & (align-1)) == 0;
+        //     return ((Length)p & (align-1)) == 0;
         // }
-        static Node *malloc(size_t capacity) noexcept
+        static Node *malloc(Count capacity) noexcept
         {
             Node *new_n = realloc(nullptr, capacity);
             new_n->len_ = 0;
             return new_n;
         }
 
-        static Node *realloc(Node *old_n, size_t new_cap) noexcept
+        static Node *realloc(Node *old_n, Count new_cap) noexcept
         {
             // Size of region to allocate excluding align padding.
             // Assume alignof(T) is included in align of Node.
-            size_t sz = sizeof(Node) - sizeof(T) + new_cap * sizeof(T);
+            Count sz = sizeof(Node) - sizeof(T) + new_cap * sizeof(T);
 
             // Check that max_align is multiple of align (i.e. is realign necessary..)
             // If it isn't, then becomes:
@@ -106,7 +105,7 @@ struct Node {
     public:
         ~Node(void)
         {
-            for (size_t i = 0; i < len(); ++i) {
+            for (Index i = 0; i < len(); ++i) {
                 values_[i].~T();
             }
         }
@@ -125,7 +124,7 @@ struct Node {
         {
             // How to fail if not big enough.
             nel_panic_if_not(l.size() <= capacity(), "not big enough");
-            size_t i = 0;
+            Index i = 0;
             for (auto it = l.begin(); i < capacity() && it != l.end(); ++it, ++i) {
                 new (&values_[i]) T(std::move(*it));
             }
@@ -144,7 +143,7 @@ struct Node {
             // }
             // // cannot use slice.fill as that expects init'ed values.
             // // and this function is
-            // for (size_t i=0;i < capacity(); ++i) {
+            // for (Index i=0;i < capacity(); ++i) {
             //     // cannot use assign as values uninitialised.
             //     new (&values_[i]) T(f);
             // }
@@ -171,11 +170,11 @@ struct Node {
         }
 
     public:
-        constexpr size_t capacity(void) const noexcept
+        constexpr Count capacity(void) const noexcept
         {
             return alloc_;
         }
-        constexpr size_t len(void) const noexcept
+        constexpr Length len(void) const noexcept
         {
             return len_;
         }
@@ -214,7 +213,7 @@ struct Node {
         void clear(void) noexcept
         {
             iter().for_each([](T &e) { e.~T(); });
-            // for (size_t i = 0; i < len(); ++i) {
+            // for (Index i = 0; i < len(); ++i) {
             //     values_[i].~T();
             // }
             len_ = 0;
@@ -269,7 +268,7 @@ struct Node {
     public:
         friend Log &operator<<(Log &outs, Node const &v) noexcept
         {
-            for (size_t i = 0; i < v.len(); ++i) {
+            for (Index i = 0; i < v.len(); ++i) {
                 outs << "[" << i << "]:" << v.values_[i] << "\n";
             }
             return outs;
