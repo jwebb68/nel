@@ -1,9 +1,8 @@
 
-#include "result.hh" //nel::ResultT
 #include "defs.hh" // NEL_NEL_UNUSED
+#include "result.hh" //nel::ResultT
 
 #include <catch2/catch.hpp>
-
 
 typedef enum _Error { NOERROR = 0, FAIL, NOENT } Error;
 nel::Log &operator<<(nel::Log &outs, Error const &v)
@@ -29,7 +28,6 @@ nel::Log &operator<<(nel::Log &outs, Error const &v)
 
 typedef nel::Result<int, Error> TestResult;
 
-
 TEST_CASE("Result::Ok for ok must produce ok", "[result]")
 {
     auto res = TestResult::Ok(1);
@@ -48,7 +46,6 @@ TEST_CASE("Result::Err for err must produce err", "[result]")
 
     REQUIRE(res.unwrap_err() == FAIL);
 }
-
 
 TEST_CASE("std::move(Result)-ctor for ok must move ok to dest", "[result]")
 {
@@ -78,8 +75,7 @@ TEST_CASE("std::move(Result)-ctor for err must move err to dest", "[result]")
     REQUIRE(val == FAIL);
 }
 
-TEST_CASE("std::move(Result)-ctor for inval must move inval to dest",
-          "[result]")
+TEST_CASE("std::move(Result)-ctor for inval must move inval to dest", "[result]")
 {
     auto res = TestResult::Err(FAIL);
     auto res2 = std::move(res);
@@ -88,7 +84,6 @@ TEST_CASE("std::move(Result)-ctor for inval must move inval to dest",
     REQUIRE(!res3.is_ok());
     REQUIRE(!res3.is_err());
 }
-
 
 TEST_CASE("std::move(Result)-ctor for ok must invalidate src", "[result]")
 {
@@ -118,7 +113,6 @@ TEST_CASE("std::move(Result)-ctor for inval must invalidate src", "[result]")
     REQUIRE(!res.is_err());
 }
 
-
 TEST_CASE("std::move(Result)-ass for ok must move ok val to dest", "[result]")
 {
     auto res = TestResult::Ok(1);
@@ -133,8 +127,7 @@ TEST_CASE("std::move(Result)-ass for ok must move ok val to dest", "[result]")
     REQUIRE(val == 1);
 }
 
-TEST_CASE("std::move(Result)-ass for err must move err val to dest",
-          "[result]")
+TEST_CASE("std::move(Result)-ass for err must move err val to dest", "[result]")
 {
     auto res = TestResult::Err(FAIL);
 
@@ -148,8 +141,7 @@ TEST_CASE("std::move(Result)-ass for err must move err val to dest",
     REQUIRE(val == FAIL);
 }
 
-TEST_CASE("std::move(Result)-ass for inval must move inval to dest",
-          "[result]")
+TEST_CASE("std::move(Result)-ass for inval must move inval to dest", "[result]")
 {
     auto res = TestResult::Err(FAIL);
     auto res2 = TestResult::Ok(2);
@@ -162,7 +154,6 @@ TEST_CASE("std::move(Result)-ass for inval must move inval to dest",
     REQUIRE(!res3.is_ok());
     REQUIRE(!res3.is_err());
 }
-
 
 TEST_CASE("std::move(Result)-ass for ok must invalidate src", "[result]")
 {
@@ -199,7 +190,6 @@ TEST_CASE("std::move(Result)-ass for inval must invalidate src", "[result]")
     REQUIRE(!res.is_ok());
     REQUIRE(!res.is_err());
 }
-
 
 TEST_CASE("Result.ok for ok must produce ok val", "[result]")
 {
@@ -244,7 +234,6 @@ TEST_CASE("Result.ok for ok must invalidate src", "[result]")
     auto val = res.ok();
     NEL_UNUSED(val);
 
-
     REQUIRE(!res.is_ok());
     REQUIRE(!res.is_err());
 }
@@ -255,7 +244,6 @@ TEST_CASE("Result.ok for err must invalidate src", "[result]")
 
     auto val = res.ok();
     NEL_UNUSED(val);
-
 
     REQUIRE(!res.is_ok());
     REQUIRE(!res.is_err());
@@ -269,11 +257,9 @@ TEST_CASE("Result.ok for inval must invalidate src", "[result]")
     auto val = res.ok();
     NEL_UNUSED(val);
 
-
     REQUIRE(!res.is_ok());
     REQUIRE(!res.is_err());
 }
-
 
 TEST_CASE("Result.err for ok must produce none", "[result]")
 {
@@ -345,7 +331,6 @@ TEST_CASE("Result.err for inval must invalidate src", "[result]")
     REQUIRE(!res.is_err());
 }
 
-
 TEST_CASE("Result.is_ok for ok must give true", "[result]")
 {
     auto res = TestResult::Ok(1);
@@ -367,7 +352,6 @@ TEST_CASE("Result.is_ok for inval must give false", "[result]")
 
     REQUIRE(!res.is_ok());
 }
-
 
 TEST_CASE("Result.is_ok for ok must not alter src", "[result]")
 {
@@ -401,9 +385,6 @@ TEST_CASE("Result.is_ok for inval must not alter src", "[result]")
     REQUIRE(!res.is_err());
 }
 
-
-
-
 TEST_CASE("Result.is_err for ok must give false", "[result]")
 {
     auto res = TestResult::Ok(1);
@@ -425,7 +406,6 @@ TEST_CASE("Result.is_err for inval must give false", "[result]")
 
     REQUIRE(!res.is_err());
 }
-
 
 TEST_CASE("Result.unwrap for Ok must give ok value", "[result]")
 {
@@ -570,7 +550,6 @@ TEST_CASE("Result.unwrap_or for invalid must stay invalid", "[result]")
     REQUIRE(!res.is_err());
 }
 
-
 TEST_CASE("Result.unwrap_err_or for ok must give or value", "[result]")
 {
     auto res = TestResult::Ok(1);
@@ -633,8 +612,6 @@ TEST_CASE("Result.unwrap_err_or for invalid must invalidate src", "[result]")
     REQUIRE(!res.is_err());
 }
 
-
-
 bool map1(const int &e)
 {
     NEL_UNUSED(e);
@@ -680,7 +657,6 @@ TEST_CASE("Result.map for inval must stay inval", "[result]")
     REQUIRE(!res3.is_err());
 }
 
-
 TEST_CASE("Result.map for ok must invalidate src", "[result]")
 {
     auto res = TestResult::Ok(1);
@@ -721,15 +697,12 @@ TEST_CASE("Result.map for inval must invalidate src", "[result]")
     REQUIRE(!res.is_err());
 }
 
-
-
 const char *bar = "bar";
 const char *map2(const Error &e)
 {
     NEL_UNUSED(e);
     return bar;
 }
-
 
 TEST_CASE("Result.map_err for ok must not change ok val", "[result]")
 {
@@ -810,8 +783,6 @@ TEST_CASE("Result.map_err for inval must invalidate src", "[result]")
     REQUIRE(!res.is_err());
 }
 
-
-
 nel::Result<int, Error> foo_ok(void)
 {
     return TestResult::Ok(1);
@@ -834,19 +805,16 @@ TEST_CASE("Result::Err auto convert to Result", "[result]")
     REQUIRE(res.is_err());
 }
 
-
 struct Foo {
     public:
-        ~Foo(void)
-        {
-            this->dtor_called = true;
-        }
-        Foo(bool &dtor_called): dtor_called(dtor_called)
-        {
-        }
+    ~Foo(void)
+    {
+        this->dtor_called = true;
+    }
+    Foo(bool &dtor_called): dtor_called(dtor_called) {}
 
     private:
-        bool &dtor_called;
+    bool &dtor_called;
 };
 
 TEST_CASE("result::~dtor for ok, must call ok dtor", "[result]")
@@ -1334,4 +1302,4 @@ TEST_CASE("Result::neq for inval with inval must not alter src", "[result]")
     REQUIRE(!res1.is_ok());
     REQUIRE(!res1.is_err());
 }
-#endif//0
+#endif // 0

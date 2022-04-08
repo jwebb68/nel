@@ -3,7 +3,6 @@
 #include <catch2/catch.hpp>
 //#include <iostream>
 
-
 TEST_CASE("RC::ctor", "[heaped][rc]")
 {
     auto a1 = nel::heaped::RC<int>(1);
@@ -27,16 +26,13 @@ TEST_CASE("RC::move", "[heaped][rc]")
 
     REQUIRE(!a1.has_value());
     REQUIRE(*a2 == 1);
-
 }
 
 TEST_CASE("RC::ref", "[heaped][rc]")
 {
     auto a1 = nel::heaped::RC<int>(1);
     REQUIRE(*a1 == 1);
-
 }
-
 
 TEST_CASE("RC::has_value", "[heaped][rc]")
 {

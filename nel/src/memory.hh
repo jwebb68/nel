@@ -1,18 +1,17 @@
 #ifndef NEL_MEMORY_HH
 #define NEL_MEMORY_HH
 
-#include <cstdint> // uint8_t
 #include <cstddef> // size_t
-
+#include <cstdint> // uint8_t
 #include <utility> // std::move, std::swap
 
-namespace nel {
+namespace nel
+{
 
 void memcpy(uint8_t *const d, uint8_t const *const s, size_t const n) noexcept;
 void memset(uint8_t *const d, uint8_t const s, size_t const n) noexcept;
 void memmove(uint8_t *const d, uint8_t *const s, size_t const n) noexcept;
 void memswap(uint8_t *const d, uint8_t *const s, size_t const n) noexcept;
-
 
 template<typename T>
 void memmove(T *d, T *s, size_t n) noexcept
@@ -46,9 +45,6 @@ void memswap(T *const d, T *const s, size_t n) noexcept
     }
 }
 
-
 } // namespace nel
 
-
-
-#endif//NEL_MEMORY_HH
+#endif // NEL_MEMORY_HH

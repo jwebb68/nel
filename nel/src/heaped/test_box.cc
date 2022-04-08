@@ -3,7 +3,6 @@
 #include <catch2/catch.hpp>
 //#include <iostream>
 
-
 TEST_CASE("Box", "[heaped][box]")
 {
     // must be able to create an empty array..
@@ -11,9 +10,7 @@ TEST_CASE("Box", "[heaped][box]")
 
     // must create not empty.
     REQUIRE(a1.has_value());
-
 }
-
 
 TEST_CASE("Box::move", "[heaped][box]")
 {
@@ -50,7 +47,6 @@ TEST_CASE("Box::deref", "[heaped][box]")
     *a1 = 3;
     REQUIRE(*a1 == 3);
 
-
     // const version
     auto const c1 = nel::heaped::Box<int>(2);
     REQUIRE(*c1 == 2);
@@ -60,9 +56,7 @@ TEST_CASE("Box::deref", "[heaped][box]")
     // and cannot mutate the boxed value
     // *c1 = 3; // compile fail
     // REQUIRE(*a1 == 2);
-
 }
-
 
 TEST_CASE("Box::has_value", "[heaped][box]")
 {
@@ -75,7 +69,6 @@ TEST_CASE("Box::has_value", "[heaped][box]")
     REQUIRE(!a1.has_value());
     REQUIRE(a2.has_value());
 }
-
 
 TEST_CASE("Box::unwrap", "[heaped][box]")
 {

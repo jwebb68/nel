@@ -98,6 +98,7 @@ CFLAGS += -Werror -Wall -Wextra -Wpedantic -Wswitch-default -Wswitch-enum -Wunin
 CXXFLAGS += -Werror -Wall -Wextra -Wpedantic -Wswitch-default -Wswitch-enum -Wuninitialized -std=c++17 -fno-exceptions
 
 # CFLAGS additionals for debug
+# -Og is really bad.. lots of 'vars optimised out' occurrences.
 debug_CFLAGS := -O0 -g
 debug_CXXFLAGS := -O0 -g
 debug_CPPFLAGS := -DDEBUG
@@ -106,6 +107,8 @@ debug_CPPFLAGS := -DDEBUG
 release_CFLAGS := -O3 -g
 release_CXXFLAGS := -O3 -g
 release_CPPFLAGS := -DRELEASE
+# nixos borken for lto: keep getting ar: lto needs a plugin..
+# problem appears to be in binutils package not picking up compiler plugins..
 #release_LDFLAGS:=
 #release_LDFLAGS += --lto
 #release_CFLAGS += --lto
@@ -539,7 +542,7 @@ distclean:
 .PHONY: format
 format:
 	astyle --project -I -n  $(allsrc) $(allhdr)
-	#env -u NIX_CFLAGS_COMPILE clang-format -style=file -i $(allsrc) $(allhdr)
+	env -u NIX_CFLAGS_COMPILE clang-format -style=file -i $(allsrc) $(allhdr)
 
 ifneq ($(MAKECMDGOALS),distclean)
 -include $(dep)

@@ -3,7 +3,6 @@
 #include <catch2/catch.hpp>
 //#include <iostream>
 
-
 TEST_CASE("Array::empty", "[heaped][array]")
 {
     // must be able to create an empty array..
@@ -14,11 +13,10 @@ TEST_CASE("Array::empty", "[heaped][array]")
     // REQUIRE(a1.is_empty());
     // // empty array must have len of 0
     // REQUIRE(a1.len() == 0);
-
 }
 
 // how to test that array cannot be copied?
-//it will fail at compile time.
+// it will fail at compile time.
 
 TEST_CASE("Array::move", "[heaped][array]")
 {
@@ -50,7 +48,6 @@ TEST_CASE("Array::is_empty", "[heaped][array]")
     auto const c1 = nel::heaped::Array<int>::empty();
     REQUIRE(c1.is_empty());
 
-
     // array filled to length 0 must be empty
     auto a2 = nel::heaped::Array<int>::fill(2, 0);
     REQUIRE(a2.is_empty());
@@ -66,7 +63,6 @@ TEST_CASE("Array::is_empty", "[heaped][array]")
     auto c3 = nel::heaped::Array<int>::fill(2, 1);
     REQUIRE(!c3.is_empty());
 }
-
 
 TEST_CASE("Array::len", "[heaped][array]")
 {
@@ -107,7 +103,6 @@ TEST_CASE("Array::slice()", "[heaped][array]")
     auto sc1 = c1.slice();
     REQUIRE(sc1.is_empty());
 
-
     // full slice of non-empty array is not empty.
     auto a2 = nel::heaped::Array<int>::fill(2, 1);
     auto sa2 = a2.slice();
@@ -118,9 +113,7 @@ TEST_CASE("Array::slice()", "[heaped][array]")
     auto sc2 = c2.slice();
     REQUIRE(!sc2.is_empty());
     REQUIRE(sc2.len() == 1);
-
 }
-
 
 // TEST_CASE("Array::slice(b,e)", "[heaped][array]")
 // {
@@ -132,7 +125,6 @@ TEST_CASE("Array::slice()", "[heaped][array]")
 //     auto const c1 = nel::heaped::Array<int>::empty();
 //     auto sc1 = c1.subslice(0, 1);
 //     REQUIRE(sc1.is_empty());
-
 
 //     // sub slice of non-empty array is not empty.
 //     auto a2 = nel::heaped::Array<int>::fill(2, 1);

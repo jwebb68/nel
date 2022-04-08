@@ -2,7 +2,6 @@
 
 #include <catch2/catch.hpp>
 
-
 TEST_CASE("vector::empty", "[heaped][vector]")
 {
     // must be able to create an empty vector..
@@ -35,7 +34,7 @@ TEST_CASE("vector::with_capacity", "[heaped][vector]")
 }
 
 // how to test that Vector cannot be copied?
-//it will fail at compile time.
+// it will fail at compile time.
 
 TEST_CASE("Vector::move", "[heaped][vector]")
 {
@@ -64,7 +63,6 @@ TEST_CASE("Vector::move", "[heaped][vector]")
         // c2 = std::move(c1);
     }
 }
-
 
 TEST_CASE("Vector::is_empty", "[heaped][vector]")
 {
@@ -101,7 +99,6 @@ TEST_CASE("Vector::is_empty", "[heaped][vector]")
         REQUIRE(a1.is_empty());
     }
 }
-
 
 TEST_CASE("Vector::capacity", "[heaped][Vector]")
 {
@@ -142,7 +139,6 @@ TEST_CASE("Vector::capacity", "[heaped][Vector]")
     }
 }
 
-
 TEST_CASE("Vector::len", "[heaped][Vector]")
 {
     {
@@ -172,7 +168,6 @@ TEST_CASE("Vector::len", "[heaped][Vector]")
         REQUIRE(c3.len() == 1);
     }
 }
-
 
 TEST_CASE("Vector::clear", "[heaped][Vector]")
 {
@@ -236,7 +231,7 @@ TEST_CASE("Vector::reserve", "[heaped][Vector]")
         auto a1 = nel::heaped::Vector<int>::empty();
 
         a1.reserve(10);
-        REQUIRE(a1.capacity() >= a1.len()+10);
+        REQUIRE(a1.capacity() >= a1.len() + 10);
 
         // growing..
         a1.reserve(16);
@@ -257,7 +252,7 @@ TEST_CASE("Vector::reserve", "[heaped][Vector]")
         auto a1 = nel::heaped::Vector<int>::fill(2, 10);
 
         a1.reserve(10);
-        REQUIRE(a1.capacity() >= a1.len()+10);
+        REQUIRE(a1.capacity() >= a1.len() + 10);
 
         // growing..
         a1.reserve(16);
@@ -273,9 +268,7 @@ TEST_CASE("Vector::reserve", "[heaped][Vector]")
         a1.reserve(0);
         REQUIRE(a1.capacity() >= a1.len() + 0);
     }
-
 }
-
 
 // TODO Array::try_get(index).
 
@@ -292,7 +285,6 @@ TEST_CASE("Vector::slice()", "[heaped][Vector]")
     auto sc1 = c1.slice();
     REQUIRE(sc1.is_empty());
 
-
     // full slice of non-empty vector is not empty.
     auto a2 = nel::heaped::Vector<int>::fill(2, 1);
     auto sa2 = a2.slice();
@@ -304,7 +296,6 @@ TEST_CASE("Vector::slice()", "[heaped][Vector]")
     REQUIRE(!sc2.is_empty());
     REQUIRE(sc2.len() == 1);
 }
-
 
 TEST_CASE("Vector::iter()", "[heaped][Vector]")
 {

@@ -2,12 +2,13 @@
 
 #include "panic.hh"
 
-#include <cstring> // std::memcpy, std::memset
 #include <cstdlib> //std::free, std::malloc, std::realloc
-#include <memory> // std::align
+#include <cstring> // std::memcpy, std::memset
 #include <cstring> // std::memmove
+#include <memory> // std::align
 
-namespace nel {
+namespace nel
+{
 
 void memcpy(uint8_t *const d, uint8_t const *const s, size_t const n) noexcept
 {
@@ -21,7 +22,6 @@ void memcpy(uint8_t *const d, uint8_t const *const s, size_t const n) noexcept
     std::memcpy(d, s, n);
 }
 
-
 void memset(uint8_t *const d, uint8_t const s, size_t const n) noexcept
 {
     // for (size_t i=0; i < n; ++i) {
@@ -32,7 +32,6 @@ void memset(uint8_t *const d, uint8_t const s, size_t const n) noexcept
     // }
     std::memset(d, s, n);
 }
-
 
 void memmove(uint8_t *const d, uint8_t *const s, size_t const n) noexcept
 {
@@ -56,7 +55,7 @@ void memmove(uint8_t *const d, uint8_t *const s, size_t const n) noexcept
     // note the toggling of addr1 read(a1), write(a2), write(a1)
     // whereas this may be better: read(a1), write(a1), write(a2)
     // but it won't get optimised into simple instructions.
-    for (uint8_t *id=d, *is=s, *const e=(d+n); id != e; ++is, ++id) {
+    for (uint8_t *id = d, *is = s, *const e = (d + n); id != e; ++is, ++id) {
         uint8_t t = *is;
         *is = 0xa5;
         *id = t;
@@ -70,7 +69,6 @@ void memmove(uint8_t *const d, uint8_t *const s, size_t const n) noexcept
     // memcpy(d, s, n);
     // memset(s, 0xa5, n);
 }
-
 
 void memswap(uint8_t *const d, uint8_t *const s, size_t const n) noexcept
 {
@@ -86,47 +84,42 @@ void memswap(uint8_t *const d, uint8_t *const s, size_t const n) noexcept
     }
 }
 
-
 struct Alloc {
-        size_t align_;
-        uint8_t payload[1];
+    size_t align_;
+    uint8_t payload[1];
 
     public:
-        static Alloc *from_payload_ptr(void *p)
-        {
-            if (p == nullptr) {
-                return nullptr;
-            }
-
-            uint8_t *u8p = reinterpret_cast<uint8_t *>(p);
-            // has previous ptr been corrupted..
-            // nasty that this needs to be stored..
-            // nasty, using offsetof.
-            uint8_t *u8a = u8p - offsetof(Alloc, payload);
-            Alloc *a = reinterpret_cast<Alloc *>(u8a);
-            nel_assert((size_t)(u8p - u8a) == a->align_);
-            return a;
+    static Alloc *from_payload_ptr(void *p)
+    {
+        if (p == nullptr) {
+            return nullptr;
         }
 
+        uint8_t *u8p = reinterpret_cast<uint8_t *>(p);
+        // has previous ptr been corrupted..
+        // nasty that this needs to be stored..
+        // nasty, using offsetof.
+        uint8_t *u8a = u8p - offsetof(Alloc, payload);
+        Alloc *a = reinterpret_cast<Alloc *>(u8a);
+        nel_assert((size_t)(u8p - u8a) == a->align_);
+        return a;
+    }
 
-        void *to_payload_ptr(void)
-        {
-            return &payload;
-        }
+    void *to_payload_ptr(void)
+    {
+        return &payload;
+    }
 };
-
 
 void free_aligned(void *p)
 {
     std::free(Alloc::from_payload_ptr(p));
 }
 
-
 static uint8_t *as_u8ptr_mut(void *p)
 {
     return reinterpret_cast<uint8_t *>(p);
 }
-
 
 void *realloc_aligned(void *old_p, size_t align, size_t size) noexcept
 {
@@ -164,12 +157,9 @@ void *realloc_aligned(void *old_p, size_t align, size_t size) noexcept
     return new_p;
 }
 
-
 void *malloc_aligned(size_t align, size_t size) noexcept
 {
     return realloc_aligned(nullptr, align, size);
 }
 
-
-
-}
+} // namespace nel
