@@ -1,6 +1,8 @@
 #ifndef NEL_HEAPLESS_VECTOR_HH
 #define NEL_HEAPLESS_VECTOR_HH
 
+#include <cstddef> // size_t
+
 namespace nel
 {
 namespace heapless
@@ -18,6 +20,7 @@ struct Vector;
 #include "slice.hh"
 #include "result.hh"
 #include "optional.hh"
+#include "defs.hh"
 
 namespace nel
 {
@@ -70,6 +73,11 @@ struct Vector {
 
     public:
         constexpr Vector(void): len_(0) {}
+
+        static constexpr Vector empty(void) noexcept
+        {
+            return Vector();
+        }
 
         constexpr Vector(std::initializer_list<T> l)
         {
