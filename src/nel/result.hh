@@ -9,13 +9,13 @@ class Result;
 
 } // namespace nel
 
-#include "element.hh"
-#include "optional.hh"
-#include "log.hh"
-#include "panic.hh"
+#include <nel/optional.hh>
+#include <nel/element.hh>
+#include <nel/log.hh>
+#include <nel/panic.hh>
 
-#include <utility> // std::move, std::forward
 #include <functional> // std::function
+#include <utility> // std::move, std::forward
 
 namespace nel
 {

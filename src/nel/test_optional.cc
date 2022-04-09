@@ -265,15 +265,17 @@ TEST_CASE("Optional.unwrap for Some must give some value", "[optional]")
     REQUIRE(val == 1);
 }
 
-// TEST_CASE("Optional.unwrap for None aborts", "[optional]")
-// {
+#if 0
+TEST_CASE("Optional.unwrap for None aborts", "[optional]")
+{
 // how do I do this?
-// }
+}
 
-// TEST_CASE("Optional.unwrap for Inval aborts", "[optional]")
-// {
+TEST_CASE("Optional.unwrap for Inval aborts", "[optional]")
+{
 // how do I do this?
-// }
+}
+#endif
 
 TEST_CASE("Optional.unwrap for Some must invalidate src", "[optional]")
 {

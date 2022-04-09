@@ -12,10 +12,12 @@ struct Array;
 } // namespace heaped
 } // namespace nel
 
-#include "node.hh"
-#include "iterator.hh"
-#include "enumerator.hh"
-#include "slice.hh"
+#include <nel/heaped/node.hh>
+#include <nel/enumerator.hh>
+#include <nel/iterator.hh>
+#include <nel/slice.hh>
+#include <nel/log.hh>
+#include <nel/defs.hh>
 
 #include <cstddef> // size_t
 

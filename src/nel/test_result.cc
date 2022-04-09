@@ -1,8 +1,7 @@
-
-#include "result.hh" //nel::ResultT
-#include "defs.hh" // NEL_NEL_UNUSED
-
 #include <catch2/catch.hpp>
+
+#include <nel/result.hh> //nel::ResultT
+#include <nel/defs.hh> // NEL_UNUSED
 
 typedef enum _Error
 {
@@ -636,10 +635,12 @@ TEST_CASE("Result.map for ok must change ok val", "[result]")
     // TODO: nasty, want bool to be auto-inferred as it's the return type of
     // map1, i.e. want res.map(map1).unwrap();
     auto res2 = res.map<bool>(map1);
-
     auto val = res2.unwrap();
-
     REQUIRE(val == true);
+
+    // auto res3 = res.map<bool>([](int const &e)->bool {return e==1;});
+    // auto val2 = res3.unwrap();
+    // REQUIRE(val2 == true);
 }
 
 TEST_CASE("Result.map for err must not change err val", "[result]")

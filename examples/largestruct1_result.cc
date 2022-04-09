@@ -1,9 +1,9 @@
-#include "log.hh"
-#include "defs.hh"
 #include "largestruct1.hh"
-
 #include "error.hh"
-#include "result.hh"
+
+#include <nel/result.hh>
+#include <nel/log.hh>
+#include <nel/defs.hh>
 
 typedef nel::Result<U8Buf<256>, Error> Result_t;
 

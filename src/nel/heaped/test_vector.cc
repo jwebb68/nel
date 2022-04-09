@@ -1,4 +1,4 @@
-#include "heaped/vector.hh"
+#include <nel/heaped/vector.hh>
 
 #include <catch2/catch.hpp>
 
@@ -276,50 +276,58 @@ TEST_CASE("heaped::Vector::reserve", "[heaped][Vector]")
 // is this a conversion, or an as.
 TEST_CASE("heaped::Vector::slice()", "[heaped][Vector]")
 {
-    // full slice of empty vector is empty.
-    auto a1 = nel::heaped::Vector<int>::empty();
-    auto sa1 = a1.slice();
-    REQUIRE(sa1.is_empty());
+    {
+        // full slice of empty vector is empty.
+        auto a1 = nel::heaped::Vector<int>::empty();
+        auto sa1 = a1.slice();
+        REQUIRE(sa1.is_empty());
 
-    auto const c1 = nel::heaped::Vector<int>::empty();
-    auto sc1 = c1.slice();
-    REQUIRE(sc1.is_empty());
+        auto const c1 = nel::heaped::Vector<int>::empty();
+        auto sc1 = c1.slice();
+        REQUIRE(sc1.is_empty());
+    }
 
-    // full slice of non-empty vector is not empty.
-    auto a2 = nel::heaped::Vector<int>::fill(2, 1);
-    auto sa2 = a2.slice();
-    REQUIRE(!sa2.is_empty());
-    REQUIRE(sa2.len() == 1);
+    {
+        // full slice of non-empty vector is not empty.
+        auto a2 = nel::heaped::Vector<int>::fill(2, 1);
+        auto sa2 = a2.slice();
+        REQUIRE(!sa2.is_empty());
+        REQUIRE(sa2.len() == 1);
 
-    auto const c2 = nel::heaped::Vector<int>::fill(2, 1);
-    auto sc2 = c2.slice();
-    REQUIRE(!sc2.is_empty());
-    REQUIRE(sc2.len() == 1);
+        auto const c2 = nel::heaped::Vector<int>::fill(2, 1);
+        auto sc2 = c2.slice();
+        REQUIRE(!sc2.is_empty());
+        REQUIRE(sc2.len() == 1);
+    }
 }
 
 TEST_CASE("heaped::Vector::iter()", "[heaped][Vector]")
 {
-    // can create iter on empty vectors.
-    auto a1 = nel::heaped::Vector<int>::empty();
-    auto it1 = a1.iter();
-    // and the iter is empty.
-    REQUIRE(it1.next().is_none());
+    {
+        // can create iter on empty vectors.
+        auto a1 = nel::heaped::Vector<int>::empty();
+        auto it1 = a1.iter();
+        // and the iter is empty.
+        REQUIRE(it1.next().is_none());
 
-    auto const c1 = nel::heaped::Vector<int>::empty();
-    auto itc1 = c1.iter();
-    // and the iter is empty.
-    REQUIRE(itc1.next().is_none());
+        auto const c1 = nel::heaped::Vector<int>::empty();
+        auto itc1 = c1.iter();
+        // and the iter is empty.
+        REQUIRE(itc1.next().is_none());
+    }
 
-    // can create iter on non empty vectors.
-    auto a2 = nel::heaped::Vector<int>::fill(2, 2);
-    auto it2 = a2.iter();
-    REQUIRE(it2.next().unwrap() == 2);
-    REQUIRE(it2.next().unwrap() == 2);
-    REQUIRE(it2.next().is_none());
+    {
+        // can create iter on non empty vectors.
+        auto a2 = nel::heaped::Vector<int>::fill(2, 2);
+        auto it2 = a2.iter();
+        REQUIRE(it2.next().unwrap() == 2);
+        REQUIRE(it2.next().unwrap() == 2);
+        REQUIRE(it2.next().is_none());
 
-    auto const c2 = nel::heaped::Vector<int>::fill(2, 2);
-    auto itc2 = c2.iter();
-    REQUIRE(itc2.next().unwrap() == 2);
-    REQUIRE(itc2.next().unwrap() == 2);
-    REQUIRE(itc2.next().is_none());
+        auto const c2 = nel::heaped::Vector<int>::fill(2, 2);
+        auto itc2 = c2.iter();
+        REQUIRE(itc2.next().unwrap() == 2);
+        REQUIRE(itc2.next().unwrap() == 2);
+        REQUIRE(itc2.next().is_none());
+    }
 }

@@ -1,4 +1,4 @@
-#include "panic.hh"
+#include <nel/panic.hh>
 
 #include <cstdio> // printf
 #include <cstdlib> // abort

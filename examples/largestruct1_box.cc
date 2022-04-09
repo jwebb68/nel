@@ -1,8 +1,8 @@
-#include "log.hh"
-#include "defs.hh"
 #include "largestruct1.hh"
 
-#include "heaped/box.hh"
+#include <nel/heaped/box.hh>
+#include <nel/log.hh>
+#include <nel/defs.hh>
 
 typedef nel::heaped::Box<U8Buf<256>> Box1;
 

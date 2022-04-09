@@ -1,8 +1,8 @@
-#include "log.hh"
-#include "defs.hh"
 #include "largestruct1.hh"
 
-#include "heaped/vector.hh"
+#include <nel/heaped/vector.hh>
+#include <nel/log.hh>
+#include <nel/defs.hh>
 
 typedef nel::heaped::Vector<U8Buf<256>> Vec1;
 

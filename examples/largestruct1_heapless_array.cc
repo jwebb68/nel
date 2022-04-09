@@ -1,10 +1,9 @@
-#include "log.hh"
-#include "defs.hh"
 #include "largestruct1.hh"
 
-
-#include "heapless/array.hh"
-#include "panic.hh"
+#include <nel/heapless/array.hh>
+#include <nel/panic.hh>
+#include <nel/log.hh>
+#include <nel/defs.hh>
 
 #include <utility> // std::move
 
@@ -12,11 +11,12 @@ typedef nel::heapless::Array<U8Buf<256>, 8> Array1;
 
 void ex1() {
     // what should this give?
-    Array1 arr1;
+    Array1 arr1 = Array1::fill(U8Buf<256>());
 
     nel::log << arr1 << "\n";
 }
 
+#if 0
 void ex2() {
     Array1 arr1 {
         U8Buf<256>(0x26),
@@ -31,7 +31,9 @@ void ex2() {
 
     nel::log << arr1 << "\n";
 }
+#endif
 
+#if 0
 void ex3() {
     Array1 arr1 {
         {(uint8_t)0x36},
@@ -46,9 +48,10 @@ void ex3() {
 
     nel::log << arr1 << "\n";
 }
+#endif
 
 void ex4() {
-    Array1 arr1;
+    Array1 arr1 = Array1::fill(U8Buf<256>());
 
     arr1[0] = U8Buf<256>(0x11);
     arr1[5] = U8Buf<256>(0x22);
@@ -69,13 +72,13 @@ void ex4() {
             break;
         }
         // calls is_some() but always is_some..
-        // opt does optimse it out but is there a better way?
+        // opt does optimise it out but is there a better way?
         nel::log << e.unwrap() << "\n";
     }
 }
 
 void ex41() {
-    Array1 arr1;
+    Array1 arr1 = Array1::fill(U8Buf<256>());
 
     arr1[0] = U8Buf<256>(0x11);
     arr1[5] = U8Buf<256>(0x22);
@@ -103,7 +106,7 @@ void ex41() {
 
 
 void ex5() {
-    Array1 arr1;
+    Array1 arr1 = Array1::fill(U8Buf<256>());
 
     arr1[0] = U8Buf<256>(0x44);
     arr1[5] = U8Buf<256>(0x55);
@@ -120,7 +123,7 @@ void ex5() {
 }
 
 void ex51() {
-    Array1 arr1;
+    Array1 arr1 = Array1::fill(U8Buf<256>());
 
     arr1[0] = U8Buf<256>(0x77);
     arr1[5] = U8Buf<256>(0x88);
@@ -138,7 +141,7 @@ void ex51() {
 
 
 void ex6() {
-    Array1 arr1;
+    Array1 arr1 = Array1::fill(U8Buf<256>());
 
     arr1[0] = U8Buf<256>(0xaa);
     arr1[5] = U8Buf<256>(0xbb);
@@ -154,12 +157,12 @@ int main() {
     nel::log << "ex1:b" << "\n";
     ex1();
     nel::log << "ex1:e" << "\n";
-    nel::log << "ex2:b" << "\n";
-    ex2();
-    nel::log << "ex2:e" << "\n";
-    nel::log << "ex3:b" << "\n";
-    ex3();
-    nel::log << "ex3:e" << "\n";
+    // nel::log << "ex2:b" << "\n";
+    // ex2();
+    // nel::log << "ex2:e" << "\n";
+    // nel::log << "ex3:b" << "\n";
+    // ex3();
+    // nel::log << "ex3:e" << "\n";
     nel::log << "ex4:b" << "\n";
     ex4();
     nel::log << "ex4:e" << "\n";

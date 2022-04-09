@@ -14,10 +14,12 @@ struct Array;
 } // namespace heapless
 } // namespace nel
 
-#include "iterator.hh"
-#include "enumerator.hh"
-#include "slice.hh"
-#include "panic.hh"
+#include <nel/enumerator.hh>
+#include <nel/iterator.hh>
+#include <nel/slice.hh>
+#include <nel/log.hh>
+#include <nel/panic.hh>
+#include <nel/defs.hh> //NEL_UNUSED
 
 namespace nel
 {
@@ -25,24 +27,77 @@ namespace heapless
 {
 
 // Fixed size array.
-// All items allocd when created.
-// All items deletd when destroyed.
-//
+// All items allocated when created.
+// All items deleted when destroyed.
+// cannot have size changed once created
+// All elements are initialised (this may be an issue)
+// have safe access to elems
+// can subslice array, safely
+// can iter array
+
 template<typename T, size_t const N>
 struct Array {
     public:
     private:
+        // default ctor does not init this array.
+        // does this class follow suite? nope, expects these to be initialised.
         T values_[N];
 
     public:
         // Does this call dtor on each values_ entry?
         ~Array(void) = default;
 
+        // create defaults?
         // If no init list?
         // Only if T has default cons
         // Is this default?
+        // constexpr Array(void) = default;
+
+    protected:
         constexpr Array(void) = default;
 
+    public:
+        static constexpr Array fill(T const &v)
+        {
+            Array a;
+            for (size_t i = 0; i < N; ++i) {
+                new (&a.values_[i]) T(v);
+            }
+            return a;
+        }
+
+#if 0
+        // experimental
+        // error value depends on what try_copy error type is.
+        static constexpr Optional<Array> try_fill(T const &v) noexcept
+        {
+            // TODO: a's dtor issues
+            // TODO: is 'a' copied/moved in cost time or should this be inplace?
+            Array a;
+            for (size_t i = 0; i < N; ++i) {
+                auto r = T::try_copy(v);
+                // values_ not auto initialised
+                if (r.is_err()) {
+                    // cleanup on fail, so to return array to uninit state..
+                    // can't use dtor since not all entries inited.
+                    for (; i != 0; --i) {
+                        i -= 1;
+                        a.values_[i].~T();
+                    }
+                    // TODO: whoops, a's dtor is deleting uninit mem..
+                    return r;
+                } else {
+                    new (&a.values_[i]) T(std::move(r.unwrap()));
+                }
+            }
+            return Optional<Array>::Some(a);
+        }
+#endif
+
+        // possibly experimental.
+        // array create using init lists
+        // want moving not copying.
+        // want copying but not via ctor (may not be poss), so it becomes a try_ returning an err.
         constexpr Array(std::initializer_list<T> l)
         {
             // Interesting
@@ -80,16 +135,6 @@ struct Array {
         }
 
     public:
-        static Array fill(T const &v) noexcept
-        {
-            Array a;
-            for (size_t i = 0; i < N; ++i) {
-                new (&a.values_[i]) T(v);
-            }
-            return a;
-        }
-
-    public:
         /**
          * Determine if the array is empty.
          *
@@ -97,7 +142,7 @@ struct Array {
          */
         constexpr bool is_empty(void) const noexcept
         {
-            return N == 0;
+            return len() == 0;
         }
 
         /**
@@ -110,6 +155,10 @@ struct Array {
             return N;
         }
 
+        // Move item in (idx).
+        // Move item out (idx).
+        // [const] ref item (idx)
+
         /**
          * Item access in array.
          *
@@ -121,13 +170,11 @@ struct Array {
         // as array access can fail, redo to try_get() and return v or error
         constexpr T &operator[](size_t idx) noexcept
         {
-            nel_panic_if_not(idx < len(), "index out of range");
-            return values_[idx];
+            return slice()[idx];
         }
         constexpr T const &operator[](size_t idx) const noexcept
         {
-            nel_panic_if_not(idx < len(), "index out of range");
-            return values_[idx];
+            return slice()[idx];
         }
 
         /**
@@ -151,6 +198,13 @@ struct Array {
         }
 
     public:
+        /**
+         * Create an iterator over the contents of the Array.
+         *
+         * iterator is invalidated if array goes out of scope/destroyed.
+         *
+         * @returns The iterator.
+         */
         constexpr Iterator<T const> iter(void) const
         {
             return slice().iter();

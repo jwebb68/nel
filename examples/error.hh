@@ -1,8 +1,8 @@
 #ifndef ERROR_HH
 #define ERROR_HH
 
-#include "log.hh"
-#include "panic.hh"
+#include <nel/log.hh>
+#include <nel/panic.hh>
 
 enum class ErrorCode {
     Failed = 1,

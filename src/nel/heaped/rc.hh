@@ -12,8 +12,9 @@ struct RC;
 } // namespace heaped
 } // namespace nel
 
-#include "element.hh"
-#include "panic.hh"
+#include <nel/element.hh>
+#include <nel/panic.hh>
+#include <nel/defs.hh>
 
 #include <utility> // std::move, std::forward
 #include <cstddef> // size_t

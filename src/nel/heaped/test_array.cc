@@ -1,4 +1,4 @@
-#include "heaped/array.hh"
+#include <nel/heaped/array.hh>
 
 #include <catch2/catch.hpp>
 

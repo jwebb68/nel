@@ -1,4 +1,4 @@
-#include "log.hh"
+#include <nel/log.hh>
 
 #include <cstdio>
 

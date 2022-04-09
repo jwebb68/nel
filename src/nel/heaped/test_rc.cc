@@ -1,4 +1,4 @@
-#include "heaped/rc.hh"
+#include <nel/heaped/rc.hh>
 
 #include <catch2/catch.hpp>
 

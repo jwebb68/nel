@@ -1,11 +1,13 @@
 #ifndef LARGESTRUCT1_HH
 #define LARGESTRUCT1_HH
 
-#include "defs.hh"
-#include "log.hh"
-#include "memory.hh"
+#include <nel/log.hh>
+#include <nel/memory.hh>
+#include <nel/defs.hh>
 
-template<size_t N>
+#include <cstddef> // size_t
+
+template<size_t const N>
 struct U8Buf {
     private:
         uint8_t data_[N];

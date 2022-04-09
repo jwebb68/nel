@@ -15,7 +15,10 @@ struct FirstNEnumerator;
 
 } // namespace nel
 
+#include <nel/defs.hh>
+
 #include <functional> // std::function
+#include <cstddef> // size_t
 
 namespace nel
 {

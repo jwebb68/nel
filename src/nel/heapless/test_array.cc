@@ -1,4 +1,4 @@
-#include "heapless/array.hh"
+#include <nel/heapless/array.hh>
 
 #include <catch2/catch.hpp>
 

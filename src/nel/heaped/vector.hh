@@ -12,13 +12,15 @@ struct Vector;
 } // namespace heaped
 } // namespace nel
 
-#include "log.hh"
-#include "heaped/node.hh"
-#include "iterator.hh"
-#include "enumerator.hh"
-#include "slice.hh"
-#include "result.hh"
-#include "optional.hh"
+#include <nel/heaped/node.hh>
+#include <nel/enumerator.hh>
+#include <nel/iterator.hh>
+#include <nel/slice.hh>
+#include <nel/optional.hh>
+#include <nel/result.hh>
+#include <nel/log.hh>
+
+#include <cstddef> // size_t
 
 namespace nel
 {
@@ -261,6 +263,7 @@ struct Vector {
             return (item_ == nullptr) ? Result<void, T>::Err(std::forward<Args>(args)...)
                                       : item_->push_back(std::forward<Args>(args)...);
         }
+
         Optional<T> pop_back(void) noexcept
         {
             return (item_ == nullptr) ? Optional<T>::None() : item_->pop_back();

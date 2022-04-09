@@ -16,9 +16,11 @@ struct FirstNIterator;
 
 } // namespace nel
 
-#include "optional.hh"
+#include <nel/optional.hh>
+#include <nel/defs.hh>
 
 #include <functional> //std::function
+#include <cstddef> // size_t
 
 namespace nel
 {
@@ -138,6 +140,21 @@ template<typename I>
 FirstNIterator<I> first_n_it(I it, size_t limit) noexcept
 {
     return FirstNIterator<I>(it, limit);
+}
+
+template<typename I, typename U>
+U fold(I it, U initial, std::function<U(U acc, typename I::ItemT &)> fn) noexcept
+{
+    // initial must be moved, even if it is empty.
+    // U acc1 = std::move(initial);
+    U acc = initial;
+    while (true) {
+        auto v = it.next();
+        if (v.is_none()) { break; }
+        auto u = v.unwrap();
+        acc = fn(acc, u);
+    }
+    return acc;
 }
 
 } // namespace nel

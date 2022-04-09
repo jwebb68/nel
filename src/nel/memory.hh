@@ -1,9 +1,11 @@
 #ifndef NEL_MEMORY_HH
 #define NEL_MEMORY_HH
 
+#include <nel/defs.hh>
+
+#include <utility> // std::move, std::swap
 #include <cstddef> // size_t
 #include <cstdint> // uint8_t
-#include <utility> // std::move, std::swap
 
 namespace nel
 {

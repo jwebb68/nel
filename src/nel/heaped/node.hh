@@ -12,16 +12,19 @@ struct Node;
 } // namespace heaped
 } // namespace nel
 
-#include "iterator.hh"
-#include "enumerator.hh"
-#include "slice.hh"
-#include "result.hh"
-#include "optional.hh"
-#include "panic.hh"
+#include <nel/enumerator.hh>
+#include <nel/iterator.hh>
+#include <nel/optional.hh>
+#include <nel/result.hh>
+#include <nel/slice.hh>
+#include <nel/log.hh>
+#include <nel/panic.hh>
+#include <nel/defs.hh>
 
 #include <new> // Inplace new
-#include <cstdlib> // std::free, std::malloc, std::realloc
 #include <utility> // std::move, std::forward
+#include <cstdlib> // std::free, std::malloc, std::realloc
+#include <cstddef> // size_t
 
 namespace nel
 {
@@ -117,6 +120,7 @@ struct Node {
         constexpr Node &operator=(Node &&) = delete;
 
         // use placement new to init.
+        // want this as a static func so ca return errors..
         Node(std::initializer_list<T> l)
         {
             // How to fail if not big enough.
@@ -148,7 +152,7 @@ struct Node {
                 .iter()
                 .for_each(
                     // cannot use assign as values uninitialised.
-                    [f](T &e) { new (&e) T(f); });
+                    [&f](T &e) { new (&e) T(f); });
             // for (T *it = values_, *e = (values_ + capacity()); it != e; ++it) {
             //     // cannot use assign as values uninitialised.
             //     new (it) T(f);
@@ -220,14 +224,19 @@ struct Node {
         template<typename... Args>
         Result<void, T> push_back(Args &&...args) noexcept
         {
-            if (len() >= capacity()) { return Result<void, T>::Err(std::forward<Args>(args)...); }
+            if (len() >= capacity()) {
+                // TODO: don't want to create a T on error though..
+                // but if one is already created then return it.
+                // must the arg be moved on error?
+                return Result<void, T>::Err(std::forward<Args>(args)...);
+            }
 
             new (&values_[len()]) T(std::forward<Args>(args)...);
             len_ += 1;
             return Result<void, T>::Ok();
         }
 
-        // rename to try-pop_back?
+        // rename to try_pop_back?
         Optional<T> pop_back(void) noexcept
         {
             if (len() == 0) { return Optional<T>::None(); }

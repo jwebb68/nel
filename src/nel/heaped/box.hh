@@ -12,8 +12,8 @@ struct Box;
 } // namespace heaped
 } // namespace nel
 
-#include "element.hh"
-#include "panic.hh"
+#include <nel/element.hh>
+#include <nel/panic.hh>
 
 #include <utility> // std::move, std::forward
 #include <memory> // std::unique_ptr
@@ -38,10 +38,10 @@ struct Box {
         constexpr Box(void) = delete;
 
         // No copying..
-        // Can move though.
         constexpr Box(Box const &o) = delete;
         constexpr Box &operator=(Box const &o) const = delete;
 
+        // Can move though.
         constexpr Box(Box &&) noexcept = default;
         constexpr Box &operator=(Box &&) noexcept = default;
 
@@ -52,6 +52,8 @@ struct Box {
         //     // : value_(std::move(ElementT::new_(std::move(o))))
         // {}
 
+        // create contained inplace.
+        // works for moving-into as well.
         template<typename... Args>
         constexpr Box(Args &&...args) noexcept: value_(new Element<T>(std::forward<Args>(args)...))
         // : value_(std::move(ElementT::new_(std::forward<Args>(args)...)))
@@ -59,6 +61,10 @@ struct Box {
         }
 
     public:
+        // no ctors, use creator functions for that.
+        // so I can return errors instead of throw exceptions.
+        // although that would get messy.
+
         // template<typename ...Args>
         // constexpr Box(Args &&... args) noexcept
         //     : value_(new ElementT(std::forward<Args>(args)...))

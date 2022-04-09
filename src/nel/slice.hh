@@ -9,10 +9,13 @@ struct Slice;
 
 } // namespace nel
 
-#include "iterator.hh"
-#include "enumerator.hh"
-#include "panic.hh"
-#include "memory.hh"
+#include <nel/enumerator.hh>
+#include <nel/iterator.hh>
+#include <nel/memory.hh>
+#include <nel/panic.hh>
+#include <nel/defs.hh>
+
+#include <cstddef> // size_t
 
 namespace nel
 {
@@ -104,12 +107,21 @@ struct Slice {
         /**
          * fill the slice with the value given.
          */
+        // is this a creational?
+        // fill or try_fill as fill will use try_copy which could fail.
         void fill(T const &f) noexcept
         {
             nel::memset(content_, f, len());
         }
 
+        // try_fill as creational
+        // if fails, leaves slice in inconsistent state (partially created/initialised)
+        // try_fill as post initied
+        // just wastes cycles destroying things.
+
         // TODO: use try_copy_from as operation can fail.
+        // Result<void, ??> try_copy_from(Slice const &o) noexcept ?
+        // Optional<void> try_copy_from(Slice const &o) noexcept ?
         // void copy_from(Slice const &o) noexcept
         // {
         //     nel_panic_if(len() != o.len(), "not same size");
@@ -117,6 +129,8 @@ struct Slice {
         // }
 
         // TODO: use try_move_from as operation can fail.
+        // Result<void, ??> try_move_from(Slice &o) noexcept ?
+        // Optional<void> try_move_from(Slice &o) noexcept ?
         // void move_from(Slice &o) noexcept
         // {
         //     nel_panic_if(len() != o.len(), "not same size");
@@ -148,14 +162,26 @@ struct Slice {
         }
 
     public:
+        // instead of insert into log, can it format into ? which log implements?
+        // so it doesn't matter about the destination..
+        // and can format-insert into any char endpoint.
         friend Log &operator<<(Log &outs, Slice const &v) noexcept
         {
             outs << "Slice(" << v.len() << "){";
             if (v.len() > 0) {
+#if 0
+                auto it = v.iter();
+                auto itv = it.next();
+                if (itv.is_none()) { goto exit; }
+                outs << itv.unwrap();
+                it.for_each([&outs](T const & e) { outs << " " << e;})
+exit:
+#else
                 outs << v.content_[0];
                 for (size_t i = 1; i < v.len(); ++i) {
                     outs << " " << v.content_[i];
                 }
+#endif
             }
             outs << "}";
             return outs;

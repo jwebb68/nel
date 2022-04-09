@@ -1,11 +1,10 @@
-#include "memory.hh"
+#include <nel/panic.hh>
+#include <nel/memory.hh>
 
-#include "panic.hh"
-
-#include <cstring> // std::memcpy, std::memset
 #include <cstdlib> //std::free, std::malloc, std::realloc
-#include <memory> // std::align
+#include <cstring> // std::memcpy, std::memset
 #include <cstring> // std::memmove
+#include <memory> // std::align
 
 namespace nel
 {
@@ -55,19 +54,19 @@ void memmove(uint8_t *const d, uint8_t *const s, size_t const n) noexcept
     // note the toggling of addr1 read(a1), write(a2), write(a1)
     // whereas this may be better: read(a1), write(a1), write(a2)
     // but it won't get optimised into simple instructions.
-    for (uint8_t *id = d, *is = s, *const e = (d + n); id != e; ++is, ++id) {
-        uint8_t t = *is;
-        *is = 0xa5;
-        *id = t;
-    }
+    // for (uint8_t *id = d, *is = s, *const e = (d + n); id != e; ++is, ++id) {
+    //     uint8_t t = *is;
+    //     *is = 0xa5;
+    //     *id = t;
+    // }
     // for (uint8_t *id = d, *is = s, *const e = (d + n); id != e; ++is, ++id) {
     //     *id = *is;
     // }
     // for (uint8_t *id = d, *is = s, *const e = (d + n); id != e; ++is, ++id) {
     //     *is = 0xa5;
     // }
-    // memcpy(d, s, n);
-    // memset(s, 0xa5, n);
+    memcpy(d, s, n);
+    memset(s, 0xa5, n);
 }
 
 void memswap(uint8_t *const d, uint8_t *const s, size_t const n) noexcept

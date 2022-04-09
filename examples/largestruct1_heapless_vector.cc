@@ -1,9 +1,9 @@
-#include "log.hh"
-#include "defs.hh"
 #include "largestruct1.hh"
 
-#include "heapless/vector.hh"
-#include "panic.hh"
+#include <nel/heapless/vector.hh>
+#include <nel/panic.hh>
+#include <nel/log.hh>
+#include <nel/defs.hh>
 
 #include <utility> // std::move
 

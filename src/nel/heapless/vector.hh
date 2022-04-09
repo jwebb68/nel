@@ -14,13 +14,13 @@ struct Vector;
 } // namespace heapless
 } // namespace nel
 
-#include "log.hh"
-#include "iterator.hh"
-#include "enumerator.hh"
-#include "slice.hh"
-#include "result.hh"
-#include "optional.hh"
-#include "defs.hh"
+#include <nel/enumerator.hh>
+#include <nel/iterator.hh>
+#include <nel/slice.hh>
+#include <nel/optional.hh>
+#include <nel/result.hh>
+#include <nel/log.hh>
+#include <nel/defs.hh> //NEL_UNUSED
 
 namespace nel
 {
@@ -72,6 +72,7 @@ struct Vector {
         }
 
     public:
+        // default ctor is safe, will always succeed.
         constexpr Vector(void): len_(0) {}
 
         static constexpr Vector empty(void) noexcept
@@ -183,6 +184,10 @@ struct Vector {
             NEL_UNUSED(new_capacity);
         }
 
+        // move value into vec
+        // on fail still move, but return.
+        // allow inplace create instead of move.
+        // if fails to store, can create be avoided..?
         template<typename... Args>
         Result<void, T> push_back(Args &&...args) noexcept
         {
@@ -206,6 +211,10 @@ struct Vector {
             len_ -= 1;
             return v;
         }
+
+        // insert_at ?/push_at?
+        // remove_at?/pop_at?
+        // sort ?
 
     public:
         constexpr Iterator<T> iter(void) noexcept

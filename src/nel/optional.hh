@@ -9,13 +9,13 @@ class Optional;
 
 } // namespace nel
 
-#include "log.hh"
-#include "element.hh"
-#include "panic.hh"
+#include <nel/element.hh>
+#include <nel/log.hh>
+#include <nel/panic.hh>
 
-#include <utility> // std::move, std::forward
 #include <new> // new (*) T(...)
 #include <cstdlib> //abort
+#include <utility> // std::move, std::forward
 
 namespace nel
 {
@@ -190,6 +190,11 @@ class Optional
             return Optional(Phantom<NONE>());
         }
 
+        /**
+         * Create an optional set to Some, moveing existing value to hold.
+         *
+         * @returns an Optional 'wrapping' the value moved.
+         */
         static Optional Some(SomeT &&v) noexcept
         {
             return Optional(Phantom<SOME>(), std::forward<SomeT>(v));
@@ -242,7 +247,7 @@ class Optional
          *
          * @returns value contained by the Optional if it's a 'Some'.
          *
-         * If the optional does not contain a Some, then abort/panic.
+         * @warning If the optional does not contain a Some, then abort/panic.
          */
         SomeT unwrap(void) noexcept
         {
@@ -251,6 +256,16 @@ class Optional
             return some_.unwrap();
         }
 
+        /**
+         * Return wrapped or supplied value.
+         *
+         * If a some, then return the wrapped value.
+         * If a none, return the suplied value.
+         * The optional is consumed regardless.
+         *
+         * @returns value contained by the Optional if it's a 'Some'.
+         * @returns value passed in if it's a 'None'.
+         */
         SomeT unwrap_or(SomeT &&v) noexcept
         {
             bool const is_some = this->is_some();
