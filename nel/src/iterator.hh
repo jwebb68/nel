@@ -51,10 +51,29 @@ struct Iterator {
             for (idx_ = 0; idx_ < len_; ++idx_) {
                 fn(content_[idx_]);
             }
-            // for (T *it = content_, *e = content_ + len_; it != e; ++it) {
-            //     fn(*it);
-            // }
         }
+
+#if 0
+        template<typename U>
+        U fold(U initial, std::function<U(U acc, T &e)> fn) noexcept
+        {
+            U acc = initial;
+            for (idx_ = 0; idx_ < len_; ++idx_) {
+                acc = fn(acc, content_[idx_]);
+            }
+            return acc;
+        }
+#else
+        template<typename U>
+        U fold(U &&initial, std::function<void(U &acc, T &e)> fn) noexcept
+        {
+            U acc = std::move(initial);
+            for (idx_ = 0; idx_ < len_; ++idx_) {
+                fn(acc, content_[idx_]);
+            }
+            return acc;
+        }
+#endif
 };
 
 // x.map(mapfn).enum().for_each(..);

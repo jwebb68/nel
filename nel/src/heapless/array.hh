@@ -1,6 +1,8 @@
 #ifndef NEL_HEAPLESS_ARRAY_HH
 #define NEL_HEAPLESS_ARRAY_HH
 
+#include <cstddef> // size_t
+
 namespace nel
 {
 namespace heapless
@@ -71,10 +73,20 @@ struct Array {
                 // Expensive to move o to temp, then to swap o and this (using moves)
                 // quicker to just move o into this.
                 // Only because move cannot fail (and leave this destructed).
-                ~Array();
+                this->~Array();
                 new (this) Array(std::move(o));
             }
             return *this;
+        }
+
+    public:
+        static Array fill(T const &v) noexcept
+        {
+            Array a;
+            for (size_t i = 0; i < N; ++i) {
+                new (&a.values_[i]) T(v);
+            }
+            return a;
         }
 
     public:
