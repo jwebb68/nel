@@ -138,6 +138,49 @@ struct Slice {
         // try_fill as post initied
         // just wastes cycles destroying things.
 
+        /**
+         * Get a partial slice over the range of elements in the slice.
+         *
+         * @param b the start index of the range to slice.
+         * @param e the end index of the range to slice.
+         *
+         * @returns if array is empty, return empty slice
+         * @returns if b&e >= array len, return empty slice
+         * @returns if b >= array len, return empty slice
+         * @returns if e > array len, clamp to last elem.
+         * @returns else return slice over region b..e of slice.
+         */
+        Slice<T> subslice(Index b, Index e) noexcept
+        {
+            if (b >= e) { return Slice<T>::empty(); }
+            if (b >= len_) { return Slice<T>::empty(); }
+            if (e > len_) { e = len_; }
+            return Slice(&content_[b], e - b);
+        }
+        Slice<T const> subslice(Index b, Index e) const noexcept
+        {
+            if (b >= e) { return Slice<T const>::empty(); }
+            if (b >= len_) { return Slice<T const>::empty(); }
+            if (e > len_) { e = len_; }
+            return Slice(&content_[b], e - b);
+        }
+
+        Optional<Slice<T>> try_subslice(Index b, Index e) noexcept
+        {
+            if (b >= e) { return Optional<Slice<T>>::None(); }
+            if (b >= len_) { return Optional<Slice<T>>::None(); }
+            if (e > len_) { e = len_; }
+            return Optional<Slice<T>>::Some(Slice(&content_[b], e - b));
+        }
+
+        Optional<Slice<T const>> try_subslice(Index b, Index e) const noexcept
+        {
+            if (b >= e) { return Optional<Slice<T const>>::None(); }
+            if (b >= len_) { return Optional<Slice<T const>>::None(); }
+            if (e > len_) { e = len_; }
+            return Optional<Slice<T const>>::Some(Slice(&content_[b], e - b));
+        }
+
         // TODO: use try_copy_from as operation can fail.
         // Result<void, ??> try_copy_from(Slice const &o) noexcept ?
         // Optional<void> try_copy_from(Slice const &o) noexcept ?

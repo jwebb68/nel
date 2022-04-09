@@ -171,13 +171,13 @@ struct Vector {
         }
 
         /**
-         * Cast this array into a full slice?
+         * Cast this vector into a full slice?
          *
-         * Creates a slice from the array.
-         * Slice does not own the contents, array does (array still valid).
-         * Slice is invalidated if Array goes out of scope/destroyed.
+         * Creates a slice from the vector.
+         * Slice does not own the contents, vector does (vector is still valid).
+         * Slice is invalidated if Vector goes out of scope/destroyed.
          *
-         * @returns a slice over all of the array.
+         * @returns a slice over the the vector.
          */
         constexpr Slice<T> slice(void) noexcept
         {
@@ -186,6 +186,36 @@ struct Vector {
         constexpr Slice<T const> const slice(void) const noexcept
         {
             return Slice<T const>::from(values_, len());
+        }
+
+        /**
+         * Get a partial slice over the range of elements in the Vector.
+         *
+         * @param b the start index of the range to slice.
+         * @param e the end index of the range to slice.
+         *
+         * @returns if vec is empty, return empty slice
+         * @returns if b&e >= vec len, return empty slice
+         * @returns if b >= vec len, return empty slice
+         * @returns if e > vec len, clamp to last elem.
+         * @returns else return slice over region b..e of vec.
+         */
+        constexpr Slice<T> subslice(Index b, Index e) noexcept
+        {
+            return slice().subslice(b, e);
+        }
+        constexpr Slice<T const> subslice(Index b, Index e) const noexcept
+        {
+            return slice().subslice(b, e);
+        }
+
+        constexpr Optional<Slice<T> > try_subslice(Index b, Index e) noexcept
+        {
+            return slice().try_subslice(b, e);
+        }
+        constexpr Optional<Slice<T const> > try_subslice(Index b, Index e) const noexcept
+        {
+            return slice().try_subslice(b, e);
         }
 
         // TODO: fail on fixed?

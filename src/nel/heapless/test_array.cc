@@ -22,7 +22,7 @@ TEST_CASE("heapless::Array::empty", "[heapless][array]")
 // how to test that array cannot be copied?
 // it will fail at compile time.
 
-TEST_CASE("heapless::Array::move", "[heapless][array]")
+TEST_CASE("heapless::heapless::Array::move", "[heapless][array]")
 {
     {
         // empty array can be moved
@@ -126,6 +126,58 @@ TEST_CASE("heapless::Array::slice()", "[heapless][array]")
     auto sc1 = c1.slice();
     REQUIRE(!sc1.is_empty());
     REQUIRE(sc1.len() == c1.len());
+}
+
+
+TEST_CASE("heapless::Array::subslice(b,e)", "[heapless][array]")
+{
+    {
+        // sub slice of array is empty.
+        auto a1 = nel::heapless::Array<int, 3>::fill(3);
+        auto sa1 = a1.subslice(0, 0);
+        REQUIRE(sa1.is_empty());
+        REQUIRE(sa1.len() == 0);
+
+        // in-range subslice is not empty
+        auto sa12 = a1.subslice(0, 1);
+        REQUIRE(!sa12.is_empty());
+        REQUIRE(sa12.len() == 1);
+
+        // out-of-range subslice is empty
+        auto sa13 = a1.subslice(3, 4);
+        REQUIRE(sa13.is_empty());
+
+        // partially out-of-range subslice is not empty, and has only up to valid items
+        auto sa14 = a1.subslice(2, 4);
+        REQUIRE(!sa14.is_empty());
+
+        // partially out-of-range subslice is not empty, and has only up to valid items
+        auto sa15 = a1.subslice(0, 4);
+        REQUIRE(!sa15.is_empty());
+        REQUIRE(sa15.len() == 3);
+    }
+
+    {
+        auto const c1 = nel::heapless::Array<int, 3>::fill(5);
+        auto sc1 = c1.subslice(0, 0);
+        REQUIRE(sc1.is_empty());
+
+        // sub slice of non-empty array is not empty.
+        auto sc2 = c1.subslice(0, 1);
+        REQUIRE(!sc2.is_empty());
+        REQUIRE(sc2.len() == 1);
+
+        auto sc3 = c1.subslice(3, 4);
+        REQUIRE(sc3.is_empty());
+
+        auto sc4 = c1.subslice(2, 4);
+        REQUIRE(!sc4.is_empty());
+        REQUIRE(sc4.len() == 1);
+
+        auto sc5 = c1.subslice(0, 4);
+        REQUIRE(!sc5.is_empty());
+        REQUIRE(sc5.len() == 3);
+    }
 }
 
 TEST_CASE("heapless::Array::iter()", "[heapless][array]")

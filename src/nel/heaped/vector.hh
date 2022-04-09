@@ -220,6 +220,27 @@ struct Vector {
                                       : reinterpret_cast<VectorNode const *>(item_)->slice();
         }
 
+        /**
+         * Get a partial slice over the range of elements in the Vector.
+         *
+         * @param b the start index of the range to slice.
+         * @param e the end index of the range to slice.
+         *
+         * @returns if vec is empty, return empty slice
+         * @returns if b&e >= vec len, return empty slice
+         * @returns if b >= vec len, return empty slice
+         * @returns if e > vec len, clamp to last elem.
+         * @returns else return slice over region b..e of vec.
+         */
+        constexpr Slice<T> subslice(Index b, Index e) noexcept
+        {
+            return slice().subslice(b, e);
+        }
+        constexpr Slice<T const> subslice(Index b, Index e) const noexcept
+        {
+            return slice().subslice(b, e);
+        }
+
     public:
         // What to return on reserve fail?
         // Result<void, ?> ?

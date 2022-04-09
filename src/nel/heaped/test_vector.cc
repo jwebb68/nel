@@ -301,6 +301,72 @@ TEST_CASE("heaped::Vector::slice()", "[heaped][Vector]")
     }
 }
 
+TEST_CASE("heaped::Vector::subslice(b,e)", "[heaped][vector]")
+{
+    {
+        // sub slice of empty vec is empty.
+        auto a1 = nel::heaped::Vector<int>::empty();
+        auto sa1 = a1.subslice(0, 0);
+        REQUIRE(sa1.is_empty());
+        REQUIRE(sa1.len() == 0);
+
+        auto sa2 = a1.subslice(3, 5);
+        REQUIRE(sa2.is_empty());
+        REQUIRE(sa2.len() == 0);
+    }
+
+    {
+        // in-range subslice is not empty
+        auto a1 = nel::heaped::Vector<int>::empty();
+        a1.push_back(1);
+        a1.push_back(2);
+
+        auto sa12 = a1.subslice(0, 1);
+        REQUIRE(!sa12.is_empty());
+        REQUIRE(sa12.len() == 1);
+
+        // out-of-range subslice is empty
+        auto sa13 = a1.subslice(3, 4);
+        REQUIRE(sa13.is_empty());
+
+        // partially out-of-range subslice is not empty, and has only up to valid items
+        auto sa14 = a1.subslice(1, 4);
+        REQUIRE(!sa14.is_empty());
+        REQUIRE(sa14.len() == 1);
+
+        // partially out-of-range subslice is not empty, and has only up to valid items
+        auto sa15 = a1.subslice(0, 4);
+        REQUIRE(!sa15.is_empty());
+        REQUIRE(sa15.len() == 2);
+    }
+
+    {
+        auto a1 = nel::heaped::Vector<int>::empty();
+        a1.push_back(1);
+        a1.push_back(2);
+        auto const c1 = std::move(a1);
+
+        auto sc1 = c1.subslice(0, 0);
+        REQUIRE(sc1.is_empty());
+
+        // sub slice of non-empty array is not empty.
+        auto sc2 = c1.subslice(0, 1);
+        REQUIRE(!sc2.is_empty());
+        REQUIRE(sc2.len() == 1);
+
+        auto sc3 = c1.subslice(3, 4);
+        REQUIRE(sc3.is_empty());
+
+        auto sc4 = c1.subslice(1, 4);
+        REQUIRE(!sc4.is_empty());
+        REQUIRE(sc4.len() == 1);
+
+        auto sc5 = c1.subslice(0, 4);
+        REQUIRE(!sc5.is_empty());
+        REQUIRE(sc5.len() == 2);
+    }
+}
+
 TEST_CASE("heaped::Vector::iter()", "[heaped][Vector]")
 {
     {

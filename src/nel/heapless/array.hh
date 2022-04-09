@@ -217,6 +217,36 @@ struct Array {
 
     public:
         /**
+         * Get a partial slice over the range of elements in the array.
+         *
+         * @param b the start index of the range to slice.
+         * @param e the end index of the range to slice.
+         *
+         * @returns if array is empty, return empty slice
+         * @returns if b&e >= array len, return empty slice
+         * @returns if b >= array len, return empty slice
+         * @returns if e > array len, clamp to last elem.
+         * @returns else return slice over region b..e of array.
+         */
+        constexpr Slice<T> subslice(Index b, Index e) noexcept
+        {
+            return slice().subslice(b, e);
+        }
+        constexpr Slice<T const> subslice(Index b, Index e) const noexcept
+        {
+            return slice().subslice(b, e);
+        }
+
+        constexpr Optional<Slice<T> > try_subslice(Index b, Index e) noexcept
+        {
+            return slice().try_subslice(b, e);
+        }
+        constexpr Optional<Slice<T const> > try_subslice(Index b, Index e) const noexcept
+        {
+            return slice().try_subslice(b, e);
+        }
+
+        /**
          * Create an iterator over the contents of the Array.
          *
          * iterator is invalidated if array goes out of scope/destroyed.
