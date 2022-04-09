@@ -331,3 +331,41 @@ TEST_CASE("heaped::Vector::iter()", "[heaped][Vector]")
         REQUIRE(itc2.next().is_none());
     }
 }
+
+TEST_CASE("heaped::Vector::try_get", "[heaped][vector]")
+{
+    {
+        // get on an empty vec gets nothing.
+        auto a1 = nel::heaped::Vector<int>::empty();
+        auto sa1 = a1.try_get(0);
+        REQUIRE(sa1.is_none());
+
+        auto const c1 = nel::heaped::Vector<int>::empty();
+        auto sc1 = c1.try_get(0);
+        REQUIRE(sc1.is_none());
+    }
+
+    {
+        // in-range get on non-empty vec is not empty.
+        auto a2 = nel::heaped::Vector<int>::fill(2, 3);
+        auto sa2 = a2.try_get(0);
+        REQUIRE(sa2.is_some());
+        REQUIRE(sa2.unwrap() == 2);
+
+        auto const c2 = nel::heaped::Vector<int>::fill(2, 3);
+        auto sc2 = c2.try_get(0);
+        REQUIRE(sc2.is_some());
+        REQUIRE(sc2.unwrap() == 2);
+    }
+
+    {
+        // out-of-range get on non-empty vec must return none.
+        auto a2 = nel::heaped::Vector<int>::fill(2, 3);
+        auto sa2 = a2.try_get(3);
+        REQUIRE(sa2.is_none());
+
+        auto const c2 = nel::heaped::Vector<int>::fill(2, 3);
+        auto sc2 = c2.try_get(3);
+        REQUIRE(sc2.is_none());
+    }
+}

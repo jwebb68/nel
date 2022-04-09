@@ -53,9 +53,9 @@ void ex3() {
 void ex4() {
     Array1 arr1 = Array1::fill(U8Buf<256>());
 
-    arr1[0] = U8Buf<256>(0x11);
-    arr1[5] = U8Buf<256>(0x22);
-    arr1[6] = U8Buf<256>(0x33);
+    arr1.try_get(0).unwrap() = U8Buf<256>(0x11);
+    arr1.try_get(5).unwrap() = U8Buf<256>(0x22);
+    arr1.try_get(6).unwrap() = U8Buf<256>(0x33);
 
     auto it = arr1.iter();
     while (true) {
@@ -80,9 +80,9 @@ void ex4() {
 void ex41() {
     Array1 arr1 = Array1::fill(U8Buf<256>());
 
-    arr1[0] = U8Buf<256>(0x11);
-    arr1[5] = U8Buf<256>(0x22);
-    arr1[6] = U8Buf<256>(0x33);
+    arr1.try_get(0).unwrap() = U8Buf<256>(0x11);
+    arr1.try_get(5).unwrap() = U8Buf<256>(0x22);
+    arr1.try_get(6).unwrap() = U8Buf<256>(0x33);
 
     auto it = first_n_it(arr1.iter(), 2);
     while (true) {
@@ -108,9 +108,9 @@ void ex41() {
 void ex5() {
     Array1 arr1 = Array1::fill(U8Buf<256>());
 
-    arr1[0] = U8Buf<256>(0x44);
-    arr1[5] = U8Buf<256>(0x55);
-    arr1[6] = U8Buf<256>(0x66);
+    arr1.try_get(0).unwrap() = U8Buf<256>(0x44);
+    arr1.try_get(5).unwrap() = U8Buf<256>(0x55);
+    arr1.try_get(6).unwrap() = U8Buf<256>(0x66);
 
     for (auto en = arr1.enumerate(); !en.is_done(); en.inc()) {
         // user can miss out the &, so forcing a copy/move of items being enumerated.
@@ -125,9 +125,9 @@ void ex5() {
 void ex51() {
     Array1 arr1 = Array1::fill(U8Buf<256>());
 
-    arr1[0] = U8Buf<256>(0x77);
-    arr1[5] = U8Buf<256>(0x88);
-    arr1[6] = U8Buf<256>(0x99);
+    arr1.try_get(0).unwrap() = U8Buf<256>(0x77);
+    arr1.try_get(5).unwrap() = U8Buf<256>(0x88);
+    arr1.try_get(6).unwrap() = U8Buf<256>(0x99);
 
     for (auto en = first_n_en(arr1.enumerate(), 9); !en.is_done(); en.inc()) {
         // user can miss out the &, so forcing a copy/move of items being enumerated.
@@ -143,9 +143,9 @@ void ex51() {
 void ex6() {
     Array1 arr1 = Array1::fill(U8Buf<256>());
 
-    arr1[0] = U8Buf<256>(0xaa);
-    arr1[5] = U8Buf<256>(0xbb);
-    arr1[6] = U8Buf<256>(0xcc);
+    arr1.try_get(0).unwrap() = U8Buf<256>(0xaa);
+    arr1.try_get(5).unwrap() = U8Buf<256>(0xbb);
+    arr1.try_get(6).unwrap() = U8Buf<256>(0xcc);
 
     for (auto en = arr1.enumerate(); en; ++en) {
         auto & v = *en;

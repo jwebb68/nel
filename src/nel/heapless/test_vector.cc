@@ -244,3 +244,43 @@ TEST_CASE("heapless::Vector::iter()", "[heapless][Vector]")
         // REQUIRE(it23.next().is_none());
     }
 }
+
+TEST_CASE("heapless::Vector::try_get()", "[heapless][Vector]")
+{
+    {
+        // get on empty vector is always none.
+        auto a1 = nel::heapless::Vector<int, 3>::empty();
+        auto sa1 = a1.try_get(0);
+        REQUIRE(sa1.is_none());
+
+        auto const c1 = nel::heapless::Vector<int, 3>::empty();
+        auto sc1 = c1.try_get(0);
+        REQUIRE(sc1.is_none());
+    }
+
+    {
+        // in-range try_get of non-empty vector is ref to value.
+        auto a2 = nel::heapless::Vector<int, 3>::empty();
+        a2.push_back(1);
+        auto sa2 = a2.try_get(0);
+        REQUIRE(sa2.is_some());
+        REQUIRE(sa2.unwrap() == 1);
+
+        auto const ca2 = std::move(a2);
+        auto sca2 = ca2.try_get(0);
+        REQUIRE(sca2.is_some());
+        REQUIRE(sca2.unwrap() == 1);
+    }
+
+    {
+        // out-of-range try_get of non-empty vector is none.
+        auto a2 = nel::heapless::Vector<int, 3>::empty();
+        a2.push_back(1);
+        auto sa2 = a2.try_get(1);
+        REQUIRE(sa2.is_none());
+
+        auto const ca2 = std::move(a2);
+        auto sca2 = ca2.try_get(1);
+        REQUIRE(sca2.is_none());
+    }
+}

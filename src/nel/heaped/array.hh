@@ -167,6 +167,7 @@ struct Array {
             return (item_ == nullptr) ? 0 : item_->len();
         }
 
+#if 0
         /**
          * Item access in array.
          *
@@ -187,6 +188,25 @@ struct Array {
             // nel_panic_if_not(item_ != nullptr, "invalid array");
             // return (*item_)[idx];
             return slice()[idx];
+        }
+#endif //
+
+        /**
+         * Return a reference to the value at idx or None.
+         *
+         * @param idx index of element to get
+         *
+         * @returns If array is empty, return None.
+         * @returns If idx is out-of range, return None.
+         * @returns else return ref to item at index..
+         */
+        constexpr Optional<T &> try_get(Index idx) noexcept
+        {
+            return slice().try_get(idx);
+        }
+        constexpr Optional<T const &> try_get(Index idx) const noexcept
+        {
+            return slice().try_get(idx);
         }
 
         /**

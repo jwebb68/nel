@@ -71,6 +71,46 @@ TEST_CASE("Slice::fill()", "[slice]")
     REQUIRE(a1[3] == 2);
 }
 
+TEST_CASE("Slice::try_get()", "[slice]")
+{
+    {
+        // get on empty slice is always none.
+        auto s1 = nel::Slice<int>::from(NULL, 0);
+        auto sa1 = s1.try_get(0);
+        REQUIRE(sa1.is_none());
+
+        auto const c1 = nel::Slice<int>::from(NULL, 0);
+        auto sc1 = c1.try_get(0);
+        REQUIRE(sc1.is_none());
+    }
+
+    {
+        // in-range try_get of non-empty slice is ref to value.
+        int a1[] = {3, 1, 2, 4};
+        auto s1 = nel::Slice<int>::from(a1, sizeof(a1) / sizeof(a1[0]));
+        auto sa2 = s1.try_get(0);
+        REQUIRE(sa2.is_some());
+        REQUIRE(sa2.unwrap() == 3);
+
+        auto const cs1 = std::move(s1);
+        auto scs1 = cs1.try_get(0);
+        REQUIRE(scs1.is_some());
+        REQUIRE(scs1.unwrap() == 3);
+    }
+
+    {
+        // out-of-range try_get of non-empty slice is none.
+        int a1[] = {3, 1, 2, 4};
+        auto s1 = nel::Slice<int>::from(a1, sizeof(a1) / sizeof(a1[0]));
+        auto sa2 = s1.try_get(5);
+        REQUIRE(sa2.is_none());
+
+        auto const cs1 = std::move(s1);
+        auto scs1 = cs1.try_get(5);
+        REQUIRE(scs1.is_none());
+    }
+}
+
 TEST_CASE("Slice::iter()", "[slice]")
 {
     auto s1 = nel::Slice<int>::empty();

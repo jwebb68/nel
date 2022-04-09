@@ -81,6 +81,7 @@ struct Slice {
             return len_;
         }
 
+#if 0
         /**
          * Item access in slice.
          *
@@ -99,6 +100,26 @@ struct Slice {
         {
             nel_panic_if_not(idx < len(), "index out of range");
             return content_[idx];
+        }
+#endif
+
+        /**
+         * Return a reference to the value at idx or None.
+         *
+         * @param idx index of element to get
+         *
+         * @returns If array is empty, return None.
+         * @returns If idx is out-of range, return None.
+         * @returns else return ref to item at index..
+         */
+        constexpr Optional<T &> try_get(Index idx) noexcept
+        {
+            return (idx >= len_) ? Optional<T &>::None() : Optional<T &>::Some(content_[idx]);
+        }
+        constexpr Optional<T const &> try_get(Index idx) const noexcept
+        {
+            return (idx >= len_) ? Optional<T const &>::None()
+                                 : Optional<T const &>::Some(content_[idx]);
         }
 
     public:

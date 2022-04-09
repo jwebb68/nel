@@ -158,6 +158,7 @@ struct Array {
         // Move item out (idx).
         // [const] ref item (idx)
 
+#if 0
         /**
          * Item access in array.
          *
@@ -174,6 +175,24 @@ struct Array {
         constexpr T const &operator[](Index idx) const noexcept
         {
             return slice()[idx];
+        }
+#endif
+
+        /**
+         * Return a reference to the value at idx or None.
+         *
+         * @param idx index of element to get
+         *
+         * @returns If idx is out-of range, return None.
+         * @returns else return ref to item at index..
+         */
+        constexpr Optional<T &> try_get(Index idx) noexcept
+        {
+            return slice().try_get(idx);
+        }
+        constexpr Optional<T const &> try_get(Index idx) const noexcept
+        {
+            return slice().try_get(idx);
         }
 
         /**

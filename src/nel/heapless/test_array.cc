@@ -145,3 +145,31 @@ TEST_CASE("heapless::Array::iter()", "[heapless][array]")
     REQUIRE(itc2.next().unwrap() == 2);
     REQUIRE(itc2.next().is_none());
 }
+
+TEST_CASE("heapless::Array::try_get", "[heapless][array]")
+{
+    {
+        auto a1 = nel::heapless::Array<int, 3>::fill(3);
+
+        // in-range get is a value
+        auto ra1 = a1.try_get(0);
+        REQUIRE(ra1.is_some());
+        REQUIRE(ra1.unwrap() == 3);
+
+        // out-of-range get is none
+        auto ra2 = a1.try_get(3);
+        REQUIRE(ra2.is_none());
+    }
+
+    {
+        auto const c1 = nel::heapless::Array<int, 3>::fill(5);
+        // in-range get is a value
+        auto rc1 = c1.try_get(0);
+        REQUIRE(rc1.is_some());
+        REQUIRE(rc1.unwrap() == 5);
+
+        // out-of-range get is none
+        auto rc2 = c1.try_get(3);
+        REQUIRE(rc2.is_none());
+    }
+}

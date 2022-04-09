@@ -140,3 +140,41 @@ TEST_CASE("heaped::Array::iter()", "[heaped][array]")
     REQUIRE(itc2.next().unwrap() == 2);
     REQUIRE(itc2.next().is_none());
 }
+
+TEST_CASE("heaped::Array::try_get", "[heaped][array]")
+{
+    {
+        // get on an empty array gets nothing.
+        auto a1 = nel::heaped::Array<int>::empty();
+        auto sa1 = a1.try_get(0);
+        REQUIRE(sa1.is_none());
+
+        auto const c1 = nel::heaped::Array<int>::empty();
+        auto sc1 = c1.try_get(0);
+        REQUIRE(sc1.is_none());
+    }
+
+    {
+        // in-range get on non-empty array is not empty.
+        auto a2 = nel::heaped::Array<int>::fill(2, 3);
+        auto sa2 = a2.try_get(0);
+        REQUIRE(sa2.is_some());
+        REQUIRE(sa2.unwrap() == 2);
+
+        auto const c2 = nel::heaped::Array<int>::fill(2, 3);
+        auto sc2 = c2.try_get(0);
+        REQUIRE(sc2.is_some());
+        REQUIRE(sc2.unwrap() == 2);
+    }
+
+    {
+        // out-of-range get on non-empty array must return none.
+        auto a2 = nel::heaped::Array<int>::fill(2, 3);
+        auto sa2 = a2.try_get(3);
+        REQUIRE(sa2.is_none());
+
+        auto const c2 = nel::heaped::Array<int>::fill(2, 3);
+        auto sc2 = c2.try_get(3);
+        REQUIRE(sc2.is_none());
+    }
+}

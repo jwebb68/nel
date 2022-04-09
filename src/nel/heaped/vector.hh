@@ -160,6 +160,7 @@ struct Vector {
             if (item_ != nullptr) { item_->clear(); }
         }
 
+#if 0
         /**
          * Item access in vector.
          *
@@ -179,6 +180,25 @@ struct Vector {
             // nel_panic_if(item_ == nullptr, "invalid vector");
             // return *item_[idx];
             return slice()[idx];
+        }
+#endif
+
+        /**
+         * Return a reference to the value at idx or None.
+         *
+         * @param idx index of element to get
+         *
+         * @returns If the vector is empty, return None.
+         * @returns If idx is out-of range, return None.
+         * @returns else return ref to item at index..
+         */
+        constexpr Optional<T &> try_get(Index idx) noexcept
+        {
+            return slice().try_get(idx);
+        }
+        constexpr Optional<T const &> try_get(Index idx) const noexcept
+        {
+            return slice().try_get(idx);
         }
 
         /**
