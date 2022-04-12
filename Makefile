@@ -356,7 +356,7 @@ $(1)_$(2)_exd_s:=$$(patsubst %.s,target/$(2)/dep/%.d,$$($(1)_exsrc_s))
 $$($(1)_$(2)_exd_c): | target/$(2)/dep/examples
 $$($(1)_$(2)_exd_c): CPPFLAGS += $$($(1)_CPPFLAGS) $$($(2)_CPPFLAGS) $$($(1)_$(2)_CPPFLAGS) -Isrc
 $$($(1)_$(2)_exd_c): target/$(2)/dep/examples/%.d: examples/%.c
-	$$(COMPILE.c)  -MM -MT $$(patsubst %.c,target/$(2)/obj/examples/%.o,$$<) -o $$@ $$<
+	$$(COMPILE.c)  -MM -MP -MT $$(patsubst %.c,target/$(2)/obj/%.o,$$<) -o $$@ $$<
 clean += $$($(1)_$(2)_exd_c)
 dep += $$($(1)_$(2)_exd_c)
 
@@ -371,7 +371,7 @@ clean += $$($(1)_$(2)_exo_c)
 $$($(1)_$(2)_exd_cc): | target/$(2)/dep/examples
 $$($(1)_$(2)_exd_cc): CPPFLAGS += $$($(1)_CPPFLAGS) $$($(2)_CPPFLAGS) $$($(1)_$(2)_CPPFLAGS) -Isrc
 $$($(1)_$(2)_exd_cc): target/$(2)/dep/examples/%.d: examples/%.cc
-	$$(COMPILE.cc)  -MM -MT $$(patsubst %.cc,target/$(2)/obj/examples/%.o,$$<) -o $$@ $$<
+	$$(COMPILE.cc)  -MM -MP -MT $$(patsubst %.cc,target/$(2)/obj/%.o,$$<) -o $$@ $$<
 
 clean += $$($(1)_$(2)_exd_cc)
 dep += $$($(1)_$(2)_exd_cc)
@@ -447,7 +447,7 @@ $$(filter-out target/$(2)/dep/tests/$(1),$$(patsubst %/,%,$$(sort $$(dir $$($(1)
 $$(foreach f,$$($(1)_$(2)_testd_c),$$(eval $$(f): | $$(patsubst %/,%,$$(dir $$(f)))))
 $$($(1)_$(2)_testd_c): CPPFLAGS += $$($(1)_CPPFLAGS) $$($(2)_CPPFLAGS) $$($(1)_$(2)_CPPFLAGS) -Isrc
 $$($(1)_$(2)_testd_c): target/$(2)/dep/tests/$(1)/%.d: src/$(1)/%.c
-	$$(COMPILE.c) -MM -MT $$(patsubst src/%.c,target/$(2)/obj/tests/$(1)/%.o,$$<) -o $$@  $$<
+	$$(COMPILE.c) -MM -MP -MT $$(patsubst src/$(1)/%.c,target/$(2)/obj/tests/$(1)/%.o,$$<) -o $$@  $$<
 dep+=$$($(1)_$(2)_testd_c)
 clean+=$$($(1)_$(2)_testd_c)
 
@@ -466,7 +466,7 @@ $$(filter-out target/$(2)/dep/tests/$(1),$$(patsubst %/,%,$$(sort $$(dir $$($(1)
 $$(foreach f,$$($(1)_$(2)_testd_cc),$$(eval $$(f): | $$(patsubst %/,%,$$(dir $$(f)))))
 $$($(1)_$(2)_testd_cc): CPPFLAGS += $$($(1)_CPPFLAGS) $$($(2)_CPPFLAGS) $$($(1)_$(2)_CPPFLAGS) $(shell pkg-config --cflags catch2) -Isrc
 $$($(1)_$(2)_testd_cc): target/$(2)/dep/tests/$(1)/%.d: src/$(1)/%.cc
-	$$(COMPILE.cc) -MM -MT $$(patsubst src/%.cc,target/$(2)/obj/tests/$(1)/%.o,$$<) -o $$@  $$<
+	$$(COMPILE.cc) -MM -MP -MT $$(patsubst src/$(1)/%.cc,target/$(2)/obj/tests/$(1)/%.o,$$<) -o $$@  $$<
 dep+=$$($(1)_$(2)_testd_cc)
 clean+=$$($(1)_$(2)_testd_cc)
 
