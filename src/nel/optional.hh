@@ -15,6 +15,7 @@ class Optional;
 
 #include <new> // new (*) T(...)
 #include <cstdlib> //abort
+#include <functional> // std::function
 #include <utility> // std::move, std::forward
 
 namespace nel
@@ -291,6 +292,13 @@ class Optional
         // Because this allows copying of value out which I want to prevent.
 
     public:
+        template<typename U>
+        Optional<U> map(std::function<U(T &&)> fn) noexcept
+        {
+            return (this->is_none()) ? Optional<U>::None() : Optional<U>::Some(fn(some_.unwrap()));
+        }
+
+    public:
         // Comparision operators
         // Implemented in terms of the operator on the type,
         // as some types may have more optimal implementations of thatoperationthan the
@@ -555,6 +563,13 @@ class Optional<void>
 
         // Why no access via references?
         // This infers copying of value which I want to prevent.
+
+    public:
+        template<typename U>
+        Optional<U> map(std::function<U(void)> fn) noexcept
+        {
+            return (this->is_none()) ? Optional<U>::None() : Optional<U>::Some(fn());
+        }
 
     public:
         // Comparision operators

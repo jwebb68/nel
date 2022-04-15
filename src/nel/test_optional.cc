@@ -2,6 +2,7 @@
 #include "defs.hh"
 
 #include <catch2/catch.hpp>
+#include <cstring> //strcmp
 
 TEST_CASE("optional::Some for some must produce a some", "[optional]")
 {
@@ -831,4 +832,20 @@ TEST_CASE("optional::~dtor for some, must call some dtor", "[optional]")
         dtor_called = false;
     }
     REQUIRE(dtor_called);
+}
+
+TEST_CASE("optional::map for some must produce a some", "[optional]")
+{
+    auto opt1a = nel::Optional<int>::Some(1);
+    auto opt2a = opt1a.map(std::function([](int &&) -> char const * { return "haha"; }));
+    auto val = opt2a.unwrap();
+
+    REQUIRE(strcmp(val, "haha") == 0);
+}
+
+TEST_CASE("optional::map for none must produce a none", "[optional]")
+{
+    auto opt1a = nel::Optional<int>::None();
+    auto opt2a = opt1a.map(std::function([](int &&) -> char const * { return "haha"; }));
+    REQUIRE(opt2a.is_none());
 }
