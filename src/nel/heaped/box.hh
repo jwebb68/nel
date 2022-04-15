@@ -38,9 +38,6 @@ struct Box {
         std::unique_ptr<ElementT> value_;
 
     private:
-        /**
-         * create a box from a T
-         */
         constexpr Box(ElementT *const p) noexcept: value_(p) {}
 
     public:
@@ -63,6 +60,7 @@ struct Box {
         {
         }
 
+    public:
         /**
          * Create a boxed T by moving existing into the box.
          *
