@@ -318,10 +318,10 @@ struct Vector {
         Optional<T> pop_back(void) noexcept
         {
             if (len() == 0) { return Optional<T>::None(); }
-
-            auto v = Optional<T>::Some(std::move(values_[len()]));
-            values_[len()].~T();
             len_ -= 1;
+            T &e = values_[len()];
+            auto v = Optional<T>::Some(std::move(e));
+            e.~T();
             return v;
         }
 
