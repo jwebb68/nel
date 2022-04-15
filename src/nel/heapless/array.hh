@@ -92,6 +92,8 @@ struct Array {
         }
 
     public:
+        // heapless arrays cannot be created 'empty'
+
         /**
          * Create an array filled with given value.
          * @return array filled with copies of value.
