@@ -34,6 +34,15 @@ struct Slice {
         constexpr Slice(T p[], Length len) noexcept: content_(p), len_(len) {}
 
     public:
+        // Copying a slice is ok as it does not own the data it points to.
+        constexpr Slice(Slice const &) noexcept = default;
+        constexpr Slice &operator=(Slice const &) noexcept = default;
+
+        // moving a slice is ok.
+        constexpr Slice(Slice &&o) noexcept = default;
+        constexpr Slice &operator=(Slice &&o) noexcept = default;
+
+    public:
         /**
          * Create an empty slice.
          */
@@ -51,17 +60,6 @@ struct Slice {
         {
             return Slice(p, len);
         }
-
-    public:
-        // Copying a slice is ok as it does not own the data it points to.
-        // Slice(Slice const &) noexcept = delete;
-        // Slice &operator=(Slice const &) noexcept = delete;
-        Slice(Slice const &) noexcept = default;
-        Slice &operator=(Slice const &) noexcept = default;
-
-        // moving a slice is ok.
-        Slice(Slice &&o) noexcept = default;
-        Slice &operator=(Slice &&o) noexcept = default;
 
     public:
         /**
@@ -131,6 +129,7 @@ struct Slice {
          */
         // is this a creational?
         // fill or try_fill as fill will use try_copy which could fail.
+        // TODO: problematic, what of errors? should be try_fill..
         void fill(T const &f) noexcept
         {
             nel::memset(content_, f, len());
@@ -168,22 +167,7 @@ struct Slice {
             return Slice(&content_[b], e - b);
         }
 
-        Optional<Slice<T>> try_subslice(Index b, Index e) noexcept
-        {
-            if (b >= e) { return Optional<Slice<T>>::None(); }
-            if (b >= len_) { return Optional<Slice<T>>::None(); }
-            if (e > len_) { e = len_; }
-            return Optional<Slice<T>>::Some(Slice(&content_[b], e - b));
-        }
-
-        Optional<Slice<T const>> try_subslice(Index b, Index e) const noexcept
-        {
-            if (b >= e) { return Optional<Slice<T const>>::None(); }
-            if (b >= len_) { return Optional<Slice<T const>>::None(); }
-            if (e > len_) { e = len_; }
-            return Optional<Slice<T const>>::Some(Slice(&content_[b], e - b));
-        }
-
+    public:
         // TODO: use try_copy_from as operation can fail.
         // Result<void, ??> try_copy_from(Slice const &o) noexcept ?
         // Optional<void> try_copy_from(Slice const &o) noexcept ?

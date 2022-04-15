@@ -204,16 +204,6 @@ struct Array {
             return slice().subslice(b, e);
         }
 
-        constexpr Optional<Slice<T> > try_subslice(Index b, Index e) noexcept
-        {
-            return slice().try_subslice(b, e);
-        }
-        constexpr Optional<Slice<T const> > try_subslice(Index b, Index e) const noexcept
-        {
-            return slice().try_subslice(b, e);
-        }
-
-    public:
         /**
          * Create an iterator over the contents of the Array.
          *

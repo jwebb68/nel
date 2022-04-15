@@ -226,16 +226,6 @@ struct Vector {
             return slice().subslice(b, e);
         }
 
-        constexpr Optional<Slice<T> > try_subslice(Index b, Index e) noexcept
-        {
-            return slice().try_subslice(b, e);
-        }
-        constexpr Optional<Slice<T const> > try_subslice(Index b, Index e) const noexcept
-        {
-            return slice().try_subslice(b, e);
-        }
-
-    public:
         // TODO: fail on fixed?
         // Or return Result<void, ?>
         // And fail if not N
