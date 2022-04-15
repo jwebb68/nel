@@ -56,6 +56,24 @@ void memcpy(T *const d, T const *const s, Length n) noexcept
         d[i] = s[i];
     }
 }
+template<typename T>
+bool try_memcpy(T *const d, T const *const s, Length n) noexcept
+{
+    for (Index i = 0; i < n; ++i) {
+        auto r = T::try_copy(s[i]);
+        bool ok;
+        ok = !r.is_err();
+        if (ok) {
+            d[i] = r.unwrap();
+        } else {
+            for (Index j = i; i != 0; --i) {
+                d[i - 1].~T();
+            }
+            return false;
+        }
+    }
+    return true;
+}
 
 /**
  * set items [s,s+n) to (copy of) d
@@ -67,6 +85,24 @@ void memset(T *const d, T const &s, Length n) noexcept
     for (Index i = 0; i < n; ++i) {
         d[i] = s;
     }
+}
+template<typename T>
+bool try_memset(T *const d, T const &s, Length n) noexcept
+{
+    for (Index i = 0; i < n; ++i) {
+        auto r = T::try_copy(s);
+        bool ok;
+        ok = !r.is_err();
+        if (ok) {
+            d[i] = r.unwrap();
+        } else {
+            for (Index j = i; i != 0; --i) {
+                d[i - 1].~T();
+            }
+            return false;
+        }
+    }
+    return true;
 }
 
 /**
