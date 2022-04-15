@@ -92,7 +92,12 @@ struct Array {
         }
 
     public:
-        static constexpr Array fill(T const &v)
+        /**
+         * Create an array filled with given value.
+         * @return array filled with copies of value.
+         * @warning UB if copying of v fails.
+         */
+        static constexpr Array filled(T const &v)
         {
             Array a;
             for (Index i = 0; i < N; ++i) {

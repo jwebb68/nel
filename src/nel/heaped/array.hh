@@ -110,7 +110,7 @@ struct Array {
          *
          * @returns the created array
          */
-        static constexpr Array fill(T const &f, Count n)
+        static constexpr Array filled(T const &f, Count n)
         {
             if (n == 0) { return Array::empty(); }
             Array a(ArrayNode::malloc(n));

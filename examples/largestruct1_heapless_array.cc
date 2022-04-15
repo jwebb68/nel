@@ -11,7 +11,7 @@ typedef nel::heapless::Array<U8Buf<256>, 8> Array1;
 
 void ex1() {
     // what should this give?
-    Array1 arr1 = Array1::fill(U8Buf<256>());
+    Array1 arr1 = Array1::filled(U8Buf<256>());
 
     nel::log << arr1 << "\n";
 }
@@ -51,7 +51,7 @@ void ex3() {
 #endif
 
 void ex4() {
-    Array1 arr1 = Array1::fill(U8Buf<256>());
+    Array1 arr1 = Array1::filled(U8Buf<256>());
 
     arr1.try_get(0).unwrap() = U8Buf<256>(0x11);
     arr1.try_get(5).unwrap() = U8Buf<256>(0x22);
@@ -78,7 +78,7 @@ void ex4() {
 }
 
 void ex41() {
-    Array1 arr1 = Array1::fill(U8Buf<256>());
+    Array1 arr1 = Array1::filled(U8Buf<256>());
 
     arr1.try_get(0).unwrap() = U8Buf<256>(0x11);
     arr1.try_get(5).unwrap() = U8Buf<256>(0x22);
@@ -106,7 +106,7 @@ void ex41() {
 
 
 void ex5() {
-    Array1 arr1 = Array1::fill(U8Buf<256>());
+    Array1 arr1 = Array1::filled(U8Buf<256>());
 
     arr1.try_get(0).unwrap() = U8Buf<256>(0x44);
     arr1.try_get(5).unwrap() = U8Buf<256>(0x55);
@@ -123,7 +123,7 @@ void ex5() {
 }
 
 void ex51() {
-    Array1 arr1 = Array1::fill(U8Buf<256>());
+    Array1 arr1 = Array1::filled(U8Buf<256>());
 
     arr1.try_get(0).unwrap() = U8Buf<256>(0x77);
     arr1.try_get(5).unwrap() = U8Buf<256>(0x88);
@@ -141,7 +141,7 @@ void ex51() {
 
 
 void ex6() {
-    Array1 arr1 = Array1::fill(U8Buf<256>());
+    Array1 arr1 = Array1::filled(U8Buf<256>());
 
     arr1.try_get(0).unwrap() = U8Buf<256>(0xaa);
     arr1.try_get(5).unwrap() = U8Buf<256>(0xbb);

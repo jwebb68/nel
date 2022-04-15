@@ -91,14 +91,6 @@ struct Vector {
             return Vector();
         }
 
-        static constexpr Vector fill(T const &f, Count n)
-        {
-            if (n == 0) { return Vector(); }
-            Vector a(VectorNode::malloc(n));
-            new (a.item_) VectorNode(f);
-            return a;
-        }
-
         /**
          * Create a vector with the initial allocation.
          *
@@ -236,6 +228,16 @@ struct Vector {
         }
 
     public:
+        // but 'fill' makes no sense on a heaped vector..
+        // push_back_repeated?
+        static constexpr Vector fill(T const &f, Count n)
+        {
+            if (n == 0) { return Vector(); }
+            Vector a(VectorNode::malloc(n));
+            new (a.item_) VectorNode(f);
+            return a;
+        }
+
         // What to return on reserve fail?
         // Result<void, ?> ?
         // TODO: should be try_reserve.
