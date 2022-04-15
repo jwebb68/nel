@@ -25,19 +25,22 @@ namespace nel
 namespace heaped
 {
 
+/**
+ * Vector
+ *
+ * A container of type T held in a contiguous block (a variable sized array.)
+ * Capacity (max number of elements) is limited only by ram (unbounded).
+ * Cannot be implicitly coped.
+ * Can be implicitly moved.
+ */
 template<typename T>
 struct Vector {
     public:
     private:
-        // May be shared between Vector<T> and Array<T> and Slice<T>?
-        // Vector: dynamic
-        // Array: static
-        // Array from vector: move node from vector to array.
-        // Vector from array: move node from vector into array,  arguably nope.
-
-        // Don't use unique_ptr as didn't use new to alloc it.
+        // not using unique_ptr as didn't use new to alloc it.
         // TODO: create malloc/free unique_ptr or see if unique_ptr can be used
         // to call free directly.. (it seems to have capability to do so).
+        // maybe use of allocator?
         typedef Node<T> VectorNode;
         VectorNode *item_;
 
@@ -50,6 +53,9 @@ struct Vector {
         constexpr Vector(VectorNode *const n) noexcept: item_(n) {}
 
     public:
+        /**
+         * destroy the vector, deleting all elements owned by it.
+         */
         ~Vector(void)
         {
             VectorNode::free(item_);
@@ -79,6 +85,13 @@ struct Vector {
 
         // vector::from(std::initializer_list<T> l)
         constexpr Vector(std::initializer_list<T> l): item_(nullptr)
+    public:
+        /**
+         * Create a vector with no initial allocation.
+         *
+         * @returns the vector created.
+         */
+        static constexpr Vector empty(void) noexcept
         {
             // Ah, can fail..., should be a try_reserve then
             // and as try_reserve can fail should be a try_from_initlist.
@@ -244,7 +257,7 @@ struct Vector {
     public:
         // What to return on reserve fail?
         // Result<void, ?> ?
-        // should be a try_reserve.
+        // TODO: should be try_reserve.
         void reserve(Count capacity) noexcept
         {
             // TODO: overalloc to quanta..
@@ -273,28 +286,13 @@ struct Vector {
             }
         }
 
-        // The problem with returning a Result<void, T> here is that
-        // if there's no space, then the push-back fails and a T gets created
-        // only to be dropped by the caller (so waste of time creating the T).
-        // But, this func doesn't know what the caller will do with it.
-        // Also, if a bool is returned, then it wont be created, but then
-        // if a T is passed in, it'd be destroyed (instead of maybe being moved back.)
-        // 1. return bool:
-        //    - success: pass in T, T moved to vector.
-        //    - success: pass in T args, T created, T created inplace in vector.
-        //    - success: move ctor called once for each arg.
-        //    - fails: pass in T, gets destroyed  (no mech to pass back out).
-        //    - fails: pass in T args, destroy all args..
-        //    - move ctor not called for each arg
-        //    - dtor called for each arg.
-        // 2. return result<void,T>
-        //    - success: pass in T, T moved to vector.
-        //    - success: pass in T args, T created inplace in vector.
-        //    - fails: pass in T, passed back out, dropped by caller.
-        //    - fails: pass in T args, creates T, passed out, dropped by caller..
-        //    - success: move ctor called once for each arg.
-        //    - fail: move ctor called once for each arg.
-        //    - fail: dtor called once for T.
+        /**
+         * Push a value onto the end of the vec.
+         *
+         * @param val The value to move into the vec.
+         * @returns if successful, Result<void, T>::Ok()
+         * @returns if unsuccessful, Result<void, T>::Err() holding val
+         */
         template<typename... Args>
         Result<void, T> push_back(Args &&...args) noexcept
         {
@@ -303,12 +301,40 @@ struct Vector {
                                       : item_->push_back(std::forward<Args>(args)...);
         }
 
+        // move contents of vec into this?
+        // Result<void, Vector<T>> push_back(Vector<T> &l) noexcept?
+        // move contents of slice into this?
+        // Result<void, Slice<T>> push_back(Slice<T> &l) noexcept?
+        // move contents of iter into this? into_vec?
+        // Result<void, Slice<T>> push_back(Iter<T> &l) noexcept?
+
+        /**
+         * Remove and return the last item in the vec.
+         *
+         * @returns on success: Optional::Some holding the value
+         * @returns on fail: Optional::None
+         */
         Optional<T> pop_back(void) noexcept
         {
             return (item_ == nullptr) ? Optional<T>::None() : item_->pop_back();
         }
 
+        // insert_at(idx, T &&) ?
+        // insert_at(idx, Array<T> &&) ?
+        // insert_at(idx, iter<T> it) ?
+        // remove_at(idx) ? drops or returns item
+        // remove_at(beg,end) ? drops or returns items..(how?)
+        // sort ?
+        // find ?
+
     public:
+        /**
+         * Create an iterator over the contents of the Vector.
+         *
+         * iterator is invalidated if vector goes out of scope/destroyed.
+         *
+         * @returns The iterator.
+         */
         constexpr Iterator<T const> iter(void) const noexcept
         {
             return slice().iter();
@@ -328,6 +354,16 @@ struct Vector {
         }
 
     public:
+        /**
+         * Format/emit a representation of this object as a charstring
+         * for debugging purposes.
+         *
+         * @param val the value to format
+         * @param outs the stream to dump the representation into.
+         */
+        // TODO: replace <<(Log ) with dbgfmt, so separate out from
+        // any other form of conversion to charstring.
+        // TODO: insert into formatter and not final dest type.
         friend Log &operator<<(Log &outs, Vector const &v) noexcept
         {
             outs << "Vector(" << v.len() << "){"
