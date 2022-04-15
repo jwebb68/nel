@@ -25,15 +25,16 @@ namespace nel
 namespace heapless
 {
 
-// Fixed size array.
-// All items allocated when created.
-// All items deleted when destroyed.
-// cannot have size changed once created
-// All elements are initialised (this may be an issue)
-// have safe access to elems
-// can subslice array, safely
-// can iter array
-
+/**
+ * Fixed size array, owning the values
+ * All items allocated when created.
+ * All items deleted when destroyed.
+ * cannot have size changed once created
+ * All elements are initialised (this may be an issue)
+ * have safe access to elems
+ * can subslice array, safely
+ * can iter array
+ */
 template<typename T, Length const N>
 struct Array {
     public:
@@ -110,6 +111,12 @@ struct Array {
         }
         // If type has copy, then could fill? use slice for that..
 
+    public:
+        /**
+         * Destroy array and it's elements.
+         */
+        ~Array(void) = default;
+
         // No copying.
         constexpr Array(Array const &o) = delete;
         constexpr Array &operator=(Array const &o) = delete;
@@ -133,6 +140,7 @@ struct Array {
             return *this;
         }
 
+    public:
     public:
         /**
          * Determine if the array is empty.
@@ -272,6 +280,16 @@ struct Array {
         }
 
     public:
+        /**
+         * Format/emit a representation of this object as a charstring
+         * for debugging purposes.
+         *
+         * @param val the value to format
+         * @param outs the stream to dump the representation into.
+         */
+        // TODO: replace <<(Log ) with dbgfmt, so separate out from
+        // any other form of conversion to charstring.
+        // TODO: insert into formatter and not final dest type.
         friend Log &operator<<(Log &outs, Array const &v) noexcept
         {
             outs << "Array<" << v.len() << ">{"
