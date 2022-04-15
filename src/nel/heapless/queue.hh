@@ -23,7 +23,13 @@ namespace nel
 {
 namespace heapless
 {
-
+/**
+ * A constrained queue of values (a FIFO queue)
+ *
+ * Values stored inline in object (no heap usage)
+ * Queue owns values , on destroy of queue, owned values destroyed as well.
+ * The FIFO ordering is preserved.
+ */
 template<typename T, Length const N>
 struct Queue {
     public:
@@ -92,17 +98,30 @@ struct Queue {
             return len_;
         }
 
+    public:
+        /**
+         * Determine if the queue is empty.
+         *
+         * @returns true if queue is empty, false otherwise.
+         */
         bool is_empty(void) const
         {
             return len_ == 0;
         }
 
-        // if Some, then v not stored
-        // if None, then v stored.
-        //
-        Result<void, T> put(T &&v)
         {
             if (is_full()) { return Result<void, T>::Err(v); }
+        /**
+         * Put a value onto the queue.
+         *
+         * if successfull, val is moved into the queue
+         * if unsuccessful, val is still moved, just into the result.
+         *
+         * @param val The value to move into the queue.
+         * @returns if successful, Result<void, T>::Ok()
+         * @returns if unsuccessful, Result<void, T>::Err() holding val
+         */
+        Result<void, T> put(T &&val)
             len_ += 1;
             new (&store_[wp_]) T(v);
             wp_ += 1;
@@ -110,6 +129,13 @@ struct Queue {
             return Result<void, T>::Ok();
         }
 
+        /**
+         * Get next value from the queue.
+         *
+         * @param val The value to move into the queue.
+         * @returns if successful, Optional<T>::Some(val)
+         * @returns if unsuccessful, Optional<T>::None
+         */
         Optional<T> get(void)
         {
             if (is_empty()) { return Optional<T>::None(); }
@@ -128,6 +154,16 @@ struct Queue {
         }
 
     public:
+        /**
+         * Format/emit a representation of this object as a charstring
+         * for debugging purposes.
+         *
+         * @param val the value to format
+         * @param outs the stream to dump the representation into.
+         */
+        // TODO: replace <<(Log ) with dbgfmt, so separate out from
+        // any other form of conversion to charstring.
+        // TODO: insert into formatter and not final dest type.
         friend Log &operator<<(Log &outs, Queue const &v) noexcept
         {
             outs << "Queue<" << N << ">(" << v.len() << "){"
