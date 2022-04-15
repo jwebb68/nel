@@ -29,12 +29,15 @@ namespace heaped
  *
  * The array is created and managed on the heap.
  * Array can be moved in O(1) (no byte-moving happens)
+ * Array is not default copyable, if a copy is required it's an explicit try_copy
  * Can create an empty array: ::empty().
  * All Items are destroyed when array is destroyed.
  * All Items are created when array is created.
  * size cannot be changed once created.
- * size is not in type?
  */
+// TODO: put size of array in type, i.e. template<typename T, Length N>
+// would mean types checked at compile time
+// cannot move to array of diff size.. checked at compile time
 template<typename T>
 struct Array {
     public:
@@ -64,6 +67,9 @@ struct Array {
         // }
 
     public:
+        /**
+         * destroy the array and all items contained.
+         */
         ~Array(void) noexcept
         {
             ArrayNode::free(item_);
@@ -288,6 +294,16 @@ struct Array {
         }
 
     public:
+        /**
+         * Format/emit a representation of this object as a charstring
+         * for debugging purposes.
+         *
+         * @param val the value to format
+         * @param outs the stream to dump the representation into.
+         */
+        // TODO: replace <<(Log ) with dbgfmt, so separate out from
+        // any other form of conversion to charstring.
+        // TODO: insert into formatter and not final dest type.
         friend Log &operator<<(Log &outs, Array const &v) noexcept
         {
             outs << "Array(" << v.len() << "){"
