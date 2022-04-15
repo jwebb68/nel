@@ -128,7 +128,6 @@ TEST_CASE("heapless::Array::slice()", "[heapless][array]")
     REQUIRE(sc1.len() == c1.len());
 }
 
-
 TEST_CASE("heapless::Array::subslice(b,e)", "[heapless][array]")
 {
     {

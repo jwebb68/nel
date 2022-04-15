@@ -43,54 +43,11 @@ struct Array {
         // does this class follow suite? nope, expects these to be initialised.
         T values_[N];
 
-    public:
-        // Does this call dtor on each values_ entry?
-        ~Array(void) = default;
-
+    private:
+        // no default construction
+        // but needed internally..
         constexpr Array(void) = default;
 
-    public:
-        static constexpr Array fill(T const &v)
-        {
-            Array a;
-            for (Index i = 0; i < N; ++i) {
-                new (&a.values_[i]) T(v);
-            }
-            return a;
-        }
-
-#if 0
-        // experimental
-        // error value depends on what try_copy error type is.
-        static constexpr Optional<Array> try_fill(T const &v) noexcept
-        {
-            // TODO: a's dtor issues
-            // TODO: is 'a' copied/moved in cost time or should this be inplace?
-            Array a;
-            for (Index i = 0; i < N; ++i) {
-                auto r = T::try_copy(v);
-                // values_ not auto initialised
-                if (r.is_err()) {
-                    // cleanup on fail, so to return array to uninit state..
-                    // can't use dtor since not all entries inited.
-                    for (; i != 0; --i) {
-                        i -= 1;
-                        a.values_[i].~T();
-                    }
-                    // TODO: whoops, a's dtor is deleting uninit mem..
-                    return r;
-                } else {
-                    new (&a.values_[i]) T(std::move(r.unwrap()));
-                }
-            }
-            return Optional<Array>::Some(a);
-        }
-#endif
-
-        // possibly experimental.
-        // array create using init lists
-        // want moving not copying.
-        // want copying but not via ctor (may not be poss), so it becomes a try_ returning an err.
         constexpr Array(std::initializer_list<T> l)
         {
             // Interesting
@@ -99,6 +56,7 @@ struct Array {
             //      todo: avoid this copying.. can I get them created inplace..
             Index i = 0;
             for (auto it = l.begin(); i < N && it != l.end(); ++it, ++i) {
+                // TODO: init list elements want to be copied, not moved..
                 new (&values_[i]) T(std::move(*it));
             }
         }
@@ -134,6 +92,15 @@ struct Array {
         }
 
     public:
+        static constexpr Array fill(T const &v)
+        {
+            Array a;
+            for (Index i = 0; i < N; ++i) {
+                new (&a.values_[i]) T(v);
+            }
+            return a;
+        }
+
     public:
         /**
          * Determine if the array is empty.
@@ -216,7 +183,6 @@ struct Array {
             return Slice<T const>::from(values_, len());
         }
 
-    public:
         /**
          * Get a partial slice over the range of elements in the array.
          *
@@ -247,6 +213,7 @@ struct Array {
             return slice().try_subslice(b, e);
         }
 
+    public:
         /**
          * Create an iterator over the contents of the Array.
          *

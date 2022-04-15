@@ -103,7 +103,7 @@ struct Node {
 #endif
 
     public:
-        ~Node(void)
+        ~Node(void) noexcept
         {
             for (Index i = 0; i < len(); ++i) {
                 values_[i].~T();
@@ -111,16 +111,16 @@ struct Node {
         }
 
         // No copying..
-        constexpr Node(Node const &) = delete;
-        constexpr Node &operator=(Node const &) const = delete;
+        constexpr Node(Node const &) noexcept = delete;
+        constexpr Node &operator=(Node const &) const noexcept = delete;
 
         // No moving
-        constexpr Node(Node &&) = delete;
-        constexpr Node &operator=(Node &&) = delete;
+        constexpr Node(Node &&) noexcept = delete;
+        constexpr Node &operator=(Node &&) noexcept = delete;
 
         // use placement new to init.
         // want this as a static func so ca return errors..
-        Node(std::initializer_list<T> l)
+        constexpr Node(std::initializer_list<T> l) noexcept
         {
             // How to fail if not big enough.
             nel_panic_if_not(l.size() <= capacity(), "not big enough");
@@ -131,6 +131,7 @@ struct Node {
             len_ = i;
         }
 
+    public:
         // use placement new to init.
         constexpr Node(T const &f) noexcept
         {

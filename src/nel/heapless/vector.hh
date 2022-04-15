@@ -57,6 +57,10 @@ struct Vector {
             }
         }
 
+        // default ctor is safe, will always succeed.
+        // just expensive in ram if T or N are large.
+        constexpr Vector(void): len_(0) {}
+
         // No copying..
         constexpr Vector(Vector const &o) = delete;
         constexpr Vector &operator=(Vector const &o) = delete;
@@ -82,9 +86,6 @@ struct Vector {
         }
 
     public:
-        // default ctor is safe, will always succeed.
-        constexpr Vector(void): len_(0) {}
-
         /**
          * Create a vector with no initial allocation.
          *
@@ -234,6 +235,7 @@ struct Vector {
             return slice().try_subslice(b, e);
         }
 
+    public:
         // TODO: fail on fixed?
         // Or return Result<void, ?>
         // And fail if not N
@@ -270,7 +272,6 @@ struct Vector {
             len_ += 1;
             return Result<void, T>::Ok();
         }
-
 
         // move contents of vec into this?
         // Result<void, Vector<T>> push_back(Vector<T> &l) noexcept?

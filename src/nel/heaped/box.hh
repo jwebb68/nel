@@ -12,6 +12,7 @@ struct Box;
 } // namespace heaped
 } // namespace nel
 
+#include <nel/result.hh>
 #include <nel/element.hh>
 #include <nel/panic.hh>
 
@@ -37,22 +38,23 @@ struct Box {
         std::unique_ptr<ElementT> value_;
 
     public:
+        ~Box(void) = default;
+
         // No default, must create a T.
-        constexpr Box(void) = delete;
+        constexpr Box(void) noexcept = delete;
 
         // No copying..
-        constexpr Box(Box const &o) = delete;
-        constexpr Box &operator=(Box const &o) const = delete;
+        constexpr Box(Box const &o) noexcept = delete;
+        constexpr Box &operator=(Box const &o) noexcept = delete;
 
         // Can move though.
         constexpr Box(Box &&) noexcept = default;
         constexpr Box &operator=(Box &&) noexcept = default;
 
-    public:
+        // create contained inplace.
         // works for moving-into as well.
         template<typename... Args>
         constexpr Box(Args &&...args) noexcept: value_(new Element<T>(std::forward<Args>(args)...))
-        // : value_(std::move(ElementT::new_(std::forward<Args>(args)...)))
         {
         }
 

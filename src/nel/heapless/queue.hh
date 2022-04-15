@@ -52,18 +52,10 @@ struct Queue {
             }
         }
 
-    protected:
-        Queue(void): len_(0), wp_(0), rp_(0)
-        {
-            // store initially uninitialised.
-        }
+    private:
+        Queue(void): len_(0), wp_(0), rp_(0) {}
 
     public:
-        static Queue empty(void) noexcept
-        {
-            return Queue();
-        }
-
         // no implicit copying allowed
         constexpr Queue(Queue const &o) = delete;
         constexpr Queue &operator=(Queue const &o) = delete;
@@ -71,6 +63,7 @@ struct Queue {
         // moving allowed though.
         constexpr Queue(Queue &&o): len_(o.len_), wp_(o.wp_), rp_(o.rp_)
         {
+            // TODO: replace with slice().move_from(o.slice())
             T *d = &store_[rp_];
             T *s = &o.store_[rp_];
             for (Index l = len_; l != 0; --l) {
@@ -93,9 +86,14 @@ struct Queue {
         }
 
     public:
-        Length len(void) const
+        /**
+         * Create a queue with no values in it.
+         *
+         * @returns the queue created.
+         */
+        constexpr static Queue empty(void) noexcept
         {
-            return len_;
+            return Queue();
         }
 
     public:
@@ -109,8 +107,26 @@ struct Queue {
             return len_ == 0;
         }
 
+        /**
+         * Determine if the queue is full.
+         *
+         * @returns true if queue is full, false otherwise.
+         */
+        bool is_full(void) const
         {
-            if (is_full()) { return Result<void, T>::Err(v); }
+            return len_ == N;
+        }
+
+        /**
+         * Return the number of items in the queue.
+         *
+         * @returns number of items in the queue.
+         */
+        Length len(void) const
+        {
+            return len_;
+        }
+
         /**
          * Put a value onto the queue.
          *
@@ -122,8 +138,10 @@ struct Queue {
          * @returns if unsuccessful, Result<void, T>::Err() holding val
          */
         Result<void, T> put(T &&val)
+        {
+            if (is_full()) { return Result<void, T>::Err(val); }
             len_ += 1;
-            new (&store_[wp_]) T(v);
+            new (&store_[wp_]) T(val);
             wp_ += 1;
             if (wp_ == N) { wp_ = 0; }
             return Result<void, T>::Ok();
@@ -144,13 +162,6 @@ struct Queue {
             rp_ += 1;
             if (rp_ == N) { rp_ = 0; }
             return r;
-        }
-
-    public:
-    private:
-        bool is_full(void)
-        {
-            return len_ == N;
         }
 
     public:

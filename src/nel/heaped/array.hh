@@ -48,7 +48,7 @@ struct Array {
         // or: how can i use realloc in c++ with new/delete?
         ArrayNode *item_;
 
-    protected:
+    private:
         // Need default constr so can create unassigned vars
         // e.g Array<T> foo;
         // but then why would you want to?
@@ -64,26 +64,6 @@ struct Array {
         {
             ArrayNode::free(item_);
         }
-
-        /**
-         * Create an empty array
-         *
-         * Empty array has length 0 and no content.
-         *
-         * @returns the created array
-         */
-        static constexpr Array empty(void) noexcept
-        {
-            return Array();
-        }
-
-        // Initialiser list initialisation required here..
-
-        // create array from vec.
-        // static constexpr Array from(Vector<T> &vec) noexcept
-        // {
-        //     return Array(vec);
-        // }
 
         // No copying.
         // copying an array is very expensive, so disabled.
@@ -107,6 +87,35 @@ struct Array {
                 new (this) Array(std::move(o));
             }
             return *this;
+        }
+
+    public:
+        /**
+         * Create an empty array
+         *
+         * Empty array has length 0 and no content.
+         *
+         * @returns the created array
+         */
+        static constexpr Array empty(void) noexcept
+        {
+            return Array();
+        }
+
+        /**
+         * Create an array, of size n, initial value f in all entries.
+         *
+         * @param f The value to fill with.
+         * @param n The size of the array.
+         *
+         * @returns the created array
+         */
+        static constexpr Array fill(T const &f, Count n)
+        {
+            if (n == 0) { return Array::empty(); }
+            Array a(ArrayNode::malloc(n));
+            new (a.item_) ArrayNode(f);
+            return a;
         }
 
     public:
@@ -194,7 +203,6 @@ struct Array {
                                       : Slice<T const>::from(item_->ptr(), item_->len());
         }
 
-    public:
         /**
          * Get a partial slice over the range of elements in the array.
          *
@@ -225,6 +233,7 @@ struct Array {
             return slice().try_subslice(b, e);
         }
 
+    public:
         /**
          * Create an iterator over the contents of the Array.
          *

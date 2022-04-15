@@ -44,12 +44,7 @@ struct Vector {
         typedef Node<T> VectorNode;
         VectorNode *item_;
 
-    public:
-        // default ctor is ok since it cannot throw.
-        // TODO: but is it 'correct'? i.e. must arrays be created initialised?
-        constexpr Vector(void) noexcept: item_(nullptr) {}
-
-    protected:
+    private:
         constexpr Vector(VectorNode *const n) noexcept: item_(n) {}
 
     public:
@@ -61,20 +56,20 @@ struct Vector {
             VectorNode::free(item_);
         }
 
-        static constexpr Vector empty(void) noexcept
-        {
-            return Vector();
-        }
+        // default ctor is ok since it cannot throw.
+        // TODO: but is it 'correct'? i.e. must arrays be created initialised?
+        constexpr Vector(void) noexcept: item_(nullptr) {}
 
         // No copying..
         constexpr Vector(Vector const &o) = delete;
         constexpr Vector &operator=(Vector const &o) = delete;
 
-        Vector(Vector &&o) noexcept: item_(std::move(o.item_))
+        // moving ok.
+        constexpr Vector(Vector &&o) noexcept: item_(std::move(o.item_))
         {
             o.item_ = nullptr;
         }
-        Vector &operator=(Vector &&o) noexcept
+        constexpr Vector &operator=(Vector &&o) noexcept
         {
             if (this != &o) {
                 this->~Vector();
@@ -83,8 +78,8 @@ struct Vector {
             return *this;
         }
 
-        // vector::from(std::initializer_list<T> l)
-        constexpr Vector(std::initializer_list<T> l): item_(nullptr)
+        constexpr Vector(std::initializer_list<T> l) noexcept: item_(new VectorNode(l)) {}
+
     public:
         /**
          * Create a vector with no initial allocation.
@@ -93,12 +88,7 @@ struct Vector {
          */
         static constexpr Vector empty(void) noexcept
         {
-            // Ah, can fail..., should be a try_reserve then
-            // and as try_reserve can fail should be a try_from_initlist.
-            reserve(capacity() + l.size());
-            // Maybe should be 'item_ = l' ?
-            // i.e. assign.
-            new (item_) VectorNode(l);
+            return Vector();
         }
 
         static constexpr Vector fill(T const &f, Count n)
@@ -109,7 +99,6 @@ struct Vector {
             return a;
         }
 
-    public:
         /**
          * Create a vector with the initial allocation.
          *
@@ -124,6 +113,7 @@ struct Vector {
             return a;
         }
 
+    public:
         /**
          * Returns the number of items currently in the allocation
          *

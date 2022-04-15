@@ -57,7 +57,6 @@ void memcpy(T *const d, T const *const s, Length n) noexcept
     }
 }
 
-
 /**
  * set items [s,s+n) to (copy of) d
  * caller must ensure there is enough space in d.
