@@ -31,31 +31,8 @@ struct Element {
     public:
         template<typename... Args>
         Element(Args &&...args) noexcept: value_(std::forward<Args>(args)...)
-        // does this keep the inplace construct behaviour?
-        // it's relying on the optimiser to remove the copy.
-        // requires T::new_(args), which it may not have.
-        // and then doesn't work for int/float etc.
-        // : value_(std::move(T::new_(std::forward<Args>(args)...)))
         {
         }
-
-        // template<typename ...Args>
-        // static constexpr Element new_(Args &&...args) noexcept
-        // {
-        //     return Element(std::forward<Args>(args)...);
-        // }
-
-    public:
-        // Element(T &&v) noexcept
-        //     // needs T::move public, which it will be
-        //     // needs T::move, which it should always have.
-        //     : value_(std::move(v))
-        // {}
-
-        // static constexpr Element new_(T &&v) noexcept
-        // {
-        //     return Element(std::move(v));
-        // }
 
     public:
         T unwrap(void) noexcept

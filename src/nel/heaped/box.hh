@@ -48,45 +48,13 @@ struct Box {
         constexpr Box(Box &&) noexcept = default;
         constexpr Box &operator=(Box &&) noexcept = default;
 
-        // protected:
     public:
-        // constexpr Box(T &&v) noexcept
-        //     : value_(new Element<T>(std::move(v)))
-        //     // : value_(std::move(ElementT::new_(std::move(o))))
-        // {}
-
-        // create contained inplace.
         // works for moving-into as well.
         template<typename... Args>
         constexpr Box(Args &&...args) noexcept: value_(new Element<T>(std::forward<Args>(args)...))
         // : value_(std::move(ElementT::new_(std::forward<Args>(args)...)))
         {
         }
-
-    public:
-        // no ctors, use creator functions for that.
-        // so I can return errors instead of throw exceptions.
-        // although that would get messy.
-
-        // template<typename ...Args>
-        // constexpr Box(Args &&... args) noexcept
-        //     : value_(new ElementT(std::forward<Args>(args)...))
-        // {}
-
-        // Box<T>::new_() = default constr
-        // Box<T>::new_(args) = inplace constr of T
-        // Box<T>::new_(T &&t) = move from existing t
-        // no copy constr.
-        // as a function so can return result (T::try_new_()) if wanted.
-        // template<typename ...Args>
-        // static constexpr Box new_(Args &&... args) noexcept
-        // {
-        //     return Box(std::forward<Args>(args)...);
-        // }
-        // static constexpr Box new_(T &&o) noexcept
-        // {
-        //     return Box(std::move(o));
-        // }
 
     public:
         /**

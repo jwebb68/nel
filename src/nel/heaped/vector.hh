@@ -110,15 +110,6 @@ struct Vector {
         }
 
     public:
-        // For conversion to array..?
-        // VectorNode *detach(void) noexcept
-        // {
-        //     VectorNode *t = item_;
-        //     item_ = nullptr;
-        //     return t;
-        // }
-
-    public:
         /**
          * Create a vector with the initial allocation.
          *

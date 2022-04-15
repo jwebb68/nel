@@ -47,13 +47,6 @@ struct Array {
         // Does this call dtor on each values_ entry?
         ~Array(void) = default;
 
-        // create defaults?
-        // If no init list?
-        // Only if T has default cons
-        // Is this default?
-        // constexpr Array(void) = default;
-
-    protected:
         constexpr Array(void) = default;
 
     public:

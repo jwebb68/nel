@@ -77,17 +77,6 @@ struct Iterator {
             }
         }
 
-#if 0
-        template<typename U>
-        U fold(U initial, std::function<U(U acc, T &e)> fn) noexcept
-        {
-            U acc = initial;
-            for (idx_ = 0; idx_ < len_; ++idx_) {
-                acc = fn(acc, content_[idx_]);
-            }
-            return acc;
-        }
-#else
         /**
          * fold/reduce each item to a single value
          *
@@ -103,7 +92,6 @@ struct Iterator {
             }
             return acc;
         }
-#endif
 };
 
 // x.map(mapfn).enum().for_each(..);
@@ -113,13 +101,11 @@ struct Iterator {
  * Apply fn to each value in iterator, returning the result for each item
  */
 template<typename I, typename U>
-// template<typename I, typename F, typename U>
 struct MappingIterator {
     public:
         typedef U ItemT;
         typedef U OutT;
         typedef std::function<U(typename I::ItemT &&)> FnT;
-        // typedef F FnT;
 
     private:
         I inner_;
@@ -128,8 +114,6 @@ struct MappingIterator {
     public:
         MappingIterator(I inner, FnT fn) noexcept: inner_(inner), fn_(fn) {}
 
-        // TODO: What happens if T cannot be mapped into U?
-        // Then fn returns a result, pass it on.
     public:
         /**
          * Return next item in iterator or None is no more.
@@ -143,7 +127,6 @@ struct MappingIterator {
             return v.is_none() ? v : Optional<OutT>(fn_(v.unwrap()));
         }
 };
-
 template<typename I, typename U>
 MappingIterator<I, U> map_it(I it, std::function<U(typename I::ItemT &&)> fn) noexcept
 {
@@ -176,14 +159,9 @@ struct FirstNIterator {
          */
         Optional<OutT> next(void) noexcept
         {
-            // Index i = current_++;
-            // return (i < limit_)
-            //     ? inner_.next()
-            //     : Optional<typename I::ItemT>::None();
             return (current_ < limit_) ? ++current_, inner_.next() : Optional<OutT>::None();
         }
 };
-
 template<typename I>
 FirstNIterator<I> first_n_it(I it, Length limit) noexcept
 {

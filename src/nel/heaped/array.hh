@@ -56,16 +56,6 @@ struct Array {
 
         constexpr Array(ArrayNode *const n) noexcept: item_(n) {}
 
-        // How to convert vector to array ?
-        // Vector::into_arr, then need to pass Node into array using private ctor.. needs
-        // arr::friend vec Array::from(vec), then need to detach node from vec using private func..
-        // needs vec:friend arr rust: as_ptr(&self) -> *const T rust: as_mut_ptr(&mut self) -> *mut
-        // T should vec convert to array? constexpr Array(Vector<T> &vec) noexcept
-        //     : item_(vec.item_)
-        // {
-        //     vec.item_ = nullptr;
-        // }
-
     public:
         /**
          * destroy the array and all items contained.
@@ -95,22 +85,6 @@ struct Array {
         //     return Array(vec);
         // }
 
-        /**
-         * Create an array, of size n, initial value f in all entries.
-         *
-         * @param f The value to fill with.
-         * @param n The size of the array.
-         *
-         * @returns the created array
-         */
-        static constexpr Array fill(T const &f, Count n)
-        {
-            if (n == 0) { return Array::empty(); }
-            Array a(ArrayNode::malloc(n));
-            new (a.item_) ArrayNode(f);
-            return a;
-        }
-
         // No copying.
         // copying an array is very expensive, so disabled.
         // if a copy is required, then must be done explicitly.
@@ -123,22 +97,6 @@ struct Array {
         {
             o.item_ = nullptr;
         }
-
-#if 0
-        constexpr Array &operator=(Array &&o) noexcept
-        {
-            if (this != &o) {
-                // slow
-                Array t(std::move(o));
-                swap(t);
-            }
-            return *this;
-        }
-        void swap(Array &o) noexcept
-        {
-            std::swap(item_, o.item_);
-        }
-#else
         constexpr Array &operator=(Array &&o) noexcept
         {
             if (this != &o) {
@@ -150,7 +108,6 @@ struct Array {
             }
             return *this;
         }
-#endif
 
     public:
         /**
