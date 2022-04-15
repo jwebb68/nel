@@ -26,6 +26,14 @@ namespace nel
 namespace heapless
 {
 
+/**
+ * Vector
+ *
+ * A container of type T held in a contiguous block (a variable sized array.)
+ * Capacity (max number of elements) is limited at create time.
+ * Cannot be implicitly coped.
+ * Can be implicitly moved.
+ */
 template<typename T, Length const N>
 struct Vector {
     public:
@@ -39,6 +47,9 @@ struct Vector {
         T values_[N];
 
     public:
+        /**
+         * destroy the vector, deleting all elements owned by it.
+         */
         ~Vector(void)
         {
             for (Index i = 0; i < len(); ++i) {
@@ -74,6 +85,11 @@ struct Vector {
         // default ctor is safe, will always succeed.
         constexpr Vector(void): len_(0) {}
 
+        /**
+         * Create a vector with no initial allocation.
+         *
+         * @returns the vector created.
+         */
         static constexpr Vector empty(void) noexcept
         {
             return Vector();
@@ -230,6 +246,13 @@ struct Vector {
             NEL_UNUSED(new_capacity);
         }
 
+        /**
+         * Push a value onto the end of the vec.
+         *
+         * @param val The value to move into the vec.
+         * @returns if successful, Result<void, T>::Ok()
+         * @returns if unsuccessful, Result<void, T>::Err() holding val
+         */
         // move value into vec
         // on fail still move, but return.
         // allow inplace create instead of move.
@@ -248,6 +271,20 @@ struct Vector {
             return Result<void, T>::Ok();
         }
 
+
+        // move contents of vec into this?
+        // Result<void, Vector<T>> push_back(Vector<T> &l) noexcept?
+        // move contents of slice into this?
+        // Result<void, Slice<T>> push_back(Slice<T> &l) noexcept?
+        // move contents of iter into this? into_vec?
+        // Result<void, Slice<T>> push_back(Iter<T> &l) noexcept?
+
+        /**
+         * Remove and return the last item in the vec.
+         *
+         * @returns on success: Optional::Some holding the value
+         * @returns on fail: Optional::None
+         */
         Optional<T> pop_back(void) noexcept
         {
             if (len() == 0) { return Optional<T>::None(); }
@@ -258,10 +295,22 @@ struct Vector {
             return v;
         }
 
-        // insert_at ?/push_at?
-        // remove_at?/pop_at?
+        // insert_at(idx, T &&) ?
+        // insert_at(idx, Array<T> &&) ?
+        // insert_at(idx, iter<T> it) ?
+        // remove_at(idx) ? drops or returns item
+        // remove_at(beg,end) ? drops or returns items..(how?)
         // sort ?
+        // find ?
 
+    public:
+        /**
+         * Create an iterator over the contents of the Array.
+         *
+         * iterator is invalidated if array goes out of scope/destroyed.
+         *
+         * @returns The iterator.
+         */
         constexpr Iterator<T> iter(void) noexcept
         {
             return slice().iter();
@@ -281,6 +330,16 @@ struct Vector {
         }
 
     public:
+        /**
+         * Format/emit a representation of this object as a charstring
+         * for debugging purposes.
+         *
+         * @param val the value to format
+         * @param outs the stream to dump the representation into.
+         */
+        // TODO: replace <<(Log ) with dbgfmt, so separate out from
+        // any other form of conversion to charstring.
+        // TODO: insert into formatter and not final dest type.
         friend Log &operator<<(Log &outs, Vector const &v) noexcept
         {
             outs << "Vector<" << N << ">(" << v.len() << "){"
