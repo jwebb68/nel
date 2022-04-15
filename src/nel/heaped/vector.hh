@@ -78,8 +78,6 @@ struct Vector {
             return *this;
         }
 
-        constexpr Vector(std::initializer_list<T> l) noexcept: item_(new VectorNode(l)) {}
-
     public:
         /**
          * Create a vector with no initial allocation.
@@ -103,6 +101,21 @@ struct Vector {
             if (cap == 0) { return Vector(); }
             Vector a(VectorNode::malloc(cap));
             return a;
+        }
+
+        /**
+         * Attempt to create vector from initialiser list
+         *
+         * @param l initialiser list to use
+         * @return on success, an Optional::Some holding the created vector.
+         * @return on fail: Optional::None
+         */
+        static constexpr Optional<Vector> try_from(std::initializer_list<T> l) noexcept
+        {
+            Vector a = Vector::empty();
+            auto r = a.push_back(l);
+            if (r.is_err()) { return Optional<Vector>::None(); }
+            return Optional<Vector>::Some(std::move(a));
         }
 
     public:
@@ -276,6 +289,13 @@ struct Vector {
          * @returns if successful, Result<void, T>::Ok()
          * @returns if unsuccessful, Result<void, T>::Err() holding val
          */
+        // TODO: poss not correct, as not returning Result<void, T>
+        Result<void, std::initializer_list<T>> push_back(std::initializer_list<T> l) noexcept
+        {
+            typedef std::initializer_list<T> U;
+            reserve(len() + l.size());
+            return (item_ == nullptr) ? Result<void, U>::Err(l) : item_->push_back(l);
+        }
         template<typename... Args>
         Result<void, T> push_back(Args &&...args) noexcept
         {

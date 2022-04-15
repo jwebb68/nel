@@ -132,6 +132,17 @@ struct Node {
         }
 
     public:
+        static constexpr Optional<Node *> try_from(std::initializer_list<T> l) noexcept
+        {
+            // cannot use Optional<Node> as size is not known at compile time.
+            // TODO: maybe should be try_malloc?
+            Node *p = Node::malloc(l.size());
+            if (p == nullptr) { return Optional<Node *>::None(); }
+            auto r = p->push_back(l);
+            if (r.is_err()) { return Optional<Node *>::None(); }
+            return Optional<Node *>::Some(p);
+        }
+
         // use placement new to init.
         constexpr Node(T const &f) noexcept
         {
@@ -234,6 +245,24 @@ struct Node {
             new (&values_[len()]) T(std::forward<Args>(args)...);
             len_ += 1;
             return Result<void, T>::Ok();
+        }
+
+        Result<void, std::initializer_list<T>> push_back(std::initializer_list<T> l) noexcept
+        {
+            typedef std::initializer_list<T> U;
+            if (len() + l.size() > capacity()) {
+                // TODO: don't want to create a T on error though..
+                // but if one is already created then return it.
+                // must the arg be moved on error?
+                return Result<void, U>::Err(l);
+            }
+
+            Index i = len_;
+            for (auto it = l.begin(); it != l.end(); ++i, ++it) {
+                new (&values_[i]) T(std::move(*it));
+            }
+            len_ = i;
+            return Result<void, U>::Ok();
         }
 
         // rename to try_pop_back?

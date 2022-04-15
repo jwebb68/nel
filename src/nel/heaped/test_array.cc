@@ -38,6 +38,19 @@ TEST_CASE("heaped::Array::move", "[heaped][array]")
     // c2 = std::move(c1);
 }
 
+TEST_CASE("heaped::Array::try_from(initlist)", "[heaped][array]")
+{
+    {
+        // must fill array with same value
+        auto a1 = nel::heaped::Array<int>::try_from({1, 2, 3});
+        REQUIRE(a1.is_some());
+        auto v1 = a1.unwrap();
+        REQUIRE(v1.try_get(0).unwrap() == 1);
+        REQUIRE(v1.try_get(1).unwrap() == 2);
+        REQUIRE(v1.try_get(2).unwrap() == 3);
+    }
+}
+
 TEST_CASE("heaped::Array::is_empty", "[heaped][array]")
 {
     // empty array must be empty

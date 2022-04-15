@@ -32,11 +32,12 @@ void ex3() {
 }
 
 void ex4() {
-    Vec1 vec1 = {
+    auto r = Vec1::try_from({
         ((uint8_t)0x67),
         ((uint8_t)0x68),
         ((uint8_t)0x69),
-    };
+    });
+    Vec1 vec1 = r.unwrap();
 
     auto it = vec1.iter();
     while (true) {

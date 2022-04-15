@@ -106,6 +106,25 @@ struct Array {
             return a;
         }
 
+        /**
+         * Attempt to create an array from initialiser list
+         *
+         * @param l initialiser list to use
+         * @return on success, an Optional::Some holding the created array.
+         * @return on fail: Optional::None
+         */
+        // possibly experimental.
+        // array create using init lists
+        // want moving not copying.
+        // want copying but not via ctor (may not be poss), so it becomes a try_ returning an err.
+        // If type has copy, then could fill? use slice for that..
+        static constexpr Optional<Array> try_from(std::initializer_list<T> l) noexcept
+        {
+            // TODO: can the array create be made inplace into the optional?
+            // prob only if initlist ctor is public, which I don't want.
+            return (l.size() != N) ? Optional<Array>::None() : Optional<Array>::Some(Array(l));
+        }
+
     public:
         /**
          * Determine if the array is empty.

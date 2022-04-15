@@ -96,14 +96,25 @@ struct Vector {
             return Vector();
         }
 
-        constexpr Vector(std::initializer_list<T> l)
+        /**
+         * Attempt to create vector from initialiser list
+         *
+         * @param l initialiser list to use
+         * @return on success, an Optional::Some holding the created vector.
+         * @return on fail: Optional::None
+         */
+        // possibly experimental.
+        // vec create using init lists
+        // want moving not copying.
+        // want copying but not via ctor (may not be poss), so it becomes a try_ returning an err.
+        static constexpr Optional<Vector> try_from(std::initializer_list<T> l) noexcept
         {
-            Index i = 0;
-            for (auto it = l.begin(); i < capacity() && it != l.end(); ++it, ++i) {
-                new (&values_[i]) T(std::move(*it));
-            }
-            len_ = i;
-            // TODO: what if l.size() > capacity()? want to fail compile..
+            if (l.size() != N) { return Optional<Vector>::None(); }
+            Vector v = Vector::empty();
+            auto r = v.push_back(l);
+            if (r.is_err()) { return Optional<Vector>::None(); }
+            return Optional<Vector>::Some(std::move(v));
+            // TODO: can all of this create the vec inplace in the optional?
         }
 
     public:
@@ -261,6 +272,22 @@ struct Vector {
             new (&values_[len()]) T(std::forward<Args>(args)...);
             len_ += 1;
             return Result<void, T>::Ok();
+        }
+
+        Result<void, std::initializer_list<T>> push_back(std::initializer_list<T> l) noexcept
+        {
+            if (len() + l.size() > capacity()) {
+                // Really? must one be created for err?
+                return Result<void, std::initializer_list<T>>::Err(l);
+            }
+            // Remember, values at len and beyond are uninitialised.
+            // So need to use new to construct them.
+            Index i = len();
+            for (auto it = l.begin(); it != l.end(); ++i, ++it) {
+                new (&values_[i]) T(std::move(*it));
+            }
+            len_ = i;
+            return Result<void, std::initializer_list<T>>::Ok();
         }
 
         // move contents of vec into this?

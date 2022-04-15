@@ -118,6 +118,25 @@ struct Array {
             return a;
         }
 
+        /**
+         * Attempt to create an array from initialiser list
+         *
+         * @param l initialiser list to use
+         * @return on success, an Optional::Some holding the created array.
+         * @return on fail: Optional::None
+         */
+        // possibly experimental.
+        // want moving not copying, but c++ default is to copy
+        // how to init is initlist in const space? (it'd be copying then)
+        // want copying but not via ctor (may not be possible), so it becomes a try_ returning an
+        // err.
+        // TODO: determine how efficient this implementation is..
+        static constexpr Optional<Array> try_from(std::initializer_list<T> l) noexcept
+        {
+            return ArrayNode::try_from(l).map(
+                std::function([](ArrayNode *&&p) -> Array { return Array(p); }));
+        }
+
     public:
         /**
          * Determine if the array is empty.

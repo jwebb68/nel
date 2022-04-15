@@ -41,6 +41,31 @@ TEST_CASE("heapless::Array::filled", "[heapless][array]")
     }
 }
 
+TEST_CASE("heapless::Array::try_from(initlist)", "[heapless][array]")
+{
+    {
+        // must fill array with same value
+        auto a1 = nel::heapless::Array<int, 3>::try_from({1, 2, 3});
+        REQUIRE(a1.is_some());
+        auto v1 = a1.unwrap();
+        REQUIRE(v1.try_get(0).unwrap() == 1);
+        REQUIRE(v1.try_get(1).unwrap() == 2);
+        REQUIRE(v1.try_get(2).unwrap() == 3);
+    }
+
+    {
+        // init list too small: must fail
+        auto a1 = nel::heapless::Array<int, 3>::try_from({1, 2});
+        REQUIRE(a1.is_none());
+    }
+
+    {
+        // init list too large: must fail
+        auto a1 = nel::heapless::Array<int, 3>::try_from({1, 2, 3, 4});
+        REQUIRE(a1.is_none());
+    }
+}
+
 TEST_CASE("heapless::heapless::Array::move", "[heapless][array]")
 {
     {
