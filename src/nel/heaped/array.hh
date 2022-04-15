@@ -213,13 +213,12 @@ struct Array {
         // or a conversion func: operator Slice<T>(void)? (but I don't want it implicit/automatic
         constexpr Slice<T> slice(void)
         {
-            return (item_ == nullptr) ? Slice<T>::empty()
-                                      : Slice<T>::from(item_->ptr(), item_->len());
+            return (item_ == nullptr) ? Slice<T>::empty() : item_->slice();
         }
         constexpr Slice<T const> slice(void) const
         {
             return (item_ == nullptr) ? Slice<T const>::empty()
-                                      : Slice<T const>::from(item_->ptr(), item_->len());
+                                      : reinterpret_cast<ArrayNode const *>(item_)->slice();
         }
 
         /**
