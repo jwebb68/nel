@@ -270,9 +270,10 @@ struct Node {
         {
             if (len() == 0) { return Optional<T>::None(); }
 
-            auto o = Optional<T>::Some(std::move(values_[len()]));
-            values_[len_].~T();
             len_ -= 1;
+            T &e = values_[len()];
+            auto o = Optional<T>::Some(std::move(e));
+            e.~T();
             return o;
         }
 
