@@ -64,13 +64,13 @@ naming notes:
 
 prevent len/size being used as an index:
 typedef size_t Size; ?
-typedef size_t Index; ?
+typedef size_t size_t; ?
 then:
 struct Len {...};
 struct Size {...};
 - can size be -ve ?
 - can index be -ve
-- IndexDiff can be -ve
+- size_tDiff can be -ve
 - SizeDiff can be -ve
 
 String<T>:

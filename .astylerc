@@ -33,9 +33,9 @@ align-pointer=name
 align-reference=name
 #break-closing-brackets
 #break-elseifs
-break-one-line-headers
+#break-one-line-headers
 add-braces
-#add-one-line-braces
+add-one-line-braces
 #remove-braces
 #break-return-type
 attach-return-type
@@ -43,5 +43,5 @@ attach-return-type
 #keep-one-line-statements
 convert-tabs
 
-max-code-length=80
+max-code-length=100
 #break-after-logical

@@ -1,22 +1,22 @@
-#include "log.hh"
-#include "defs.hh"
 #include "largestruct1.hh"
 
-#include "heapless/vector.hh"
-#include "panic.hh"
+#include <nel/heapless/vector.hh>
+#include <nel/panic.hh>
+#include <nel/log.hh>
+#include <nel/defs.hh>
 
 #include <utility> // std::move
 
 typedef nel::heapless::Vector<U8Buf<256>, 10> Vec1;
 
 void ex1() {
-    Vec1 vec1;
+    Vec1 vec1 = Vec1::empty();
 
     nel::log << vec1 << "\n";
 }
 
 void ex2() {
-    Vec1 vec1;
+    Vec1 vec1 = Vec1::empty();
 
     U8Buf<256> v = U8Buf<256>((uint8_t)0x66);
     vec1.push_back(std::move(v));
@@ -25,7 +25,7 @@ void ex2() {
 }
 
 void ex3() {
-    Vec1 vec1;
+    Vec1 vec1 = Vec1::empty();
 
     vec1.push_back((uint8_t)0x67);
 
@@ -33,7 +33,7 @@ void ex3() {
 }
 
 void ex4() {
-    Vec1 vec1;
+    Vec1 vec1 = Vec1::empty();
 
     vec1.push_back((uint8_t)0x67);
     vec1.push_back((uint8_t)0x68);
@@ -62,7 +62,7 @@ void ex4() {
 }
 
 void ex41() {
-    Vec1 vec1;
+    Vec1 vec1 = Vec1::empty();
 
     for (uint8_t f=1; f < 10; ++f) {
         vec1.push_back(f);
@@ -90,7 +90,7 @@ void ex41() {
 
 
 void ex5() {
-    Vec1 vec1;
+    Vec1 vec1 = Vec1::empty();
 
     vec1.push_back((uint8_t)0x67);
     vec1.push_back((uint8_t)0x68);
@@ -107,7 +107,7 @@ void ex5() {
 }
 
 void ex51() {
-    Vec1 vec1;
+    Vec1 vec1 = Vec1::empty();
 
     for (uint8_t f=1; f < 10; ++f) {
         vec1.push_back(f);
@@ -125,7 +125,7 @@ void ex51() {
 
 
 void ex6() {
-    Vec1 vec1;
+    Vec1 vec1 = Vec1::empty();
 
     vec1.push_back((uint8_t)0x67);
     vec1.push_back((uint8_t)0x68);

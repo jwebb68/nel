@@ -1,17 +1,17 @@
 # build main code/test/examples for modules
 # modules are subfolders from root, containing a main for exes, liba for statics and libso for shared.
 # all other .c,.cc files are treated as part of that module.
-# <modl>/src/main.{c,cc}
-# <modl>/src/liba.{c,cc}
-# <modl>/src/libso.{c,cc}
+# src/<modl>main.{c,cc}
+# src/<modl>liba.{c,cc}
+# src/<modl>libso.{c,cc}
 # builds an exe based on module name. <modl> for exes, lib<modl>.a for statics, lib<modl>.so for shared.
 # for defined configs (debug,release)
-# output is in build/<config>/
+# output is in target/<config>/
 # builds tests and runs them for each module.
 # tests are .c,.cc files in <modl>/src/ matching pattern test_*.{c,cc}
-# tests are built into build/<config>/tests/test_<modl> as an exe
+# tests are built into target/<config>/tests/test_<modl> as an exe
 # builds examples as found in the examples/ folder.
-# each .c.cc file is built into an exe into the build/<config/examples folder.
+# each .c.cc file is built into an exe into the target/<config/examples folder.
 #
 # you will need pkg-config and catch2 installed (for c++ tests)
 # TODO: pick details up from .yaml file (will mean dropping make)
@@ -22,7 +22,7 @@
 # TODO: rewrite in C++ and not makefile.. (or rust for portability/self-containment)
 
 .SUFFIXES:
-.SUFFIXES: c cc a o
+.SUFFIXES: .c .cc .a .o
 
 # toolchains
 # GCC
@@ -94,18 +94,21 @@ $(error allowed configs: $(allowed_configs))
 endif
 
 #CFLAGS already defined
-CFLAGS += -Werror -Wall -Wextra -Wpedantic
-CXXFLAGS += -Werror -Wall -Wextra -Wpedantic -std=c++17 -fno-exceptions
+CFLAGS += -Werror -Wall -Wextra -Wpedantic -Wswitch-default -Wswitch-enum -Wuninitialized
+CXXFLAGS += -Werror -Wall -Wextra -Wpedantic -Wswitch-default -Wswitch-enum -Wuninitialized -std=c++17 -fno-exceptions
 
 # CFLAGS additionals for debug
-debug_CFLAGS := -Og -g
-debug_CXXFLAGS := -Og -g
+# -Og is really bad.. lots of 'vars optimised out' occurrences.
+debug_CFLAGS := -O0 -g
+debug_CXXFLAGS := -O0 -g
 debug_CPPFLAGS := -DDEBUG
 #debug_LDFLAGS:=
 
 release_CFLAGS := -O3 -g
 release_CXXFLAGS := -O3 -g
 release_CPPFLAGS := -DRELEASE
+# nixos borken for lto: keep getting ar: lto needs a plugin..
+# problem appears to be in binutils package not picking up compiler plugins..
 #release_LDFLAGS:=
 #release_LDFLAGS += --lto
 #release_CFLAGS += --lto
@@ -153,7 +156,7 @@ nel_DEPS:=
 modls:=
 modls+=nel
 
-# build makefile to build/clean buildtree from src
+# build makefile to target/clean buildtree from src
 # in makefile:
 # $<modl>_DEPS:= lists deps of modl, relative to root of project.
 # must be in same project..TODO: cross project building so can pull in projs from other repos.
@@ -162,26 +165,26 @@ modls+=nel
 # folder tree laid out thus:
 # examples/<nmame>.c
 # examples/<nmame>.cc
-# <modl>/src/
-# <modl>/src/main.{c,cc} # for exe builds
-# <modl>/<src>/liba.{c,cc} # for static lib builds
-# <modl>/<src>/libso.{c,cc} # for shared lib builds
-# <modl>/src/<other>.{c,cc}
+# src/<modl>/
+# src/<modl>/main.{c,cc} # for exe builds
+# src/<modl>/liba.{c,cc} # for static lib builds
+# src/<modl>/libso.{c,cc} # for shared lib builds
+# src/<modl>/<other>.{c,cc}
 
-# will compile examples/<file>.c into build/<config>/obj/examples/<file>.o
-# will link build/<config>/obj/examples/<file>/<file>.o into build/<config>/examples/<file>
+# will compile examples/<file>.c into target/<config>/obj/examples/<file>.o
+# will link target/<config>/obj/examples/<file>/<file>.o into target/<config>/examples/<file>
 # i.e. every single .c and .cc file compiles to a single product.
 # dependencies are from main project (is no deps between examples)
 
-# will compile modl/src/<file>.{c,cc} into build/<config>/obj/<modl>/<file>.o
-# will preprocess modl/src/<file>.{c,cc} into build/<config>/dep/<modl>/<file>.d for deps tracking of included files.
+# will compile src/<modl>/<file>.{c,cc} into target/<config>/obj/<modl>/<file>.o
+# will preprocess src/<modl>/<file>.{c,cc} into target/<config>/dep/<modl>/<file>.d for deps tracking of included files.
 
 # for c,cc exes:
-# will link build/<config>/obj/<modl>/<file>.o into build/<config>/obj/<modl>
+# will link target/<config>/obj/<modl>/<file>.o into target/<config>/obj/<modl>
 # for c,cc statics:
-# will link build/<config>/obj/<modl>/<file>.o into build/<config>/obj/lib<modl>.a
+# will link target/<config>/obj/<modl>/<file>.o into target/<config>/obj/lib<modl>.a
 # for c,cc shared libs
-# will link build/<config>/obj/<modl>/<file>.o into build/<config>/obj/lib<modl>.so
+# will link target/<config>/obj/<modl>/<file>.o into target/<config>/obj/lib<modl>.so
 
 # TODO: error out if main.c/main.cc exist together
 # TODO: error out if liba.c/liba.cc exist together
@@ -190,10 +193,8 @@ modls+=nel
 
 all: build
 
-allsrc:=$(foreach f,$(modls),$(wildcard $(f)/src/*.c $(f)/src/*.cc))
-allhdr:=$(foreach f,$(modls),$(wildcard $(f)/src/*.h $(f)/src/*.hh))
-testsrc:= $(foreach f,$(modls),$(wildcard $(f)/src/test_*.c $(f)/src/test_*.cc))
-src:=$(filter-out $(testsrc),$(foreach f,$(modls),$(wildcard $(f)/src/*.c $(f)/src/*.cc)))
+allsrc:=$(foreach f,$(modls),$(shell find src/$(f) -name '*.c' -o -name '*.cc'))
+allhdr:=$(foreach f,$(modls),$(shell find src/$(f) -name '*.h' -o -name '*.hh'))
 
 obj:=
 clean:=
@@ -202,218 +203,321 @@ rtests:=
 
 # $1 = modl, $2 = config
 define mk_modl
-clean+=$(patsubst $(1)/src/%.c,build/$(2)/obj/$(1)/%.o,$(filter $(1)/src/%.c,$(src)))
-clean+=$(patsubst $(1)/src/%.cc,build/$(2)/obj/$(1)/%.o,$(filter $(1)/src/%.cc,$(src)))
-clean+=$(patsubst $(1)/src/%.s,build/$(2)/obj/$(1)/%.o,$(filter $(1)/src/%.s,$(src)))
+# TODO: this is eval'd every config, when want it evaled every module.
+# but deps is being overhauled anyway, (very hard to impl in makefile)
+$(1)_src_c:=$(patsubst src/$(1)/%,%,$(shell find src/$(1) ! -name 'test_*.c' -name '*.c'))
+$(1)_src_cc:=$(patsubst src/$(1)/%,%,$(shell find src/$(1) ! -name 'test_*.cc' -name '*.cc'))
+$(1)_src_s:=$(patsubst src/$(1)/%,%,$(shell find src/$(1) ! -name 'test_*.s' -name '*.s'))
 
-build/$(2)/obj/$(1): ; mkdir -p $$@
-build/$(2)/dep/$(1): ; mkdir -p $$@
+# note: can end up with same .o for .c or .cc or .s
+# possible fix is to use .c.o, .s.o and .cc.o for obj file extension.
+$(1)_$(2)_o_c:=$$(patsubst %.c,target/$(2)/obj/$(1)/%.o,$$($(1)_src_c))
+$(1)_$(2)_o_cc:=$$(patsubst %.cc,target/$(2)/obj/$(1)/%.o,$$($(1)_src_cc))
+$(1)_$(2)_o_s:=$$(patsubst %.s,target/$(2)/obj/$(1)/%.o,$$($(1)_src_s))
 
-$(if $(filter $(1)/src/%.c,$(src)),$(patsubst $(1)/src/%.c,build/$(2)/obj/$(1)/%.o,$(filter $(1)/src/%.c,$(src))): | build/$(2)/obj/$(1))
-$(if $(filter $(1)/src/%.cc,$(src)),$(patsubst $(1)/src/%.cc,build/$(2)/obj/$(1)/%.o,$(filter $(1)/src/%.cc,$(src))): | build/$(2)/obj/$(1))
-$(if $(filter $(1)/src/%.s,$(src)),$(patsubst $(1)/src/%.s,build/$(2)/obj/$(1)/%.o,$(filter $(1)/src/%.s,$(src))): | build/$(2)/obj/$(1))
+# note: can end up with same .d for .c or .cc or .s
+# possible fix is to use .c.d, .s.d and .cc.d for dep file extension.
+$(1)_$(2)_d_c:=$$(patsubst %.c,target/$(2)/dep/$(1)/%.d,$$($(1)_src_c))
+$(1)_$(2)_d_cc:=$$(patsubst %.cc,target/$(2)/dep/$(1)/%.d,$$($(1)_src_cc))
+$(1)_$(2)_d_s:=$$(patsubst %.s,target/$(2)/dep/$(1)/%.d,$$($(1)_src_s))
 
-$(if $(filter $(1)/src/%.c,$(src)),$(patsubst $(1)/src/%.c,build/$(2)/dep/$(1)/%.d,$(filter $(1)/src/%.c,$(src))): | build/$(2)/dep/$(1))
-$(if $(filter $(1)/src/%.cc,$(src)),$(patsubst $(1)/src/%.cc,build/$(2)/dep/$(1)/%.d,$(filter $(1)/src/%.cc,$(src))): | build/$(2)/dep/$(1))
-$(if $(filter $(1)/src/%.s,$(src)),$(patsubst $(1)/src/%.s,build/$(2)/dep/$(1)/%.d,$(filter $(1)/src/%.s,$(src))): | build/$(2)/dep/$(1))
+target/$(2)/obj/$(1): | target/$(2)/obj ; mkdir $$@
 
-$(if $(filter $(1)/src/%.c,$(src)),$(patsubst $(1)/src/%.c,build/$(2)/dep/$(1)/%.d,$(filter $(1)/src/%.c,$(src))): CPPFLAGS:=$$(CPPFLAGS) $$($(1)_CPPFLAGS) $$($(2)_CPPFLAGS) $$($(1)_$(2)_CPPFLAGS) $(foreach m,$($(1)_DEPS),-I$(m)/src))
-$(if $(filter $(1)/src/%.cc,$(src)),$(patsubst $(1)/src/%.cc,build/$(2)/dep/$(1)/%.d,$(filter $(1)/src/%.cc,$(src))): CPPFLAGS:=$$(CPPFLAGS) $$($(1)_CPPFLAGS) $$($(2)_CPPFLAGS) $$($(1)_$(2)_CPPFLAGS) $(foreach m,$($(1)_DEPS),-I$(m)/src))
+target/$(2)/dep/$(1): | target/$(2)/dep ; mkdir $$@
 
-$(if $(filter $(1)/src/%.c,$(src)),$(patsubst $(1)/src/%.c,build/$(2)/obj/$(1)/%.o,$(filter $(1)/src/%.c,$(src))): CPPFLAGS:=$$(CPPFLAGS) $$($(1)_CPPFLAGS) $$($(2)_CPPFLAGS) $$($(1)_$(2)_CPPFLAGS) $(foreach m,$($(1)_DEPS),-I$(m)/src))
-$(if $(filter $(1)/src/%.c,$(src)),$(patsubst $(1)/src/%.c,build/$(2)/obj/$(1)/%.o,$(filter $(1)/src/%.c,$(src))): CFLAGS:=$$(CFLAGS) $$($(1)_CFLAGS) $$($(2)_CFLAGS) $$($(1)_$(2)_CFLAGS))
+$$(filter-out target/$(2)/dep/$(1),$$(patsubst %/,%,$$(sort $$(dir $$($(1)_$(2)_d_c))))): | target/$(2)/dep/$(1)
+	mkdir -p $$@
+$$(foreach f,$$($(1)_$(2)_d_c),$$(eval $$(f): | $$(patsubst %/,%,$$(dir $$(f)))))
+$$($(1)_$(2)_d_c): CPPFLAGS += $$($(1)_CPPFLAGS) $$($(2)_CPPFLAGS) $$($(1)_$(2)_CPPFLAGS) -Isrc
+$$($(1)_$(2)_d_c): target/$(2)/dep/$(1)/%.d: src/$(1)/%.c
+	$$(COMPILE.c) -MM -MT $$(patsubst src/$(1)/%.c,target/$(2)/obj/$(1)/%.o,$$<) -o $$@  $$<
+dep+=$$($(1)_$(2)_d_c)
+clean+=$$($(1)_$(2)_d_c)
 
-$(if $(filter $(1)/src/%.cc,$(src)),$(patsubst $(1)/src/%.cc,build/$(2)/obj/$(1)/%.o,$(filter $(1)/src/%.cc,$(src))): CPPFLAGS:=$$(CPPFLAGS) $$($(1)_CPPFLAGS) $$($(2)_CPPFLAGS) $$($(1)_$(2)_CPPFLAGS)  $(foreach m,$($(1)_DEPS),-I$(m)/src))
-$(if $(filter $(1)/src/%.cc,$(src)),$(patsubst $(1)/src/%.cc,build/$(2)/obj/$(1)/%.o,$(filter $(1)/src/%.cc,$(src))): CXXFLAGS:=$$(CXXFLAGS) $$($(1)_CXXFLAGS) $$($(2)_CXXFLAGS) $$($(1)_$(2)_CXXFLAGS))
+$$(filter-out target/$(2)/obj/$(1),$$(patsubst %/,%,$$(sort $$(dir $$($(1)_$(2)_o_c))))): | target/$(2)/obj/$(1)
+	mkdir -p $$@
+$$(foreach f,$$($(1)_$(2)_o_c),$$(eval $$(f): | $$(patsubst %/,%,$$(dir $$(f)))))
+$$($(1)_$(2)_o_c): CPPFLAGS += $$($(1)_CPPFLAGS) $$($(2)_CPPFLAGS) $$($(1)_$(2)_CPPFLAGS) -Isrc
+$$($(1)_$(2)_o_c): CFLAGS+=$$($(1)_CFLAGS) $$($(2)_CFLAGS) $$($(1)_$(2)_CFLAGS))
+$$($(1)_$(2)_o_c): target/$(2)/obj/$(1)/%.o: src/$(1)/%.c
+	$$(COMPILE.c) -o $$@  $$<
+clean+=$$($(1)_$(2)_o_c)
 
-$(if $(filter $(1)/src/%.c,$(src)),$(patsubst $(1)/src/%.c,build/$(2)/obj/$(1)/%.o,$(filter $(1)/src/%.c,$(src))): build/$(2)/obj/$(1)/%.o: $(1)/src/%.c ;$$(COMPILE.c) -o $$@  $$<)
-$(if $(filter $(1)/src/%.cc,$(src)),$(patsubst $(1)/src/%.cc,build/$(2)/obj/$(1)/%.o,$(filter $(1)/src/%.cc,$(src))): build/$(2)/obj/$(1)/%.o: $(1)/src/%.cc ;$$(COMPILE.cc) -o $$@  $$<)
-$(if $(filter $(1)/src/%.s,$(src)),$(patsubst $(1)/src/%.s,build/$(2)/obj/$(1)/%.o,$(filter $(1)/src/%.s,$(src))): build/$(2)/obj/$(1)/%.o: $(1)/src/%.s ;$$(COMPILE.s) -o $$@  $$<)
 
-$(if $(filter $(1)/src/%.c,$(src)),$(patsubst $(1)/src/%.c,build/$(2)/dep/$(1)/%.d,$(filter $(1)/src/%.c,$(src))): build/$(2)/dep/$(1)/%.d: $(1)/src/%.c ;$$(COMPILE.c) -MM -MT $$(patsubst $(1)/src/%.c,build/$(2)/obj/$(1)/%.o,$$<) -o $$@ $$<)
-$(if $(filter $(1)/src/%.cc,$(src)),$(patsubst $(1)/src/%.cc,build/$(2)/dep/$(1)/%.d,$(filter $(1)/src/%.cc,$(src))): build/$(2)/dep/$(1)/%.d: $(1)/src/%.cc ;$$(COMPILE.cc) -MM -MT $$(patsubst $(1)/src/%.cc,build/$(2)/obj/$(1)/%.o,$$<) -o $$@  $$<)
-$(if $(filter $(1)/src/%.s,$(src)),$(patsubst $(1)/src/%.s,build/$(2)/dep/$(1)/%.d,$(filter $(1)/src/%.s,$(src))): build/$(2)/dep/$(1)/%.d: $(1)/src/%.s ;$$(COMPILE.s) -MM -MT $$(patsubst $(1)/src/%.s,build/$(2)/obj/$(1)/%.o,$$<) -o $$@  $$<)
+$$(filter-out target/$(2)/dep/$(1),$$(patsubst %/,%,$$(sort $$(dir $$($(1)_$(2)_d_cc))))): | target/$(2)/dep/$(1)
+	mkdir -p $$@
+$$(foreach f,$$($(1)_$(2)_d_cc),$$(eval $$(f): | $$(patsubst %/,%,$$(dir $$(f)))))
+$$($(1)_$(2)_d_cc): CPPFLAGS += $$($(1)_CPPFLAGS) $$($(2)_CPPFLAGS) $$($(1)_$(2)_CPPFLAGS) -Isrc
+$$($(1)_$(2)_d_cc): target/$(2)/dep/$(1)/%.d: src/$(1)/%.cc
+	$$(COMPILE.cc) -MM -MT $$(patsubst src/$(1)/%.cc,target/$(2)/obj/$(1)/%.o,$$<) -o $$@  $$<
+dep+=$$($(1)_$(2)_d_cc)
+clean+=$$($(1)_$(2)_d_cc)
 
-$(if $(filter $(1)/src/%.c,$(src)),dep += $(patsubst $(1)/src/%.c,build/$(2)/dep/$(1)/%.d,$(filter $(1)/src/%.c,$(src))))
-$(if $(filter $(1)/src/%.cc,$(src)),dep += $(patsubst $(1)/src/%.cc,build/$(2)/dep/$(1)/%.d,$(filter $(1)/src/%.cc,$(src))))
-$(if $(filter $(1)/src/%.s,$(src)),dep +=$(patsubst $(1)/src/%.s,build/$(2)/dep/$(1)/%.d,$(filter $(1)/src/%.s,$(src))))
+$$(filter-out target/$(2)/obj/$(1),$$(patsubst %/,%,$$(sort $$(dir $$($(1)_$(2)_o_cc))))): | target/$(2)/obj/$(1)
+	mkdir -p $$@
+$$(foreach f,$$($(1)_$(2)_o_cc),$$(eval $$(f): | $$(patsubst %/,%,$$(dir $$(f)))))
+$$($(1)_$(2)_o_cc): CPPFLAGS += $$($(1)_CPPFLAGS) $$($(2)_CPPFLAGS) $$($(1)_$(2)_CPPFLAGS) -Isrc
+$$($(1)_$(2)_o_cc): CXXFLAGS+=$$($(1)_CXXFLAGS) $$($(2)_CXXFLAGS) $$($(1)_$(2)_CXXFLAGS)
+$$($(1)_$(2)_o_cc): target/$(2)/obj/$(1)/%.o: src/$(1)/%.cc
+	$$(COMPILE.cc) -o $$@  $$<
+clean+=$$($(1)_$(2)_o_cc)
 
-$(if $(filter $(1)/src/liba.c,$(src)),build/$(2)/lib$(1).a: | build/$(2))
-$(if $(filter $(1)/src/liba.c,$(src)),build/$(2)/lib$(1).a: $(patsubst $(1)/src/%.c,build/$(2)/obj/$(1)/%.o,$(filter $(1)/src/%.c,$(src))); $$(AR) rcs $$@ $$^)
-$(if $(filter $(1)/src/liba.c,$(src)),build/$(2)/$(1): $(foreach m,$($(1)_DEP),$$($(m)_targ)))
-$(if $(filter $(1)/src/liba.c,$(src)),build: build/$(2)/lib$(1).a)
-$(if $(filter $(1)/src/liba.c,$(src)),clean += build/$(2)/lib$(1).a)
-$(if $(filter $(1)/src/liba.c,$(src)),$(1)_targ := build/$(2)/lib$(1).a)
+$$(filter-out target/$(2)/dep/$(1),$$(patsubst %/,%,$$(sort $$(dir $$($(1)_$(2)_d_s))))): | target/$(2)/obj/$(1)
+	mkdir -p $$@
+$$(foreach f,$$($(1)_$(2)_d_s),$$(eval $$(f): | $$(patsubst %/,%,$$(dir $$(f)))))
+dep+=$$($(1)_$(2)_d_s)
+clean+=$$($(1)_$(2)_d_s)
 
-$(if $(filter $(1)/src/liba.cc,$(src)),build/$(2)/lib$(1).a: | build/$(2))
-$(if $(filter $(1)/src/liba.cc,$(src)),build/$(2)/lib$(1).a: $(patsubst $(1)/src/%.cc,build/$(2)/obj/$(1)/%.o,$(filter $(1)/src/%.cc,$(src))); $$(AR) rcs $$@ $$^)
-$(if $(filter $(1)/src/liba.cc,$(src)),build/$(2)/$(1): $(foreach m,$($(1)_DEP),$$($(m)_targ)))
-$(if $(filter $(1)/src/liba.cc,$(src)),build: build/$(2)/lib$(1).a)
-$(if $(filter $(1)/src/liba.cc,$(src)),clean += build/$(2)/lib$(1).a)
-$(if $(filter $(1)/src/liba.cc,$(src)),$(1)_targ := build/$(2)/lib$(1).a)
-
-$(if $(filter $(1)/src/main.c,$(src)),build/$(2)/$(1): | build/$(2))
-$(if $(filter $(1)/src/main.c,$(src)),build/$(2)/$(1): LDFLAGS += $($(2)_LDFLAGS))
-$(if $(filter $(1)/src/main.c,$(src)),build/$(2)/$(1): LDLIBS += $($(2)_LDLIBS))
-$(if $(filter $(1)/src/main.c,$(src)),build/$(2)/$(1): $(patsubst $(1)/src/%.c,build/$(2)/obj/$(1)/%.o,$(filter $(1)/src/%.c,$(src))); $$(LINK.o) $$^ $$(LOADLIBES) $$(LDLIBS) -o $$@)
-$(if $(filter $(1)/src/main.c,$(src)),build/$(2)/$(1): $(foreach m,$($(1)_DEP),$$($(m)_targ)))
-$(if $(filter $(1)/src/main.c,$(src)),build: build/$(2)/$(1))
-$(if $(filter $(1)/src/main.c,$(src)),clean += build/$(2)/$(1))
-$(if $(filter $(1)/src/main.c,$(src)),$(1)_targ := build/$(2)/$(1))
-
-$(if $(filter $(1)/src/main.cc,$(src)),build/$(2)/$(1): | build/$(2))
-$(if $(filter $(1)/src/main.cc,$(src)),build/$(2)/$(1): LDFLAGS += $($(2)_LDFLAGS))
-$(if $(filter $(1)/src/main.cc,$(src)),build/$(2)/$(1): LDLIBS += $($(2)_LDLIBS))
-$(if $(filter $(1)/src/main.cc,$(src)),build/$(2)/$(1): LINK = $(CXX))
-$(if $(filter $(1)/src/main.cc,$(src)),build/$(2)/$(1): $(patsubst $(1)/src/%.cc,build/$(2)/obj/$(1)/%.o,$(filter $(1)/src/%.cc,$(src))); $$(LINK.o) $$^ $$(LOADLIBES) $$(LDLIBS) -o $$@)
-$(if $(filter $(1)/src/main.cc,$(src)),build/$(2)/$(1): $(foreach m,$($(1)_DEP),$$($(m)_targ)))
-$(if $(filter $(1)/src/main.cc,$(src)),build: build/$(2)/$(1))
-$(if $(filter $(1)/src/main.cc,$(src)),clean += build/$(2)/$(1))
-$(if $(filter $(1)/src/main.cc,$(src)),$(1)_targ := build/$(2)/$(1))
+$$(filter-out target/$(2)/obj/$(1),$$(patsubst %/,%,$$(sort $$(dir $$($(1)_$(2)_o_s))))): | target/$(2)/obj/$(1)
+	mkdir -p $$@
+$$(foreach f,$$($(1)_$(2)_o_s),$$(eval $$(f): | $$(patsubst %/,%,$$(dir $$(f)))))
+$$($(1)_$(2)_o_s): target/$(2)/obj/$(1)/%.o: src/$(1)/%.s
+	$$(COMPILE.s) -o $$@  $$<
+clean+=$$($(1)_$(2)_o_s)
 
 endef
 
+# $1=modl
+define mk_modtype
+$(1)_typ1:=$(patsubst src/$(1)/%,%,$(wildcard src/$(1)/main.c src/$(1)/main.cc src/$(1)/main.s src/$(1)/liba.c src/$(1)/liba.cc src/$(1)/liba.s))
+endef
 
-$(foreach c,$(configs),build/$(c) build/$(c)/obj):
+# $1 = modl, $2=config
+define mk_main.c
+$(1)_$(2)_targ:=target/$(2)/$(1)
+$$($(1)_$(2)_targ): $$($(1)_$(2)_o_c); $$(LINK.o) $$^ $$(LOADLIBES) $$(LDLIBS) -o $$@
+$$($(1)_$(2)_targ): $(foreach m,$(modls),$(filter %.a %.so,$($(m)_$(2)_targ)))
+$$($(1)_$(2)_targ): | target/$(2)/
+build: $$($(1)_$(2)_targ)
+clean+=$$($(1)_$(2)_targ)
+endef
+
+define mk_main.cc
+$(1)_$(2)_targ:=target/$(2)/$(1)
+$$($(1)_$(2)_targ): LINK=$$(CXX)
+$$($(1)_$(2)_targ): $$($(1)_$(2)_o_cc); $$(LINK.o) $$^ $$(LOADLIBES) $$(LDLIBS) -o $$@
+$$($(1)_$(2)_targ): $(foreach m,$(modls),$(filter %.a %.so,$($(m)_$(2)_targ)))
+$$($(1)_$(2)_targ): | target/$(2)/
+build: $$($(1)_$(2)_targ)
+clean+=$$($(1)_$(2)_targ)
+endef
+
+define mk_liba.c
+$(1)_$(2)_targ:=target/$(2)/lib$(1).a
+$$($(1)_$(2)_targ): $$($(1)_$(2)_o_c); $$(AR) rcs $$@ $$^
+$$($(1)_$(2)_targ): $(foreach m,$(modls),$(filter %.a %.so,$($(m)_$(2)_targ)))
+$$($(1)_$(2)_targ): | target/$(2)/
+build: $$($(1)_$(2)_targ)
+clean+=$$($(1)_$(2)_targ)
+endef
+
+define mk_liba.cc
+$(1)_$(2)_targ:=target/$(2)/lib$(1).a
+$$($(1)_$(2)_targ): $$($(1)_$(2)_o_cc); $$(AR) rcs $$@ $$^
+$$($(1)_$(2)_targ): $(foreach m,$(modls),$(filter %.a %.so,$($(m)_$(2)_targ)))
+$$($(1)_$(2)_targ): | target/$(2)/
+build: $$($(1)_$(2)_targ)
+clean+=$$($(1)_$(2)_targ)
+endef
+
+$(foreach c,$(configs),target/$(c)):
 	mkdir -p $@
 
+$(foreach c,$(configs),$(eval target/$(c)/obj: | target/$(c); mkdir $$@))
+$(foreach c,$(configs),$(eval target/$(c)/dep: | target/$(c); mkdir $$@))
+
+
+# $(foreach m,$(modls),$(foreach c,$(configs),$(eval $(call mk_modl,$(m),$(c)))))
+# $(eval $(call mk_modtype,nel,debug))
+# $(eval $(call mk_modl,nel,debug))
+# $(eval $(call mk_$(nel_typ1),nel,debug))
+$(foreach m,$(modls),$(foreach c,$(configs),$(eval $(call mk_modtype,$(m),$(c)))))
 $(foreach m,$(modls),$(foreach c,$(configs),$(eval $(call mk_modl,$(m),$(c)))))
+$(foreach m,$(modls),$(foreach c,$(configs),$(eval $(call mk_$($(m)_typ1),$(m),$(c)))))
 
-examples:=
-examples+=$(patsubst examples/%.c,%,$(wildcard examples/*.c))
-examples+=$(patsubst examples/%.cc,%,$(wildcard examples/*.cc))
-
-examples_src:=$(wildcard examples/*.c examples/*.cc)
-
-examples_deps:=nel
 
 # $1 = example name $2 = config
 define mk_example
-clean += $(patsubst examples/$(1).c,build/$(2)/obj/examples/$(1).o,$(filter examples/$(1).c,$(examples_src)))
-clean += $(patsubst examples/$(1).cc,build/$(2)/obj/examples/$(1).o,$(filter examples/$(1).cc,$(examples_src)))
+# TODO: this is eval'd every config, when want it evaled every module.
+# but deps is being overhauled anyway, (very hard to impl in makefile)
+$(1)_exsrc_c:=$(shell find examples/ -name '$(1).c')
+$(1)_exsrc_cc:=$(shell find examples/ -name '$(1).cc')
+$(1)_exsrc_s:=$(shell find examples/ -name '$(1).s')
 
-$(if $(filter examples/$(1).c,$(examples_src)),$(patsubst examples/$(1).c,build/$(2)/obj/examples/$(1).o,$(filter examples/$(1).c,$(examples_src))): CPPFLAGS += $($(2)_CPPFLAGS) $(foreach m,$(modls),-I$(m)/src))
-$(if $(filter examples/$(1).cc,$(examples_src)),$(patsubst examples/$(1).cc,build/$(2)/obj/examples/$(1).o,$(filter examples/$(1).cc,$(examples_src))): CPPFLAGS +=  $($(2)_CPPFLAGS)  $(foreach m,$(modls),-I$(m)/src))
-$(if $(filter examples/$(1).c,$(examples_src)),$(patsubst examples/$(1).c,build/$(2)/obj/examples/$(1).o,$(filter examples/$(1).c,$(examples_src))): CFLAGS += $($(2)_CFLAGS))
-$(if $(filter examples/$(1).cc,$(examples_src)),$(patsubst examples/$(1).cc,build/$(2)/obj/examples/$(1).o,$(filter examples/$(1).cc,$(examples_src))): CFLAGS +=  $($(2)_CFLAGS))
-$(if $(filter examples/$(1).c,$(examples_src)),$(patsubst examples/$(1).c,build/$(2)/obj/examples/$(1).o,$(filter examples/$(1).c,$(examples_src))): CXXFLAGS += $($(2)_CXXFLAGS))
-$(if $(filter examples/$(1).cc,$(examples_src)),$(patsubst examples/$(1).cc,build/$(2)/obj/examples/$(1).o,$(filter examples/$(1).cc,$(examples_src))): CXXFLAGS +=  $($(2)_CXXFLAGS))
+$(1)_$(2)_exo_c:=$$(patsubst %.c,target/$(2)/obj/%.o,$$($(1)_exsrc_c))
+$(1)_$(2)_exo_cc:=$$(patsubst %.cc,target/$(2)/obj/%.o,$$($(1)_exsrc_cc))
+$(1)_$(2)_exo_s:=$$(patsubst %.s,target/$(2)/obj/%.o,$$($(1)_exsrc_s))
 
-$(if $(filter examples/$(1).c,$(examples_src)),$(patsubst examples/$(1).c,build/$(2)/dep/examples/$(1).d,$(filter examples/$(1).c,$(examples_src))): CPPFLAGS +=  $($(2)_CPPFLAGS) $(foreach m,$(modls),-I$(m)/src))
-$(if $(filter examples/$(1).cc,$(examples_src)),$(patsubst examples/$(1).cc,build/$(2)/dep/examples/$(1).d,$(filter examples/$(1).cc,$(examples_src))): CPPFLAGS +=  $($(2)_CPPFLAGS) $(foreach m,$(modls),-I$(m)/src))
+$(1)_$(2)_exd_c:=$$(patsubst %.c,target/$(2)/dep/%.d,$$($(1)_exsrc_c))
+$(1)_$(2)_exd_cc:=$$(patsubst %.cc,target/$(2)/dep/%.d,$$($(1)_exsrc_cc))
+$(1)_$(2)_exd_s:=$$(patsubst %.s,target/$(2)/dep/%.d,$$($(1)_exsrc_s))
 
-$(if $(filter examples/$(1).c,$(examples_src)),$(patsubst examples/$(1).c,build/$(2)/dep/examples/$(1).d,$(filter examples/$(1).c,$(examples_src))): build/$(2)/dep/examples/%.d: examples/%.c | build/$(2)/dep/examples; $$(COMPILE.c)  -MM -MT $$(patsubst examples/$(1).c,build/$(2)/obj/examples/$(1).o,$$<) -o $$@ $$<)
-$(if $(filter examples/$(1).c,$(examples_src)), clean += $(patsubst examples/$(1).c,build/$(2)/dep/examples/$(1).d,$(filter examples/$(1).c,$(examples_src))))
-$(if $(filter examples/$(1).cc,$(examples_src)),$(patsubst examples/$(1).cc,build/$(2)/dep/examples/$(1).d,$(filter examples/$(1).cc,$(examples_src))): build/$(2)/dep/examples/%.d: examples/%.cc | build/$(2)/dep/examples; $$(COMPILE.cc) -MM -MT $$(patsubst examples/$(1).cc,build/$(2)/obj/examples/$(1).o,$$<) -o $$@ $$<)
-$(if $(filter examples/$(1).cc,$(examples_src)), clean += $(patsubst examples/$(1).cc,build/$(2)/dep/examples/$(1).d,$(filter examples/$(1).cc,$(examples_src))))
 
-$(if $(filter $(1)/src/%.c,$(src)),dep += $(patsubst $(1)/src/%.c,build/$(2)/dep/$(1)/%.d,$(filter $(1)/src/%.c,$(src))))
-$(if $(filter $(1)/src/%.cc,$(src)),dep += $(patsubst $(1)/src/%.cc,build/$(2)/dep/$(1)/%.d,$(filter $(1)/src/%.cc,$(src))))
-$(if $(filter $(1)/src/%.s,$(src)),dep +=$(patsubst $(1)/src/%.s,build/$(2)/dep/$(1)/%.d,$(filter $(1)/src/%.s,$(src))))
+$$($(1)_$(2)_exd_c): | target/$(2)/dep/examples
+$$($(1)_$(2)_exd_c): CPPFLAGS += $$($(1)_CPPFLAGS) $$($(2)_CPPFLAGS) $$($(1)_$(2)_CPPFLAGS) -Isrc
+$$($(1)_$(2)_exd_c): target/$(2)/dep/examples/%.d: examples/%.c
+	$$(COMPILE.c)  -MM -MP -MT $$(patsubst %.c,target/$(2)/obj/%.o,$$<) -o $$@ $$<
+clean += $$($(1)_$(2)_exd_c)
+dep += $$($(1)_$(2)_exd_c)
 
-$(if $(filter examples/$(1).c,$(examples_src)),dep += build/$(2)/dep/examples/$(1).d)
-$(if $(filter examples/$(1).cc,$(examples_src)),dep += build/$(2)/dep/examples/$(1).d)
+$$($(1)_$(2)_exo_c): | target/$(2)/obj/examples
+$$($(1)_$(2)_exo_c): CPPFLAGS += $$($(1)_CPPFLAGS) $$($(2)_CPPFLAGS) $$($(1)_$(2)_CPPFLAGS) -Isrc
+$$($(1)_$(2)_exo_c): CFLAGS += $$($(1)_CFLAGS) $$($(2)_CFLAGS) $$($(1)_$(2)_CFLAGS)
+$$($(1)_$(2)_exo_c): target/$(2)/obj/examples/%.o: examples/%.c
+	$$(COMPILE.c)  -o $$@ $$<
+clean += $$($(1)_$(2)_exo_c)
 
-$(if $(filter examples/$(1).c,$(examples_src)),$(patsubst examples/$(1).c,build/$(2)/obj/examples/$(1).o,$(filter examples/$(1).c,$(examples_src))): build/$(2)/obj/examples/%.o: examples/%.c | build/$(2)/obj/examples; $$(COMPILE.c) -o $$@ $$<)
-$(if $(filter examples/$(1).cc,$(examples_src)),$(patsubst examples/$(1).cc,build/$(2)/obj/examples/$(1).o,$(filter examples/$(1).cc,$(examples_src))): build/$(2)/obj/examples/%.o: examples/%.cc | build/$(2)/obj/examples; $$(COMPILE.cc) -o $$@ $$<)
 
-$(if $(filter examples/$(1).c,$(examples_src)), build/$(2)/examples/$(1): LDFLAGS += $($(2)_LDFLAGS))
-$(if $(filter examples/$(1).c,$(examples_src)), build/$(2)/examples/$(1): LDLIBS += $($(2)_LDLIBS))
-$(if $(filter examples/$(1).c,$(examples_src)), build/$(2)/examples/$(1): $(patsubst examples/$(1).c,build/$(2)/obj/examples/$(1).o,$(filter examples/$(1).c,$(examples_src))) | build/$(2)/examples; $$(LINK.o) $$^ $$(LOADLIBES) $$(LDLIBS) -o $$@)
-$(if $(filter examples/$(1).c,$(examples_src)),build/$(2)/examples/$(1): $(foreach m,$(modls),$(filter %.a %.so,$($(m)_targ))))
-$(if $(filter examples/$(1).c,$(examples_src)),examples: build/$(2)/examples/$(1))
-$(if $(filter examples/$(1).c,$(examples_src)),clean += build/$(2)/examples/$(1))
+$$($(1)_$(2)_exd_cc): | target/$(2)/dep/examples
+$$($(1)_$(2)_exd_cc): CPPFLAGS += $$($(1)_CPPFLAGS) $$($(2)_CPPFLAGS) $$($(1)_$(2)_CPPFLAGS) -Isrc
+$$($(1)_$(2)_exd_cc): target/$(2)/dep/examples/%.d: examples/%.cc
+	$$(COMPILE.cc)  -MM -MP -MT $$(patsubst %.cc,target/$(2)/obj/%.o,$$<) -o $$@ $$<
 
-$(if $(filter examples/$(1).cc,$(examples_src)), build/$(2)/examples/$(1): LDFLAGS += $($(2)_LDFLAGS))
-$(if $(filter examples/$(1).cc,$(examples_src)), build/$(2)/examples/$(1): LDLIBS += $($(2)_LDLIBS))
-$(if $(filter examples/$(1).cc,$(examples_src)), build/$(2)/examples/$(1): LINK = $(CXX))
-$(if $(filter examples/$(1).cc,$(examples_src)), build/$(2)/examples/$(1): $(patsubst examples/$(1).cc,build/$(2)/obj/examples/$(1).o,$(filter examples/$(1).cc,$(examples_src))) | build/$(2)/examples; $$(LINK.o) $$^ $$(LOADLIBES) $$(LDLIBS) -o $$@)
-$(if $(filter examples/$(1).cc,$(examples_src)),build/$(2)/examples/$(1):  $(foreach m,$(modls),$(filter %.a %.so,$($(m)_targ))))
-$(if $(filter examples/$(1).cc,$(examples_src)),examples: build/$(2)/examples/$(1))
-$(if $(filter examples/$(1).cc,$(examples_src)),clean += build/$(2)/examples/$(1))
+clean += $$($(1)_$(2)_exd_cc)
+dep += $$($(1)_$(2)_exd_cc)
 
-$(if $(filter examples/$(1).c,$(examples_src)),build/$(2)/examples/$(1).s: build/$(2)/examples/$(1); $(OBJDUMP) -Sr $$< > $$@)
-$(if $(filter examples/$(1).c,$(examples_src)),examples: build/$(2)/examples/$(1).s)
-$(if $(filter examples/$(1).c,$(examples_src)),clean += build/$(2)/examples/$(1).s)
+$$($(1)_$(2)_exo_cc): | target/$(2)/obj/examples
+$$($(1)_$(2)_exo_cc): CPPFLAGS += $$($(1)_CPPFLAGS) $$($(2)_CPPFLAGS) $$($(1)_$(2)_CPPFLAGS) -Isrc
+$$($(1)_$(2)_exo_cc): CXXFLAGS += $$($(1)_CXXFLAGS) $$($(2)_CXXFLAGS) $$($(1)_$(2)_CXXFLAGS)
+$$($(1)_$(2)_exo_cc): target/$(2)/obj/examples/%.o: examples/%.cc
+	$$(COMPILE.cc)  -o $$@ $$<
+clean += $$($(1)_$(2)_exo_cc)#$$($(1)_$(2)_testo_cc): | $$(dir $$($(1)_$(2)_testo_cc))
 
-$(if $(filter examples/$(1).cc,$(examples_src)),build/$(2)/examples/$(1).s: build/$(2)/examples/$(1); $(OBJDUMP) -Sr $$< > $$@)
-$(if $(filter examples/$(1).cc,$(examples_src)),examples: build/$(2)/examples/$(1).s)
-$(if $(filter examples/$(1).cc,$(examples_src)),clean += build/$(2)/examples/$(1).s)
+target/$(2)/examples/$(1): | target/$(2)/examples
+target/$(2)/examples/$(1): $(foreach m,$(modls),$(filter %.a %.so,$($(m)_$(2)_targ)))
+target/$(2)/examples/$(1): LDFLAGS += $$($(1)_LDFLAGS) $$($(2)_LDFLAGS) $$($(1)_$(2)_LDFLAGS)
+target/$(2)/examples/$(1): LDLIBS += $$($(1)_LDLIBS) $$($(2)_LDLIBS) $$($(1)_$(2)_LDLIBS)
+#target/$(2)/examples/$(1): $$($(1)_$(2)_exo_c)
+#	$$(LINK.o) $$^ $$(LOADLIBES) $$(LDLIBS) -o $$@
+target/$(2)/examples/$(1): LINK = $(CXX)
+target/$(2)/examples/$(1): $$($(1)_$(2)_exo_cc)
+	$$(LINK.o) $$^ $$(LOADLIBES) $$(LDLIBS) -o $$@
+examples: target/$(2)/examples/$(1)
+clean += target/$(2)/examples/$(1)
+
+target/$(2)/examples/$(1).s: | target/$(2)/examples
+target/$(2)/examples/$(1).s: target/$(2)/examples/$(1)
+	$(OBJDUMP) -Sr $$< > $$@
+examples: target/$(2)/examples/$(1).s
+clean += target/$(2)/examples/$(1).s
+
+
+clean += $$($(1)_$(2)_exo_s)
+clean += $$($(1)_$(2)_exd_s)
+dep += $$($(1)_$(2)_exd_s)
 
 endef
 
+$(foreach c,$(configs),$(eval target/$(c)/obj/examples: | target/$(c)/obj; mkdir $$@))
+$(foreach c,$(configs),$(eval target/$(c)/dep/examples: | target/$(c)/dep; mkdir $$@))
+$(foreach c,$(configs),$(eval target/$(c)/examples: | target/$(c); mkdir $$@))
 
-$(foreach c,$(configs),build/$(c)/obj/examples build/$(c)/dep/examples build/$(c)/examples):
-	mkdir -p $@
+exs:=
+exs+=$(patsubst examples/%.c,%,$(wildcard examples/*.c))
+exs+=$(patsubst examples/%.cc,%,$(wildcard examples/*.cc))
+# examples:=largestruct1_array
+$(foreach e,$(exs),$(foreach c,$(configs),$(eval $(call mk_example,$(e),$(c)))))
 
-$(foreach e,$(examples),$(foreach c,$(configs),$(eval $(call mk_example,$(e),$(c)))))
 
 define mk_modl_tests
-clean+=$(patsubst $(1)/src/test_%.c,build/$(2)/obj/tests/$(1)/test_%.o,$(filter $(1)/src/test_%.c,$(testsrc)))
-clean+=$(patsubst $(1)/src/test_%.cc,build/$(2)/obj/tests/$(1)/test_%.o,$(filter $(1)/src/test_%.cc,$(testsrc)))
-clean+=$(patsubst $(1)/src/test_%.s,build/$(2)/obj/tests/$(1)/test_%.o,$(filter $(1)/src/test_%.s,$(testsrc)))
+# TODO: this is eval'd every config, when want it evaled every module.
+# but deps is being overhauled anyway, (very hard to impl in makefile)
+$(1)_testsrc_c:=$(patsubst src/$(1)/%,%,$(shell find src/$(1) -name 'test_*.c'))
+$(1)_testsrc_cc:=$(patsubst src/$(1)/%,%,$(shell find src/$(1) -name 'test_*.cc'))
+$(1)_testsrc_s:=$(patsubst src/$(1)/%,%,$(shell find src/$(1) -name 'test_*.s'))
 
-build/$(2)/obj/tests/$(1): ; mkdir -p $$@
-build/$(2)/dep/tests/$(1): ; mkdir -p $$@
+# note: can end up with same .o for .c or .cc or .s
+# possible fix is to use .c.o, .s.o and .cc.o for obj file extension.
+$(1)_$(2)_testo_c:=$$(patsubst %.c,target/$(2)/obj/tests/$(1)/%.o,$$($(1)_testsrc_c))
+$(1)_$(2)_testo_cc:=$$(patsubst %.cc,target/$(2)/obj/tests/$(1)/%.o,$$($(1)_testsrc_cc))
+$(1)_$(2)_testo_s:=$$(patsubst %.s,target/$(2)/obj/tests/$(1)/%.o,$$($(1)_testsrc_s))
 
-$(if $(filter $(1)/src/test_%.c,$(testsrc)),$(patsubst $(1)/src/test_%.c,build/$(2)/obj/tests/$(1)/test_%.o,$(filter $(1)/src/test_%.c,$(testsrc))): | build/$(2)/obj/tests/$(1))
-$(if $(filter $(1)/src/test_%.cc,$(testsrc)),$(patsubst $(1)/src/test_%.cc,build/$(2)/obj/tests/$(1)/test_%.o,$(filter $(1)/src/test_%.cc,$(testsrc))): | build/$(2)/obj/tests/$(1))
-$(if $(filter $(1)/src/test_%.s,$(testsrc)),$(patsubst $(1)/src/test_%.s,build/$(2)/obj/tests/$(1)/test_%.o,$(filter $(1)/src/test_%.s,$(testsrc))): | build/$(2)/obj/tests/$(1))
+# note: can end up with same .d for .c or .cc or .s
+# possible fix is to use .c.d, .s.d and .cc.d for dep file extension.
+$(1)_$(2)_testd_c:=$$(patsubst %.c,target/$(2)/dep/tests/$(1)/%.d,$$($(1)_testsrc_c))
+$(1)_$(2)_testd_cc:=$$(patsubst %.cc,target/$(2)/dep/tests/$(1)/%.d,$$($(1)_testsrc_cc))
+$(1)_$(2)_testd_s:=$$(patsubst %.s,target/$(2)/dep/tests/$(1)/%.d,$$($(1)_testsrc_s))
 
-$(if $(filter $(1)/src/test_%.c,$(testsrc)),$(patsubst $(1)/src/test_%.c,build/$(2)/dep/tests/$(1)/test_%.d,$(filter $(1)/src/test_%.c,$(testsrc))): | build/$(2)/dep/tests/$(1))
-$(if $(filter $(1)/src/test_%.cc,$(testsrc)),$(patsubst $(1)/src/test_%.cc,build/$(2)/dep/tests/$(1)/test_%.d,$(filter $(1)/src/test_%.cc,$(testsrc))): | build/$(2)/dep/tests/$(1))
-$(if $(filter $(1)/src/test_%.s,$(testsrc)),$(patsubst $(1)/src/test_%.s,build/$(2)/dep/tests/$(1)/test_%.d,$(filter $(1)/src/test_%.s,$(testsrc))): | build/$(2)/dep/tests/$(1))
+target/$(2)/obj/tests/$(1): | target/$(2)/obj/tests ; mkdir $$@
 
-$(if $(filter $(1)/src/test_%.c,$(testsrc)),$(patsubst $(1)/src/test_%.c,build/$(2)/dep/tests/$(1)/test_%.d,$(filter $(1)/src/test_%.c,$(testsrc))): CPPFLAGS += $$($(1)_CPPFLAGS) $$($(2)_CPPFLAGS) $$($(1)_$(2)_CPPFLAGS)  -I$(1)/src $(foreach m,$($(1)_DEPS),-I$(m)/src))
-$(if $(filter $(1)/src/test_%.cc,$(testsrc)),$(patsubst $(1)/src/test_%.cc,build/$(2)/dep/tests/$(1)/test_%.d,$(filter $(1)/src/test_%.cc,$(testsrc))): CPPFLAGS += $$($(1)_CPPFLAGS) $$($(2)_CPPFLAGS) $$($(1)_$(2)_CPPFLAGS) $(shell pkg-config --cflags catch2) -I$(1)/src $(foreach m,$($(1)_DEPS),-I$(m)/src))
+target/$(2)/dep/tests/$(1): | target/$(2)/dep/tests ; mkdir $$@
 
-$(if $(filter $(1)/src/test_%.c,$(testsrc)),$(patsubst $(1)/src/test_%.c,build/$(2)/obj/tests/$(1)/test_%.o,$(filter $(1)/src/test_%.c,$(testsrc))): CPPFLAGS+=$$($(1)_CPPFLAGS) $$($(2)_CPPFLAGS) $$($(1)_$(2)_CPPFLAGS) -I$(1)/src $(foreach m,$($(1)_DEPS),-I$(m)/src))
-$(if $(filter $(1)/src/test_%.c,$(testsrc)),$(patsubst $(1)/src/test_%.c,build/$(2)/obj/tests/$(1)/test_%.o,$(filter $(1)/src/test_%.c,$(testsrc))): CFLAGS+=$$($(1)_CFLAGS) $$($(2)_CFLAGS) $$($(1)_$(2)_CFLAGS))
+$$(filter-out target/$(2)/dep/tests/$(1),$$(patsubst %/,%,$$(sort $$(dir $$($(1)_$(2)_testd_c))))): | target/$(2)/dep/tests/$(1)
+	mkdir $$@
+$$(foreach f,$$($(1)_$(2)_testd_c),$$(eval $$(f): | $$(patsubst %/,%,$$(dir $$(f)))))
+$$($(1)_$(2)_testd_c): CPPFLAGS += $$($(1)_CPPFLAGS) $$($(2)_CPPFLAGS) $$($(1)_$(2)_CPPFLAGS) -Isrc
+$$($(1)_$(2)_testd_c): target/$(2)/dep/tests/$(1)/%.d: src/$(1)/%.c
+	$$(COMPILE.c) -MM -MP -MT $$(patsubst src/$(1)/%.c,target/$(2)/obj/tests/$(1)/%.o,$$<) -o $$@  $$<
+dep+=$$($(1)_$(2)_testd_c)
+clean+=$$($(1)_$(2)_testd_c)
 
-$(if $(filter $(1)/src/test_%.cc,$(testsrc)),$(patsubst $(1)/src/test_%.cc,build/$(2)/obj/tests/$(1)/test_%.o,$(filter $(1)/src/test_%.cc,$(testsrc))): CPPFLAGS += $$($(1)_CPPFLAGS) $$($(2)_CPPFLAGS) $$($(1)_$(2)_CPPFLAGS) $(shell pkg-config --cflags catch2) -I$(1)/src $(foreach m,$($(1)_DEPS),-I$(m)/src))
-$(if $(filter $(1)/src/test_%.cc,$(testsrc)),$(patsubst $(1)/src/test_%.cc,build/$(2)/obj/tests/$(1)/test_%.o,$(filter $(1)/src/test_%.cc,$(testsrc))): CXXFLAGS += $$($(1)_CXXFLAGS) $$($(2)_CXXFLAGS) $$($(1)_$(2)_CXXFLAGS))
+$$(filter-out target/$(2)/obj/tests/$(1),$$(patsubst %/,%,$$(sort $$(dir $$($(1)_$(2)_testo_c))))): | target/$(2)/obj/tests/$(1)
+	mkdir $$@
+$$(foreach f,$$($(1)_$(2)_testo_c),$$(eval $$(f): | $$(patsubst %/,%,$$(dir $$(f)))))
+$$($(1)_$(2)_testo_c): CPPFLAGS += $$($(1)_CPPFLAGS) $$($(2)_CPPFLAGS) $$($(1)_$(2)_CPPFLAGS) -Isrc
+$$($(1)_$(2)_testo_c): CFLAGS+=$$($(1)_CFLAGS) $$($(2)_CFLAGS) $$($(1)_$(2)_CFLAGS))
+$$($(1)_$(2)_testo_c): target/$(2)/obj/tests/$(1)/%.o: src/$(1)/%.c
+	$$(COMPILE.c) -o $$@  $$<
+clean+=$$($(1)_$(2)_testo_c)
 
-$(if $(filter $(1)/src/test_%.c,$(testsrc)),$(patsubst $(1)/src/test_%.c,build/$(2)/obj/tests/$(1)/test_%.o,$(filter $(1)/src/test_%.c,$(testsrc))): build/$(2)/obj/tests/$(1)/test_%.o: $(1)/src/test_%.c ;$$(COMPILE.c) -o $$@  $$<)
-$(if $(filter $(1)/src/test_%.cc,$(testsrc)),$(patsubst $(1)/src/test_%.cc,build/$(2)/obj/tests/$(1)/test_%.o,$(filter $(1)/src/test_%.cc,$(testsrc))): build/$(2)/obj/tests/$(1)/test_%.o: $(1)/src/test_%.cc ;$$(COMPILE.cc) -o $$@  $$<)
-$(if $(filter $(1)/src/test_%.s,$(testsrc)),$(patsubst $(1)/src/test_%.s,build/$(2)/obj/tests/$(1)/test_%.o,$(filter $(1)/src/test_%.s,$(testsrc))): build/$(2)/obj/tests/$(1)/test_%.o: $(1)/src/test_%.s ;$$(COMPILE.s) -o $$@  $$<)
 
-$(if $(filter $(1)/src/test_%.c,$(testsrc)),$(patsubst $(1)/src/test_%.c,build/$(2)/dep/tests/$(1)/test_%.d,$(filter $(1)/src/test_%.c,$(testsrc))): build/$(2)/dep/tests/$(1)/test_%.d: $(1)/src/test_%.c ;$$(COMPILE.c) -MM -MT $$(patsubst $(1)/src/test_%.c,build/$(2)/obj/tests/$(1)/test_%.o,$$<) -o $$@ $$<)
-$(if $(filter $(1)/src/test_%.cc,$(testsrc)),$(patsubst $(1)/src/test_%.cc,build/$(2)/dep/tests/$(1)/test_%.d,$(filter $(1)/src/test_%.cc,$(testsrc))): build/$(2)/dep/tests/$(1)/test_%.d: $(1)/src/test_%.cc ;$$(COMPILE.cc) -MM -MT $$(patsubst $(1)/src/test_%.cc,build/$(2)/obj/tests/$(1)/test_%.o,$$<) -o $$@  $$<)
-$(if $(filter $(1)/src/test_%.s,$(testsrc)),$(patsubst $(1)/src/test_%.s,build/$(2)/dep/tests/$(1)/test_%.d,$(filter $(1)/src/test_%.s,$(testsrc))): build/$(2)/dep/$(1)/test/%.d: $(1)/src/test_%.s ;$$(COMPILE.s) -MM -MT $$(patsubst $(1)/src/test_%.s,build/$(2)/obj/tests/$(1)/test_%.o,$$<) -o $$@  $$<)
+$$(filter-out target/$(2)/dep/tests/$(1),$$(patsubst %/,%,$$(sort $$(dir $$($(1)_$(2)_testd_cc))))): | target/$(2)/dep/tests/$(1)
+	mkdir $$@
+$$(foreach f,$$($(1)_$(2)_testd_cc),$$(eval $$(f): | $$(patsubst %/,%,$$(dir $$(f)))))
+$$($(1)_$(2)_testd_cc): CPPFLAGS += $$($(1)_CPPFLAGS) $$($(2)_CPPFLAGS) $$($(1)_$(2)_CPPFLAGS) $(shell pkg-config --cflags catch2) -Isrc
+$$($(1)_$(2)_testd_cc): target/$(2)/dep/tests/$(1)/%.d: src/$(1)/%.cc
+	$$(COMPILE.cc) -MM -MP -MT $$(patsubst src/$(1)/%.cc,target/$(2)/obj/tests/$(1)/%.o,$$<) -o $$@  $$<
+dep+=$$($(1)_$(2)_testd_cc)
+clean+=$$($(1)_$(2)_testd_cc)
 
-$(if $(filter $(1)/src/test_%.c,$(testsrc)),dep += $(patsubst $(1)/src/test_%.c,build/$(2)/dep/tests/$(1)/test_%.d,$(filter $(1)/src/test_%.c,$(testsrc))))
-$(if $(filter $(1)/src/test_%.cc,$(testsrc)),dep += $(patsubst $(1)/src/test_%.cc,build/$(2)/dep/tests/$(1)/test_%.d,$(filter $(1)/src/test_%.cc,$(testsrc))))
-$(if $(filter $(1)/src/test_%.s,$(testsrc)),dep +=$(patsubst $(1)/src/test_%.s,build/$(2)/dep/tests/$(1)/test_%.d,$(filter $(1)/src/test_%.s,$(testsrc))))
+$$(filter-out target/$(2)/obj/tests/$(1),$$(patsubst %/,%,$$(sort $$(dir $$($(1)_$(2)_testo_cc))))): | target/$(2)/obj/tests/$(1)
+	mkdir -p $$@
+$$(foreach f,$$($(1)_$(2)_testo_cc),$$(eval $$(f): | $$(patsubst %/,%,$$(dir $$(f)))))
+$$($(1)_$(2)_testo_cc): CPPFLAGS += $$($(1)_CPPFLAGS) $$($(2)_CPPFLAGS) $$($(1)_$(2)_CPPFLAGS) $(shell pkg-config --cflags catch2) -Isrc
+$$($(1)_$(2)_testo_cc): CXXFLAGS+=$$($(1)_CXXFLAGS) $$($(2)_CXXFLAGS) $$($(1)_$(2)_CXXFLAGS)
+$$($(1)_$(2)_testo_cc): target/$(2)/obj/tests/$(1)/%.o: src/$(1)/%.cc
+	$$(COMPILE.cc) -o $$@  $$<
+clean+=$$($(1)_$(2)_testo_cc)
 
-$(if $(filter $(1)/src/test_%.s,$(testsrc)),build/$(2)/tests/test_$(1): $(foreach m,$(modls),$(filter %.a %.so,$($(m)_targ))))
-$(if $(filter $(1)/src/test_%.c,$(testsrc)),build/$(2)/tests/test_$(1): $(foreach m,$(modls),$(filter %.a %.so,$($(m)_targ))))
-$(if $(filter $(1)/src/test_%.cc,$(testsrc)),build/$(2)/tests/test_$(1): $(foreach m,$(modls),$(filter %.a %.so,$($(m)_targ))))
 
-$(if $(filter $(1)/src/test_main.c,$(testsrc)),build/$(2)/tests/test_$(1): | build/$(2)/tests)
-$(if $(filter $(1)/src/test_main.c,$(testsrc)),build/$(2)/tests/test_$(1): LDFLAGS += $($(2)_LDFLAGS))
-$(if $(filter $(1)/src/test_main.c,$(testsrc)),build/$(2)/tests/test_$(1): LDLIBS += $($(2)_LDLIBS))
-$(if $(filter $(1)/src/test_main.c,$(testsrc)),build/$(2)/tests/test_$(1): $(patsubst $(1)/src/test_%.c,build/$(2)/obj/tests/$(1)/test_%.o,$(filter $(1)/src/test_%.c,$(testsrc))); $$(LINK.o) $$^ $$(LOADLIBES) $$(LDLIBS) -o $$@)
-$(if $(filter $(1)/src/test_main.c,$(testsrc)),rtests+= build/$(2)/tests/test_$(1))
-$(if $(filter $(1)/src/test_main.c,$(testsrc)),clean += build/$(2)/tests/test_$(1))
+$$(filter-out target/$(2)/dep/tests/$(1),$$(patsubst %/,%,$$(sort $$(dir $$($(1)_$(2)_testd_s))))): | target/$(2)/dep/tests/$(1)
+	mkdir -p $$@
+$$(foreach f,$$($(1)_$(2)_testd_s),$$(eval $$(f): | $$(patsubst %/,%,$$(dir $$(f)))))
+dep+=$$($(1)_$(2)_testd_s)
+clean+=$$($(1)_$(2)_testd_s)
 
-$(if $(filter $(1)/src/test_main.cc,$(testsrc)),build/$(2)/tests/test_$(1): | build/$(2)/tests)
-$(if $(filter $(1)/src/test_main.cc,$(testsrc)),build/$(2)/tests/test_$(1): LDFLAGS += $($(2)_LDFLAGS))
-$(if $(filter $(1)/src/test_main.cc,$(testsrc)),build/$(2)/tests/test_$(1): LDLIBS += $($(2)_LDLIBS))
-$(if $(filter $(1)/src/test_main.cc,$(testsrc)),build/$(2)/tests/test_$(1): LINK = $(CXX))
-$(if $(filter $(1)/src/test_main.cc,$(testsrc)),build/$(2)/tests/test_$(1): $(patsubst $(1)/src/test_%.cc,build/$(2)/obj/tests/$(1)/test_%.o,$(filter $(1)/src/test_%.cc,$(testsrc))); $$(LINK.o) $$^ $$(LOADLIBES) $$(LDLIBS) -o $$@)
-$(if $(filter $(1)/src/test_main.cc,$(testsrc)),rtests+= build/$(2)/tests/test_$(1) )
-$(if $(filter $(1)/src/test_main.cc,$(testsrc)),clean += build/$(2)/tests/test_$(1))
+$$(filter-out target/$(2)/obj/tests/$(1),$$(patsubst %/,%,$$(sort $$(dir $$($(1)_$(2)_testo_s))))): | target/$(2)/obj/tests/$(1)
+	mkdir -p $$@
+$$(foreach f,$$($(1)_$(2)_testo_s),$$(eval $$(f): | $$(patsubst %/,%,$$(dir $$(f)))))
+$$($(1)_$(2)_testo_s): target/$(2)/obj/tests/$(1)/%.o: src/$(1)/%.s
+	$$(COMPILE.s) -o $$@  $$<
+clean+=$$($(1)_$(2)_testo_s)
+
+
+target/$(2)/tests/test_$(1): | target/$(2)/tests
+target/$(2)/tests/test_$(1): $(foreach m,$(modls),$(filter %.a %.so,$($(m)_$(2)_targ)))
+target/$(2)/tests/test_$(1): LDFLAGS += $($(2)_LDFLAGS)
+target/$(2)/tests/test_$(1): LDLIBS += $($(2)_LDLIBS)
+#target/$(2)/tests/test_$(1): $$($(1)_$(2)_testo_c); $$(LINK.o) $$^ $$(LOADLIBES) $$(LDLIBS) -o $$@
+target/$(2)/tests/test_$(1): LINK = $$(CXX)
+target/$(2)/tests/test_$(1): $$($(1)_$(2)_testo_cc); $$(LINK.o) $$^ $$(LOADLIBES) $$(LDLIBS) -o $$@
+#target/$(2)/tests/test_$(1): $$($(1)_$(2)_testo_s); $$(LINK.o) $$^ $$(LOADLIBES) $$(LDLIBS) -o $$@
+
+.PHONY: run_target/$(2)/tests/test_$(1)
+run_target/$(2)/tests/test_$(1): target/$(2)/tests/test_$(1)
+	target/$(2)/tests/test_$(1) -b
+
+rtests += target/$(2)/tests/test_$(1)
+clean += target/$(2)/tests/test_$(1)
 
 endef
 
-
-
-$(foreach c,$(configs),build/$(c)/obj/tests build/$(c)/dep/tests build/$(c)/tests):
+$(foreach c,$(configs),target/$(c)/obj/tests target/$(c)/dep/tests target/$(c)/tests):
 	mkdir -p $@
 
 $(foreach m,$(modls),$(foreach c,$(configs),$(eval $(call mk_modl_tests,$(m),$(c)))))
 
-
+#==================================================================================================
 
 .PHONY: build
 build:
@@ -426,21 +530,13 @@ clean:
 	$(RM) $(clean)
 	find . -name '*.orig' -delete
 
-
-.PNONY: $(addprefix run_,$(rtests))
-$(foreach d,$(rtests),$(eval run_$(d): $(d)))
-
-$(addprefix run_,$(rtests)):
-	$(patsubst run_%,%,$@) -b
-
-
-
 .PHONY: test tests
 tests: $(addprefix run_,$(rtests))
 test: tests
 
 distclean:
-	$(RM) -r build
+	$(RM) -r target
+	find . -name '*.orig' -delete
 
 # clang-format does not format class/struct defs how I like them
 # with access spec 1 indent, and members 1 more indent after that
@@ -449,7 +545,7 @@ distclean:
 .PHONY: format
 format:
 	astyle --project -I -n  $(allsrc) $(allhdr)
-	#env -u NIX_CFLAGS_COMPILE clang-format -style=file -i $(allsrc) $(allhdr)
+	env -u NIX_CFLAGS_COMPILE clang-format -style=file -i $(allsrc) $(allhdr)
 
 ifneq ($(MAKECMDGOALS),distclean)
 -include $(dep)

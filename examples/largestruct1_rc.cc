@@ -1,8 +1,8 @@
-#include "log.hh"
-#include "defs.hh"
 #include "largestruct1.hh"
 
-#include "heaped/rc.hh"
+#include <nel/heaped/rc.hh>
+#include <nel/log.hh>
+#include <nel/defs.hh>
 
 #include <utility> // std::move
 

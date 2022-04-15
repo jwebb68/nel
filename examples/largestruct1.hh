@@ -1,11 +1,15 @@
 #ifndef LARGESTRUCT1_HH
 #define LARGESTRUCT1_HH
 
-#include "defs.hh"
-#include "log.hh"
-#include "memory.hh"
+#include <nel/log.hh>
+#include <nel/memory.hh>
+#include <nel/defs.hh>
 
-template<size_t N>
+typedef long unsigned int Length;
+typedef long unsigned int Index;
+
+
+template<Length const N>
 struct U8Buf {
     private:
         uint8_t data_[N];
@@ -14,19 +18,19 @@ struct U8Buf {
         // default I want is create with uninitialised array..
         // maybe a uninitialised ctor then?
         //U8Buf(void) = default;
-        U8Buf(void)
+        constexpr U8Buf(void)
         {}
 
 
-        U8Buf(U8Buf const &o) {
+        constexpr U8Buf(U8Buf const &o) {
             nel::memcpy(data_, o.data_, N);
         }
 
-        U8Buf(U8Buf &&o) {
+        constexpr U8Buf(U8Buf &&o) {
             nel::memmove(data_, o.data_, N);
         }
 
-        U8Buf &operator=(U8Buf &&o) {
+        constexpr U8Buf &operator=(U8Buf &&o) {
             nel::memmove(data_, o.data_, N);
             return *this;
         }
@@ -39,12 +43,7 @@ struct U8Buf {
         }
 
     public:
-        // U8Slice slice(size_t b, size_t e) {
-        //     assert(b < e);
-        //     assert(e < N);
-        //     U8Slice(*this,
-        // }
-        size_t len(void) const {
+        Length len(void) const {
             return N;
         }
 
@@ -56,7 +55,7 @@ struct U8Buf {
             outs << "U8Buf<" << val.len() << ">{";
             if (val.len() > 0) {
                 outs  << val.data_[0];
-                for (size_t i = 1; i < val.len(); ++i) {
+                for (Index i = 1; i < val.len(); ++i) {
                     outs << " " << val.data_[i];
                 }
             }

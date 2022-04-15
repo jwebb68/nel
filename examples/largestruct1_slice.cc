@@ -1,13 +1,13 @@
-#include "log.hh"
-#include "defs.hh"
 #include "largestruct1.hh"
 
-#include "heaped/vector.hh"
+#include <nel/heaped/vector.hh>
+#include <nel/log.hh>
+#include <nel/defs.hh>
 
 typedef nel::heaped::Vector<U8Buf<256>> Vec1;
 
 void ex1(void) {
-    Vec1 vec1;
+    Vec1 vec1 = Vec1::with_capacity(5);
 
     vec1.push_back((uint8_t)0x67);
     vec1.push_back((uint8_t)0x68);

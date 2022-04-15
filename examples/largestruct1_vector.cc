@@ -1,21 +1,21 @@
-#include "log.hh"
-#include "defs.hh"
 #include "largestruct1.hh"
 
-#include "heaped/vector.hh"
+#include <nel/heaped/vector.hh>
+#include <nel/log.hh>
+#include <nel/defs.hh>
 
 #include <utility> // std::move
 
 typedef nel::heaped::Vector<U8Buf<256>> Vec1;
 
 void ex1() {
-    Vec1 vec1;
+    Vec1 vec1 = Vec1::with_capacity(5);
 
     nel::log << vec1 << "\n";
 }
 
 void ex2() {
-    Vec1 vec1;
+    Vec1 vec1 = Vec1::with_capacity(5);
 
     U8Buf<256> v = U8Buf<256>((uint8_t)0x66);
     vec1.push_back(std::move(v));
@@ -24,7 +24,7 @@ void ex2() {
 }
 
 void ex3() {
-    Vec1 vec1;
+    Vec1 vec1 = Vec1::with_capacity(5);
 
     vec1.push_back((uint8_t)0x67);
 
@@ -32,11 +32,12 @@ void ex3() {
 }
 
 void ex4() {
-    Vec1 vec1 = {
+    auto r = Vec1::try_from({
         ((uint8_t)0x67),
         ((uint8_t)0x68),
         ((uint8_t)0x69),
-    };
+    });
+    Vec1 vec1 = r.unwrap();
 
     auto it = vec1.iter();
     while (true) {
@@ -59,7 +60,7 @@ void ex4() {
 }
 
 void ex5() {
-    Vec1 vec1;
+    Vec1 vec1 = Vec1::with_capacity(5);
 
     vec1.push_back((uint8_t)0x67);
     vec1.push_back((uint8_t)0x68);
@@ -76,7 +77,7 @@ void ex5() {
 }
 
 void ex6() {
-    Vec1 vec1;
+    Vec1 vec1 = Vec1::with_capacity(5);
 
     vec1.push_back((uint8_t)0x67);
     vec1.push_back((uint8_t)0x68);

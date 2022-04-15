@@ -1,24 +1,25 @@
 #ifndef NEL_LOG_HH
 #define NEL_LOG_HH
 
-namespace nel {
+namespace nel
+{
 
 class Log;
 
 } // namespace nel
 
-#include <cstddef> // size_t
+namespace nel
+{
 
-namespace nel {
-
-class Log {
+class Log
+{
     public:
         friend Log &operator<<(Log &outs, char const *v) noexcept;
-        friend Log &operator<<(Log &outs, size_t const v) noexcept;
+        friend Log &operator<<(Log &outs, long unsigned int const v) noexcept;
 };
 
 extern Log log;
 
 } // namespace nel
 
-#endif//NEL_LOG_HH
+#endif // NEL_LOG_HH

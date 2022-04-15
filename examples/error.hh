@@ -1,8 +1,8 @@
 #ifndef ERROR_HH
 #define ERROR_HH
 
-#include "log.hh"
-#include "panic.hh"
+#include <nel/log.hh>
+#include <nel/panic.hh>
 
 enum class ErrorCode {
     Failed = 1,
@@ -17,6 +17,8 @@ nel::Log &operator<<(nel::Log &outs, ErrorCode const &val) {
         case ErrorCode::Failed:
             return outs << "Failed";
             break;
+        default:
+            break;
     }
     nel_panic("unknown ErrorCode");
     return outs << "?";
@@ -24,7 +26,7 @@ nel::Log &operator<<(nel::Log &outs, ErrorCode const &val) {
 
 
 //typedef uint16_t Lineno;
-typedef size_t Lineno;
+typedef long unsigned int Lineno;
 struct Error {
     // tot=16
     private:
