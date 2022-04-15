@@ -23,6 +23,9 @@ namespace nel
 namespace heaped
 {
 
+/**
+ * A T on the heap, owned (a bit like std::unique_ptr)
+ */
 template<typename T>
 struct Box {
     public:
