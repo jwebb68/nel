@@ -18,6 +18,9 @@ struct Slice;
 namespace nel
 {
 
+/**
+ * A contiguous region
+ */
 template<typename T>
 struct Slice {
     private:
@@ -25,7 +28,7 @@ struct Slice {
         // Implicit start at 0.
         Length len_;
 
-    protected:
+    private:
         constexpr Slice(void): content_(nullptr), len_(0) {}
 
         constexpr Slice(T p[], Length len) noexcept: content_(p), len_(len) {}
@@ -224,6 +227,16 @@ struct Slice {
         }
 
     public:
+        /**
+         * Format/emit a representation of this object as a charstring
+         * for debugging purposes.
+         *
+         * @param val the value to format
+         * @param outs the stream to dump the representation into.
+         */
+        // TODO: replace <<(Log ) with dbgfmt, so separate out from
+        // any other form of conversion to charstring.
+        // TODO: insert into formatter and not final dest type.
         // instead of insert into log, can it format into ? which log implements?
         // so it doesn't matter about the destination..
         // and can format-insert into any char endpoint.
