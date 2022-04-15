@@ -4,6 +4,8 @@
 #include <nel/log.hh>
 #include <nel/defs.hh>
 
+#include <utility> // std::move, std::forward
+
 typedef nel::heaped::Box<U8Buf<256>> Box1;
 
 nel::Log &operator<<(nel::Log &outs, Box1 const &v) {
@@ -14,13 +16,15 @@ nel::Log &operator<<(nel::Log &outs, Box1 const &v) {
 
 void box1() {
     U8Buf<256> v = U8Buf<256>((uint8_t)0x66);
-    Box1 b = Box1(std::move(v));
+    auto r = Box1::try_from(std::move(v));
+    Box1 b = r.unwrap();
 
     nel::log << b << "\n";
 }
 
 void box2() {
-    Box1 b = Box1((uint8_t)0x67);
+    auto r = Box1::try_from((uint8_t)0x67);
+    Box1 b = r.unwrap();
 
     nel::log << b << "\n";
 }

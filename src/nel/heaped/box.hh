@@ -37,6 +37,12 @@ struct Box {
         typedef Element<T> ElementT;
         std::unique_ptr<ElementT> value_;
 
+    private:
+        /**
+         * create a box from a T
+         */
+        constexpr Box(ElementT *const p) noexcept: value_(p) {}
+
     public:
         ~Box(void) = default;
 
@@ -51,11 +57,24 @@ struct Box {
         constexpr Box(Box &&) noexcept = default;
         constexpr Box &operator=(Box &&) noexcept = default;
 
-        // create contained inplace.
         // works for moving-into as well.
         template<typename... Args>
         constexpr Box(Args &&...args) noexcept: value_(new Element<T>(std::forward<Args>(args)...))
         {
+        }
+
+        /**
+         * Create a boxed T by moving existing into the box.
+         *
+         * @param val The value to move into the box
+         * @returns on success, Optional::Some
+         * @returns of fail, Optional::None
+         */
+        constexpr static Result<Box, T> try_from(T &&val) noexcept
+        {
+            // for new: on fail, val not moved
+            ElementT *const p = new ElementT(val);
+            return (p == nullptr) ? Result<Box, T>::Err(val) : Result<Box, T>::Ok(Box(p));
         }
 
     public:

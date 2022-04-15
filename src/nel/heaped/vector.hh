@@ -290,6 +290,11 @@ struct Vector {
          * @returns if unsuccessful, Result<void, T>::Err() holding val
          */
         // TODO: poss not correct, as not returning Result<void, T>
+        Result<void, T> push_back(T &&val) noexcept
+        {
+            reserve(len() + 1);
+            return (item_ == nullptr) ? Result<void, T>::Err(val) : item_->push_back(val);
+        }
         Result<void, std::initializer_list<T>> push_back(std::initializer_list<T> l) noexcept
         {
             typedef std::initializer_list<T> U;

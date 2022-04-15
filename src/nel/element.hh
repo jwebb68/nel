@@ -19,8 +19,8 @@ struct Element {
     public:
         ~Element(void) = default;
 
-        // What if T has a default cons?
         // Element(void) = delete;
+        Element(void) = default;
 
         Element(Element const &) = delete;
         Element &operator=(Element const &) const = delete;
@@ -28,7 +28,8 @@ struct Element {
         constexpr Element(Element &&o) noexcept = default;
         constexpr Element &operator=(Element &&o) noexcept = default;
 
-    public:
+        Element(T &&val) noexcept: value_(std::forward<T>(val)) {}
+
         template<typename... Args>
         Element(Args &&...args) noexcept: value_(std::forward<Args>(args)...)
         {

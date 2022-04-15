@@ -260,6 +260,18 @@ struct Vector {
         // on fail still move, but return.
         // allow inplace create instead of move.
         // if fails to store, can create be avoided..?
+        Result<void, T> push_back(T &&val) noexcept
+        {
+            if (len() >= capacity()) {
+                // Really? must one be created for err?
+                return Result<void, T>::Err(val);
+            }
+            // Remember, values at len and beyond are uninitialised.
+            // So need to use new to construct them.
+            new (&values_[len()]) T(val);
+            len_ += 1;
+            return Result<void, T>::Ok();
+        }
         template<typename... Args>
         Result<void, T> push_back(Args &&...args) noexcept
         {

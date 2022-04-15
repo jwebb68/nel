@@ -5,7 +5,7 @@
 TEST_CASE("heaped::Box", "[heaped][box]")
 {
     // must be able to create an empty array..
-    auto a1 = nel::heaped::Box<int>(1);
+    auto a1 = nel::heaped::Box<int>::try_from(1).unwrap();
 
     // must create not empty.
     REQUIRE(a1.has_value());
@@ -14,7 +14,7 @@ TEST_CASE("heaped::Box", "[heaped][box]")
 TEST_CASE("heaped::Box::move", "[heaped][box]")
 {
     // must be able to move box contents from one box to another.
-    auto a1 = nel::heaped::Box<int>(1);
+    auto a1 = nel::heaped::Box<int>::try_from(1).unwrap();
     auto a2 = std::move(a1);
 
     // moved from is no empty
@@ -36,7 +36,7 @@ TEST_CASE("heaped::Box::deref", "[heaped][box]")
 {
     // deref must return value value put into the box.
     // mutable version
-    auto a1 = nel::heaped::Box<int>(1);
+    auto a1 = nel::heaped::Box<int>::try_from(1).unwrap();
     REQUIRE(*a1 == 1);
 
     // and value is not consumed by the deref
@@ -47,7 +47,7 @@ TEST_CASE("heaped::Box::deref", "[heaped][box]")
     REQUIRE(*a1 == 3);
 
     // const version
-    auto const c1 = nel::heaped::Box<int>(2);
+    auto c1 = nel::heaped::Box<int const>::try_from(2).unwrap();
     REQUIRE(*c1 == 2);
     // and value is not consumed by the deref
     REQUIRE(*c1 == 2);
@@ -60,7 +60,7 @@ TEST_CASE("heaped::Box::deref", "[heaped][box]")
 TEST_CASE("heaped::Box::has_value", "[heaped][box]")
 {
     // a newly created boxed always has a value.
-    auto a1 = nel::heaped::Box<int>(1);
+    auto a1 = nel::heaped::Box<int>::try_from(2).unwrap();
     REQUIRE(a1.has_value());
 
     // moving the boxed value to another causes the variable to lose it's value.
@@ -80,9 +80,9 @@ TEST_CASE("heaped::Box::unwrap", "[heaped][box]")
 
     // unwrap of value returns that value.
     // and invalidates the box.
-    auto a2 = nel::heaped::Box<int>(1);
-    REQUIRE(a2.unwrap() == 1);
-    REQUIRE(!a2.has_value());
+    auto a1 = nel::heaped::Box<int>::try_from(1).unwrap();
+    REQUIRE(a1.unwrap() == 1);
+    REQUIRE(!a1.has_value());
 
     // cannot unwrap const box?
     // unwraping invalidates box so cannot be const.. (?)
@@ -91,9 +91,9 @@ TEST_CASE("heaped::Box::unwrap", "[heaped][box]")
     // REQUIRE(c2.unwrap() == 2);
 
     // unwrap of a box containing a const must work.
-    auto a3 = nel::heaped::Box<int const>(2);
-    REQUIRE(a3.unwrap() == 2);
-    REQUIRE(!a3.has_value());
+    auto a2 = nel::heaped::Box<int const>::try_from(2).unwrap();
+    REQUIRE(a2.unwrap() == 2);
+    REQUIRE(!a2.has_value());
 }
 
 #if 0
