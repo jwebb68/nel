@@ -24,6 +24,14 @@ struct FirstNIterator;
 namespace nel
 {
 
+/**
+ * An Iterator over a range of T
+ *
+ * Iterator does not own what it's iterating over, so is invalidated if that goes out of scope.
+ * Cannot be reset once exhausted.
+ * Is non-consuming, items are not moved out of original container.
+ */
+// TODO: maybe make length a template param..
 template<typename T>
 struct Iterator {
     public:
@@ -39,6 +47,16 @@ struct Iterator {
     public:
         constexpr Iterator(ItemT p[], Length const len) noexcept: content_(p), idx_(0), len_(len) {}
 
+        // default copy is ok.
+        // default move is ok.
+
+    public:
+        /**
+         * Return next item in iterator or None is no more.
+         *
+         * @returns Optional::Some if iterator still active.
+         * @returns Optional::None if iterator exhausted.
+         */
         Optional<OutT> next(void) noexcept
         {
             return (idx_ < len_) ? Optional<OutT>::Some(content_[idx_++]) : Optional<OutT>::None();
@@ -47,6 +65,11 @@ struct Iterator {
     public:
         // nasty, now cannot add new ops as class is not extensible.
         // and has to be implemented on each new iterator type.
+        /**
+         * Apply mutating fn to each item in iterator
+         *
+         * @param fn func to apply to each item in iterator
+         */
         void for_each(std::function<void(T &)> fn) noexcept
         {
             for (idx_ = 0; idx_ < len_; ++idx_) {
@@ -65,6 +88,12 @@ struct Iterator {
             return acc;
         }
 #else
+        /**
+         * fold/reduce each item to a single value
+         *
+         * @param fn func to apply to each item in iterator
+         * @note for fn, acc is the folded value, e is the item to fold into it.
+         */
         template<typename U>
         U fold(U &&initial, std::function<void(U &acc, T &e)> fn) noexcept
         {
@@ -80,6 +109,9 @@ struct Iterator {
 // x.map(mapfn).enum().for_each(..);
 // x.chain(MapIt(mapfn)).chain(EnumIt).for_each([](Index idx, T &e) {});
 
+/**
+ * Apply fn to each value in iterator, returning the result for each item
+ */
 template<typename I, typename U>
 // template<typename I, typename F, typename U>
 struct MappingIterator {
@@ -98,6 +130,13 @@ struct MappingIterator {
 
         // TODO: What happens if T cannot be mapped into U?
         // Then fn returns a result, pass it on.
+    public:
+        /**
+         * Return next item in iterator or None is no more.
+         *
+         * @returns Optional::Some if iterator still active.
+         * @returns Optional::None if iterator exhausted.
+         */
         Optional<OutT> next(void) noexcept
         {
             auto v = inner_.next();
@@ -111,6 +150,9 @@ MappingIterator<I, U> map_it(I it, std::function<U(typename I::ItemT &&)> fn) no
     return MappingIterator<I, U>(it, fn);
 }
 
+/**
+ * Return first n items in iterator, stop iteration if more.
+ */
 template<typename I>
 struct FirstNIterator {
     public:
@@ -125,6 +167,13 @@ struct FirstNIterator {
     public:
         FirstNIterator(I inner, Length limit) noexcept: inner_(inner), current_(0), limit_(limit) {}
 
+    public:
+        /**
+         * Return next item in iterator or None is no more.
+         *
+         * @returns Optional::Some if iterator still active.
+         * @returns Optional::None if iterator exhausted.
+         */
         Optional<OutT> next(void) noexcept
         {
             // Index i = current_++;
@@ -141,6 +190,14 @@ FirstNIterator<I> first_n_it(I it, Length limit) noexcept
     return FirstNIterator<I>(it, limit);
 }
 
+/**
+ * fold values in iterator into single value.
+ *
+ * @param it The iterator to operate on
+ * @param initial the initial value to start the fold with
+ * @param fn The fn to apply to each element to fold.
+ * @returns folded value..
+ */
 template<typename I, typename U>
 U fold(I it, U initial, std::function<U(U acc, typename I::ItemT &)> fn) noexcept
 {
