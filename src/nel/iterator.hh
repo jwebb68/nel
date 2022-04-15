@@ -177,16 +177,16 @@ FirstNIterator<I> first_n_it(I it, Length limit) noexcept
  * @returns folded value..
  */
 template<typename I, typename U>
-U fold(I it, U initial, std::function<U(U acc, typename I::ItemT &)> fn) noexcept
+U fold(I it, U &&initial, std::function<void(U &acc, typename I::ItemT &e)> fn) noexcept
 {
-    // initial must be moved, even if it is empty.
-    // U acc1 = std::move(initial);
-    U acc = initial;
+    U acc = std::move(initial);
     while (true) {
         auto v = it.next();
         if (v.is_none()) { break; }
+        // TODO: want better way to unwrap that does not check after already checked
+        // or returns value pair<bool, T> ? then could use unpacking without checking twice.
         auto u = v.unwrap();
-        acc = fn(acc, u);
+        fn(acc, u);
     }
     return acc;
 }
