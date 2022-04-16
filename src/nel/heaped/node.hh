@@ -196,20 +196,7 @@ struct Node {
             return len() == 0;
         }
 
-        // TODO: to use try_get as index access can fail.
-        constexpr T &operator[](size_t idx) noexcept
-        {
-            // nel_panic_if_not(idx < len(), "index out of range");
-            // return values_[idx];
-            return slice()[idx];
-        }
-        constexpr T const &operator[](size_t idx) const noexcept
-        {
-            // nel_panic_if_not(idx < len(), "index out of range");
-            // return values_[idx];
-            return slice()[idx];
-        }
-
+    public:
         constexpr Slice<T> slice(void) noexcept
         {
             return Slice<T>::from(values_, len());
