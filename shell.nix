@@ -3,7 +3,7 @@
 with import <nixpkgs> {};
 
 # Make a new "derivation" that represents our shell
-stdenv.mkDerivation {
+pkgs.mkShell {
   name = "nel";
   shellHook = ''
         export PS1="[nix-shell]$ "
