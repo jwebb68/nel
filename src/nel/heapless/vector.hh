@@ -237,16 +237,24 @@ struct Vector {
             return slice().subslice(b, e);
         }
 
-        // TODO: fail on fixed?
-        // Or return Result<void, ?>
-        // And fail if not N
-        // i.e. reserve(0) on cap of 4 does what?
-        // Shouldn't be errT=bool but don't know what to use..
-        // for heaped err would be from mem-allocator
-        // Result<void, bool> reserve(Count new_capacity) noexcept
-        void reserve(Count new_capacity) noexcept
+        /**
+         * Change the internal allocation to given number of elements.
+         *
+         * If new capacity is smaller than current, then current is reduced.
+         * If new capacity is less than currently used, then removes all unused
+         * allocations and does not reduce the in-use amount (does not delete
+         * items in the vec).
+         *
+         * In a fixed vec, the internal allocation can never change.
+         *
+         * @param new_cap the new allocation to set.
+         *
+         * @returns true if new capacity is same as current..
+         * @returns false otherwise.
+         */
+        bool try_reserve(Count new_capacity) noexcept
         {
-            NEL_UNUSED(new_capacity);
+            return new_capacity == N;
         }
 
         /**

@@ -251,35 +251,55 @@ struct Vector {
             return a;
         }
 
+        /**
+         * Change the internal allocation to given number of elements.
+         *
+         * If new capacity is smaller than current, then current is reduced.
+         * If new capacity is less than currently used, then removes all unused
+         * allocations and does not reduce the in-use amount (does not delete
+         * items in the vec).
+         *
+         * @param new_cap the new allocation to set.
+         *
+         * @returns true if (re)allocation succeeded.
+         * @returns false otherwise.
+         */
         // What to return on reserve fail?
         // Result<void, ?> ?
-        // TODO: should be try_reserve.
-        void reserve(Count capacity) noexcept
+        // Optional<void> aka bool?
+        bool try_reserve(Count new_cap) noexcept
         {
-            // TODO: overalloc to quanta..
-            // TODO: could over alloc to some quanta, e.g. 16, 8, etc..
-
             // TODO: handle alignment issues here.
+            // TODO: quanta as a template param?
+            Count const quanta = 16;
+            if (new_cap > 0) { new_cap = new_cap - new_cap % quanta + quanta; }
+
+            // prevent new_cap going below len..
+            // i.e. reserve does not free off items.
+            if (new_cap < len()) { new_cap = len(); }
+
             if (item_ == nullptr) {
                 // No current alloc..
-                Count cap = capacity;
-                item_ = VectorNode::malloc(cap);
-            } else {
-                Count cap = len() + capacity;
-                if (cap > item_->capacity()) {
-                    // Grow.. + realloc.
-                    // No copying of contained, so bitwise move is ok.
-                    item_ = VectorNode::realloc(item_, cap);
-                } else if (cap < item_->capacity()) {
-                    // Shrink (release off excess..) + realloc.
-                    // Can shrink below current in use ?
-                    // No copying of contained, so bitwise move is ok.
-                    // Can realloc handle shrink?
-                    item_ = VectorNode::realloc(item_, cap);
-                } else {
-                    // Not shrinking if same
-                }
+                item_ = VectorNode::malloc(new_cap);
+                if (item_ == nullptr) { return false; }
+            } else if (new_cap == item_->capacity()) {
+                // nothing to do.
+            } else if (new_cap > item_->capacity()) {
+                // Grow.. + realloc.
+                // No copying of contained, so bitwise move is ok.
+                VectorNode *p = VectorNode::realloc(item_, new_cap);
+                if (p == nullptr) { return false; }
+                item_ = p;
+            } else if (new_cap < item_->capacity()) {
+                // Shrink (release off excess..) + realloc.
+                // Can shrink below current in use ? no.
+                // No copying of contained, so bitwise move is ok.
+                // Can realloc handle shrink?
+                VectorNode *p = VectorNode::realloc(item_, new_cap);
+                if (p == nullptr) { return false; }
+                item_ = p;
             }
+            return true;
         }
 
         /**
@@ -292,20 +312,23 @@ struct Vector {
         // TODO: poss not correct, as not returning Result<void, T>
         Result<void, T> push_back(T &&val) noexcept
         {
-            reserve(len() + 1);
-            return (item_ == nullptr) ? Result<void, T>::Err(val) : item_->push_back(val);
+            bool ok;
+            ok = try_reserve(len() + 1);
+            return (!ok || item_ == nullptr) ? Result<void, T>::Err(val) : item_->push_back(val);
         }
         Result<void, std::initializer_list<T>> push_back(std::initializer_list<T> l) noexcept
         {
             typedef std::initializer_list<T> U;
-            reserve(len() + l.size());
-            return (item_ == nullptr) ? Result<void, U>::Err(l) : item_->push_back(l);
+            bool ok;
+            ok = try_reserve(len() + l.size());
+            return (!ok || item_ == nullptr) ? Result<void, U>::Err(l) : item_->push_back(l);
         }
         template<typename... Args>
         Result<void, T> push_back(Args &&...args) noexcept
         {
-            reserve(len() + 1);
-            return (item_ == nullptr) ? Result<void, T>::Err(std::forward<Args>(args)...)
+            bool ok;
+            ok = reserve(len() + 1);
+            return (!ok || item_ == nullptr) ? Result<void, T>::Err(std::forward<Args>(args)...)
                                       : item_->push_back(std::forward<Args>(args)...);
         }
 

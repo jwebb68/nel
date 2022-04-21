@@ -81,19 +81,26 @@ struct Node {
             return new_n;
         }
 
-        static Node *realloc(Node *old_n, Count new_cap) noexcept
+        static Node *realloc(Node *const old_n, Count const new_cap) noexcept
         {
             // Size of region to allocate excluding align padding.
             // Assume alignof(T) is included in align of Node.
-            Count sz = sizeof(Node) - sizeof(T) + new_cap * sizeof(T);
+            Count new_sz = sizeof(Node) - sizeof(T) + new_cap * sizeof(T);
+            Count old_sz =
+                (old_n == nullptr) ? 0 : sizeof(Node) - sizeof(T) + old_n->alloc_ * sizeof(T);
 
             // Check that max_align is multiple of align (i.e. is realign necessary..)
             // If it isn't, then becomes:
-            Node *new_n = reinterpret_cast<Node *>(std::realloc(old_n, sz));
-            // TODO: handle (re)alloc fails.
+            Node *const new_n = reinterpret_cast<Node *>(std::realloc(old_n, new_sz));
+            if (new_n == nullptr) { return nullptr; }
+
             // Remember, if realloc fails, then old is still valid..
-            nel_assert(new_n != nullptr);
             // nel_assert(is_aligned(new_n));
+            if (new_sz > old_sz) {
+                // clear new memory,
+                // assumes realloc adds to end
+                memset((uint8_t *)new_n + old_sz, 0xa5, new_sz - old_sz);
+            }
             new_n->alloc_ = new_cap;
             return new_n;
         }

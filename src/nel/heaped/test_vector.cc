@@ -123,11 +123,11 @@ TEST_CASE("heaped::Vector::capacity", "[heaped][Vector]")
 
     {
         // vector filled to length >0 must have len of length
-        auto a3 = nel::heaped::Vector<int>::fill(2, 1);
-        REQUIRE(a3.capacity() == 1);
+        auto a3 = nel::heaped::Vector<int>::try_from({2}).unwrap();
+        REQUIRE(a3.capacity() >= 1);
 
-        auto const c3 = nel::heaped::Vector<int>::fill(2, 1);
-        REQUIRE(c3.capacity() == 1);
+        auto const c3 = nel::heaped::Vector<int>::try_from({2}).unwrap();
+        REQUIRE(c3.capacity() >= 1);
     }
 
     {
@@ -221,52 +221,44 @@ TEST_CASE("heaped::Vector::clear", "[heaped][Vector]")
 
 TEST_CASE("heaped::Vector::reserve", "[heaped][Vector]")
 {
-    // reserve, gives the feel of an increment, i.e. the extra capacity
-    // above the current len.
-    // reserve(10) would set cap to len + 10,
-    // reserve(13) would set cap to len + 13,
-    // and reserve(0) would shrinkwrap.
-
     {
         auto a1 = nel::heaped::Vector<int>::empty();
 
-        a1.reserve(10);
-        REQUIRE(a1.capacity() >= a1.len() + 10);
+        REQUIRE(a1.try_reserve(10));
+        REQUIRE(a1.capacity() >= 10);
 
         // growing..
-        a1.reserve(16);
-        REQUIRE(a1.capacity() >= a1.len() + 16);
+        REQUIRE(a1.try_reserve(16));
+        REQUIRE(a1.capacity() >= 16);
 
         // shrinking is not optional..
         // but may not shrink as much as wanted..
-        a1.reserve(8);
-        REQUIRE(a1.capacity() >= a1.len() + 8);
+        REQUIRE(a1.try_reserve(8));
+        REQUIRE(a1.capacity() >= 8);
 
         // shrinking is not optional..
         // reserving to 0 is shrink-wrapping?
-        a1.reserve(0);
-        REQUIRE(a1.capacity() >= a1.len() + 0);
+        REQUIRE(a1.try_reserve(0));
     }
 
     {
-        auto a1 = nel::heaped::Vector<int>::fill(2, 10);
+        auto a1 = nel::heaped::Vector<int>::try_from({2, 2, 2, 2, 2, 2, 2, 2, 2}).unwrap();
 
-        a1.reserve(10);
-        REQUIRE(a1.capacity() >= a1.len() + 10);
+        REQUIRE(a1.try_reserve(10));
+        REQUIRE(a1.capacity() >= 10);
 
         // growing..
-        a1.reserve(16);
-        REQUIRE(a1.capacity() >= a1.len() + 16);
+        REQUIRE(a1.try_reserve(16));
+        REQUIRE(a1.capacity() >= 16);
 
         // shrinking is not optional..
         // but may not shrink as much as wanted..
-        a1.reserve(8);
-        REQUIRE(a1.capacity() >= a1.len() + 8);
+        REQUIRE(a1.try_reserve(8));
+        REQUIRE(a1.capacity() >= 8);
 
         // shrinking is not optional..
         // reserving to 0 is shrink-wrapping?
-        a1.reserve(0);
-        REQUIRE(a1.capacity() >= a1.len() + 0);
+        REQUIRE(a1.try_reserve(0));
     }
 }
 
