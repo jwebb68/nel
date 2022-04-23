@@ -14,7 +14,6 @@ class Optional;
 #include <nel/panic.hh>
 
 #include <new> // new (*) T(...)
-#include <cstdlib> //abort
 #include <functional> // std::function
 #include <utility> // std::move, std::forward
 
@@ -164,7 +163,15 @@ class Optional
                     return;
                     break;
                 default:
-                    nel_panic("invalid Optional");
+                    // For gcc/clang minsize: if this not nell:abort,
+                    // then iteration may not collapse into a tight loop.
+                    // It's the  need for arguments that's doing it.
+                    // For O3: does not affect and iteration collapses into tight loop
+                    // TODO: look into stack trace dumper on fail.
+                    // But would still like a message..
+                    // For arm:minsize: if panic, then does not collapse (func with arg issue)
+                    // nel_panic("invalid optional");
+                    nel::abort();
             }
         }
 
@@ -328,8 +335,15 @@ class Optional
                         return true;
                         break;
                     default:
-                        // std::abort();
-                        nel_panic("invalid Optional");
+                        // For gcc/clang minsize: if this not nell:abort,
+                        // then iteration may not collapse into a tight loop.
+                        // It's the  need for arguments that's doing it.
+                        // For O3: does not affect and iteration collapses into tight loop
+                        // TODO: look into stack trace dumper on fail.
+                        // But would still like a message..
+                        // For arm:minsize: if panic, then does not collapse (func with arg issue)
+                        // nel_panic("invalid optional");
+                        nel::abort();
                 }
             }
             return false;
@@ -359,8 +373,15 @@ class Optional
                         return false;
                         break;
                     default:
-                        // std::abort();
-                        nel_panic("invalid Optional");
+                        // For gcc/clang minsize: if this not nell:abort,
+                        // then iteration may not collapse into a tight loop.
+                        // It's the  need for arguments that's doing it.
+                        // For O3: does not affect and iteration collapses into tight loop
+                        // TODO: look into stack trace dumper on fail.
+                        // But would still like a message..
+                        // For arm:minsize: if panic, then does not collapse (func with arg issue)
+                        // nel_panic("invalid optional");
+                        nel::abort();
                 }
             }
             return true;
@@ -436,7 +457,15 @@ class Optional<void>
                     return;
                     break;
                 default:
-                    nel_panic("invalid Optional");
+                    // For gcc/clang minsize: if this not nell:abort,
+                    // then iteration may not collapse into a tight loop.
+                    // It's the  need for arguments that's doing it.
+                    // For O3: does not affect and iteration collapses into tight loop
+                    // TODO: look into stack trace dumper on fail.
+                    // But would still like a message..
+                    // For arm:minsize: if panic, then does not collapse (func with arg issue)
+                    // nel_panic("invalid optional");
+                    nel::abort();
             }
         }
 
@@ -466,7 +495,15 @@ class Optional<void>
                     return;
                     break;
                 default:
-                    nel_panic("invalid Optional");
+                    // For gcc/clang minsize: if this not nell:abort,
+                    // then iteration may not collapse into a tight loop.
+                    // It's the  need for arguments that's doing it.
+                    // For O3: does not affect and iteration collapses into tight loop
+                    // TODO: look into stack trace dumper on fail.
+                    // But would still like a message..
+                    // For arm:minsize: if panic, then does not collapse (func with arg issue)
+                    // nel_panic("invalid optional");
+                    nel::abort();
             }
         }
 
@@ -601,8 +638,15 @@ class Optional<void>
                         return true;
                         break;
                     default:
-                        // std::abort();
-                        nel_panic("invalid Optional");
+                        // For gcc/clang minsize: if this not nell:abort,
+                        // then iteration may not collapse into a tight loop.
+                        // It's the  need for arguments that's doing it.
+                        // For O3: does not affect and iteration collapses into tight loop
+                        // TODO: look into stack trace dumper on fail.
+                        // But would still like a message..
+                        // For arm:minsize: if panic, then does not collapse (func with arg issue)
+                        // nel_panic("invalid optional");
+                        nel::abort();
                 }
             }
             return false;
@@ -632,8 +676,15 @@ class Optional<void>
                         return false;
                         break;
                     default:
-                        // std::abort();
-                        nel_panic("invalid Optional");
+                        // For gcc/clang minsize: if this not nell:abort,
+                        // then iteration may not collapse into a tight loop.
+                        // It's the  need for arguments that's doing it.
+                        // For O3: does not affect and iteration collapses into tight loop
+                        // TODO: look into stack trace dumper on fail.
+                        // But would still like a message..
+                        // For arm:minsize: if panic, then does not collapse (func with arg issue)
+                        // nel_panic("invalid optional");
+                        nel::abort();
                 }
             }
             return true;
