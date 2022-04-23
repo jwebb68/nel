@@ -68,7 +68,7 @@ void ex41() {
         vec1.push_back(f);
     }
 
-    auto it = first_n_it(vec1.iter(), 3);
+    auto it = vec1.iter().first_n(3);
     while (true) {
         auto e = it.next();
         // checking for none and unwrapping/ from opt

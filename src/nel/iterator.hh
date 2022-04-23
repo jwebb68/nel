@@ -4,14 +4,13 @@
 namespace nel
 {
 
-template<typename T>
+template<typename It, typename InT, typename OutT>
 struct Iterator;
 
-template<typename I, typename U>
-// template<typename I, typename F, typename U>
+template<typename It, typename InT, typename OutT>
 struct MappingIterator;
 
-template<typename I>
+template<typename It, typename InT, typename OutT>
 struct FirstNIterator;
 
 } // namespace nel
@@ -25,55 +24,35 @@ namespace nel
 {
 
 /**
- * An Iterator over a range of T
+ * A fluent-style/iterator 'trait'
  *
- * Iterator does not own what it's iterating over, so is invalidated if that goes out of scope.
- * Cannot be reset once exhausted.
- * Is non-consuming, items are not moved out of original container.
+ * Use as a mixin to get functionals defined on it for all iterators
  */
-// TODO: maybe make length a template param..
-template<typename T>
+template<typename ItT, typename InT, typename OutT>
 struct Iterator {
     public:
-        typedef T ItemT;
-        typedef T &OutT;
-
     private:
-        // Won't pick up changes if realloc'd.
-        ItemT *const content_;
-        Index idx_;
-        Length len_;
-
-    public:
-        constexpr Iterator(ItemT p[], Length const len) noexcept: content_(p), idx_(0), len_(len) {}
-
-        // default copy is ok.
-        // default move is ok.
-
-    public:
-        /**
-         * Return next item in iterator or None is no more.
-         *
-         * @returns Optional::Some if iterator still active.
-         * @returns Optional::None if iterator exhausted.
-         */
-        Optional<OutT> next(void) noexcept
+        constexpr ItT &self(void) noexcept
         {
-            return (idx_ < len_) ? Optional<OutT>::Some(content_[idx_++]) : Optional<OutT>::None();
+            ItT &it = static_cast<ItT &>(*this);
+            return it;
         }
 
     public:
-        // nasty, now cannot add new ops as class is not extensible.
-        // and has to be implemented on each new iterator type.
         /**
-         * Apply mutating fn to each item in iterator
+         * Apply fn to each item in iterator
          *
          * @param fn func to apply to each item in iterator
          */
-        void for_each(std::function<void(T &)> fn) noexcept
+        void for_each(std::function<void(InT &&)> fn) noexcept
         {
-            for (idx_ = 0; idx_ < len_; ++idx_) {
-                fn(content_[idx_]);
+            // It &it = static_cast<It &>(*this);
+            while (true) {
+                auto r = self().next();
+                if (r.is_none()) { break; }
+                // auto & v = r.unwrap();
+                auto v = r.unwrap();
+                fn(std::move(v));
             }
         }
 
@@ -84,35 +63,45 @@ struct Iterator {
          * @note for fn, acc is the folded value, e is the item to fold into it.
          */
         template<typename U>
-        U fold(U &&initial, std::function<void(U &acc, T &e)> fn) noexcept
+        U fold(U &&initial, std::function<void(U &acc, InT &&e)> fn) noexcept
         {
             U acc = std::move(initial);
-            for (idx_ = 0; idx_ < len_; ++idx_) {
-                fn(acc, content_[idx_]);
+            while (true) {
+                auto r = self().next();
+                if (r.is_none()) { break; }
+                // auto & v = r.unwrap();
+                auto v = r.unwrap();
+                fn(acc, std::move(v));
             }
             return acc;
+        }
+
+        FirstNIterator<ItT, InT, OutT> first_n(Count const limit) noexcept
+        {
+            return FirstNIterator<ItT, InT, OutT>(self(), limit);
+        }
+
+        template<typename U>
+        MappingIterator<ItT, InT, U> map(std::function<U(InT &&)> fn) noexcept
+        {
+            return MappingIterator<ItT, InT, U>(self(), fn);
         }
 };
 
 // x.map(mapfn).enum().for_each(..);
 // x.chain(MapIt(mapfn)).chain(EnumIt).for_each([](Index idx, T &e) {});
 
-/**
- * Apply fn to each value in iterator, returning the result for each item
- */
-template<typename I, typename U>
-struct MappingIterator {
+template<typename It, typename InT, typename OutT>
+struct MappingIterator: Iterator<MappingIterator<It, InT, OutT>, InT, OutT> {
     public:
-        typedef U ItemT;
-        typedef U OutT;
-        typedef std::function<U(typename I::ItemT &&)> FnT;
+        typedef std::function<OutT(InT &&)> FnT;
 
     private:
-        I inner_;
+        It inner_;
         FnT fn_;
 
     public:
-        MappingIterator(I inner, FnT fn) noexcept: inner_(inner), fn_(fn) {}
+        MappingIterator(It inner, FnT fn) noexcept: inner_(inner), fn_(fn) {}
 
     public:
         /**
@@ -123,32 +112,35 @@ struct MappingIterator {
          */
         Optional<OutT> next(void) noexcept
         {
-            auto v = inner_.next();
-            return v.is_none() ? v : Optional<OutT>(fn_(v.unwrap()));
+            auto r = inner_.next();
+            // // if (r.is_none()) { return Optional<OutT>::None(); }
+            // // auto t = r.unwrap();
+            // // auto u = fn_(std::move(t));
+            // // return Optional<OutT>::Some(u);
+            return (r.is_none()) ? Optional<OutT>::None()
+                                 : Optional<OutT>::Some(fn_(std::move(r.unwrap())));
+
+            // auto r = inner_.next();
+            // return r.map1(fn_);
+            // return inner_.next();
         }
 };
-template<typename I, typename U>
-MappingIterator<I, U> map_it(I it, std::function<U(typename I::ItemT &&)> fn) noexcept
-{
-    return MappingIterator<I, U>(it, fn);
-}
 
 /**
  * Return first n items in iterator, stop iteration if more.
  */
-template<typename I>
-struct FirstNIterator {
+template<typename It, typename InT, typename OutT>
+struct FirstNIterator: Iterator<FirstNIterator<It, InT, OutT>, InT, OutT> {
     public:
-        typedef typename I::ItemT ItemT;
-        typedef typename I::OutT OutT;
-
     private:
-        I inner_;
+        It inner_;
         Index current_;
-        Length limit_;
+        Length const limit_;
 
     public:
-        FirstNIterator(I inner, Length limit) noexcept: inner_(inner), current_(0), limit_(limit) {}
+        FirstNIterator(It inner, Length limit) noexcept: inner_(inner), current_(0), limit_(limit)
+        {
+        }
 
     public:
         /**
@@ -162,34 +154,6 @@ struct FirstNIterator {
             return (current_ < limit_) ? ++current_, inner_.next() : Optional<OutT>::None();
         }
 };
-template<typename I>
-FirstNIterator<I> first_n_it(I it, Length limit) noexcept
-{
-    return FirstNIterator<I>(it, limit);
-}
-
-/**
- * fold values in iterator into single value.
- *
- * @param it The iterator to operate on
- * @param initial the initial value to start the fold with
- * @param fn The fn to apply to each element to fold.
- * @returns folded value..
- */
-template<typename I, typename U>
-U fold(I it, U &&initial, std::function<void(U &acc, typename I::ItemT &e)> fn) noexcept
-{
-    U acc = std::move(initial);
-    while (true) {
-        auto v = it.next();
-        if (v.is_none()) { break; }
-        // TODO: want better way to unwrap that does not check after already checked
-        // or returns value pair<bool, T> ? then could use unpacking without checking twice.
-        auto u = v.unwrap();
-        fn(acc, u);
-    }
-    return acc;
-}
 
 } // namespace nel
 

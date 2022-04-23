@@ -84,7 +84,7 @@ void ex41() {
     arr1.try_get(5).unwrap() = U8Buf<256>(0x22);
     arr1.try_get(6).unwrap() = U8Buf<256>(0x33);
 
-    auto it = first_n_it(arr1.iter(), 2);
+    auto it = arr1.iter().first_n(2);
     while (true) {
         auto e = it.next();
         // checking for none and unwrapping/ from opt

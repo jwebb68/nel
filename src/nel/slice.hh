@@ -7,6 +7,9 @@ namespace nel
 template<typename T>
 struct Slice;
 
+template<typename T>
+struct SliceIterator;
+
 } // namespace nel
 
 #include <nel/enumerator.hh>
@@ -185,13 +188,13 @@ struct Slice {
         //     nel_panic_if(len() != o.len(), "not same size");
         //     nel::memmove(content_, o.content_, len());
         // }
-
     public:
         /**
          * Return an iterator that will iterate over the slice
          *
          * The iterator is invalidated if the slice goes out of scope/destroyed.
          */
+#if 0
         constexpr Iterator<T> iter(void) noexcept
         {
             return Iterator<T>(content_, len_);
@@ -200,7 +203,16 @@ struct Slice {
         {
             return Iterator<T const>(content_, len_);
         }
-
+#else
+        constexpr SliceIterator<T> iter(void) noexcept
+        {
+            return SliceIterator<T>(content_, len());
+        }
+        constexpr SliceIterator<T const> const iter(void) const noexcept
+        {
+            return SliceIterator<T const>(content_, len());
+        }
+#endif
         constexpr Enumerator<T> enumerate(void) noexcept
         {
             return Enumerator<T>(content_, len_);
@@ -245,6 +257,58 @@ exit:
             outs << "}";
             return outs;
         }
+};
+
+/**
+ * An Iterator over a range of T
+ *
+ * Iterator does not own what it's iterating over, so is invalidated if that goes out of scope.
+ * Cannot be reset once exhausted.
+ * Is non-consuming, items are not moved out of original container.
+ */
+// TODO: maybe make length a template param..
+template<typename T>
+class SliceIterator: public Iterator<SliceIterator<T>, T, T &>
+{
+    public:
+    private:
+        T *const ptr_;
+        Count const len_;
+        Index pos_;
+
+    public:
+        constexpr SliceIterator(void) = delete;
+
+        // copy ok
+        // move ok
+    public:
+        constexpr SliceIterator(T arr[], Count len) noexcept: ptr_(arr), len_(len), pos_(0) {}
+
+        /**
+         * Return next item in iterator or None is no more.
+         *
+         * @returns Optional::Some if iterator still active.
+         * @returns Optional::None if iterator exhausted.
+         */
+        // if T == U & then mutating, non-consuming.
+        // if T == U && then owning/consuming (val moved out of underlying collection)
+        // if T == U then coping.. want to avoid.
+        // mutating.non-consuming
+        // non-mutating.non-consuming
+        Optional<T &> next(void) noexcept
+        {
+            // Some() takes a move, so want to move the reference into the optional.
+            // ref(),
+            if (pos_ >= len_) { return Optional<T &>::None(); }
+            auto &v = ptr_[pos_++];
+            return Optional<T &>::Some(v);
+        }
+        // consuming/moving/mutating iter
+        // Optional<T> next(void) noexcept
+        // {
+        //     return (pos_ < len_) ? Optional<T>::Some(std::move(ptr_[pos_++])) :
+        //     Optional<T>::None();
+        // }
 };
 
 } // namespace nel

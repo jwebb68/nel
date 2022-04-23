@@ -237,11 +237,11 @@ struct Array {
          *
          * @returns The iterator.
          */
-        constexpr Iterator<T const> iter(void) const
+        constexpr auto iter(void) const
         {
             return slice().iter();
         }
-        constexpr Iterator<T> iter(void)
+        constexpr auto iter(void)
         {
             return slice().iter();
         }

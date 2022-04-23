@@ -295,7 +295,8 @@ class Optional
         template<typename U>
         Optional<U> map(std::function<U(T &&)> fn) noexcept
         {
-            return (this->is_none()) ? Optional<U>::None() : Optional<U>::Some(fn(some_.unwrap()));
+            return (this->is_none()) ? Optional<U>::None()
+                                     : Optional<U>::Some(fn(std::move(some_.unwrap())));
         }
 
     public:

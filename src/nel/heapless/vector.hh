@@ -349,11 +349,11 @@ struct Vector {
          *
          * @returns The iterator.
          */
-        constexpr Iterator<T> iter(void) noexcept
+        constexpr auto iter(void) noexcept
         {
             return slice().iter();
         }
-        constexpr Iterator<T const> iter(void) const noexcept
+        constexpr auto iter(void) const noexcept
         {
             return slice().iter();
         }

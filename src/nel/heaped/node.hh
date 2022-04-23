@@ -218,7 +218,7 @@ struct Node {
         // vector empty/clear..
         void clear(void) noexcept
         {
-            iter().for_each([](T &e) { e.~T(); });
+            iter().for_each([](T &&e) { e.~T(); });
             // for (Index i = 0; i < len(); ++i) {
             //     values_[i].~T();
             // }
@@ -272,11 +272,11 @@ struct Node {
         }
 
     public:
-        constexpr Iterator<T const> iter(void) const noexcept
+        constexpr auto iter(void) const noexcept
         {
             return slice().iter();
         }
-        constexpr Iterator<T> iter(void) noexcept
+        constexpr auto iter(void) noexcept
         {
             return slice().iter();
         }
