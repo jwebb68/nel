@@ -241,15 +241,17 @@ struct Vector {
         }
 
     public:
+#if 0
         // but 'fill' makes no sense on a heaped vector..
         // push_back_repeated?
-        static constexpr Vector fill(T const &f, Count n)
+        static constexpr Vector filled(T const &f, Count n)
         {
             if (n == 0) { return Vector(); }
             Vector a(VectorNode::malloc(n));
             new (a.item_) VectorNode(f);
             return a;
         }
+#endif
 
         /**
          * Change the internal allocation to given number of elements.

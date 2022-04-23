@@ -122,6 +122,7 @@ void ex5() {
     // enum taking values from a second?
 }
 
+#if 0
 void ex51() {
     Array1 arr1 = Array1::filled(U8Buf<256>());
 
@@ -138,7 +139,7 @@ void ex51() {
     // how to enumerators stack..?
     // enum taking values from a second?
 }
-
+#endif
 
 void ex6() {
     Array1 arr1 = Array1::filled(U8Buf<256>());

@@ -102,6 +102,7 @@ struct Array {
             return Array();
         }
 
+#if 0
         /**
          * Create an array, of size n, initial value f in all entries.
          *
@@ -117,6 +118,7 @@ struct Array {
             new (a.item_) ArrayNode(f);
             return a;
         }
+#endif
 
         /**
          * Attempt to create an array from initialiser list

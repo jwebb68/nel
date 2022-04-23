@@ -94,6 +94,7 @@ struct Array {
     public:
         // heapless arrays cannot be created 'empty'
 
+#if 0
         /**
          * Create an array filled with given value.
          * @return array filled with copies of value.
@@ -107,6 +108,7 @@ struct Array {
             }
             return a;
         }
+#endif
 
         /**
          * Attempt to create an array from initialiser list
