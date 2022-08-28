@@ -129,10 +129,10 @@ struct Slice {
     public:
         /**
          * fill the slice with the value given.
+         *
+         * T must be bitcopyable (i.e. not need special copy semantics.
+         * value at each location is not destroyed.
          */
-        // is this a creational?
-        // fill or try_fill as fill will use try_copy which could fail.
-        // TODO: problematic, what of errors? should be try_fill..
         void fill(T const &f) noexcept
         {
             nel::memset(content_, f, len());

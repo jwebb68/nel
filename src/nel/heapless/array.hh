@@ -62,6 +62,14 @@ struct Array {
         }
         // If type has copy, then could fill? use slice for that..
 
+        // fill constructor
+        // TODO:  what if copy of T fails..? try_fill? how?
+        Array(T const &v) {
+            for (Index i=0; i < N; ++i) {
+                new (&values_[i]) T(v);
+            }
+        }
+
     public:
         /**
          * Destroy array and it's elements.
@@ -94,19 +102,26 @@ struct Array {
     public:
         // heapless arrays cannot be created 'empty'
 
-#if 0
         /**
-         * Create an array filled with given value.
+         * Initialise an array with given value.
          * @return array filled with copies of value.
          * @warning UB if copying of v fails.
          */
-        static constexpr Array filled(T const &v)
+        static Array filled(T const &v)
         {
-            Array a;
-            for (Index i = 0; i < N; ++i) {
-                new (&a.values_[i]) T(v);
-            }
+            Array a = Array(v);
             return a;
+        }
+
+#if 0
+        /**
+         * Atempt to create and Initialise an array with given value.
+         * @return on success: array filled with copies of value.
+         * @return on fail: None
+         */
+        static constexpr Optional<Array> try_filled(T const &v)
+        {
+            return Array(v);
         }
 #endif
 
