@@ -241,17 +241,23 @@ struct Vector {
         }
 
     public:
-#if 0
-        // but 'fill' makes no sense on a heaped vector..
-        // push_back_repeated?
-        static constexpr Vector filled(T const &f, Count n)
+        /**
+         * resize vector to size n.
+         *
+         * If n is greater than current length, the additional members are
+         * initialised with copies of f.
+         * If n is less than current length, then vec is simply truncated.
+         * If n is same as current length, then no action.
+         *
+         * @param n new size of vector
+         * @param f value to fill with if growing.
+         * T must be bitcopyable
+         * T must be clone-able.
+         */
+        void resize(Count n, T const &f)
         {
-            if (n == 0) { return Vector(); }
-            Vector a(VectorNode::malloc(n));
-            new (a.item_) VectorNode(f);
-            return a;
+            item_ = VectorNode::resize(item_, n, f);
         }
-#endif
 
         /**
          * Change the internal allocation to given number of elements.
@@ -311,27 +317,32 @@ struct Vector {
          * @returns if successful, Result<void, T>::Ok()
          * @returns if unsuccessful, Result<void, T>::Err() holding val
          */
-        // TODO: poss not correct, as not returning Result<void, T>
         Result<void, T> push_back(T &&val) noexcept
         {
             bool ok;
             ok = try_reserve(len() + 1);
-            return (!ok || item_ == nullptr) ? Result<void, T>::Err(val) : item_->push_back(val);
+            if (!ok) { return Result<void, T>::Err(val); }
+            if (item_ == nullptr) { return Result<void, T>::Err(val); }
+            return item_->push_back(val);
         }
+        // TODO: poss not consistent, as not returning Result<void, T>
         Result<void, std::initializer_list<T>> push_back(std::initializer_list<T> l) noexcept
         {
             typedef std::initializer_list<T> U;
             bool ok;
             ok = try_reserve(len() + l.size());
-            return (!ok || item_ == nullptr) ? Result<void, U>::Err(l) : item_->push_back(l);
+            if (!ok) { return Result<void, U>::Err(l); }
+            if (item_ == nullptr) { return Result<void, U>::Err(l); }
+            return item_->push_back(l);
         }
         template<typename... Args>
         Result<void, T> push_back(Args &&...args) noexcept
         {
             bool ok;
-            ok = reserve(len() + 1);
-            return (!ok || item_ == nullptr) ? Result<void, T>::Err(std::forward<Args>(args)...)
-                                      : item_->push_back(std::forward<Args>(args)...);
+            ok = try_reserve(len() + 1);
+            if (!ok) { return Result<void, T>::Err(std::forward<Args>(args)...); }
+            if (item_ == nullptr) { return Result<void, T>::Err(std::forward<Args>(args)...); }
+            return item_->push_back(std::forward<Args>(args)...);
         }
 
         // move contents of vec into this?

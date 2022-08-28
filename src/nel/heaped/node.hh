@@ -225,6 +225,36 @@ struct Node {
             len_ = 0;
         }
 
+        static Node *resize(Node *old, size_t newsize, T const &fill)
+        {
+            if (old != nullptr && newsize == old->len()) {
+                return old;
+            } else if (old == nullptr || newsize > old->len()) {
+                // growing.. no excess
+                Node *p;
+                size_t newalloc = newsize;
+                if (old == nullptr || newalloc > old->alloc()) {
+                    p = Node::realloc(old, newalloc);
+                    if (p == nullptr) {
+                        Node::free(old);
+                        return nullptr;
+                    }
+                }
+                for (Index i=(old == nullptr)?0:old->len(); i < newsize; ++i) {
+                    new (&p->values_[i]) T(fill);
+                }
+                p->len_ = newsize;
+                return p;
+            } else if (newsize < old->len()) {
+                // shrinking, drop excess.
+                for (Index i=newsize; i < old->len(); ++i) {
+                    old->values_[i].~T();
+                }
+                old->len_ = newsize;
+                return old;
+            }
+        }
+
         // rename to try-push_back?
         template<typename... Args>
         Result<void, T> push_back(Args &&...args) noexcept
