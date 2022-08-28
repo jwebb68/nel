@@ -547,6 +547,9 @@ format:
 	astyle --project -I -n  $(allsrc) $(allhdr)
 	env -u NIX_CFLAGS_COMPILE clang-format -style=file -i $(allsrc) $(allhdr)
 
-ifneq ($(MAKECMDGOALS),distclean)
+ifeq ($(MAKECMDGOALS),distclean)
+else ifeq ($(MAKECMDGOALS),clean)
+else ifeq ($(MAKECMDGOALS),format)
+else
 -include $(dep)
 endif
