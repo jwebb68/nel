@@ -95,7 +95,7 @@ endif
 
 #CFLAGS already defined
 CFLAGS += -Werror -Wall -Wextra -Wpedantic -Wswitch-default -Wswitch-enum -Wuninitialized
-CXXFLAGS += -Werror -Wall -Wextra -Wpedantic -Wswitch-default -Wswitch-enum -Wuninitialized -std=c++17 -fno-exceptions
+CXXFLAGS += -Werror -Wall -Wextra -Wpedantic -Wswitch-default -Wswitch-enum -Wuninitialized -std=c++20 -fno-exceptions
 
 # CFLAGS additionals for debug
 # -Og is really bad.. lots of 'vars optimised out' occurrences.
