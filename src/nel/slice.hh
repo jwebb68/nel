@@ -118,12 +118,11 @@ struct Slice {
          */
         constexpr Optional<T &> try_get(Index idx) noexcept
         {
-            return (idx >= len_) ? Optional<T &>::None() : Optional<T &>::Some(content_[idx]);
+            return (idx >= len_) ? None : Some(content_[idx]);
         }
         constexpr Optional<T const &> try_get(Index idx) const noexcept
         {
-            return (idx >= len_) ? Optional<T const &>::None()
-                                 : Optional<T const &>::Some(content_[idx]);
+            return (idx >= len_) ? None : Optional<T const &>::Some(content_[idx]);
         }
 
     public:
@@ -299,9 +298,8 @@ class SliceIterator: public Iterator<SliceIterator<T>, T, T &>
         {
             // Some() takes a move, so want to move the reference into the optional.
             // ref(),
-            if (pos_ >= len_) { return Optional<T &>::None(); }
-            auto &v = ptr_[pos_++];
-            return Optional<T &>::Some(v);
+            if (pos_ >= len_) { return None; }
+            return Some(ptr_[pos_++]);
         }
         // consuming/moving/mutating iter
         // Optional<T> next(void) noexcept
@@ -310,7 +308,6 @@ class SliceIterator: public Iterator<SliceIterator<T>, T, T &>
         //     Optional<T>::None();
         // }
 };
-
 } // namespace nel
 
 #endif // NEL_HEAPLESS_SLICE_HH

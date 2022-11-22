@@ -117,8 +117,7 @@ struct MappingIterator: Iterator<MappingIterator<It, InT, OutT>, InT, OutT> {
             // // auto t = r.unwrap();
             // // auto u = fn_(std::move(t));
             // // return Optional<OutT>::Some(u);
-            return (r.is_none()) ? Optional<OutT>::None()
-                                 : Optional<OutT>::Some(fn_(std::move(r.unwrap())));
+            return (r.is_none()) ? None : Some(fn_(std::move(r.unwrap())));
 
             // auto r = inner_.next();
             // return r.map1(fn_);
@@ -151,7 +150,7 @@ struct FirstNIterator: Iterator<FirstNIterator<It, InT, OutT>, InT, OutT> {
          */
         Optional<OutT> next(void) noexcept
         {
-            return (current_ < limit_) ? ++current_, inner_.next() : Optional<OutT>::None();
+            return (current_ < limit_) ? ++current_, inner_.next() : None;
         }
 };
 

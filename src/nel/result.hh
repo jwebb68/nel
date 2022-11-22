@@ -328,7 +328,7 @@ class Result
             tag_ = INVAL;
             // TODO: remove need to explicitly cast to Optional in each of the
             //       branches.. i.e. the Optional<T>:: bit.
-            return is_ok ? Optional<OkT>::Some(ok_.unwrap()) : Optional<OkT>::None();
+            return is_ok ? Some(ok_.unwrap()) : None;
         }
 
         /**
@@ -345,7 +345,7 @@ class Result
             tag_ = INVAL;
             // TODO: remove need to explicitly cast to Optional in each of the
             //       branches.. i.e. the Optional<E>:: bit.
-            return is_err ? Optional<ErrT>::Some(err_.unwrap()) : Optional<ErrT>::None();
+            return is_err ? Some(err_.unwrap()) : None;
         }
 
         /**
@@ -776,7 +776,7 @@ class Result<void, E>
             tag_ = INVAL;
             // TODO: remove need to explicitly cast to Optional in each of the
             //       branches.. i.e. the Optional<T>:: bit.
-            return is_ok ? Optional<OkT>::Some() : Optional<OkT>::None();
+            return is_ok ? Some() : None;
         }
 
         /**

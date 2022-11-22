@@ -7,6 +7,8 @@ namespace nel
 template<typename T>
 class Optional;
 
+class NoneT;
+
 } // namespace nel
 
 #include <nel/element.hh>
@@ -19,6 +21,10 @@ class Optional;
 
 namespace nel
 {
+
+struct NoneT {
+};
+static constexpr NoneT None = NoneT {};
 
 /**
  * Optional<T>
@@ -68,14 +74,10 @@ class Optional
 {
     public:
     private:
-        // Need to use class/struct as references cannot be used in unions,
-        // so this is possible: Optional<Foo &>
-        typedef T SomeT;
-
         // Tagged enum thing.
         // Similar to std::variant but without the exception throwing behaviour.
         // Maybe make into a nel::Variant ?
-        enum Tag
+        enum class Tag
         {
             INVAL = 0,
             NONE,
@@ -85,38 +87,25 @@ class Optional
         struct Phantom {
         };
 
-        // Use union to disable certain default methods on SomeT
+        // Use union to disable certain default methods on T
+        // Need to use class/struct as references cannot be used in unions,
+        // so this is possible: Optional<Foo &>
         union {
-                Element<SomeT> some_;
+                Element<T> some_;
         };
 
-        constexpr Optional(Phantom<NONE> const) noexcept: tag_(NONE) {}
-
-        Optional(Phantom<SOME> const, SomeT &&v) noexcept: tag_(SOME), some_(std::forward<SomeT>(v))
-        {
-        }
-
-        template<typename... Args>
-        Optional(Phantom<SOME> const, Args &&...args) noexcept
-            : tag_(SOME), some_(std::forward<Args>(args)...)
-        {
-        }
-
     public:
-        ~Optional(void) noexcept
+        constexpr ~Optional(void) noexcept
         {
             switch (tag_) {
-                case SOME:
-                    some_.~Element<SomeT>();
-                    return;
+                case Tag::SOME:
+                    some_.~Element<T>();
                     break;
 
-                case NONE:
-                    return;
+                case Tag::NONE:
                     break;
 
-                case INVAL:
-                    return;
+                case Tag::INVAL:
                     break;
 
                 // I want compile to fail if an explicit enum case handler isn't present.
@@ -136,31 +125,23 @@ class Optional
             }
         }
 
-        // Default constructor.
-        // Don't want this as there is no default for an optional.
-        // i.e. require a value, even if it's a None (i.e. being explicit).
-        // really? Default to None/Inval?
-        // But use of move-ctor mandates an inval state, so can have a default.
-        // Optional(void) = delete;
-        constexpr Optional(void) noexcept: tag_(INVAL) {}
-
+    private:
         // Don't want copy semantics here, use move instead.
         constexpr Optional(Optional const &o) = delete;
         constexpr Optional &operator=(Optional const &o) const = delete;
 
-        constexpr Optional(Optional &&o) noexcept: tag_(std::move(o.tag_))
+    public:
+        constexpr Optional(Optional &&o) noexcept
         {
-            o.tag_ = INVAL;
+            tag_ = o.tag_;
+            o.tag_ = Tag::INVAL;
             switch (tag_) {
-                case SOME:
-                    new (&some_) Element<SomeT>(std::move(o.some_));
-                    return;
+                case Tag::SOME:
+                    new (&some_) Element<T>(std::move(o.some_));
                     break;
-                case NONE:
-                    return;
+                case Tag::NONE:
                     break;
-                case INVAL:
-                    return;
+                case Tag::INVAL:
                     break;
                 default:
                     // For gcc/clang minsize: if this not nell:abort,
@@ -178,46 +159,80 @@ class Optional
         constexpr Optional &operator=(Optional &&o) noexcept
         {
             if (this != &o) {
-                // Destruct and move, more efficient than move+swap
-                // Esp if move is copy+wipe.
-                // But only if moving does not throw.
-                this->~Optional();
-                new (this) Optional(std::move(o));
+                tag_ = o.tag_;
+                o.tag_ = Tag::INVAL;
+                switch (tag_) {
+                    case Tag::SOME:
+                        some_ = std::move(o.some_);
+                        break;
+                    case Tag::NONE:
+                        break;
+                    case Tag::INVAL:
+                        break;
+                    default:
+                        // For gcc/clang minsize: if this not nell:abort,
+                        // then iteration may not collapse into a tight loop.
+                        // It's the  need for arguments that's doing it.
+                        // For O3: does not affect and iteration collapses into tight loop
+                        // TODO: look into stack trace dumper on fail.
+                        // But would still like a message..
+                        // For arm:minsize: if panic, then does not collapse (func with arg issue)
+                        // nel_panic("invalid optional");
+                        nel::abort();
+                }
             }
             return *this;
         }
 
+    private:
+        constexpr Optional(Phantom<Tag::SOME> const, T &&v) noexcept
+            : tag_(Tag::SOME), some_(std::forward<T>(v))
+        {
+        }
+        // template<typename... Args>
+        // constexpr Optional(Phantom<SOME> const, Args &&...args) noexcept
+        //     : tag_(SOME), some_(std::forward<Args>(args)...) {}
+
     public:
+        // Default constructor.
+        // Don't want this as there is no default for an optional.
+        // i.e. require a value, even if it's a None (i.e. being explicit).
+        // really? Default to None/Inval?
+        // But use of move-ctor mandates an inval state, so can have a default.
+        // Optional(void) = delete;
+        constexpr Optional(void) noexcept: tag_(Tag::INVAL) {}
+
+        // Optional<T> t = None;
+        // Optional<T> t{None};
+        // Optional<T> t(None);
         /**
          * Create an optional set to none.
          *
          * @returns an Optional 'wrapping' a None
          */
-        constexpr static Optional None(void) noexcept
-        {
-            return Optional(Phantom<NONE>());
-        }
+        constexpr Optional(NoneT const &) noexcept: tag_(Tag::NONE) {}
 
         /**
-         * Create an optional set to Some, moveing existing value to hold.
+         * Create an optional set to Some, moving existing value to hold.
          *
          * @returns an Optional 'wrapping' the value moved.
          */
-        static Optional Some(SomeT &&v) noexcept
+        constexpr static Optional Some(T &&v) noexcept
         {
-            return Optional(Phantom<SOME>(), std::forward<SomeT>(v));
+            // using forward<>() instead of move() allows using T as references .
+            return Optional(Phantom<Tag::SOME>(), std::forward<T>(v));
         }
 
-        /**
-         * Create an optional set to Some, creating the value to use used inplace.
-         *
-         * @returns an Optional 'wrapping' the value created from the values given.
-         */
-        template<typename... Args>
-        static Optional Some(Args &&...args) noexcept
-        {
-            return Optional(Phantom<SOME>(), std::forward<Args>(args)...);
-        }
+        // /**
+        //  * Create an optional set to Some, creating the value to use used inplace.
+        //  *
+        //  * @returns an Optional 'wrapping' the value created from the values given.
+        //  */
+        // template<typename... Args>
+        // constexpr static Optional Some(Args &&...args) noexcept
+        // {
+        //     return Optional(Phantom<Tag::SOME>(), std::forward<Args>(args)...);
+        // }
 
     public:
         /**
@@ -229,7 +244,7 @@ class Optional
          */
         constexpr bool is_some(void) const noexcept
         {
-            return tag_ == SOME;
+            return tag_ == Tag::SOME;
         }
 
         /**
@@ -241,7 +256,7 @@ class Optional
          */
         constexpr bool is_none(void) const noexcept
         {
-            return tag_ == NONE;
+            return tag_ == Tag::NONE;
         }
 
     public:
@@ -257,10 +272,10 @@ class Optional
          *
          * @warning If the optional does not contain a Some, then abort/panic.
          */
-        SomeT unwrap(void) noexcept
+        T unwrap(void) noexcept
         {
             nel_panic_if_not(is_some(), "not a Some");
-            tag_ = INVAL;
+            tag_ = Tag::INVAL;
             return some_.unwrap();
         }
 
@@ -274,11 +289,13 @@ class Optional
          * @returns value contained by the Optional if it's a 'Some'.
          * @returns value passed in if it's a 'None'.
          */
-        SomeT unwrap_or(SomeT &&v) noexcept
+        T unwrap(T &&v) noexcept
         {
+            // move into temp, will need to be moved or it'll be destroyed.
+            auto t = std::forward<T>(v);
             bool const is_some = this->is_some();
-            tag_ = INVAL;
-            return is_some ? some_.unwrap() : std::forward<SomeT>(v);
+            tag_ = Tag::INVAL;
+            return is_some ? some_.unwrap() : std::forward<T>(t);
         }
 
         /**
@@ -288,11 +305,12 @@ class Optional
          * @returns if not Some, consumes args and creates value to return.
          */
         template<typename... Args>
-        SomeT unwrap_or(Args &&...args) noexcept
+        T unwrap(Args &&...args) noexcept
         {
+            // TODO: are args destroyed if a some?
             bool const is_some = this->is_some();
-            tag_ = INVAL;
-            return is_some ? some_.unwrap() : SomeT(std::forward<Args>(args)...);
+            tag_ = Tag::INVAL;
+            return is_some ? some_.unwrap() : T(std::forward<Args>(args)...);
         }
 
         // Why no access via references?
@@ -302,15 +320,15 @@ class Optional
         template<typename U>
         Optional<U> map(std::function<U(T &&)> fn) noexcept
         {
-            return (this->is_none()) ? Optional<U>::None()
-                                     : Optional<U>::Some(fn(std::move(some_.unwrap())));
+            return (this->is_none()) ? None
+                                     : Optional<U>::Some(fn(std::forward<T>(some_.unwrap())));
         }
 
     public:
         // Comparision operators
         // Implemented in terms of the operator on the type,
-        // as some types may have more optimal implementations of thatoperationthan the
-        // negation of it's opposite.
+        // as some types may have more optimal implementations of that operation than the
+        // it's negation.
         /**
          * Is this equal by value to the optional given?
          *
@@ -325,13 +343,13 @@ class Optional
             if (this == &o) { return true; }
             if (tag_ == o.tag_) {
                 switch (tag_) {
-                    case SOME:
+                    case Tag::SOME:
                         return some_ == o.some_;
                         break;
-                    case NONE:
+                    case Tag::NONE:
                         return true;
                         break;
-                    case INVAL:
+                    case Tag::INVAL:
                         return true;
                         break;
                     default:
@@ -363,13 +381,13 @@ class Optional
             if (this == &o) { return false; }
             if (tag_ == o.tag_) {
                 switch (tag_) {
-                    case SOME:
+                    case Tag::SOME:
                         return some_ != o.some_;
                         break;
-                    case NONE:
+                    case Tag::NONE:
                         return false;
                         break;
-                    case INVAL:
+                    case Tag::INVAL:
                         return false;
                         break;
                     default:
@@ -392,19 +410,19 @@ class Optional
         friend Log &operator<<(Log &outs, Optional const &val) noexcept
         {
             switch (val.tag_) {
-                case NONE:
+                case Tag::NONE:
                     outs << "Optional("
                          << "None"
                          << ")";
                     return outs;
                     break;
-                case SOME:
+                case Tag::SOME:
                     outs << "Optional("
                          << "Some(" << val.some_.get() << ")"
                          << ")";
                     return outs;
                     break;
-                case INVAL:
+                case Tag::INVAL:
                     outs << "Optional("
                          << "Inval"
                          << ")";
@@ -419,18 +437,20 @@ class Optional
         }
 };
 
+template<typename T>
+constexpr Optional<T> Some(T &&v) noexcept
+{
+    return Optional<T>::Some(std::forward<T>(v));
+}
+
 template<>
 class Optional<void>
 {
-    public:
-        typedef void SomeT;
-
     private:
         // Tagged enum thing.
         // Similar to std::variant but without the exception throwing behaviour.
         // Maybe make into a nel::Variant ?
-        enum Tag
-        {
+        enum Tag {
             INVAL = 0,
             NONE,
             SOME
@@ -439,22 +459,15 @@ class Optional<void>
         struct Phantom {
         };
 
-        constexpr Optional(Phantom<NONE> const) noexcept: tag_(NONE) {}
-
-        constexpr Optional(Phantom<SOME> const) noexcept: tag_(SOME) {}
-
     public:
-        ~Optional(void) noexcept
+        constexpr ~Optional(void) noexcept
         {
             switch (tag_) {
-                case SOME:
-                    return;
+                case Tag::SOME:
                     break;
-                case NONE:
-                    return;
+                case Tag::NONE:
                     break;
-                case INVAL:
-                    return;
+                case Tag::INVAL:
                     break;
                 default:
                     // For gcc/clang minsize: if this not nell:abort,
@@ -469,30 +482,22 @@ class Optional<void>
             }
         }
 
-        // Default constructor.
-        // Don't want this as there is no default for an optional.
-        // i.e. require a value, even if it's a None (i.e. being explicit).
-        // really? Default to None/Inval?
-        // But use of move-ctor mandates an inval state, so can have a default.
-        // Optional(void) = delete;
-        constexpr Optional(void) noexcept: tag_(INVAL) {}
-
+    private:
         // Don't want copy semantics here, use move instead.
         constexpr Optional(Optional const &o) = delete;
         constexpr Optional &operator=(Optional const &o) const = delete;
 
-        constexpr Optional(Optional &&o) noexcept: tag_(std::move(o.tag_))
+    public:
+        constexpr Optional(Optional &&o) noexcept
         {
-            o.tag_ = INVAL;
+            tag_ = o.tag_;
+            o.tag_ = Tag::INVAL;
             switch (tag_) {
-                case SOME:
-                    return;
+                case Tag::SOME:
                     break;
-                case NONE:
-                    return;
+                case Tag::NONE:
                     break;
-                case INVAL:
-                    return;
+                case Tag::INVAL:
                     break;
                 default:
                     // For gcc/clang minsize: if this not nell:abort,
@@ -510,26 +515,52 @@ class Optional<void>
         constexpr Optional &operator=(Optional &&o) noexcept
         {
             if (this != &o) {
-                // Destruct and move, more efficient than move+swap
-                // Especially if move is copy+wipe.
-                // But only if moving does not error.
-                this->~Optional();
-                new (this) Optional(std::move(o));
+                tag_ = o.tag_;
+                o.tag_ = Tag::INVAL;
+                switch (tag_) {
+                    case Tag::SOME:
+                        break;
+                    case Tag::NONE:
+                        break;
+                    case Tag::INVAL:
+                        break;
+                    default:
+                        // For gcc/clang minsize: if this not nell:abort,
+                        // then iteration may not collapse into a tight loop.
+                        // It's the  need for arguments that's doing it.
+                        // For O3: does not affect and iteration collapses into tight loop
+                        // TODO: look into stack trace dumper on fail.
+                        // But would still like a message..
+                        // For arm:minsize: if panic, then does not collapse (func with arg issue)
+                        // nel_panic("invalid optional");
+                        nel::abort();
+                }
             }
             return *this;
         }
 
+    private:
+        constexpr Optional(Phantom<Tag::SOME> const) noexcept: tag_(Tag::SOME) {}
+
     public:
+        // Default constructor.
+        // Don't want this as there is no default for an optional.
+        // i.e. require a value, even if it's a None (i.e. being explicit).
+        // really? Default to None/Inval?
+        // But use of move-ctor mandates an inval state, so can have a default.
+        // Optional(void) = delete;
+        constexpr Optional(void) noexcept: tag_(Tag::INVAL) {}
+
+        // assign/create from None
+        // Optional<T> t = None;
+        // Optional<T> t{None};
+        // Optional<T> t(None);
         /**
          * Create an optional set to none.
          *
          * @returns an Optional 'wrapping' a None
          */
-        // Cannot be constexpr since struct has non-trivial dtor..
-        static Optional None(void) noexcept
-        {
-            return Optional(Phantom<NONE>());
-        }
+        constexpr Optional(NoneT const &) noexcept: tag_(Tag::NONE) {}
 
         /**
          * Create an optional set to Some, creating the value to use used inplace.
@@ -537,9 +568,9 @@ class Optional<void>
          * @returns an Optional 'wrapping' the value created from the values given.
          */
         // Cannot be constexpr since struct has non-trivial dtor..
-        static Optional Some(void) noexcept
+        constexpr static Optional Some(void) noexcept
         {
-            return Optional(Phantom<SOME>());
+            return Optional(Phantom<Tag::SOME>());
         }
 
     public:
@@ -552,7 +583,7 @@ class Optional<void>
          */
         constexpr bool is_some(void) const noexcept
         {
-            return tag_ == SOME;
+            return tag_ == Tag::SOME;
         }
 
         /**
@@ -564,7 +595,7 @@ class Optional<void>
          */
         constexpr bool is_none(void) const noexcept
         {
-            return tag_ == NONE;
+            return tag_ == Tag::NONE;
         }
 
     public:
@@ -583,7 +614,7 @@ class Optional<void>
         void unwrap(void) noexcept
         {
             nel_panic_if_not(is_some(), "not a Some");
-            tag_ = INVAL;
+            tag_ = Tag::INVAL;
         }
 
         /**
@@ -596,7 +627,7 @@ class Optional<void>
          */
         void unwrap_or(void) noexcept
         {
-            tag_ = INVAL;
+            tag_ = Tag::INVAL;
         }
 
         // Why no access via references?
@@ -606,7 +637,7 @@ class Optional<void>
         template<typename U>
         Optional<U> map(std::function<U(void)> fn) noexcept
         {
-            return (this->is_none()) ? Optional<U>::None() : Optional<U>::Some(fn());
+            return (this->is_none()) ? None : Some(fn());
         }
 
     public:
@@ -628,13 +659,13 @@ class Optional<void>
             if (this == &o) { return true; }
             if (tag_ == o.tag_) {
                 switch (tag_) {
-                    case SOME:
+                    case Tag::SOME:
                         return true;
                         break;
-                    case NONE:
+                    case Tag::NONE:
                         return true;
                         break;
-                    case INVAL:
+                    case Tag::INVAL:
                         return true;
                         break;
                     default:
@@ -666,13 +697,13 @@ class Optional<void>
             if (this == &o) { return false; }
             if (tag_ == o.tag_) {
                 switch (tag_) {
-                    case SOME:
+                    case Tag::SOME:
                         return false;
                         break;
-                    case NONE:
+                    case Tag::NONE:
                         return false;
                         break;
-                    case INVAL:
+                    case Tag::INVAL:
                         return false;
                         break;
                     default:
@@ -695,20 +726,20 @@ class Optional<void>
         friend Log &operator<<(Log &outs, Optional const &val) noexcept
         {
             switch (val.tag_) {
-                case NONE:
+                case Tag::NONE:
                     outs << "Optional("
                          << "None"
                          << ")";
                     return outs;
                     break;
-                case SOME:
+                case Tag::SOME:
                     outs << "Optional("
                          << "Some("
                          << ")"
                          << ")";
                     return outs;
                     break;
-                case INVAL:
+                case Tag::INVAL:
                     outs << "Optional("
                          << "Inval"
                          << ")";
@@ -722,6 +753,11 @@ class Optional<void>
             return outs;
         }
 };
+
+constexpr Optional<void> Some(void)
+{
+    return Optional<void>::Some();
+}
 
 } // namespace nel
 

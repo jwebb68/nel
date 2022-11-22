@@ -64,8 +64,9 @@ struct Array {
 
         // fill constructor
         // TODO:  what if copy of T fails..? try_fill? how?
-        Array(T const &v) {
-            for (Index i=0; i < N; ++i) {
+        Array(T const &v)
+        {
+            for (Index i = 0; i < N; ++i) {
                 new (&values_[i]) T(v);
             }
         }
@@ -141,7 +142,7 @@ struct Array {
         {
             // TODO: can the array create be made inplace into the optional?
             // prob only if initlist ctor is public, which I don't want.
-            return (l.size() != N) ? Optional<Array>::None() : Optional<Array>::Some(Array(l));
+            return (l.size() != N) ? None : Some(Array(l));
         }
 
     public:

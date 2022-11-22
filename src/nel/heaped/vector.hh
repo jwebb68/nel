@@ -114,8 +114,8 @@ struct Vector {
         {
             Vector a = Vector::empty();
             auto r = a.push_back(l);
-            if (r.is_err()) { return Optional<Vector>::None(); }
-            return Optional<Vector>::Some(std::move(a));
+            if (r.is_err()) { return None; }
+            return Some(std::move(a));
         }
 
     public:

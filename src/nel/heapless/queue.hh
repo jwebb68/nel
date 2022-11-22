@@ -156,9 +156,9 @@ struct Queue {
          */
         Optional<T> get(void)
         {
-            if (is_empty()) { return Optional<T>::None(); }
+            if (is_empty()) { return None; }
             len_ -= 1;
-            auto r = Optional<T>::Some(std::move(store_[rp_]));
+            auto r = Some(std::move(store_[rp_]));
             rp_ += 1;
             if (rp_ == N) { rp_ = 0; }
             return r;

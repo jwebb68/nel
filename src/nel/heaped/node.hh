@@ -144,10 +144,10 @@ struct Node {
             // cannot use Optional<Node> as size is not known at compile time.
             // TODO: maybe should be try_malloc?
             Node *p = Node::malloc(l.size());
-            if (p == nullptr) { return Optional<Node *>::None(); }
+            if (p == nullptr) { return None; }
             auto r = p->push_back(l);
-            if (r.is_err()) { return Optional<Node *>::None(); }
-            return Optional<Node *>::Some(p);
+            if (r.is_err()) { return None; }
+            return Some(std::move(p));
         }
 
         // use placement new to init.
@@ -240,14 +240,14 @@ struct Node {
                         return nullptr;
                     }
                 }
-                for (Index i=(old == nullptr)?0:old->len(); i < newsize; ++i) {
+                for (Index i = (old == nullptr) ? 0 : old->len(); i < newsize; ++i) {
                     new (&p->values_[i]) T(fill);
                 }
                 p->len_ = newsize;
                 return p;
             } else if (newsize < old->len()) {
                 // shrinking, drop excess.
-                for (Index i=newsize; i < old->len(); ++i) {
+                for (Index i = newsize; i < old->len(); ++i) {
                     old->values_[i].~T();
                 }
                 old->len_ = newsize;
