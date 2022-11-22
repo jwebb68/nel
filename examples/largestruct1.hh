@@ -21,6 +21,9 @@ struct U8Buf {
         constexpr U8Buf(void)
         {}
 
+        constexpr ~U8Buf(void) {
+            nel::memset(data_, 0xa5, N);
+        }
 
         constexpr U8Buf(U8Buf const &o) {
             nel::memcpy(data_, o.data_, N);
