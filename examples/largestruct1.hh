@@ -38,15 +38,13 @@ struct U8Buf {
             return *this;
         }
 
-        // explicit U8Buf(uint8_t const f) {
-        //     nel::memset(data_, f, N);
-        // }
+        //constexpr explicit U8Buf(uint8_t const f) {
         constexpr U8Buf(uint8_t const f) {
             nel::memset(data_, f, N);
         }
 
     public:
-        Length len(void) const {
+        constexpr Length len(void) const {
             return N;
         }
 
