@@ -41,6 +41,12 @@ struct Iterator {
             return it;
         }
 
+        constexpr ItT const &self(void) const noexcept
+        {
+            ItT const &it = static_cast<ItT const &>(*this);
+            return it;
+        }
+
     public:
         Optional<OutT> next(void);
 
@@ -50,15 +56,16 @@ struct Iterator {
          *
          * @param fn func to apply to each item in iterator
          */
-        void for_each(std::function<void(InT &&)> fn) noexcept
+        // void for_each(std::function<void(OutT)> fn) noexcept
+        template<typename F>
+        void for_each(F fn) noexcept
         {
-            // It &it = static_cast<It &>(*this);
             while (true) {
-                auto r = self().next();
+                Optional<OutT> r = self().next();
                 if (r.is_none()) { break; }
-                // auto & v = r.unwrap();
-                auto v = r.unwrap();
-                fn(std::move(v));
+                // TODO: already checked r for none, but unwrap will do so again.. can this be
+                // avoided?
+                fn(r.unwrap());
             }
         }
 
@@ -68,20 +75,18 @@ struct Iterator {
          * @param fn func to apply to each item in iterator
          * @note for fn, acc is the folded value, e is the item to fold into it.
          */
-        template<typename U>
-        U fold(U &&initial, std::function<void(U &acc, InT &&e)> fn) noexcept
+        // template<typename U>
+        // U fold(U &&initial, std::function<void(U &acc, OutT e)> fn) noexcept
+        template<typename U, typename F>
+        U fold(U &&initial, F fn) noexcept
         {
             U acc = std::move(initial);
-            while (true) {
-                auto r = self().next();
-                if (r.is_none()) { break; }
-                // auto & v = r.unwrap();
-                auto v = r.unwrap();
-                fn(acc, std::move(v));
-            }
+            for_each([&](OutT &v) { fn(acc, v); });
             return acc;
         }
 
+    public:
+        // annoyingly, new iters need to be added to base iter for fluent style extensions
         FirstNIterator<ItT> first_n(Count const limit) noexcept
         {
             return FirstNIterator<ItT>(self(), limit);
