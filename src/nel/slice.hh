@@ -202,16 +202,6 @@ struct Slice {
          *
          * The iterator is invalidated if the slice goes out of scope/destroyed.
          */
-#if 0
-        constexpr Iterator<T> iter(void) noexcept
-        {
-            return Iterator<T>(content_, len_);
-        }
-        constexpr Iterator<T const> const iter(void) const noexcept
-        {
-            return Iterator<T const>(content_, len_);
-        }
-#else
         constexpr SliceIterator<T> iter(void) noexcept
         {
             return SliceIterator<T>(content_, len());
@@ -221,7 +211,6 @@ struct Slice {
         {
             return SliceIterator<T const>(content_, len());
         }
-#endif
 
     public:
         /**
@@ -269,16 +258,15 @@ exit:
  */
 // TODO: maybe make length a template param..
 template<typename T>
-class SliceIterator: public Iterator<SliceIterator<T>, T, T &>
+class SliceIterator: public Iterator<SliceIterator<T>, T &, T &>
 {
     public:
         typedef T &InT;
         typedef T &OutT;
 
     private:
-        T *const ptr_;
-        Count const len_;
-        Index pos_;
+        T *b_;
+        T *const e_;
 
     public:
         constexpr SliceIterator(void) = delete;
@@ -287,9 +275,8 @@ class SliceIterator: public Iterator<SliceIterator<T>, T, T &>
         // move ok
     public:
         constexpr SliceIterator(T arr[], Count len) noexcept
-            : ptr_(arr)
-            , len_(len)
-            , pos_(0)
+            : b_(arr)
+            , e_(arr + len)
         {
         }
 
@@ -308,16 +295,10 @@ class SliceIterator: public Iterator<SliceIterator<T>, T, T &>
         {
             // Some() takes a move, so want to move the reference into the optional.
             // ref(),
-            if (pos_ >= len_) { return None; }
-            return Some(ptr_[pos_++]);
+            if (b_ == e_) { return None; }
+            return Some(*b_++);
         }
-
-        // consuming/moving/mutating iter
-        // Optional<T> next(void) noexcept
-        // {
-        //     return (pos_ < len_) ? Optional<T>::Some(std::move(ptr_[pos_++])) :
-        //     Optional<T>::None();
-        // }
+}
 };
 } // namespace nel
 
