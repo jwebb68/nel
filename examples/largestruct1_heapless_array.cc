@@ -50,12 +50,18 @@ void ex3() {
 }
 #endif
 
-void ex4() {
+void ex3() {
     Array1 arr1 = Array1::filled(U8Buf<256>(0xff));
 
     arr1.try_get(0).unwrap() = U8Buf<256>(0x11);
     arr1.try_get(5).unwrap() = U8Buf<256>(0x22);
     arr1.try_get(6).unwrap() = U8Buf<256>(0x33);
+
+}
+
+
+void ex41() {
+    Array1 arr1 = Array1::filled(U8Buf<256>(0xff));
 
     auto it = arr1.iter();
     while (true) {
@@ -77,12 +83,17 @@ void ex4() {
     }
 }
 
-void ex41() {
+void ex42() {
     Array1 arr1 = Array1::filled(U8Buf<256>(0xff));
 
-    arr1.try_get(0).unwrap() = U8Buf<256>(0x11);
-    arr1.try_get(5).unwrap() = U8Buf<256>(0x22);
-    arr1.try_get(6).unwrap() = U8Buf<256>(0x33);
+    arr1.iter().for_each([&](U8Buf<256> &v)->void {
+        nel::log << v << '\n';
+    });
+}
+
+
+void ex61() {
+    Array1 arr1 = Array1::filled(U8Buf<256>(0xff));
 
     auto it = arr1.iter().first_n(2);
     Index i = 0;
@@ -106,22 +117,31 @@ void ex41() {
     }
 }
 
+void ex62() {
+    Array1 arr1 = Array1::filled(U8Buf<256>(0xff));
+
+    auto it = arr1.iter().first_n(2);
+    Index i = 0;
+    it.for_each([&](U8Buf<256> &e)->void {
+        nel::log << '[' << i << ']' << ':' << e << '\n';
+        ++i;
+    });
+}
 
 int main() {
     nel::log << "ex1:b" << '\n';
     ex1();
-    nel::log << "ex1:e" << "\n";
-    // nel::log << "ex2:b" << "\n";
+    nel::log << "ex1:e" << '\n';
+    // nel::log << "ex2:b" << '\n';
     // ex2();
-    // nel::log << "ex2:e" << "\n";
-    // nel::log << "ex3:b" << "\n";
-    // ex3();
-    // nel::log << "ex3:e" << "\n";
-    nel::log << "ex4:b" << "\n";
-    ex4();
-    nel::log << "ex4:e" << "\n";
-    nel::log << "ex41:b" << "\n";
+    // nel::log << "ex2:e" << '\n';
+    nel::log << "ex3:b" << '\n';
+    ex3();
+    nel::log << "ex3:e" << '\n';
     nel::log << "ex41:b" << '\n';
     ex41();
     nel::log << "ex41:e" << '\n';
+    nel::log << "ex42:b" << '\n';
+    ex42();
+    nel::log << "ex42:e" << '\n';
 }

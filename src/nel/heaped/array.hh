@@ -143,7 +143,7 @@ struct Array {
         static constexpr Optional<Array> try_from(std::initializer_list<T> l) noexcept
         {
             return ArrayNode::try_from(l).map(
-                std::function([](ArrayNode *&&p) -> Array { return Array(p); }));
+                std::function([](ArrayNode *&p) -> Array { return Array(p); }));
         }
 
     public:
@@ -286,9 +286,11 @@ struct Array {
         {
             outs << "Array(" << v.len() << "){";
             outs << '\n';
-            for (Index i = 0; i < v.len(); ++i) {
-                outs << '[' << i << "]:" << v.values_[i] << '\n';
-            }
+            Index i = 0;
+            v.iter().for_each([&outs, &i](T const &e) {
+                outs << '[' << i << "]:" << e << '\n';
+                ++i;
+            });
             outs << '}';
             return outs;
         }

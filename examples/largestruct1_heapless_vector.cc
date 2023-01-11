@@ -32,7 +32,7 @@ void ex3() {
     nel::log << vec1 << '\n';
 }
 
-void ex4() {
+void ex41() {
     Vec1 vec1 = Vec1::empty();
 
     vec1.push_back((uint8_t)0x67);
@@ -61,7 +61,7 @@ void ex4() {
     }
 }
 
-void ex41() {
+void ex51() {
     Vec1 vec1 = Vec1::empty();
 
     for (uint8_t f=1; f < 10; ++f) {
@@ -99,10 +99,10 @@ int main() {
     nel::log << "ex3:b" << '\n';
     ex3();
     nel::log << "ex3:e" << '\n';
-    nel::log << "ex4:b" << '\n';
-    ex4();
-    nel::log << "ex4:e" << '\n';
     nel::log << "ex41:b" << '\n';
     ex41();
     nel::log << "ex41:e" << '\n';
+    nel::log << "ex51:b" << '\n';
+    ex51();
+    nel::log << "ex51:e" << '\n';
 }

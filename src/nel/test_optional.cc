@@ -845,7 +845,7 @@ TEST_CASE("optional::~dtor for some, must call some dtor", "[optional]")
 TEST_CASE("optional::map for some must produce a some", "[optional]")
 {
     nel::Optional<int> opt1a = nel::Some(1);
-    auto opt2a = opt1a.map(std::function([](int &&) -> char const * { return "haha"; }));
+    auto opt2a = opt1a.map(std::function([](int &) -> char const * { return "haha"; }));
     auto val = opt2a.unwrap();
 
     REQUIRE(strcmp(val, "haha") == 0);
@@ -854,6 +854,6 @@ TEST_CASE("optional::map for some must produce a some", "[optional]")
 TEST_CASE("optional::map for none must produce a none", "[optional]")
 {
     nel::Optional<int> opt1a = nel::None;
-    auto opt2a = opt1a.map(std::function([](int &&) -> char const * { return "haha"; }));
+    auto opt2a = opt1a.map(std::function([](int &) -> char const * { return "haha"; }));
     REQUIRE(opt2a.is_none());
 }

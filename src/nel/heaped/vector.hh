@@ -414,7 +414,8 @@ struct Vector {
         // TODO: insert into formatter and not final dest type.
         friend Log &operator<<(Log &outs, Vector const &v) noexcept
         {
-            outs << "Vector(" << v.len() << "){" << '\n';
+            outs << "Vector(" << v.len() << "){";
+            outs << '\n';
             if (v.item_ != nullptr) { outs << *v.item_; }
             outs << '}';
             return outs;

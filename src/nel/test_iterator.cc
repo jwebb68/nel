@@ -18,7 +18,8 @@ TEST_CASE("iterator::fold", "[iterator]")
     {
         // fold on the iter traits works.
         auto a1 = nel::heapless::Array<int, 2>::try_from({7, 7}).unwrap();
-        int folded = a1.iter().fold(0.0, std::function([](double &acc, int &e) { acc += e; }));
+        int folded
+            = a1.iter().fold(0.0, std::function([](double &acc, int const &e) { acc += e; }));
         REQUIRE(folded == 14);
     }
 }

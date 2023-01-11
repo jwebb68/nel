@@ -327,10 +327,11 @@ class Optional
 
     public:
         template<typename U>
-        Optional<U> map(std::function<U(T &&)> fn) noexcept
+        Optional<U> map(std::function<U(T &)> fn) noexcept
         {
-            return (this->is_none()) ? None
-                                     : Optional<U>::Some(fn(std::forward<T>(some_.unwrap())));
+            if (is_none()) { return None; }
+            auto v = some_.unwrap();
+            return Optional<U>::Some(fn(v));
         }
 
     public:

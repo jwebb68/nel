@@ -104,6 +104,18 @@ struct Iterator {
 
 template<typename It, typename V>
 struct MappingIterator: public Iterator<MappingIterator<It, V>, typename It::InT, V> {
+        // turns an InT into an OutT via a It::OutT
+
+        // e.g. vec<int>.iter()
+        //  .map([&](int &v)->float{ return v; })
+        // is iter emitting float, but from int &.
+
+        // e.g. vec<int>.iter() // iter of int &
+        //    .map([&](int &v)->float{ return v; }) // iter of float
+        //    .map([&](float v)->Complex<float>{ return Complex<float>(v,v); }) // iter of
+        //    complex<float>
+        // is iter emitting Complex, but from int &.
+
     public:
         typedef V OutT;
         typedef std::function<V(typename It::OutT)> FnT;
@@ -128,16 +140,10 @@ struct MappingIterator: public Iterator<MappingIterator<It, V>, typename It::InT
          */
         Optional<OutT> next(void) noexcept
         {
-            auto r = inner_.next();
-            // // if (r.is_none()) { return Optional<OutT>::None(); }
-            // // auto t = r.unwrap();
-            // // auto u = fn_(std::move(t));
-            // // return Optional<OutT>::Some(u);
-            return (r.is_none()) ? None : Some(fn_(r.unwrap()));
-
-            // auto r = inner_.next();
-            // return r.map1(fn_);
-            // return inner_.next();
+            FnT f = [&](typename It::OutT &e) -> OutT {
+                return fn_(e);
+            };
+            return inner_.next().map(f);
         }
 };
 

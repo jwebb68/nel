@@ -60,15 +60,14 @@ struct Array {
             }
         }
 
+
         // If type has copy, then could fill? use slice for that..
 
         // fill constructor
         // TODO:  what if copy of T fails..? try_fill? how?
         Array(T const &v)
         {
-            for (Index i = 0; i < N; ++i) {
-                new (&values_[i]) T(v);
-            }
+            iter().for_each([&](T &e) { new (&e) T(v); });
         }
 
     public:
@@ -282,10 +281,13 @@ struct Array {
         // TODO: insert into formatter and not final dest type.
         friend Log &operator<<(Log &outs, Array const &v) noexcept
         {
-            outs << "Array<" << v.len() << ">{" << '\n';
-            for (Index i = 0; i < v.len(); ++i) {
-                outs << '[' << i << "]:" << v.values_[i] << '\n';
-            }
+            outs << "Array<" << v.len() << ">{";
+            outs << '\n';
+            Index i = 0;
+            v.iter().for_each([&outs, &i](T const &e) {
+                outs << '[' << i << "]:" << e << '\n';
+                ++i;
+            });
             outs << '}';
             return outs;
         }

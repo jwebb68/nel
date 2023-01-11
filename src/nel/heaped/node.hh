@@ -314,9 +314,11 @@ struct Node {
     public:
         friend Log &operator<<(Log &outs, Node const &v) noexcept
         {
-            for (Index i = 0; i < v.len(); ++i) {
-                outs << '[' << i << "]:" << v.values_[i] << '\n';
-            }
+            Index i = 0;
+            v.iter().for_each([&outs, &i](T const &e) {
+                outs << '[' << i << "]:" << e << '\n';
+                ++i;
+            });
             return outs;
         }
 };

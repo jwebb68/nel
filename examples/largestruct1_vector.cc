@@ -31,7 +31,7 @@ void ex3() {
     nel::log << vec1 << '\n';
 }
 
-void ex4() {
+void ex41() {
     auto r = Vec1::try_from({
         ((uint8_t)0x67),
         ((uint8_t)0x68),
@@ -59,6 +59,20 @@ void ex4() {
     }
 }
 
+void ex42() {
+    auto r = Vec1::try_from({
+        ((uint8_t)0x67),
+        ((uint8_t)0x68),
+        ((uint8_t)0x69),
+    });
+    Vec1 vec1 = r.unwrap();
+
+    auto it = vec1.iter();
+    it.for_each([&](U8Buf<256> &e)->void{
+        nel::log << e << '\n';
+    });
+}
+
 
 int main() {
     nel::log << "ex1:b" << '\n';
@@ -70,7 +84,7 @@ int main() {
     nel::log << "ex3:b" << '\n';
     ex3();
     nel::log << "ex3:e" << '\n';
-    nel::log << "ex4:b" << '\n';
-    ex4();
-    nel::log << "ex4:e" << '\n';
+    nel::log << "ex41:b" << '\n';
+    ex41();
+    nel::log << "ex41:e" << '\n';
 }
