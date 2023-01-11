@@ -89,13 +89,13 @@ struct Iterator {
         // annoyingly, new iters need to be added to base iter for fluent style extensions
         FirstNIterator<ItT> first_n(Count const limit) noexcept
         {
-            return FirstNIterator<ItT>(self(), limit);
+            return FirstNIterator<ItT>(std::move(self()), limit);
         }
 
         template<typename U>
-        MappingIterator<ItT, U> map(std::function<U(OutT &&)> fn) noexcept
+        MappingIterator<ItT, U> map(std::function<U(OutT &)> fn) noexcept
         {
-            return MappingIterator<ItT, U>(self(), fn);
+            return MappingIterator<ItT, U>(std::move(self()), fn);
         }
 };
 
@@ -113,8 +113,8 @@ struct MappingIterator: public Iterator<MappingIterator<It, V>, typename It::InT
         FnT fn_;
 
     public:
-        MappingIterator(It inner, FnT fn) noexcept
-            : inner_(inner)
+        MappingIterator(It &&inner, FnT fn) noexcept
+            : inner_(std::move(inner))
             , fn_(fn)
         {
         }
@@ -155,8 +155,8 @@ struct FirstNIterator: public Iterator<FirstNIterator<It>, typename It::InT, typ
         Length const limit_;
 
     public:
-        FirstNIterator(It inner, Length limit) noexcept
-            : inner_(inner)
+        FirstNIterator(It &&inner, Length limit) noexcept
+            : inner_(std::move(inner))
             , current_(0)
             , limit_(limit)
         {
