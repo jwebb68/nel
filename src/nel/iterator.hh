@@ -7,10 +7,10 @@ namespace nel
 template<typename It, typename InT, typename OutT>
 struct Iterator;
 
-template<typename It, typename InT, typename OutT>
+template<typename It, typename V>
 struct MappingIterator;
 
-template<typename It, typename InT, typename OutT>
+template<typename It>
 struct FirstNIterator;
 
 } // namespace nel
@@ -28,15 +28,21 @@ namespace nel
  *
  * Use as a mixin to get functionals defined on it for all iterators
  */
-template<typename ItT, typename InT, typename OutT>
+template<typename ItT, typename IT, typename OT>
 struct Iterator {
     public:
+        typedef OT OutT;
+        typedef IT InT;
+
     private:
         constexpr ItT &self(void) noexcept
         {
             ItT &it = static_cast<ItT &>(*this);
             return it;
         }
+
+    public:
+        Optional<OutT> next(void);
 
     public:
         /**
@@ -76,25 +82,26 @@ struct Iterator {
             return acc;
         }
 
-        FirstNIterator<ItT, InT, OutT> first_n(Count const limit) noexcept
+        FirstNIterator<ItT> first_n(Count const limit) noexcept
         {
-            return FirstNIterator<ItT, InT, OutT>(self(), limit);
+            return FirstNIterator<ItT>(self(), limit);
         }
 
         template<typename U>
-        MappingIterator<ItT, InT, U> map(std::function<U(InT &&)> fn) noexcept
+        MappingIterator<ItT, U> map(std::function<U(OutT &&)> fn) noexcept
         {
-            return MappingIterator<ItT, InT, U>(self(), fn);
+            return MappingIterator<ItT, U>(self(), fn);
         }
 };
 
 // x.map(mapfn).enum().for_each(..);
 // x.chain(MapIt(mapfn)).chain(EnumIt).for_each([](Index idx, T &e) {});
 
-template<typename It, typename InT, typename OutT>
-struct MappingIterator: Iterator<MappingIterator<It, InT, OutT>, InT, OutT> {
+template<typename It, typename V>
+struct MappingIterator: public Iterator<MappingIterator<It, V>, typename It::InT, V> {
     public:
-        typedef std::function<OutT(InT &&)> FnT;
+        typedef V OutT;
+        typedef std::function<V(typename It::OutT)> FnT;
 
     private:
         It inner_;
@@ -132,9 +139,11 @@ struct MappingIterator: Iterator<MappingIterator<It, InT, OutT>, InT, OutT> {
 /**
  * Return first n items in iterator, stop iteration if more.
  */
-template<typename It, typename InT, typename OutT>
-struct FirstNIterator: Iterator<FirstNIterator<It, InT, OutT>, InT, OutT> {
+template<typename It>
+struct FirstNIterator: public Iterator<FirstNIterator<It>, typename It::InT, typename It::OutT> {
     public:
+        typedef typename It::OutT OutT;
+
     private:
         It inner_;
         Index current_;

@@ -272,6 +272,9 @@ template<typename T>
 class SliceIterator: public Iterator<SliceIterator<T>, T, T &>
 {
     public:
+        typedef T &InT;
+        typedef T &OutT;
+
     private:
         T *const ptr_;
         Count const len_;
@@ -301,7 +304,7 @@ class SliceIterator: public Iterator<SliceIterator<T>, T, T &>
         // if T == U then coping.. want to avoid.
         // mutating.non-consuming
         // non-mutating.non-consuming
-        Optional<T &> next(void) noexcept
+        Optional<OutT> next(void) noexcept
         {
             // Some() takes a move, so want to move the reference into the optional.
             // ref(),
