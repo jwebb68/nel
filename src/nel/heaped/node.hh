@@ -299,7 +299,7 @@ struct Node {
 
             len_ -= 1;
             T &e = values_[len()];
-            auto o = Optional<T>::Some(std::move(e));
+            auto o = Some(std::move(e));
             e.~T();
             return o;
         }
