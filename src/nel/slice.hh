@@ -256,16 +256,16 @@ struct Slice {
                 auto itv = it.next();
                 if (itv.is_none()) { goto exit; }
                 outs << itv.unwrap();
-                it.for_each([&outs](T const & e) { outs << " " << e;})
+                it.for_each([&outs](T const & e) { outs << ' ' << e;})
 exit:
 #else
                 outs << v.content_[0];
                 for (Index i = 1; i < v.len(); ++i) {
-                    outs << " " << v.content_[i];
+                    outs << ' ' << v.content_[i];
                 }
 #endif
             }
-            outs << "}";
+            outs << '}';
             return outs;
         }
 };

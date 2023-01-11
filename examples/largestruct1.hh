@@ -57,10 +57,10 @@ struct U8Buf {
             if (val.len() > 0) {
                 outs  << val.data_[0];
                 for (Index i = 1; i < val.len(); ++i) {
-                    outs << " " << val.data_[i];
+                    outs << ' ' << val.data_[i];
                 }
             }
-            outs << "}";
+            outs << '}';
             return outs;
         }
 };

@@ -21,7 +21,7 @@ nel::Log &operator<<(nel::Log &outs, ErrorCode const &val) {
             break;
     }
     nel_panic("unknown ErrorCode");
-    return outs << "?";
+    return outs << '?';
 }
 
 

@@ -14,10 +14,13 @@ void ex1(void) {
     vec1.push_back((uint8_t)0x69);
 
     auto s1 = vec1.slice();
-    nel::log << s1.len() << "\n";
+    nel::log << s1.len() << '\n' << s1;
 
 }
 
 int main()
 {
+    nel::log << "ex1:b" << '\n';
+    ex1();
+    nel::log << "ex1:e" << '\n';
 }

@@ -293,12 +293,11 @@ struct Array {
         // TODO: insert into formatter and not final dest type.
         friend Log &operator<<(Log &outs, Array const &v) noexcept
         {
-            outs << "Array<" << v.len() << ">{"
-                 << "\n";
+            outs << "Array<" << v.len() << ">{" << '\n';
             for (Index i = 0; i < v.len(); ++i) {
-                outs << "[" << i << "]:" << v.values_[i] << "\n";
+                outs << '[' << i << "]:" << v.values_[i] << '\n';
             }
-            outs << "}";
+            outs << '}';
             return outs;
         }
 };

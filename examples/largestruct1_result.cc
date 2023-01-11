@@ -81,14 +81,14 @@ void handleok1(void) {
     Result_t res = ok3();
     if (res.is_ok()) {
         U8Buf<256> v = res.unwrap();
-        nel::log << v << "\n";
+        nel::log << v << '\n';
     }
 }
 void handleok2(void) {
     Result_t res = ok3();
     if (res.is_err()) {
         Error v = res.unwrap_err();
-        nel::log << v << "\n";
+        nel::log << v << '\n';
     }
 }
 
@@ -96,14 +96,14 @@ void handlefail1(void) {
     Result_t res = fail4();
     if (res.is_ok()) {
         U8Buf<256> v = res.unwrap();
-        nel::log << v << "\n";
+        nel::log << v << '\n';
     }
 }
 void handlefail2(void) {
     Result_t res = fail4();
     if (res.is_err()) {
         Error v = res.unwrap_err();
-        nel::log << v << "\n";
+        nel::log << v << '\n';
     }
 }
 

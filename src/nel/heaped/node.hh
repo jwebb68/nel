@@ -329,7 +329,7 @@ struct Node {
         friend Log &operator<<(Log &outs, Node const &v) noexcept
         {
             for (Index i = 0; i < v.len(); ++i) {
-                outs << "[" << i << "]:" << v.values_[i] << "\n";
+                outs << '[' << i << "]:" << v.values_[i] << '\n';
             }
             return outs;
         }

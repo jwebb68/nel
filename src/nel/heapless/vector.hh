@@ -391,12 +391,11 @@ struct Vector {
         // TODO: insert into formatter and not final dest type.
         friend Log &operator<<(Log &outs, Vector const &v) noexcept
         {
-            outs << "Vector<" << N << ">(" << v.len() << "){"
-                 << "\n";
+            outs << "Vector<" << N << ">(" << v.len() << "){" << '\n';
             for (Index i = 0; i < v.len(); ++i) {
-                outs << "[" << i << "]:" << v.values_[i] << "\n";
+                outs << '[' << i << "]:" << v.values_[i] << '\n';
             }
-            outs << "}";
+            outs << '}';
             return outs;
         }
 };

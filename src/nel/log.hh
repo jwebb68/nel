@@ -8,13 +8,18 @@ class Log;
 
 } // namespace nel
 
+#include <inttypes.h>
+
 namespace nel
 {
 
 class Log
 {
     public:
+        friend Log &operator<<(Log &outs, char v) noexcept;
         friend Log &operator<<(Log &outs, char const *v) noexcept;
+        friend Log &operator<<(Log &outs, uint8_t const v) noexcept;
+        friend Log &operator<<(Log &outs, int const v) noexcept;
         friend Log &operator<<(Log &outs, long unsigned int const v) noexcept;
 };
 

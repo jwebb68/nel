@@ -13,7 +13,7 @@ void ex1() {
     // what should this give?
     Array1 arr1 = Array1::filled(U8Buf<256>(0xff));
 
-    nel::log << arr1 << "\n";
+    nel::log << arr1 << '\n';
 }
 
 #if 0
@@ -29,7 +29,7 @@ void ex2() {
         U8Buf<256>(0x2d),
      };
 
-    nel::log << arr1 << "\n";
+    nel::log << arr1 << '\n';
 }
 #endif
 
@@ -46,7 +46,7 @@ void ex3() {
         {(uint8_t)0x3d},
      };
 
-    nel::log << arr1 << "\n";
+    nel::log << arr1 << '\n';
 }
 #endif
 
@@ -73,7 +73,7 @@ void ex4() {
         }
         // calls is_some() but always is_some..
         // opt does optimise it out but is there a better way?
-        nel::log << e.unwrap() << "\n";
+        nel::log << e.unwrap() << '\n';
     }
 }
 
@@ -85,6 +85,7 @@ void ex41() {
     arr1.try_get(6).unwrap() = U8Buf<256>(0x33);
 
     auto it = arr1.iter().first_n(2);
+    Index i = 0;
     while (true) {
         auto e = it.next();
         // checking for none and unwrapping/ from opt
@@ -100,7 +101,8 @@ void ex41() {
         }
         // calls is_some() but always is_some..
         // opt does optimise it out but is there a better way?
-        nel::log << e.unwrap() << "\n";
+        nel::log << '[' << i << ']' << ':' << e.unwrap() << '\n';
+        ++i;
     }
 }
 
@@ -115,7 +117,7 @@ void ex5() {
     for (auto en = arr1.enumerate(); !en.is_done(); en.inc()) {
         // user can miss out the &, so forcing a copy/move of items being enumerated.
         auto & v = en.get();
-        nel::log << v << "\n";
+        nel::log << v << '\n';
     }
 
     // how to enumerators stack..?
@@ -133,7 +135,7 @@ void ex51() {
     for (auto en = first_n_en(arr1.enumerate(), 9); !en.is_done(); en.inc()) {
         // user can miss out the &, so forcing a copy/move of items being enumerated.
         auto & v = en.get();
-        nel::log << v << "\n";
+        nel::log << v << '\n';
     }
 
     // how to enumerators stack..?
@@ -150,30 +152,30 @@ void ex6() {
 
     for (auto en = arr1.enumerate(); en; ++en) {
         auto & v = *en;
-        nel::log << v << "\n";
+        nel::log << v << '\n';
     }
 }
 
 int main() {
-    nel::log << "ex1:b" << "\n";
+    nel::log << "ex1:b" << '\n';
     ex1();
-    nel::log << "ex1:e" << "\n";
-    // nel::log << "ex2:b" << "\n";
+    nel::log << "ex1:e" << '\n';
+    // nel::log << "ex2:b" << '\n';
     // ex2();
-    // nel::log << "ex2:e" << "\n";
-    // nel::log << "ex3:b" << "\n";
+    // nel::log << "ex2:e" << '\n';
+    // nel::log << "ex3:b" << '\n';
     // ex3();
-    // nel::log << "ex3:e" << "\n";
-    nel::log << "ex4:b" << "\n";
+    // nel::log << "ex3:e" << '\n';
+    nel::log << "ex4:b" << '\n';
     ex4();
-    nel::log << "ex4:e" << "\n";
-    nel::log << "ex41:b" << "\n";
+    nel::log << "ex4:e" << '\n';
+    nel::log << "ex41:b" << '\n';
     ex41();
-    nel::log << "ex41:e" << "\n";
-    nel::log << "ex5:b" << "\n";
+    nel::log << "ex41:e" << '\n';
+    nel::log << "ex5:b" << '\n';
     ex5();
-    nel::log << "ex5:e" << "\n";
-    nel::log << "ex6:b" << "\n";
+    nel::log << "ex5:e" << '\n';
+    nel::log << "ex6:b" << '\n';
     ex6();
-    nel::log << "ex6:e" << "\n";
+    nel::log << "ex6:e" << '\n';
 }

@@ -19,14 +19,14 @@ void box1() {
     auto r = Box1::try_from(std::move(v));
     Box1 b = r.unwrap();
 
-    nel::log << b << "\n";
+    nel::log << b << '\n';
 }
 
 void box2() {
     auto r = Box1::try_from((uint8_t)0x67);
     Box1 b = r.unwrap();
 
-    nel::log << b << "\n";
+    nel::log << b << '\n';
 }
 
 

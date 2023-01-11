@@ -186,15 +186,14 @@ struct Queue {
         // TODO: insert into formatter and not final dest type.
         friend Log &operator<<(Log &outs, Queue const &v) noexcept
         {
-            outs << "Queue<" << N << ">(" << v.len() << "){"
-                 << "\n";
+            outs << "Queue<" << N << ">(" << v.len() << "){" << '\n';
             Index rp = v.rp_;
             for (Index i = 0; i < v.len(); ++i) {
-                outs << "[" << i << "]:" << v.store_[rp] << "\n";
+                outs << '[' << i << "]:" << v.store_[rp] << '\n';
                 rp += 1;
                 if (rp >= v.len()) { rp = 0; }
             }
-            outs << "}";
+            outs << '}';
             return outs;
         }
 };

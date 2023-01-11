@@ -421,26 +421,22 @@ class Optional
             switch (val.tag_) {
                 case Tag::NONE:
                     outs << "Optional("
-                         << "None"
-                         << ")";
+                         << "None" << ')';
                     return outs;
                     break;
                 case Tag::SOME:
                     outs << "Optional("
-                         << "Some(" << val.some_.get() << ")"
-                         << ")";
+                         << "Some(" << val.some_.get() << ')' << ')';
                     return outs;
                     break;
                 case Tag::INVAL:
                     outs << "Optional("
-                         << "Inval"
-                         << ")";
+                         << "Inval" << ')';
                     return outs;
                     break;
                 default:
                     outs << "Optional("
-                         << "Unknown"
-                         << ")";
+                         << "Unknown" << ')';
             }
             return outs;
         }
@@ -747,27 +743,22 @@ class Optional<void>
             switch (val.tag_) {
                 case Tag::NONE:
                     outs << "Optional("
-                         << "None"
-                         << ")";
+                         << "None" << ')';
                     return outs;
                     break;
                 case Tag::SOME:
                     outs << "Optional("
-                         << "Some("
-                         << ")"
-                         << ")";
+                         << "Some(" << ')' << ')';
                     return outs;
                     break;
                 case Tag::INVAL:
                     outs << "Optional("
-                         << "Inval"
-                         << ")";
+                         << "Inval" << ')';
                     return outs;
                     break;
                 default:
                     outs << "Optional("
-                         << "Unknown"
-                         << ")";
+                         << "Unknown" << ')';
             }
             return outs;
         }
