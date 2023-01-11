@@ -73,6 +73,34 @@ void ex42() {
     });
 }
 
+void ex43() {
+    auto r = Vec1::try_from({
+        ((uint8_t)0x67),
+        ((uint8_t)0x68),
+        ((uint8_t)0x69),
+    });
+    Vec1 vec1 = r.unwrap();
+
+    auto it = vec1.iter();
+    for (; !it.is_done(); it.inc()) {
+        auto &e = it.deref();
+        nel::log << e << '\n';
+    }
+}
+
+void ex44() {
+    auto r = Vec1::try_from({
+        ((uint8_t)0x67),
+        ((uint8_t)0x68),
+        ((uint8_t)0x69),
+    });
+    Vec1 vec1 = r.unwrap();
+
+    auto it = vec1.iter();
+    it.for_each2([&](U8Buf<256> &e)->void{
+        nel::log << e << '\n';
+    });
+}
 
 int main() {
     nel::log << "ex1:b" << '\n';
@@ -87,4 +115,13 @@ int main() {
     nel::log << "ex41:b" << '\n';
     ex41();
     nel::log << "ex41:e" << '\n';
+    nel::log << "ex42:b" << '\n';
+    ex42();
+    nel::log << "ex42:e" << '\n';
+    nel::log << "ex43:b" << '\n';
+    ex43();
+    nel::log << "ex43:e" << '\n';
+    nel::log << "ex44:b" << '\n';
+    ex44();
+    nel::log << "ex44:e" << '\n';
 }

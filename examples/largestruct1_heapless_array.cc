@@ -92,6 +92,25 @@ void ex42() {
 }
 
 
+void ex51() {
+    Array1 arr1 = Array1::filled(U8Buf<256>(0xff));
+
+    auto it = arr1.iter();
+    for (; !it.is_done(); it.inc()) {
+        auto & v = it.deref();
+        nel::log << v << '\n';
+    }
+}
+
+void ex52() {
+    Array1 arr1 = Array1::filled(U8Buf<256>(0xff));
+
+    arr1.iter().for_each2([&](U8Buf<256> &v)->void {
+        nel::log << v << '\n';
+    });
+}
+
+
 void ex61() {
     Array1 arr1 = Array1::filled(U8Buf<256>(0xff));
 
@@ -128,6 +147,30 @@ void ex62() {
     });
 }
 
+void ex71() {
+    Array1 arr1 = Array1::filled(U8Buf<256>(0xff));
+
+    auto it = arr1.iter().first_n(2);
+    Index i = 0;
+    for (; !it.is_done(); it.inc()){
+        // user can miss out the &, so forcing a copy/move of items being enumerated.
+        auto &e = it.deref();
+        nel::log << '[' << i << ']' << ':' << e << '\n';
+        ++i;
+    }
+}
+
+void ex72() {
+    Array1 arr1 = Array1::filled(U8Buf<256>(0xff));
+
+    auto it = arr1.iter().first_n(2);
+    Index i = 0;
+    it.for_each2([&](U8Buf<256> &e)->void {
+        nel::log << '[' << i << ']' << ':' << e << '\n';
+        ++i;
+    });
+}
+
 int main() {
     nel::log << "ex1:b" << '\n';
     ex1();
@@ -144,4 +187,22 @@ int main() {
     nel::log << "ex42:b" << '\n';
     ex42();
     nel::log << "ex42:e" << '\n';
+    nel::log << "ex51:b" << '\n';
+    ex51();
+    nel::log << "ex51:e" << '\n';
+    nel::log << "ex52:b" << '\n';
+    ex52();
+    nel::log << "ex52:e" << '\n';
+    nel::log << "ex61:b" << '\n';
+    ex61();
+    nel::log << "ex61:e" << '\n';
+    nel::log << "ex62:b" << '\n';
+    ex62();
+    nel::log << "ex62:e" << '\n';
+    nel::log << "ex71:b" << '\n';
+    ex71();
+    nel::log << "ex71:e" << '\n';
+    nel::log << "ex72:b" << '\n';
+    ex72();
+    nel::log << "ex72:e" << '\n';
 }

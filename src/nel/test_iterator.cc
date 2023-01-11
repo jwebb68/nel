@@ -13,6 +13,15 @@ TEST_CASE("iterator::for_each", "[iterator]")
     }
 }
 
+TEST_CASE("iterator::for_each2", "[iterator]")
+{
+    {
+        // for_each on the iter traits works.
+        auto a1 = nel::heapless::Array<int, 2>::try_from({7, 7}).unwrap();
+        a1.iter().for_each2([](int &e) { e *= 3; });
+    }
+}
+
 TEST_CASE("iterator::fold", "[iterator]")
 {
     {

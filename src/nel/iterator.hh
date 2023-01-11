@@ -51,6 +51,11 @@ struct Iterator {
         Optional<OutT> next(void);
 
     public:
+        constexpr bool is_done(void) const noexcept;
+        void inc(void) noexcept;
+        OutT deref(void) noexcept;
+
+    public:
         /**
          * Apply fn to each item in iterator
          *
@@ -66,6 +71,18 @@ struct Iterator {
                 // TODO: already checked r for none, but unwrap will do so again.. can this be
                 // avoided?
                 fn(r.unwrap());
+            }
+        }
+
+        // void for_each2(std::function<void(OutT)> fn) noexcept
+        template<typename F>
+        void for_each2(F fn) noexcept
+        {
+            for (; !self().is_done(); self().inc()) {
+                fn(self().deref());
+                // Iter will be fn(self.deref()); // self.deref()->T const &
+                // IterMut will be fn(self.deref()); // self.deref()->T &
+                // IterOwn will be fn(self.deref()); self.deref()->T &&
             }
         }
 
@@ -146,6 +163,23 @@ struct MappingIterator: public Iterator<MappingIterator<It, V>, typename It::InT
                 return fn_(e);
             };
             return inner_.next().map(f);
+            // return inner_.next().map([&](It::OutT &e)->V{ return fn_(e); });
+        }
+
+    public:
+        constexpr bool is_done(void) const noexcept
+        {
+            return inner_.is_done();
+        }
+
+        void inc(void) noexcept
+        {
+            inner_.inc();
+        }
+
+        OutT deref(void) noexcept
+        {
+            return fn_(inner_.deref());
         }
 };
 
@@ -180,6 +214,23 @@ struct FirstNIterator: public Iterator<FirstNIterator<It>, typename It::InT, typ
         Optional<OutT> next(void) noexcept
         {
             return (current_ < limit_) ? ++current_, inner_.next() : None;
+        }
+
+    public:
+        constexpr bool is_done(void) const noexcept
+        {
+            return (current_ >= limit_);
+        }
+
+        void inc(void) noexcept
+        {
+            inner_.inc();
+            ++current_;
+        }
+
+        OutT deref(void) noexcept
+        {
+            return inner_.deref();
         }
 };
 

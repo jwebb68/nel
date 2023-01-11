@@ -61,6 +61,23 @@ void ex41() {
     }
 }
 
+void ex42() {
+    Vec1 vec1 = Vec1::empty();
+
+    vec1.push_back((uint8_t)0x67);
+    vec1.push_back((uint8_t)0x68);
+    vec1.push_back((uint8_t)0x69);
+
+    vec1.pop_back();
+
+    auto it = vec1.iter();
+    for (; !it.is_done(); it.inc()) {
+        auto &v = it.deref();
+        nel::log << v << '\n';
+    }
+}
+
+
 void ex51() {
     Vec1 vec1 = Vec1::empty();
 
@@ -88,6 +105,19 @@ void ex51() {
     }
 }
 
+void ex52() {
+    Vec1 vec1 = Vec1::empty();
+
+    for (uint8_t f=1; f < 10; ++f) {
+        vec1.push_back(f);
+    }
+
+    auto it = vec1.iter().first_n(3);
+    for (; !it.is_done(); it.inc()) {
+        auto &v = it.deref();
+        nel::log << v << '\n';
+    }
+}
 
 int main() {
     nel::log << "ex1:b" << '\n';
@@ -102,7 +132,13 @@ int main() {
     nel::log << "ex41:b" << '\n';
     ex41();
     nel::log << "ex41:e" << '\n';
+    nel::log << "ex42:b" << '\n';
+    ex42();
+    nel::log << "ex42:e" << '\n';
     nel::log << "ex51:b" << '\n';
     ex51();
     nel::log << "ex51:e" << '\n';
+    nel::log << "ex52:b" << '\n';
+    ex52();
+    nel::log << "ex52:e" << '\n';
 }

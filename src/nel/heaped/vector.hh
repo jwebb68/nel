@@ -415,8 +415,12 @@ struct Vector {
         friend Log &operator<<(Log &outs, Vector const &v) noexcept
         {
             outs << "Vector(" << v.len() << "){";
+#if 1
             outs << '\n';
             if (v.item_ != nullptr) { outs << *v.item_; }
+#else
+            if (v.item_ != nullptr) { outs << *v.item_; }
+#endif
             outs << '}';
             return outs;
         }

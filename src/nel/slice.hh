@@ -229,21 +229,27 @@ struct Slice {
         friend Log &operator<<(Log &outs, Slice const &v) noexcept
         {
             outs << "Slice(" << v.len() << "){";
-            if (v.len() > 0) {
 #if 0
-                auto it = v.iter();
-                auto itv = it.next();
-                if (itv.is_none()) { goto exit; }
-                outs << itv.unwrap();
-                it.for_each([&outs](T const & e) { outs << ' ' << e;})
+            auto it = v.iter();
+            auto itv = it.next();
+            if (itv.is_none()) { goto exit; }
+            outs << itv.unwrap();
+            it.for_each([&outs](T const & e) { outs << ' ' << e;})
 exit:
-#else
+#elif 0
+            if (v.len() > 0) {
                 outs << v.content_[0];
                 for (Index i = 1; i < v.len(); ++i) {
                     outs << ' ' << v.content_[i];
                 }
-#endif
             }
+#else
+            auto it = v.iter();
+            if (!it.is_done()) {
+                outs << it.deref();
+                it.for_each2([&outs](T const &e) { outs << ' ' << e; });
+            }
+#endif
             outs << '}';
             return outs;
         }
@@ -298,8 +304,24 @@ class SliceIterator: public Iterator<SliceIterator<T>, T &, T &>
             if (b_ == e_) { return None; }
             return Some(*b_++);
         }
-}
+
+    public:
+        constexpr bool is_done(void) const noexcept
+        {
+            return (b_ == e_);
+        }
+
+        void inc(void) noexcept
+        {
+            ++b_;
+        }
+
+        OutT deref(void) noexcept
+        {
+            return *b_;
+        }
 };
+
 } // namespace nel
 
 #endif // NEL_HEAPLESS_SLICE_HH
