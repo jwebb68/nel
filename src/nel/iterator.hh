@@ -133,7 +133,7 @@ struct MappingIterator: public Iterator<MappingIterator<It, V>, typename It::InT
             // // auto t = r.unwrap();
             // // auto u = fn_(std::move(t));
             // // return Optional<OutT>::Some(u);
-            return (r.is_none()) ? None : Some(fn_(std::move(r.unwrap())));
+            return (r.is_none()) ? None : Some(fn_(r.unwrap()));
 
             // auto r = inner_.next();
             // return r.map1(fn_);

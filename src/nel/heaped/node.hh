@@ -220,10 +220,7 @@ struct Node {
         // vector empty/clear..
         void clear(void) noexcept
         {
-            iter().for_each([](T &&e) { e.~T(); });
-            // for (Index i = 0; i < len(); ++i) {
-            //     values_[i].~T();
-            // }
+            iter().for_each([](T &e) { e.~T(); });
             len_ = 0;
         }
 
