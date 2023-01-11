@@ -174,11 +174,11 @@ TEST_CASE("Slice::try_get()", "[slice]")
 {
     {
         // get on empty slice is always none.
-        auto s1 = nel::Slice<int>::from(NULL, 0);
+        auto s1 = nel::Slice<int>::empty();
         auto sa1 = s1.try_get(0);
         REQUIRE(sa1.is_none());
 
-        auto const c1 = nel::Slice<int>::from(NULL, 0);
+        auto const c1 = nel::Slice<int>::empty();
         auto sc1 = c1.try_get(0);
         REQUIRE(sc1.is_none());
     }

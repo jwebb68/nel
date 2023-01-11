@@ -11,6 +11,9 @@ template<typename It, typename V>
 struct MappingIterator;
 
 template<typename It>
+struct ChainIterator;
+
+template<typename It>
 struct FirstNIterator;
 
 } // namespace nel
@@ -114,9 +117,15 @@ struct Iterator {
         {
             return MappingIterator<ItT, U>(std::move(self()), fn);
         }
+
+        ChainIterator<ItT> chain(ItT &&other) noexcept
+        {
+            return ChainIterator<ItT>(std::move(self()), std::move(other));
+        }
 };
 
-// x.chain(MapIt(mapfn)).chain(EnumIt).for_each([](Index idx, T &e) {});
+// x.zip(it2).for_each([&](??)->void{});
+// x.enum().for_each([&](??)->void {..});
 
 template<typename It, typename V>
 struct MappingIterator: public Iterator<MappingIterator<It, V>, typename It::InT, V> {
@@ -159,7 +168,7 @@ struct MappingIterator: public Iterator<MappingIterator<It, V>, typename It::InT
             // use explicit function type otherwise get
             // no matching call to/argument deduction failed/isnode derived from
             // std::function<U(int&)>
-            FnT f = [&](typename It::OutT &e) -> OutT {
+            std::function<V(typename It::OutT)> f = [&](It::OutT &e) -> V {
                 return fn_(e);
             };
             return inner_.next().map(f);
@@ -231,6 +240,78 @@ struct FirstNIterator: public Iterator<FirstNIterator<It>, typename It::InT, typ
         OutT deref(void) noexcept
         {
             return inner_.deref();
+        }
+};
+
+template<typename It>
+struct ChainIterator: public Iterator<ChainIterator<It>, typename It::InT, typename It::OutT> {
+    public:
+        typedef It::OutT OutT;
+
+    private:
+        It it1_;
+        It it2_;
+
+    public:
+        ChainIterator(It &&it1, It &&it2) noexcept
+            : it1_(std::move(it1))
+            , it2_(std::move(it2))
+        {
+        }
+
+    public:
+        /**
+         * Return next item in iterator or None is no more.
+         *
+         * @returns Optional::Some if iterator still active.
+         * @returns Optional::None if iterator exhausted.
+         */
+        Optional<OutT> next(void) noexcept
+        {
+            return it1_.next().or_else([&](void) -> Optional<OutT> { return it2_.next(); });
+        }
+
+    public:
+        constexpr bool is_done(void) const noexcept
+        {
+            return it1_.is_done() && it2_.is_done();
+        }
+
+        void inc(void) noexcept
+        {
+            if (!it1_.is_done()) {
+                it1_.inc();
+            } else {
+                it2_.inc();
+            }
+        }
+
+        OutT deref(void) noexcept
+        {
+            return (!it1_.is_done()) ? it1_.deref() : it2_.deref();
+        }
+
+    public:
+        /**
+         * Apply fn to each item in iterator
+         * Consume each item iterated.
+         *
+         * @param fn func to apply to each item in iterator
+         */
+        // void for_each(std::function<void(OutT)> fn) noexcept
+        template<typename F>
+        void for_each(F fn) noexcept
+        {
+            it1_.for_each(fn);
+            it2_.for_each(fn);
+        }
+
+        // void for_each2(std::function<void(OutT)> fn) noexcept
+        template<typename F>
+        void for_each2(F fn) noexcept
+        {
+            it1_.for_each2(fn);
+            it2_.for_each2(fn);
         }
 };
 

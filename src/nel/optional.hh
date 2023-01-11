@@ -334,6 +334,16 @@ class Optional
             return Optional<U>::Some(fn(v));
         }
 
+        Optional or_(Optional &&o) noexcept
+        {
+            return (this->is_some()) ? *this : std::move(o);
+        }
+
+        Optional or_else(std::function<Optional(void)> fn) noexcept
+        {
+            return (this->is_some()) ? *this : fn();
+        }
+
     public:
         // Comparision operators
         // Implemented in terms of the operator on the type,

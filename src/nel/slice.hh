@@ -31,15 +31,27 @@ struct Slice {
         Length len_;
 
     private:
-        constexpr Slice(void)
+        constexpr Slice(void) noexcept
             : content_(nullptr)
             , len_(0)
+        {
+        }
+
+        constexpr Slice(std::nullptr_t, Length l) noexcept
+            : content_(nullptr)
+            , len_(l)
         {
         }
 
         constexpr Slice(T p[], Length len) noexcept
             : content_(p)
             , len_(len)
+        {
+        }
+
+        constexpr Slice(T *const b, T *const e) noexcept
+            : content_(b)
+            , len_(e - b)
         {
         }
 
@@ -69,6 +81,11 @@ struct Slice {
         static constexpr Slice from(T p[], Length len) noexcept
         {
             return Slice(p, len);
+        }
+
+        static constexpr Slice from(T *const b, T *const e) noexcept
+        {
+            return Slice(b, e);
         }
 
     public:
@@ -283,6 +300,12 @@ class SliceIterator: public Iterator<SliceIterator<T>, T &, T &>
         constexpr SliceIterator(T arr[], Count len) noexcept
             : b_(arr)
             , e_(arr + len)
+        {
+        }
+
+        constexpr SliceIterator(T *const b, T *const e) noexcept
+            : b_(b)
+            , e_(e)
         {
         }
 

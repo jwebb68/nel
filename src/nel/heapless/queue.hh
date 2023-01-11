@@ -14,6 +14,8 @@ struct Queue;
 } // namespace heapless
 } // namespace nel
 
+#include <nel/iterator.hh>
+#include <nel/slice.hh>
 #include <nel/optional.hh>
 #include <nel/result.hh>
 #include <nel/log.hh>
@@ -174,6 +176,45 @@ struct Queue {
         }
 
     public:
+        typedef ChainIterator<SliceIterator<T>> QueueIteratorMut;
+
+        QueueIteratorMut iter(void) noexcept
+        {
+            if (len() == 0) {
+                auto s1 = Slice<T>::empty();
+                auto s2 = s1;
+                return QueueIteratorMut(s1.iter(), s2.iter());
+            } else if (rp_ < wp_) {
+                auto s1 = Slice<T>::from(&store_[rp_], &store_[wp_]);
+                auto s2 = Slice<T>::empty();
+                return QueueIteratorMut(s1.iter(), s2.iter());
+            } else {
+                auto s1 = Slice<T>::from(&store_[rp_], &store_[N]);
+                auto s2 = Slice<T>::from(&store_[0], &store_[wp_]);
+                return QueueIteratorMut(s1.iter(), s2.iter());
+            }
+        }
+
+        typedef ChainIterator<SliceIterator<T const>> QueueIterator;
+
+        QueueIterator iter(void) const noexcept
+        {
+            if (len() == 0) {
+                auto s1 = Slice<T const>::empty();
+                auto s2 = s1;
+                return QueueIterator(s1.iter(), s2.iter());
+            } else if (rp_ < wp_) {
+                auto s1 = Slice<T const>::from(&store_[rp_], &store_[wp_]);
+                auto s2 = Slice<T const>::empty();
+                return QueueIterator(s1.iter(), s2.iter());
+            } else {
+                auto s1 = Slice<T const>::from(&store_[rp_], &store_[N]);
+                auto s2 = Slice<T const>::from(&store_[0], &store_[wp_]);
+                return QueueIterator(s1.iter(), s2.iter());
+            }
+        }
+
+    public:
         /**
          * Format/emit a representation of this object as a charstring
          * for debugging purposes.
@@ -186,13 +227,32 @@ struct Queue {
         // TODO: insert into formatter and not final dest type.
         friend Log &operator<<(Log &outs, Queue const &v) noexcept
         {
-            outs << "Queue<" << N << ">(" << v.len() << "){" << '\n';
+            outs << "Queue<" << N << ">(" << v.len() << "){";
+#if 0
+            outs << '\n';
             Index rp = v.rp_;
             for (Index i = 0; i < v.len(); ++i) {
                 outs << '[' << i << "]:" << v.store_[rp] << '\n';
                 rp += 1;
                 if (rp >= v.len()) { rp = 0; }
             }
+#elif 1
+            auto it = v.iter();
+            outs << '\n';
+            Index i = 0;
+            it.for_each([&](T const &e) {
+                outs << '[' << i << "]:" << e << '\n';
+                ++i;
+            });
+#else
+            auto it = v.iter();
+            outs << '\n';
+            Index i = 0;
+            it.for_each2([&](T const &e) {
+                outs << '[' << i << "]:" << e << '\n';
+                ++i;
+            });
+#endif
             outs << '}';
             return outs;
         }
