@@ -14,7 +14,6 @@ struct Vector;
 } // namespace heapless
 } // namespace nel
 
-#include <nel/enumerator.hh>
 #include <nel/iterator.hh>
 #include <nel/slice.hh>
 #include <nel/optional.hh>
@@ -366,16 +365,6 @@ struct Vector {
         constexpr auto iter(void) const noexcept
         {
             return slice().iter();
-        }
-
-        constexpr Enumerator<T> enumerate(void) noexcept
-        {
-            return slice().enumerate();
-        }
-
-        constexpr Enumerator<T const> enumerate(void) const noexcept
-        {
-            return slice().enumerate();
         }
 
     public:

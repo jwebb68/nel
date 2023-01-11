@@ -107,75 +107,21 @@ void ex41() {
 }
 
 
-void ex5() {
-    Array1 arr1 = Array1::filled(U8Buf<256>(0xff));
-
-    arr1.try_get(0).unwrap() = U8Buf<256>(0x44);
-    arr1.try_get(5).unwrap() = U8Buf<256>(0x55);
-    arr1.try_get(6).unwrap() = U8Buf<256>(0x66);
-
-    for (auto en = arr1.enumerate(); !en.is_done(); en.inc()) {
-        // user can miss out the &, so forcing a copy/move of items being enumerated.
-        auto & v = en.get();
-        nel::log << v << '\n';
-    }
-
-    // how to enumerators stack..?
-    // enum taking values from a second?
-}
-
-#if 0
-void ex51() {
-    Array1 arr1 = Array1::filled(U8Buf<256>());
-
-    arr1.try_get(0).unwrap() = U8Buf<256>(0x77);
-    arr1.try_get(5).unwrap() = U8Buf<256>(0x88);
-    arr1.try_get(6).unwrap() = U8Buf<256>(0x99);
-
-    for (auto en = first_n_en(arr1.enumerate(), 9); !en.is_done(); en.inc()) {
-        // user can miss out the &, so forcing a copy/move of items being enumerated.
-        auto & v = en.get();
-        nel::log << v << '\n';
-    }
-
-    // how to enumerators stack..?
-    // enum taking values from a second?
-}
-#endif
-
-void ex6() {
-    Array1 arr1 = Array1::filled(U8Buf<256>(0xff));
-
-    arr1.try_get(0).unwrap() = U8Buf<256>(0xaa);
-    arr1.try_get(5).unwrap() = U8Buf<256>(0xbb);
-    arr1.try_get(6).unwrap() = U8Buf<256>(0xcc);
-
-    for (auto en = arr1.enumerate(); en; ++en) {
-        auto & v = *en;
-        nel::log << v << '\n';
-    }
-}
-
 int main() {
     nel::log << "ex1:b" << '\n';
     ex1();
-    nel::log << "ex1:e" << '\n';
-    // nel::log << "ex2:b" << '\n';
+    nel::log << "ex1:e" << "\n";
+    // nel::log << "ex2:b" << "\n";
     // ex2();
-    // nel::log << "ex2:e" << '\n';
-    // nel::log << "ex3:b" << '\n';
+    // nel::log << "ex2:e" << "\n";
+    // nel::log << "ex3:b" << "\n";
     // ex3();
-    // nel::log << "ex3:e" << '\n';
-    nel::log << "ex4:b" << '\n';
+    // nel::log << "ex3:e" << "\n";
+    nel::log << "ex4:b" << "\n";
     ex4();
-    nel::log << "ex4:e" << '\n';
+    nel::log << "ex4:e" << "\n";
+    nel::log << "ex41:b" << "\n";
     nel::log << "ex41:b" << '\n';
     ex41();
     nel::log << "ex41:e" << '\n';
-    nel::log << "ex5:b" << '\n';
-    ex5();
-    nel::log << "ex5:e" << '\n';
-    nel::log << "ex6:b" << '\n';
-    ex6();
-    nel::log << "ex6:e" << '\n';
 }

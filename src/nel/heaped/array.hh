@@ -13,7 +13,6 @@ struct Array;
 } // namespace nel
 
 #include <nel/heaped/node.hh>
-#include <nel/enumerator.hh>
 #include <nel/iterator.hh>
 #include <nel/slice.hh>
 #include <nel/log.hh>
@@ -270,16 +269,6 @@ struct Array {
         constexpr auto iter(void) const noexcept
         {
             return slice().iter();
-        }
-
-        constexpr Enumerator<T const> enumerate(void) const
-        {
-            return slice().enumerate();
-        }
-
-        constexpr Enumerator<T> enumerate(void)
-        {
-            return slice().enumerate();
         }
 
     public:

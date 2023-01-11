@@ -16,6 +16,7 @@ pkgs.mkShell {
     # for clang-format
     pkgs.clang-tools
     pkgs.catch2
+    pkgs.check
     pkgs.pkg-config
 
     # multi is not multi version of compiler, but multilib

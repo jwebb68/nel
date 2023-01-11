@@ -14,7 +14,6 @@ struct Array;
 } // namespace heapless
 } // namespace nel
 
-#include <nel/enumerator.hh>
 #include <nel/iterator.hh>
 #include <nel/slice.hh>
 #include <nel/log.hh>
@@ -268,16 +267,6 @@ struct Array {
         constexpr auto iter(void)
         {
             return slice().iter();
-        }
-
-        constexpr Enumerator<T const> enumerate(void) const
-        {
-            return slice().enumerate();
-        }
-
-        constexpr Enumerator<T> enumerate(void)
-        {
-            return slice().enumerate();
         }
 
     public:

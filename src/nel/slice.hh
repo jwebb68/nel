@@ -12,7 +12,6 @@ struct SliceIterator;
 
 } // namespace nel
 
-#include <nel/enumerator.hh>
 #include <nel/iterator.hh>
 #include <nel/memory.hh>
 #include <nel/panic.hh>
@@ -223,15 +222,6 @@ struct Slice {
             return SliceIterator<T const>(content_, len());
         }
 #endif
-        constexpr Enumerator<T> enumerate(void) noexcept
-        {
-            return Enumerator<T>(content_, len_);
-        }
-
-        constexpr Enumerator<T const> const enumerate(void) const noexcept
-        {
-            return Enumerator<T const>(content_, len_);
-        }
 
     public:
         /**
