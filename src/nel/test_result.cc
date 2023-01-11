@@ -3,12 +3,12 @@
 #include <nel/result.hh> //nel::ResultT
 #include <nel/defs.hh> // NEL_UNUSED
 
-typedef enum _Error
-{
+typedef enum _Error {
     NOERROR = 0,
     FAIL,
     NOENT
 } Error;
+
 nel::Log &operator<<(nel::Log &outs, Error const &v)
 {
     switch (v) {
@@ -628,6 +628,7 @@ bool map1(const int &e)
     NEL_UNUSED(e);
     return true;
 }
+
 TEST_CASE("Result.map for ok must change ok val", "[result]")
 {
     auto res = TestResult::Ok(1);
@@ -710,11 +711,13 @@ TEST_CASE("Result.map for inval must invalidate src", "[result]")
 }
 
 const char *bar = "bar";
+
 const char *map2(const Error &e)
 {
     NEL_UNUSED(e);
     return bar;
 }
+
 TEST_CASE("Result.map_err for ok must not change ok val", "[result]")
 {
     auto res = TestResult::Ok(1);
@@ -798,6 +801,7 @@ nel::Result<int, Error> foo_ok(void)
 {
     return TestResult::Ok(1);
 }
+
 TEST_CASE("Result::Ok auto convert to Result", "[result]")
 {
     auto res = foo_ok();
@@ -809,6 +813,7 @@ nel::Result<int, Error> foo_err(void)
 {
     return TestResult::Err(FAIL);
 }
+
 TEST_CASE("Result::Err auto convert to Result", "[result]")
 {
     auto res = foo_err();
@@ -822,11 +827,16 @@ struct Foo {
         {
             this->dtor_called = true;
         }
-        Foo(bool &dtor_called): dtor_called(dtor_called) {}
+
+        Foo(bool &dtor_called)
+            : dtor_called(dtor_called)
+        {
+        }
 
     private:
         bool &dtor_called;
 };
+
 TEST_CASE("result::~dtor for ok, must call ok dtor", "[result]")
 {
     bool dtor_called = false;

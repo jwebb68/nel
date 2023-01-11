@@ -60,6 +60,7 @@ struct Array {
                 new (&values_[i]) T(std::move(*it));
             }
         }
+
         // If type has copy, then could fill? use slice for that..
 
         // fill constructor
@@ -88,6 +89,7 @@ struct Array {
                 new (&values_[i]) T(std::move(o.values_[i]));
             }
         }
+
         constexpr Array &operator=(Array &&o) noexcept
         {
             if (this != &o) {
@@ -202,6 +204,7 @@ struct Array {
         {
             return slice().try_get(idx);
         }
+
         constexpr Optional<T const &> try_get(Index idx) const noexcept
         {
             return slice().try_get(idx);
@@ -222,6 +225,7 @@ struct Array {
         {
             return Slice<T>::from(values_, len());
         }
+
         constexpr Slice<T const> slice(void) const
         {
             return Slice<T const>::from(values_, len());
@@ -243,6 +247,7 @@ struct Array {
         {
             return slice().subslice(b, e);
         }
+
         constexpr Slice<T const> subslice(Index b, Index e) const noexcept
         {
             return slice().subslice(b, e);
@@ -259,6 +264,7 @@ struct Array {
         {
             return slice().iter();
         }
+
         constexpr auto iter(void)
         {
             return slice().iter();
@@ -268,6 +274,7 @@ struct Array {
         {
             return slice().enumerate();
         }
+
         constexpr Enumerator<T> enumerate(void)
         {
             return slice().enumerate();

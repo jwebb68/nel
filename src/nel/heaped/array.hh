@@ -52,9 +52,15 @@ struct Array {
         // Need default constr so can create unassigned vars
         // e.g Array<T> foo;
         // but then why would you want to?
-        constexpr Array(void) noexcept: item_(nullptr) {}
+        constexpr Array(void) noexcept
+            : item_(nullptr)
+        {
+        }
 
-        constexpr Array(ArrayNode *const n) noexcept: item_(n) {}
+        constexpr Array(ArrayNode *const n) noexcept
+            : item_(n)
+        {
+        }
 
     public:
         /**
@@ -73,10 +79,12 @@ struct Array {
 
         // Moving allowed.
         // Moving is allowed since it's a fast O(1) op.
-        constexpr Array(Array &&o) noexcept: item_(std::move(o.item_))
+        constexpr Array(Array &&o) noexcept
+            : item_(std::move(o.item_))
         {
             o.item_ = nullptr;
         }
+
         constexpr Array &operator=(Array &&o) noexcept
         {
             if (this != &o) {
@@ -197,6 +205,7 @@ struct Array {
         {
             return slice().try_get(idx);
         }
+
         constexpr Optional<T const &> try_get(Index idx) const noexcept
         {
             return slice().try_get(idx);
@@ -217,6 +226,7 @@ struct Array {
         {
             return (item_ == nullptr) ? Slice<T>::empty() : item_->slice();
         }
+
         constexpr Slice<T const> slice(void) const
         {
             return (item_ == nullptr) ? Slice<T const>::empty()
@@ -239,6 +249,7 @@ struct Array {
         {
             return slice().subslice(b, e);
         }
+
         constexpr Slice<T const> subslice(Index b, Index e) const noexcept
         {
             return slice().subslice(b, e);
@@ -255,6 +266,7 @@ struct Array {
         {
             return slice().iter();
         }
+
         constexpr auto iter(void) const noexcept
         {
             return slice().iter();
@@ -264,6 +276,7 @@ struct Array {
         {
             return slice().enumerate();
         }
+
         constexpr Enumerator<T> enumerate(void)
         {
             return slice().enumerate();

@@ -38,7 +38,10 @@ struct Box {
         std::unique_ptr<ElementT> value_;
 
     private:
-        constexpr Box(ElementT *const p) noexcept: value_(p) {}
+        constexpr Box(ElementT *const p) noexcept
+            : value_(p)
+        {
+        }
 
     public:
         ~Box(void) = default;
@@ -56,7 +59,8 @@ struct Box {
 
         // works for moving-into as well.
         template<typename... Args>
-        constexpr Box(Args &&...args) noexcept: value_(new Element<T>(std::forward<Args>(args)...))
+        constexpr Box(Args &&...args) noexcept
+            : value_(new Element<T>(std::forward<Args>(args)...))
         {
         }
 
@@ -86,6 +90,7 @@ struct Box {
         {
             return deref();
         }
+
         constexpr T &deref(void) noexcept
         {
             nel_panic_if_not(has_value(), "not a value");
@@ -102,6 +107,7 @@ struct Box {
         {
             return deref();
         }
+
         constexpr T const &deref(void) const noexcept
         {
             nel_panic_if_not(has_value(), "not a value");
@@ -117,6 +123,7 @@ struct Box {
         {
             return value_ != nullptr;
         }
+
         constexpr operator bool(void) const noexcept
         {
             return has_value();

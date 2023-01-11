@@ -56,6 +56,7 @@ void memcpy(T *const d, T const *const s, Length n) noexcept
         d[i] = s[i];
     }
 }
+
 template<typename T>
 bool try_memcpy(T *const d, T const *const s, Length n) noexcept
 {
@@ -86,6 +87,7 @@ void memset(T *const d, T const &s, Length n) noexcept
         d[i] = s;
     }
 }
+
 template<typename T>
 bool try_memset(T *const d, T const &s, Length n) noexcept
 {

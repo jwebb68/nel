@@ -101,7 +101,11 @@ struct MappingIterator: Iterator<MappingIterator<It, InT, OutT>, InT, OutT> {
         FnT fn_;
 
     public:
-        MappingIterator(It inner, FnT fn) noexcept: inner_(inner), fn_(fn) {}
+        MappingIterator(It inner, FnT fn) noexcept
+            : inner_(inner)
+            , fn_(fn)
+        {
+        }
 
     public:
         /**
@@ -137,7 +141,10 @@ struct FirstNIterator: Iterator<FirstNIterator<It, InT, OutT>, InT, OutT> {
         Length const limit_;
 
     public:
-        FirstNIterator(It inner, Length limit) noexcept: inner_(inner), current_(0), limit_(limit)
+        FirstNIterator(It inner, Length limit) noexcept
+            : inner_(inner)
+            , current_(0)
+            , limit_(limit)
         {
         }
 

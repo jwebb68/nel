@@ -45,7 +45,10 @@ struct Vector {
         VectorNode *item_;
 
     private:
-        constexpr Vector(VectorNode *const n) noexcept: item_(n) {}
+        constexpr Vector(VectorNode *const n) noexcept
+            : item_(n)
+        {
+        }
 
     public:
         /**
@@ -58,17 +61,22 @@ struct Vector {
 
         // default ctor is ok since it cannot throw.
         // TODO: but is it 'correct'? i.e. must arrays be created initialised?
-        constexpr Vector(void) noexcept: item_(nullptr) {}
+        constexpr Vector(void) noexcept
+            : item_(nullptr)
+        {
+        }
 
         // No copying..
         constexpr Vector(Vector const &o) = delete;
         constexpr Vector &operator=(Vector const &o) = delete;
 
         // moving ok.
-        constexpr Vector(Vector &&o) noexcept: item_(std::move(o.item_))
+        constexpr Vector(Vector &&o) noexcept
+            : item_(std::move(o.item_))
         {
             o.item_ = nullptr;
         }
+
         constexpr Vector &operator=(Vector &&o) noexcept
         {
             if (this != &o) {
@@ -195,6 +203,7 @@ struct Vector {
         {
             return slice().try_get(idx);
         }
+
         constexpr Optional<T const &> try_get(Index idx) const noexcept
         {
             return slice().try_get(idx);
@@ -213,6 +222,7 @@ struct Vector {
         {
             return (item_ == nullptr) ? Slice<T>::empty() : item_->slice();
         }
+
         constexpr Slice<T const> slice(void) const noexcept
         {
             return (item_ == nullptr) ? Slice<T const>::empty()
@@ -235,6 +245,7 @@ struct Vector {
         {
             return slice().subslice(b, e);
         }
+
         constexpr Slice<T const> subslice(Index b, Index e) const noexcept
         {
             return slice().subslice(b, e);
@@ -325,6 +336,7 @@ struct Vector {
             if (item_ == nullptr) { return Result<void, T>::Err(val); }
             return item_->push_back(val);
         }
+
         // TODO: poss not consistent, as not returning Result<void, T>
         Result<void, std::initializer_list<T>> push_back(std::initializer_list<T> l) noexcept
         {
@@ -335,6 +347,7 @@ struct Vector {
             if (item_ == nullptr) { return Result<void, U>::Err(l); }
             return item_->push_back(l);
         }
+
         template<typename... Args>
         Result<void, T> push_back(Args &&...args) noexcept
         {
@@ -383,6 +396,7 @@ struct Vector {
         {
             return slice().iter();
         }
+
         constexpr auto iter(void) noexcept
         {
             return slice().iter();
@@ -392,6 +406,7 @@ struct Vector {
         {
             return slice().enumerate();
         }
+
         constexpr Enumerator<T> enumerate(void) noexcept
         {
             return slice().enumerate();

@@ -32,9 +32,17 @@ struct Slice {
         Length len_;
 
     private:
-        constexpr Slice(void): content_(nullptr), len_(0) {}
+        constexpr Slice(void)
+            : content_(nullptr)
+            , len_(0)
+        {
+        }
 
-        constexpr Slice(T p[], Length len) noexcept: content_(p), len_(len) {}
+        constexpr Slice(T p[], Length len) noexcept
+            : content_(p)
+            , len_(len)
+        {
+        }
 
     public:
         // Copying a slice is ok as it does not own the data it points to.
@@ -120,6 +128,7 @@ struct Slice {
         {
             return (idx >= len_) ? None : Some(content_[idx]);
         }
+
         constexpr Optional<T const &> try_get(Index idx) const noexcept
         {
             return (idx >= len_) ? None : Optional<T const &>::Some(content_[idx]);
@@ -161,6 +170,7 @@ struct Slice {
             if (e > len_) { e = len_; }
             return Slice(&content_[b], e - b);
         }
+
         Slice<T const> subslice(Index b, Index e) const noexcept
         {
             if (b >= e) { return Slice<T const>::empty(); }
@@ -207,6 +217,7 @@ struct Slice {
         {
             return SliceIterator<T>(content_, len());
         }
+
         constexpr SliceIterator<T const> const iter(void) const noexcept
         {
             return SliceIterator<T const>(content_, len());
@@ -216,6 +227,7 @@ struct Slice {
         {
             return Enumerator<T>(content_, len_);
         }
+
         constexpr Enumerator<T const> const enumerate(void) const noexcept
         {
             return Enumerator<T const>(content_, len_);
@@ -281,7 +293,12 @@ class SliceIterator: public Iterator<SliceIterator<T>, T, T &>
         // copy ok
         // move ok
     public:
-        constexpr SliceIterator(T arr[], Count len) noexcept: ptr_(arr), len_(len), pos_(0) {}
+        constexpr SliceIterator(T arr[], Count len) noexcept
+            : ptr_(arr)
+            , len_(len)
+            , pos_(0)
+        {
+        }
 
         /**
          * Return next item in iterator or None is no more.
@@ -301,6 +318,7 @@ class SliceIterator: public Iterator<SliceIterator<T>, T, T &>
             if (pos_ >= len_) { return None; }
             return Some(ptr_[pos_++]);
         }
+
         // consuming/moving/mutating iter
         // Optional<T> next(void) noexcept
         // {

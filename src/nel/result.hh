@@ -71,12 +71,12 @@ class Result
         // Tagged enum thing.
         // Similar to std::variant but without the exception throwing behaviour.
         // Maybe make into a nel::Variant ?
-        enum Tag
-        {
+        enum Tag {
             INVAL = 0,
             OK,
             ERR
         } tag_;
+
         template<enum Tag>
         struct Phantom {
         };
@@ -86,19 +86,29 @@ class Result
                 Element<ErrT> err_;
         };
 
-        Result(Phantom<OK> const, OkT &&v) noexcept: tag_(OK), ok_(std::forward<OkT>(v)) {}
-
-        template<typename... Args>
-        Result(Phantom<OK> const, Args &&...args) noexcept
-            : tag_(OK), ok_(std::forward<Args>(args)...)
+        Result(Phantom<OK> const, OkT &&v) noexcept
+            : tag_(OK)
+            , ok_(std::forward<OkT>(v))
         {
         }
 
-        Result(Phantom<ERR> const, ErrT &&v) noexcept: tag_(ERR), err_(std::forward<ErrT>(v)) {}
+        template<typename... Args>
+        Result(Phantom<OK> const, Args &&...args) noexcept
+            : tag_(OK)
+            , ok_(std::forward<Args>(args)...)
+        {
+        }
+
+        Result(Phantom<ERR> const, ErrT &&v) noexcept
+            : tag_(ERR)
+            , err_(std::forward<ErrT>(v))
+        {
+        }
 
         template<typename... Args>
         Result(Phantom<ERR> const, Args &&...args) noexcept
-            : tag_(ERR), err_(std::forward<Args>(args)...)
+            : tag_(ERR)
+            , err_(std::forward<Args>(args)...)
         {
         }
 
@@ -131,7 +141,8 @@ class Result
             }
         }
 
-        Result(Result &&o) noexcept: tag_(std::move(o.tag_))
+        Result(Result &&o) noexcept
+            : tag_(std::move(o.tag_))
         {
             o.tag_ = INVAL;
             switch (tag_) {
@@ -152,6 +163,7 @@ class Result
                     nel_panic("invalid Result");
             }
         }
+
         Result &operator=(Result &&o) noexcept
         {
             if (this != &o) {
@@ -168,7 +180,10 @@ class Result
 
         // Don't really want default ctor, but move semantics brought in a
         // inval state, which can be used for it.
-        constexpr Result(void) noexcept: tag_(INVAL) {}
+        constexpr Result(void) noexcept
+            : tag_(INVAL)
+        {
+        }
 
     public:
         /**
@@ -549,12 +564,12 @@ class Result<void, E>
         // Tagged enum thing.
         // Similar to std::variant but without the exception throwing behaviour.
         // Maybe make into a nel::Variant ?
-        enum Tag
-        {
+        enum Tag {
             INVAL = 0,
             OK,
             ERR
         } tag_;
+
         template<enum Tag>
         struct Phantom {
         };
@@ -563,13 +578,21 @@ class Result<void, E>
                 Element<ErrT> err_;
         };
 
-        constexpr Result(Phantom<OK> const) noexcept: tag_(OK) {}
+        constexpr Result(Phantom<OK> const) noexcept
+            : tag_(OK)
+        {
+        }
 
-        Result(Phantom<ERR> const, ErrT &&v) noexcept: tag_(ERR), err_(std::forward<ErrT>(v)) {}
+        Result(Phantom<ERR> const, ErrT &&v) noexcept
+            : tag_(ERR)
+            , err_(std::forward<ErrT>(v))
+        {
+        }
 
         template<typename... Args>
         Result(Phantom<ERR> const, Args &&...args) noexcept
-            : tag_(ERR), err_(std::forward<Args>(args)...)
+            : tag_(ERR)
+            , err_(std::forward<Args>(args)...)
         {
         }
 
@@ -601,7 +624,8 @@ class Result<void, E>
             }
         }
 
-        Result(Result &&o) noexcept: tag_(std::move(o.tag_))
+        Result(Result &&o) noexcept
+            : tag_(std::move(o.tag_))
         {
             o.tag_ = INVAL;
             switch (tag_) {
@@ -636,7 +660,10 @@ class Result<void, E>
 
         // Don't really want default ctor, but move semantics brought in a
         // inval state, which can be used for it.
-        constexpr Result(void) noexcept: tag_(INVAL) {}
+        constexpr Result(void) noexcept
+            : tag_(INVAL)
+        {
+        }
 
     public:
         /**

@@ -28,10 +28,14 @@ struct Element {
         constexpr Element(Element &&o) noexcept = default;
         constexpr Element &operator=(Element &&o) noexcept = default;
 
-        Element(T &&val) noexcept: value_(std::forward<T>(val)) {}
+        Element(T &&val) noexcept
+            : value_(std::forward<T>(val))
+        {
+        }
 
         template<typename... Args>
-        Element(Args &&...args) noexcept: value_(std::forward<Args>(args)...)
+        Element(Args &&...args) noexcept
+            : value_(std::forward<Args>(args)...)
         {
         }
 
@@ -45,6 +49,7 @@ struct Element {
         {
             return value_;
         }
+
         T &get(void) noexcept
         {
             return value_;
@@ -54,6 +59,7 @@ struct Element {
         {
             return value_;
         }
+
         T &operator*(void) noexcept
         {
             return value_;

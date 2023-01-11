@@ -799,6 +799,7 @@ nel::Optional<int> foo_some()
     return nel::Some(1);
     // return nel::nel::Some(1);
 }
+
 TEST_CASE("optional::Some auto into Optional", "[optional]")
 {
     REQUIRE(foo_some().is_some());
@@ -808,6 +809,7 @@ nel::Optional<int> foo_none()
 {
     return nel::None;
 }
+
 TEST_CASE("optional::None auto into Optional", "[optional]")
 {
     REQUIRE(foo_none().is_none());
@@ -819,11 +821,16 @@ struct Foo {
         {
             this->dtor_called = true;
         }
-        Foo(bool &dtor_called): dtor_called(dtor_called) {}
+
+        Foo(bool &dtor_called)
+            : dtor_called(dtor_called)
+        {
+        }
 
     private:
         bool &dtor_called;
 };
+
 TEST_CASE("optional::~dtor for some, must call some dtor", "[optional]")
 {
     bool dtor_called = false;

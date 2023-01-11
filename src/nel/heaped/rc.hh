@@ -48,7 +48,9 @@ struct RC {
 
                 template<typename... Args>
                 constexpr Node(Args &&...args) noexcept
-                    : n_refs_(1), has_value_(true), value_(std::forward<Args>(args)...)
+                    : n_refs_(1)
+                    , has_value_(true)
+                    , value_(std::forward<Args>(args)...)
                 {
                 }
 
@@ -59,12 +61,14 @@ struct RC {
                 {
                     if (v != nullptr) { ++v->n_refs_; }
                 }
+
                 static void release(Node *const v) noexcept
                 {
                     if (v != nullptr) {
                         if (--v->n_refs_ == 0) { delete v; }
                     }
                 }
+
                 static T unwrap(Node *const v) noexcept
                 {
                     // Value moved out from value_ on unwrap().
@@ -83,11 +87,13 @@ struct RC {
                     nel_panic_if_not(has_value(), "invalid rc node");
                     return value_.get();
                 }
+
                 T const &ref(void) const noexcept
                 {
                     nel_panic_if_not(has_value(), "invalid rc node");
                     return value_.get();
                 }
+
                 bool has_value(void) const noexcept
                 {
                     return has_value_;
@@ -108,17 +114,20 @@ struct RC {
 
         // It's meant to be shared, so can copy this.
         // much badness, non-const ref for a copy?
-        constexpr RC(RC &o) noexcept: node_(nullptr)
+        constexpr RC(RC &o) noexcept
+            : node_(nullptr)
         {
             Node::grab(o.node_);
             node_ = o.node_;
         }
 
-        constexpr RC(RC const &o) noexcept: node_(nullptr)
+        constexpr RC(RC const &o) noexcept
+            : node_(nullptr)
         {
             Node::grab(o.node_);
             node_ = o.node_;
         }
+
         // constexpr RC &operator=(RC const &o) const noexcept
         constexpr RC &operator=(RC &o) noexcept
         {
@@ -130,6 +139,7 @@ struct RC {
             }
             return *this;
         }
+
         constexpr RC &operator=(RC const &o) const noexcept
         {
             if (this != &o) {
@@ -140,17 +150,23 @@ struct RC {
             }
             return *this;
         }
+
         void swap(RC &o) noexcept
         {
             std::swap(node_, o.node_);
         }
 
-        constexpr RC(void) noexcept: node_(nullptr) {}
+        constexpr RC(void) noexcept
+            : node_(nullptr)
+        {
+        }
 
-        constexpr RC(RC &&o) noexcept: node_(std::move(o.node_))
+        constexpr RC(RC &&o) noexcept
+            : node_(std::move(o.node_))
         {
             o.node_ = nullptr;
         }
+
         constexpr RC &operator=(RC &&o) noexcept
         {
             if (this != &o) {
@@ -161,13 +177,15 @@ struct RC {
         }
 
     public:
-        constexpr RC(T &&v) noexcept: node_(new Node(std::move(v)))
+        constexpr RC(T &&v) noexcept
+            : node_(new Node(std::move(v)))
         {
             // Node created pre-grabbed.
         }
 
         template<typename... Args>
-        constexpr RC(Args &&...args) noexcept: node_(new Node(std::forward<Args>(args)...))
+        constexpr RC(Args &&...args) noexcept
+            : node_(new Node(std::forward<Args>(args)...))
         {
             // Node created pre-grabbed.
         }

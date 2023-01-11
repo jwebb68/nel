@@ -86,8 +86,8 @@ struct Node {
             // Size of region to allocate excluding align padding.
             // Assume alignof(T) is included in align of Node.
             Count new_sz = sizeof(Node) - sizeof(T) + new_cap * sizeof(T);
-            Count old_sz =
-                (old_n == nullptr) ? 0 : sizeof(Node) - sizeof(T) + old_n->alloc_ * sizeof(T);
+            Count old_sz
+                = (old_n == nullptr) ? 0 : sizeof(Node) - sizeof(T) + old_n->alloc_ * sizeof(T);
 
             // Check that max_align is multiple of align (i.e. is realign necessary..)
             // If it isn't, then becomes:
@@ -183,6 +183,7 @@ struct Node {
         {
             return values_;
         }
+
         constexpr T const *ptr(void) const noexcept
         {
             return values_;
@@ -193,6 +194,7 @@ struct Node {
         {
             return alloc_;
         }
+
         constexpr Length len(void) const noexcept
         {
             return len_;
@@ -208,6 +210,7 @@ struct Node {
         {
             return Slice<T>::from(values_, len());
         }
+
         constexpr Slice<T const> slice(void) const noexcept
         {
             return Slice<T const>::from(values_, len());
@@ -306,6 +309,7 @@ struct Node {
         {
             return slice().iter();
         }
+
         constexpr auto iter(void) noexcept
         {
             return slice().iter();
@@ -315,6 +319,7 @@ struct Node {
         {
             return slice().enumerate();
         }
+
         constexpr Enumerator<T> enumerate(void) noexcept
         {
             return slice().enumerate();

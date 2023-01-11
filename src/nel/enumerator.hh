@@ -36,7 +36,12 @@ struct Enumerator {
         Length len_;
 
     public:
-        Enumerator(T p[], Length const len) noexcept: content_(p), idx_(0), len_(len) {}
+        Enumerator(T p[], Length const len) noexcept
+            : content_(p)
+            , idx_(0)
+            , len_(len)
+        {
+        }
 
         constexpr bool is_done(void) const noexcept
         {
@@ -83,7 +88,11 @@ struct MappingEnumerator {
 
     public:
         // MappingEnumerator(I &inner, F fn)
-        MappingEnumerator(I &inner, FnT fn) noexcept: inner_(inner), fn_(fn) {}
+        MappingEnumerator(I &inner, FnT fn) noexcept
+            : inner_(inner)
+            , fn_(fn)
+        {
+        }
 
         constexpr bool is_done(void) const noexcept
         {
@@ -138,7 +147,10 @@ struct FirstNEnumerator {
         Length limit_;
 
     public:
-        FirstNEnumerator(I &inner, Length limit) noexcept: inner_(inner), current_(0), limit_(limit)
+        FirstNEnumerator(I &inner, Length limit) noexcept
+            : inner_(inner)
+            , current_(0)
+            , limit_(limit)
         {
         }
 

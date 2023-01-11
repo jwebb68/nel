@@ -53,7 +53,12 @@ struct Queue {
         }
 
     private:
-        Queue(void): len_(0), wp_(0), rp_(0) {}
+        Queue(void)
+            : len_(0)
+            , wp_(0)
+            , rp_(0)
+        {
+        }
 
     public:
         // no implicit copying allowed
@@ -61,7 +66,10 @@ struct Queue {
         constexpr Queue &operator=(Queue const &o) = delete;
 
         // moving allowed though.
-        constexpr Queue(Queue &&o): len_(o.len_), wp_(o.wp_), rp_(o.rp_)
+        constexpr Queue(Queue &&o)
+            : len_(o.len_)
+            , wp_(o.wp_)
+            , rp_(o.rp_)
         {
             // TODO: replace with slice().move_from(o.slice())
             T *d = &store_[rp_];
@@ -76,6 +84,7 @@ struct Queue {
             o.len_ = 0;
             o.wp_ = o.rp_ = 0;
         }
+
         constexpr Queue &operator=(Queue &&o) noexcept
         {
             if (this != &o) {

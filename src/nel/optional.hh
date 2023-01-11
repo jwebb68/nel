@@ -24,6 +24,7 @@ namespace nel
 
 struct NoneT {
 };
+
 static constexpr NoneT None = NoneT {};
 
 /**
@@ -77,12 +78,12 @@ class Optional
         // Tagged enum thing.
         // Similar to std::variant but without the exception throwing behaviour.
         // Maybe make into a nel::Variant ?
-        enum class Tag
-        {
+        enum class Tag {
             INVAL = 0,
             NONE,
             SOME
         } tag_;
+
         template<enum Tag>
         struct Phantom {
         };
@@ -186,9 +187,11 @@ class Optional
 
     private:
         constexpr Optional(Phantom<Tag::SOME> const, T &&v) noexcept
-            : tag_(Tag::SOME), some_(std::forward<T>(v))
+            : tag_(Tag::SOME)
+            , some_(std::forward<T>(v))
         {
         }
+
         // template<typename... Args>
         // constexpr Optional(Phantom<SOME> const, Args &&...args) noexcept
         //     : tag_(SOME), some_(std::forward<Args>(args)...) {}
@@ -200,7 +203,10 @@ class Optional
         // really? Default to None/Inval?
         // But use of move-ctor mandates an inval state, so can have a default.
         // Optional(void) = delete;
-        constexpr Optional(void) noexcept: tag_(Tag::INVAL) {}
+        constexpr Optional(void) noexcept
+            : tag_(Tag::INVAL)
+        {
+        }
 
         // Optional<T> t = None;
         // Optional<T> t{None};
@@ -210,7 +216,10 @@ class Optional
          *
          * @returns an Optional 'wrapping' a None
          */
-        constexpr Optional(NoneT const &) noexcept: tag_(Tag::NONE) {}
+        constexpr Optional(NoneT const &) noexcept
+            : tag_(Tag::NONE)
+        {
+        }
 
         /**
          * Create an optional set to Some, moving existing value to hold.
@@ -455,6 +464,7 @@ class Optional<void>
             NONE,
             SOME
         } tag_;
+
         template<enum Tag>
         struct Phantom {
         };
@@ -540,7 +550,10 @@ class Optional<void>
         }
 
     private:
-        constexpr Optional(Phantom<Tag::SOME> const) noexcept: tag_(Tag::SOME) {}
+        constexpr Optional(Phantom<Tag::SOME> const) noexcept
+            : tag_(Tag::SOME)
+        {
+        }
 
     public:
         // Default constructor.
@@ -549,7 +562,10 @@ class Optional<void>
         // really? Default to None/Inval?
         // But use of move-ctor mandates an inval state, so can have a default.
         // Optional(void) = delete;
-        constexpr Optional(void) noexcept: tag_(Tag::INVAL) {}
+        constexpr Optional(void) noexcept
+            : tag_(Tag::INVAL)
+        {
+        }
 
         // assign/create from None
         // Optional<T> t = None;
@@ -560,7 +576,10 @@ class Optional<void>
          *
          * @returns an Optional 'wrapping' a None
          */
-        constexpr Optional(NoneT const &) noexcept: tag_(Tag::NONE) {}
+        constexpr Optional(NoneT const &) noexcept
+            : tag_(Tag::NONE)
+        {
+        }
 
         /**
          * Create an optional set to Some, creating the value to use used inplace.

@@ -59,20 +59,25 @@ struct Vector {
 
         // default ctor is safe, will always succeed.
         // just expensive in ram if T or N are large.
-        constexpr Vector(void): len_(0) {}
+        constexpr Vector(void)
+            : len_(0)
+        {
+        }
 
         // No copying..
         constexpr Vector(Vector const &o) = delete;
         constexpr Vector &operator=(Vector const &o) = delete;
 
         // Moving ok
-        Vector(Vector &&o) noexcept: len_(std::move(o.len_))
+        Vector(Vector &&o) noexcept
+            : len_(std::move(o.len_))
         {
             o.len_ = 0;
             for (Index i = 0; i < len(); ++i) {
                 new (&values_[i]) T(std::move(o.values_[i]));
             }
         }
+
         Vector &operator=(Vector &&o) noexcept
         {
             if (this != &o) {
@@ -193,6 +198,7 @@ struct Vector {
         {
             return slice().try_get(idx);
         }
+
         constexpr Optional<T const &> try_get(Index idx) const noexcept
         {
             return slice().try_get(idx);
@@ -211,6 +217,7 @@ struct Vector {
         {
             return Slice<T>::from(values_, len());
         }
+
         constexpr Slice<T const> const slice(void) const noexcept
         {
             return Slice<T const>::from(values_, len());
@@ -232,6 +239,7 @@ struct Vector {
         {
             return slice().subslice(b, e);
         }
+
         constexpr Slice<T const> subslice(Index b, Index e) const noexcept
         {
             return slice().subslice(b, e);
@@ -280,6 +288,7 @@ struct Vector {
             len_ += 1;
             return Result<void, T>::Ok();
         }
+
         template<typename... Args>
         Result<void, T> push_back(Args &&...args) noexcept
         {
@@ -353,6 +362,7 @@ struct Vector {
         {
             return slice().iter();
         }
+
         constexpr auto iter(void) const noexcept
         {
             return slice().iter();
@@ -362,6 +372,7 @@ struct Vector {
         {
             return slice().enumerate();
         }
+
         constexpr Enumerator<T const> enumerate(void) const noexcept
         {
             return slice().enumerate();

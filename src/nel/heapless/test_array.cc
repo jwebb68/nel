@@ -78,8 +78,8 @@ TEST_CASE("heapless::heapless::Array::move", "[heapless][array]")
         // how to test array elems are moved then..?
         // all entries in a2 must now be 1
         // TODO: how to drop fold<bool>(..0 to fold(..)
-        auto r =
-            a2.iter().fold(true, std::function([](bool &acc, int &&v) { acc = acc && (v == 1); }));
+        auto r = a2.iter().fold(true,
+                                std::function([](bool &acc, int &&v) { acc = acc && (v == 1); }));
         REQUIRE(r == true);
     }
 
@@ -88,8 +88,8 @@ TEST_CASE("heapless::heapless::Array::move", "[heapless][array]")
         auto a2 = nel::heapless::Array<int, 3>::try_from({4, 4, 4}).unwrap();
         auto a3 = nel::heapless::Array<int, 3>::try_from({2, 2, 2}).unwrap();
         a2 = std::move(a3);
-        auto r2 =
-            a2.iter().fold(true, std::function([](bool &acc, int &&v) { acc = acc && (v == 2); }));
+        auto r2 = a2.iter().fold(true,
+                                 std::function([](bool &acc, int &&v) { acc = acc && (v == 2); }));
         REQUIRE(r2 == true);
         // REQUIRE(!a2.is_empty());
         // REQUIRE(a3.is_empty());
