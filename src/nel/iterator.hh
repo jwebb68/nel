@@ -99,7 +99,6 @@ struct Iterator {
         }
 };
 
-// x.map(mapfn).enum().for_each(..);
 // x.chain(MapIt(mapfn)).chain(EnumIt).for_each([](Index idx, T &e) {});
 
 template<typename It, typename V>
@@ -140,6 +139,9 @@ struct MappingIterator: public Iterator<MappingIterator<It, V>, typename It::InT
          */
         Optional<OutT> next(void) noexcept
         {
+            // use explicit function type otherwise get
+            // no matching call to/argument deduction failed/isnode derived from
+            // std::function<U(int&)>
             FnT f = [&](typename It::OutT &e) -> OutT {
                 return fn_(e);
             };
