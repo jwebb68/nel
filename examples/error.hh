@@ -1,3 +1,4 @@
+// -*- mode: c++; indent-tabs-mode: nil; tab-width: 4 -*-
 #ifndef ERROR_HH
 #define ERROR_HH
 

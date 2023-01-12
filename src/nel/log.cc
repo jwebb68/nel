@@ -1,3 +1,4 @@
+// -*- mode: c++; indent-tabs-mode: nil; tab-width: 4 -*-
 #include <nel/log.hh>
 
 #include <cstdio>

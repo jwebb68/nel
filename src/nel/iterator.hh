@@ -1,3 +1,4 @@
+// -*- mode: c++; indent-tabs-mode: nil; tab-width: 4 -*-
 #ifndef NEL_ITERATOR_HH
 #define NEL_ITERATOR_HH
 

@@ -1,3 +1,4 @@
+// -*- mode: c++; indent-tabs-mode: nil; tab-width: 4 -*-
 #ifndef NEL_HEAPLESS_SLICE_HH
 #define NEL_HEAPLESS_SLICE_HH
 

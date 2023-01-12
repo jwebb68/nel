@@ -1,3 +1,4 @@
+// -*- mode: c++; indent-tabs-mode: nil; tab-width: 4 -*-
 #ifndef NEL_OPTIONAL_HH
 #define NEL_OPTIONAL_HH
 

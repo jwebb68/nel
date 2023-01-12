@@ -1,3 +1,4 @@
+// -*- mode: c++; indent-tabs-mode: nil; tab-width: 4 -*-
 #include "iterator.hh"
 
 #include <nel/heapless/array.hh>

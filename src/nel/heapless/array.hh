@@ -1,3 +1,4 @@
+// -*- mode: c++; indent-tabs-mode: nil; tab-width: 4 -*-
 #ifndef NEL_HEAPLESS_ARRAY_HH
 #define NEL_HEAPLESS_ARRAY_HH
 
@@ -59,7 +60,6 @@ struct Array {
                 new (&values_[i]) T(std::move(*it));
             }
         }
-
 
         // If type has copy, then could fill? use slice for that..
 
