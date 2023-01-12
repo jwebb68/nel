@@ -118,12 +118,10 @@ struct Vector {
          * @return on success, an Optional::Some holding the created vector.
          * @return on fail: Optional::None
          */
-        static constexpr Optional<Vector> try_from(std::initializer_list<T> l) noexcept
+        static constexpr Optional<Vector> try_from(std::initializer_list<T> &&l) noexcept
         {
             Vector a = Vector::empty();
-            auto r = a.push_back(l);
-            if (r.is_err()) { return None; }
-            return Some(std::move(a));
+            return a.push_back(l).ok().template map<Vector>([&a]() { return std::move(a); });
         }
 
     public:

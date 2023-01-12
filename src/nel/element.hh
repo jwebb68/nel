@@ -41,7 +41,7 @@ struct Element {
         }
 
     public:
-        T unwrap(void) noexcept
+        T &&unwrap(void) noexcept
         {
             return std::forward<T>(value_);
         }

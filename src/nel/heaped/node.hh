@@ -127,27 +127,25 @@ struct Node {
 
         // use placement new to init.
         // want this as a static func so ca return errors..
-        constexpr Node(std::initializer_list<T> l) noexcept
+        constexpr Node(std::initializer_list<T> &&l) noexcept
         {
             // How to fail if not big enough.
             nel_panic_if_not(l.size() <= capacity(), "not big enough");
             Index i = 0;
             for (auto it = l.begin(); i < capacity() && it != l.end(); ++it, ++i) {
-                new (&values_[i]) T(std::move(*it));
+                new (&values_[i]) T(std::forward<T>(*it));
             }
             len_ = i;
         }
 
     public:
-        static constexpr Optional<Node *> try_from(std::initializer_list<T> l) noexcept
+        static constexpr Optional<Node *> try_from(std::initializer_list<T> &&l) noexcept
         {
             // cannot use Optional<Node> as size is not known at compile time.
             // TODO: maybe should be try_malloc?
             Node *p = Node::malloc(l.size());
             if (p == nullptr) { return None; }
-            auto r = p->push_back(l);
-            if (r.is_err()) { return None; }
-            return Some(std::move(p));
+            return p->push_back(l).ok().template map<Node *>([p]() -> Node * { return p; });
         }
 
         // use placement new to init.

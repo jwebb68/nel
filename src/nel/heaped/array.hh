@@ -16,6 +16,7 @@ struct Array;
 #include <nel/heaped/node.hh>
 #include <nel/iterator.hh>
 #include <nel/slice.hh>
+#include <nel/optional.hh>
 #include <nel/log.hh>
 #include <nel/defs.hh>
 
@@ -71,14 +72,17 @@ struct Array {
             ArrayNode::free(item_);
         }
 
+    private:
         // No copying.
         // copying an array is very expensive, so disabled.
         // if a copy is required, then must be done explicitly.
         constexpr Array(Array const &o) = delete;
         constexpr Array &operator=(Array const &o) = delete;
 
+    public:
         // Moving allowed.
         // Moving is allowed since it's a fast O(1) op.
+        // and does not create any extra resources..
         constexpr Array(Array &&o) noexcept
             : item_(std::move(o.item_))
         {
@@ -128,6 +132,7 @@ struct Array {
         }
 #endif
 
+#if 1
         /**
          * Attempt to create an array from initialiser list
          *
@@ -137,15 +142,17 @@ struct Array {
          */
         // possibly experimental.
         // want moving not copying, but c++ default is to copy
-        // how to init is initlist in const space? (it'd be copying then)
+        // how to init the initlist in const space? (it'd be copying then)
         // want copying but not via ctor (may not be possible), so it becomes a try_ returning an
         // err.
         // TODO: determine how efficient this implementation is..
-        static constexpr Optional<Array> try_from(std::initializer_list<T> l) noexcept
+        static constexpr Optional<Array> try_from(std::initializer_list<T> &&l) noexcept
         {
-            return ArrayNode::try_from(l).map(
-                std::function([](ArrayNode *&p) -> Array { return Array(p); }));
+            return ArrayNode::try_from(std::move(l)).template map<Array>([](ArrayNode *p) -> Array {
+                return Array(p);
+            });
         }
+#endif
 
     public:
         /**

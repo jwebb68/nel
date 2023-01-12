@@ -81,6 +81,8 @@ TEST_CASE("std::move(Result)-ctor for err must move err to dest", "[result]")
     REQUIRE(val == FAIL);
 }
 
+#if 0
+// disabled until panic testing is available
 TEST_CASE("std::move(Result)-ctor for inval must move inval to dest", "[result]")
 {
     auto res = TestResult::Err(FAIL);
@@ -90,7 +92,10 @@ TEST_CASE("std::move(Result)-ctor for inval must move inval to dest", "[result]"
     REQUIRE(!res3.is_ok());
     REQUIRE(!res3.is_err());
 }
+#endif
 
+#if 0
+// disabled until panic testing is available
 TEST_CASE("std::move(Result)-ctor for ok must invalidate src", "[result]")
 {
     auto res = TestResult::Ok(1);
@@ -99,7 +104,10 @@ TEST_CASE("std::move(Result)-ctor for ok must invalidate src", "[result]")
     REQUIRE(!res.is_ok());
     REQUIRE(!res.is_err());
 }
+#endif
 
+#if 0
+// disabled until panic testing is available
 TEST_CASE("std::move(Result)-ctor for err must invalidate src", "[result]")
 {
     auto res = TestResult::Err(FAIL);
@@ -108,7 +116,10 @@ TEST_CASE("std::move(Result)-ctor for err must invalidate src", "[result]")
     REQUIRE(!res.is_ok());
     REQUIRE(!res.is_err());
 }
+#endif
 
+#if 0
+// disabled until panic testing is available
 TEST_CASE("std::move(Result)-ctor for inval must invalidate src", "[result]")
 {
     auto res = TestResult::Err(FAIL);
@@ -118,6 +129,7 @@ TEST_CASE("std::move(Result)-ctor for inval must invalidate src", "[result]")
     REQUIRE(!res.is_ok());
     REQUIRE(!res.is_err());
 }
+#endif
 
 TEST_CASE("std::move(Result)-ass for ok must move ok val to dest", "[result]")
 {
@@ -147,6 +159,8 @@ TEST_CASE("std::move(Result)-ass for err must move err val to dest", "[result]")
     REQUIRE(val == FAIL);
 }
 
+#if 0
+// disabled until panic testing is available
 TEST_CASE("std::move(Result)-ass for inval must move inval to dest", "[result]")
 {
     auto res = TestResult::Err(FAIL);
@@ -160,7 +174,10 @@ TEST_CASE("std::move(Result)-ass for inval must move inval to dest", "[result]")
     REQUIRE(!res3.is_ok());
     REQUIRE(!res3.is_err());
 }
+#endif
 
+#if 0
+// disabled until panic testing is available
 TEST_CASE("std::move(Result)-ass for ok must invalidate src", "[result]")
 {
     auto res = TestResult::Ok(1);
@@ -171,7 +188,10 @@ TEST_CASE("std::move(Result)-ass for ok must invalidate src", "[result]")
     REQUIRE(!res.is_ok());
     REQUIRE(!res.is_err());
 }
+#endif
 
+#if 0
+// disabled until panic testing is available
 TEST_CASE("std::move(Result)-ass for err must invalidate src", "[result]")
 {
     auto res = TestResult::Err(FAIL);
@@ -182,7 +202,10 @@ TEST_CASE("std::move(Result)-ass for err must invalidate src", "[result]")
     REQUIRE(!res.is_ok());
     REQUIRE(!res.is_err());
 }
+#endif
 
+#if 0
+// disabled until panic testing is available
 TEST_CASE("std::move(Result)-ass for inval must invalidate src", "[result]")
 {
     auto res = TestResult::Err(FAIL);
@@ -196,6 +219,7 @@ TEST_CASE("std::move(Result)-ass for inval must invalidate src", "[result]")
     REQUIRE(!res.is_ok());
     REQUIRE(!res.is_err());
 }
+#endif
 
 TEST_CASE("Result.ok for ok must produce ok val", "[result]")
 {
@@ -223,16 +247,23 @@ TEST_CASE("Result.ok for err must produce none", "[result]")
     REQUIRE(val.is_none());
 }
 
-TEST_CASE("Result.ok for inval must produce none", "[result]")
+#if 0
+// disabled until panic testing is available
+TEST_CASE("Result.ok for inval must panic", "[result]")
 {
     auto res = TestResult::Err(FAIL);
     auto res2 = std::move(res);
+
+    // should panic here..
     auto val = res.ok();
 
-    REQUIRE(!val.is_some());
-    REQUIRE(val.is_none());
+    REQUIRE(!res.is_ok());
+    REQUIRE(!res.is_err());
 }
+#endif
 
+#if 0
+// disabled until panic testing is available
 TEST_CASE("Result.ok for ok must invalidate src", "[result]")
 {
     auto res = TestResult::Ok(1);
@@ -243,7 +274,10 @@ TEST_CASE("Result.ok for ok must invalidate src", "[result]")
     REQUIRE(!res.is_ok());
     REQUIRE(!res.is_err());
 }
+#endif
 
+#if 0
+// disabled until panic testing is available
 TEST_CASE("Result.ok for err must invalidate src", "[result]")
 {
     auto res = TestResult::Err(FAIL);
@@ -254,7 +288,10 @@ TEST_CASE("Result.ok for err must invalidate src", "[result]")
     REQUIRE(!res.is_ok());
     REQUIRE(!res.is_err());
 }
+#endif
 
+#if 0
+// disabled until panic catching/suppression is available.
 TEST_CASE("Result.ok for inval must invalidate src", "[result]")
 {
     auto res = TestResult::Err(FAIL);
@@ -266,6 +303,7 @@ TEST_CASE("Result.ok for inval must invalidate src", "[result]")
     REQUIRE(!res.is_ok());
     REQUIRE(!res.is_err());
 }
+#endif
 
 TEST_CASE("Result.err for ok must produce none", "[result]")
 {
@@ -293,16 +331,20 @@ TEST_CASE("Result.err for err must not produce none", "[result]")
     REQUIRE(val.is_some());
 }
 
-TEST_CASE("Result.err for inval must produce none", "[result]")
+#if 0
+// disabled until panic detection is available.
+TEST_CASE("Result.err for inval must panic", "[result]")
 {
     auto res = TestResult::Ok(1);
     auto res2 = std::move(res);
+
     auto val = res.err();
 
-    REQUIRE(val.is_none());
-    REQUIRE(!val.is_some());
 }
+#endif
 
+#if 0
+// disabled until panic testing is available
 TEST_CASE("Result.err for ok must invalidate src", "[result]")
 {
     auto res = TestResult::Ok(1);
@@ -313,7 +355,10 @@ TEST_CASE("Result.err for ok must invalidate src", "[result]")
     REQUIRE(!res.is_ok());
     REQUIRE(!res.is_err());
 }
+#endif
 
+#if 0
+// disabled until panic testing is available
 TEST_CASE("Result.err for err must invalidate src", "[result]")
 {
     auto res = TestResult::Err(FAIL);
@@ -324,7 +369,10 @@ TEST_CASE("Result.err for err must invalidate src", "[result]")
     REQUIRE(!res.is_ok());
     REQUIRE(!res.is_err());
 }
+#endif
 
+#if 0
+// disabled until panic suppression is avail.
 TEST_CASE("Result.err for inval must invalidate src", "[result]")
 {
     auto res = TestResult::Err(FAIL);
@@ -336,6 +384,7 @@ TEST_CASE("Result.err for inval must invalidate src", "[result]")
     REQUIRE(!res.is_ok());
     REQUIRE(!res.is_err());
 }
+#endif
 
 TEST_CASE("Result.is_ok for ok must give true", "[result]")
 {
@@ -351,13 +400,16 @@ TEST_CASE("Result.is_ok for err must give false", "[result]")
     REQUIRE(!res.is_ok());
 }
 
-TEST_CASE("Result.is_ok for inval must give false", "[result]")
+#if 0
+// disabled until panic testing is available
+TEST_CASE("Result.is_ok for inval must panic", "[result]")
 {
     auto res = TestResult::Ok(1);
     auto res2 = std::move(res);
 
     REQUIRE(!res.is_ok());
 }
+#endif
 
 TEST_CASE("Result.is_ok for ok must not alter src", "[result]")
 {
@@ -379,6 +431,8 @@ TEST_CASE("Result.is_ok for err must not alter src", "[result]")
     REQUIRE(res.unwrap_err() == FAIL);
 }
 
+#if 0
+// disabled until panic testing is available
 TEST_CASE("Result.is_ok for inval must not alter src", "[result]")
 {
     auto res = TestResult::Ok(1);
@@ -390,6 +444,7 @@ TEST_CASE("Result.is_ok for inval must not alter src", "[result]")
     REQUIRE(!res.is_ok());
     REQUIRE(!res.is_err());
 }
+#endif
 
 TEST_CASE("Result.is_err for ok must give false", "[result]")
 {
@@ -405,13 +460,16 @@ TEST_CASE("Result.is_err for err must give true", "[result]")
     REQUIRE(res.is_err());
 }
 
-TEST_CASE("Result.is_err for inval must give false", "[result]")
+#if 0
+// disabled until panic testing is available
+TEST_CASE("Result.is_err for inval must panic", "[result]")
 {
     auto res = TestResult::Ok(1);
     auto res2 = std::move(res);
 
     REQUIRE(!res.is_err());
 }
+#endif
 
 TEST_CASE("Result.unwrap for Ok must give ok value", "[result]")
 {
@@ -422,6 +480,8 @@ TEST_CASE("Result.unwrap for Ok must give ok value", "[result]")
     REQUIRE(val == 1);
 }
 
+#if 0
+// disabled until panic testing is available
 TEST_CASE("Result.unwrap for Ok must invalidate src", "[result]")
 {
     auto res = TestResult::Ok(1);
@@ -432,8 +492,10 @@ TEST_CASE("Result.unwrap for Ok must invalidate src", "[result]")
     REQUIRE(!res.is_ok());
     REQUIRE(!res.is_err());
 }
+#endif
 
 #if 0
+// disabled until panic detection is available.
 TEST_CASE("Result.unwrap for err aborts", "[result]")
 {
     auto res = TestResult::Err(FAIL);
@@ -444,6 +506,7 @@ TEST_CASE("Result.unwrap for err aborts", "[result]")
 }
 
 
+// disabled until panic detection is available.
 TEST_CASE("Result.unwrap for inval aborts", "[result]")
 {
     auto res = TestResult::Ok(1);
@@ -465,6 +528,8 @@ TEST_CASE("Result.unwrap_err for err must give err value", "[result]")
     REQUIRE(val == FAIL);
 }
 
+#if 0
+// disabled until panic testing is available
 TEST_CASE("Result.unwrap_err for err must invalidate src", "[result]")
 {
     auto res = TestResult::Err(FAIL);
@@ -475,8 +540,10 @@ TEST_CASE("Result.unwrap_err for err must invalidate src", "[result]")
     REQUIRE(!res.is_ok());
     REQUIRE(!res.is_err());
 }
+#endif
 
 #if 0
+// disabled until panic detection is available.
 TEST_CASE("Result.unwrap_err for ok aborts", "[result]")
 {
     auto res = TestResult::Ok(1);
@@ -518,6 +585,8 @@ TEST_CASE("Result.unwrap_or for err must give or value", "[result]")
     REQUIRE(val == 2);
 }
 
+#if 0
+// disabled until panic detection is available.
 TEST_CASE("Result.unwrap_or for invalid must give or value", "[result]")
 {
     auto res = TestResult::Err(FAIL);
@@ -527,7 +596,10 @@ TEST_CASE("Result.unwrap_or for invalid must give or value", "[result]")
 
     REQUIRE(val == 2);
 }
+#endif
 
+#if 0
+// disabled until panic testing is available
 TEST_CASE("Result.unwrap_or for ok must invalidate src", "[result]")
 {
     auto res = TestResult::Ok(1);
@@ -538,7 +610,10 @@ TEST_CASE("Result.unwrap_or for ok must invalidate src", "[result]")
     REQUIRE(!res.is_ok());
     REQUIRE(!res.is_err());
 }
+#endif
 
+#if 0
+// disabled until panic detection is available.
 TEST_CASE("Result.unwrap_or for err must invalidate src", "[result]")
 {
     auto res = TestResult::Err(FAIL);
@@ -561,6 +636,7 @@ TEST_CASE("Result.unwrap_or for invalid must stay invalid", "[result]")
     REQUIRE(!res.is_ok());
     REQUIRE(!res.is_err());
 }
+#endif
 
 TEST_CASE("Result.unwrap_err_or for ok must give or value", "[result]")
 {
@@ -580,6 +656,8 @@ TEST_CASE("Result.unwrap_err_or for err must give err value", "[result]")
     REQUIRE(val == FAIL);
 }
 
+#if 0
+// disabled until panic detection is available.
 TEST_CASE("Result.unwrap_err_or for invalid must give or value", "[result]")
 {
     auto res = TestResult::Err(FAIL);
@@ -589,7 +667,10 @@ TEST_CASE("Result.unwrap_err_or for invalid must give or value", "[result]")
 
     REQUIRE(val == NOENT);
 }
+#endif
 
+#if 0
+// disabled until panic testing is available
 TEST_CASE("Result.unwrap_err_or for ok must invalidate src", "[result]")
 {
     auto res = TestResult::Ok(1);
@@ -600,7 +681,10 @@ TEST_CASE("Result.unwrap_err_or for ok must invalidate src", "[result]")
     REQUIRE(!res.is_ok());
     REQUIRE(!res.is_err());
 }
+#endif
 
+#if 0
+// disabled until panic testing is available
 TEST_CASE("Result.unwrap_err_or for err must invalidate src", "[result]")
 {
     auto res = TestResult::Err(FAIL);
@@ -611,7 +695,10 @@ TEST_CASE("Result.unwrap_err_or for err must invalidate src", "[result]")
     REQUIRE(!res.is_ok());
     REQUIRE(!res.is_err());
 }
+#endif
 
+#if 0
+// disabled until panic detection is available.
 TEST_CASE("Result.unwrap_err_or for invalid must invalidate src", "[result]")
 {
     auto res = TestResult::Err(FAIL);
@@ -623,8 +710,9 @@ TEST_CASE("Result.unwrap_err_or for invalid must invalidate src", "[result]")
     REQUIRE(!res.is_ok());
     REQUIRE(!res.is_err());
 }
+#endif
 
-bool map1(const int &e)
+bool map1(int const &e)
 {
     NEL_UNUSED(e);
     return true;
@@ -636,7 +724,7 @@ TEST_CASE("Result.map for ok must change ok val", "[result]")
 
     // TODO: nasty, want bool to be auto-inferred as it's the return type of
     // map1, i.e. want res.map(map1).unwrap();
-    auto res2 = res.map<bool>(map1);
+    nel::Result<bool, _Error> res2 = res.map<bool>(map1);
     auto val = res2.unwrap();
     REQUIRE(val == true);
 
@@ -658,6 +746,8 @@ TEST_CASE("Result.map for err must not change err val", "[result]")
     REQUIRE(val == FAIL);
 }
 
+#if 0
+// disabled until panic detection is available.
 TEST_CASE("Result.map for inval must stay inval", "[result]")
 {
     auto res = TestResult::Err(FAIL);
@@ -670,7 +760,10 @@ TEST_CASE("Result.map for inval must stay inval", "[result]")
     REQUIRE(!res3.is_ok());
     REQUIRE(!res3.is_err());
 }
+#endif
 
+#if 0
+// disabled until panic testing is available
 TEST_CASE("Result.map for ok must invalidate src", "[result]")
 {
     auto res = TestResult::Ok(1);
@@ -683,7 +776,10 @@ TEST_CASE("Result.map for ok must invalidate src", "[result]")
     REQUIRE(!res.is_ok());
     REQUIRE(!res.is_err());
 }
+#endif
 
+#if 0
+// disabled until panic testing is available
 TEST_CASE("Result.map for err must invalidate src", "[result]")
 {
     auto res = TestResult::Err(FAIL);
@@ -696,7 +792,10 @@ TEST_CASE("Result.map for err must invalidate src", "[result]")
     REQUIRE(!res.is_ok());
     REQUIRE(!res.is_err());
 }
+#endif
 
+#if 0
+// disabled until panic detection is available.
 TEST_CASE("Result.map for inval must invalidate src", "[result]")
 {
     auto res = TestResult::Err(FAIL);
@@ -710,6 +809,7 @@ TEST_CASE("Result.map for inval must invalidate src", "[result]")
     REQUIRE(!res.is_ok());
     REQUIRE(!res.is_err());
 }
+#endif
 
 const char *bar = "bar";
 
@@ -745,6 +845,8 @@ TEST_CASE("Result.map_err for err must change err val", "[result]")
     REQUIRE(val == bar);
 }
 
+#if 0
+// disabled until panic detection is available.
 TEST_CASE("Result.map_err for inval must stay inval", "[result]")
 {
     auto res = TestResult::Err(FAIL);
@@ -757,7 +859,10 @@ TEST_CASE("Result.map_err for inval must stay inval", "[result]")
     REQUIRE(!res3.is_ok());
     REQUIRE(!res3.is_err());
 }
+#endif
 
+#if 0
+// disabled until panic testing is available
 TEST_CASE("Result.map_err for ok must invalidate src", "[result]")
 {
     auto res = TestResult::Ok(1);
@@ -770,7 +875,10 @@ TEST_CASE("Result.map_err for ok must invalidate src", "[result]")
     REQUIRE(!res.is_ok());
     REQUIRE(!res.is_err());
 }
+#endif
 
+#if 0
+// disabled until panic testing is available
 TEST_CASE("Result.map_err for err must invalidate src", "[result]")
 {
     auto res = TestResult::Err(FAIL);
@@ -783,7 +891,10 @@ TEST_CASE("Result.map_err for err must invalidate src", "[result]")
     REQUIRE(!res.is_ok());
     REQUIRE(!res.is_err());
 }
+#endif
 
+#if 0
+// disabled until panic detection is available.
 TEST_CASE("Result.map_err for inval must invalidate src", "[result]")
 {
     auto res = TestResult::Err(FAIL);
@@ -797,6 +908,7 @@ TEST_CASE("Result.map_err for inval must invalidate src", "[result]")
     REQUIRE(!res.is_ok());
     REQUIRE(!res.is_err());
 }
+#endif
 
 nel::Result<int, Error> foo_ok(void)
 {

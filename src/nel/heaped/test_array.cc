@@ -21,14 +21,16 @@ TEST_CASE("heaped::Array::empty", "[heaped][array]")
 TEST_CASE("heaped::Array::move", "[heaped][array]")
 {
     // empty array can be moved
-    auto a1 = nel::heaped::Array<int>::empty();
-    auto a2 = nel::heaped::Array<int>::try_from({2}).unwrap();
+    nel::heaped::Array<int> a1 = nel::heaped::Array<int>::empty();
+    nel::heaped::Array<int> a2 = nel::heaped::Array<int>::try_from({2}).unwrap();
+    // auto a2 = nel::heaped::Array<int>::filled(2, 4);
     a2 = std::move(a1);
     REQUIRE(a1.is_empty());
     REQUIRE(a2.is_empty());
 
     // not empty array can be moved
     auto a3 = nel::heaped::Array<int>::try_from({2}).unwrap();
+    // auto a3 = nel::heaped::Array<int>::filled(2, 4);
     a2 = std::move(a3);
     REQUIRE(!a2.is_empty());
     REQUIRE(a3.is_empty());
@@ -144,6 +146,7 @@ TEST_CASE("heaped::Array::subslice(b,e)", "[heaped][array]")
     {
         // sub slice of array is empty.
         auto a1 = nel::heaped::Array<int>::try_from({3, 3, 3}).unwrap();
+        // auto a1 = nel::heaped::Array<int>::filled(3, 3);
         auto sa1 = a1.subslice(0, 0);
         REQUIRE(sa1.is_empty());
         REQUIRE(sa1.len() == 0);
@@ -169,6 +172,7 @@ TEST_CASE("heaped::Array::subslice(b,e)", "[heaped][array]")
 
     {
         auto const c1 = nel::heaped::Array<int>::try_from({5, 5, 5}).unwrap();
+        // auto const c1 = nel::heaped::Array<int>::filled(5, 3);
         auto sc1 = c1.subslice(0, 0);
         REQUIRE(sc1.is_empty());
 
@@ -205,12 +209,14 @@ TEST_CASE("heaped::Array::iter()", "[heaped][array]")
 
     // can create iter on non empty arrays.
     auto a2 = nel::heaped::Array<int>::try_from({2, 2}).unwrap();
+    // auto a2 = nel::heaped::Array<int>::filled(2, 2);
     auto it2 = a2.iter();
     REQUIRE(it2.next().unwrap() == 2);
     REQUIRE(it2.next().unwrap() == 2);
     REQUIRE(it2.next().is_none());
 
     auto const c2 = nel::heaped::Array<int>::try_from({2, 2}).unwrap();
+    // auto const c2 = nel::heaped::Array<int>::filled(2, 2);
     auto itc2 = c2.iter();
     REQUIRE(itc2.next().unwrap() == 2);
     REQUIRE(itc2.next().unwrap() == 2);
@@ -233,11 +239,13 @@ TEST_CASE("heaped::Array::try_get", "[heaped][array]")
     {
         // in-range get on non-empty array is not empty.
         auto a2 = nel::heaped::Array<int>::try_from({2, 2, 2}).unwrap();
+        // auto a2 = nel::heaped::Array<int>::filled(2, 3);
         auto sa2 = a2.try_get(0);
         REQUIRE(sa2.is_some());
         REQUIRE(sa2.unwrap() == 2);
 
         auto const c2 = nel::heaped::Array<int>::try_from({2, 2, 2}).unwrap();
+        // auto const c2 = nel::heaped::Array<int>::filled(2, 3);
         auto sc2 = c2.try_get(0);
         REQUIRE(sc2.is_some());
         REQUIRE(sc2.unwrap() == 2);
@@ -246,10 +254,12 @@ TEST_CASE("heaped::Array::try_get", "[heaped][array]")
     {
         // out-of-range get on non-empty array must return none.
         auto a2 = nel::heaped::Array<int>::try_from({2, 2, 2}).unwrap();
+        // auto a2 = nel::heaped::Array<int>::filled(2, 3);
         auto sa2 = a2.try_get(3);
         REQUIRE(sa2.is_none());
 
         auto const c2 = nel::heaped::Array<int>::try_from({2, 2, 2}).unwrap();
+        // auto const c2 = nel::heaped::Array<int>::filled(2, 3);
         auto sc2 = c2.try_get(3);
         REQUIRE(sc2.is_none());
     }

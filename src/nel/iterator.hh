@@ -8,7 +8,7 @@ namespace nel
 template<typename It, typename InT, typename OutT>
 struct Iterator;
 
-template<typename It, typename V>
+template<typename It, typename V, typename Fn>
 struct MappingIterator;
 
 template<typename It>
@@ -22,7 +22,7 @@ struct FirstNIterator;
 #include <nel/optional.hh>
 #include <nel/defs.hh>
 
-#include <functional> //std::function
+//#include <functional> //std::function
 
 namespace nel
 {
@@ -67,7 +67,7 @@ struct Iterator {
          */
         // void for_each(std::function<void(OutT)> fn) noexcept
         template<typename F>
-        void for_each(F fn) noexcept
+        void for_each(F &&fn) noexcept
         {
             while (true) {
                 Optional<OutT> r = self().next();
@@ -80,7 +80,7 @@ struct Iterator {
 
         // void for_each2(std::function<void(OutT)> fn) noexcept
         template<typename F>
-        void for_each2(F fn) noexcept
+        void for_each2(F &&fn) noexcept
         {
             for (; !self().is_done(); self().inc()) {
                 fn(self().deref());
@@ -99,7 +99,7 @@ struct Iterator {
         // template<typename U>
         // U fold(U &&initial, std::function<void(U &acc, OutT e)> fn) noexcept
         template<typename U, typename F>
-        U fold(U &&initial, F fn) noexcept
+        U fold(U &&initial, F &&fn) noexcept
         {
             U acc = std::move(initial);
             for_each([&](OutT &v) { fn(acc, v); });
@@ -113,10 +113,13 @@ struct Iterator {
             return FirstNIterator<ItT>(std::move(self()), limit);
         }
 
-        template<typename U>
-        MappingIterator<ItT, U> map(std::function<U(OutT &)> fn) noexcept
+        // template<typename U>
+        // MappingIterator<ItT, U> map(std::function<U(OutT &)> fn) noexcept
+        // template<typename Fn, typename U>
+        template<typename U, typename Fn>
+        MappingIterator<ItT, U, Fn> map(Fn &&fn) noexcept
         {
-            return MappingIterator<ItT, U>(std::move(self()), fn);
+            return MappingIterator<ItT, U, Fn>(std::move(self()), std::forward<Fn>(fn));
         }
 
         ChainIterator<ItT> chain(ItT &&other) noexcept
@@ -128,8 +131,8 @@ struct Iterator {
 // x.zip(it2).for_each([&](??)->void{});
 // x.enum().for_each([&](??)->void {..});
 
-template<typename It, typename V>
-struct MappingIterator: public Iterator<MappingIterator<It, V>, typename It::InT, V> {
+template<typename It, typename V, typename Fn>
+struct MappingIterator: public Iterator<MappingIterator<It, V, Fn>, typename It::InT, V> {
         // turns an InT into an OutT via a It::OutT
 
         // e.g. vec<int>.iter()
@@ -144,16 +147,17 @@ struct MappingIterator: public Iterator<MappingIterator<It, V>, typename It::InT
 
     public:
         typedef V OutT;
-        typedef std::function<V(typename It::OutT)> FnT;
+        // typedef std::function<V(typename It::OutT)> FnT;
+        typedef Fn FnT;
 
     private:
         It inner_;
         FnT fn_;
 
     public:
-        MappingIterator(It &&inner, FnT fn) noexcept
+        MappingIterator(It &&inner, FnT &&fn) noexcept
             : inner_(std::move(inner))
-            , fn_(fn)
+            , fn_(std::forward<FnT>(fn))
         {
         }
 
@@ -166,14 +170,9 @@ struct MappingIterator: public Iterator<MappingIterator<It, V>, typename It::InT
          */
         Optional<OutT> next(void) noexcept
         {
-            // use explicit function type otherwise get
-            // no matching call to/argument deduction failed/isnode derived from
-            // std::function<U(int&)>
-            std::function<V(typename It::OutT)> f = [&](It::OutT &e) -> V {
-                return fn_(e);
-            };
-            return inner_.next().map(f);
-            // return inner_.next().map([&](It::OutT &e)->V{ return fn_(e); });
+            // c++ butt ugly language, giving butt ugly constrcts..
+            // WTF should I need 'template' here..?
+            return inner_.next().template map<OutT>([this](It::OutT &e) -> V { return fn_(e); });
         }
 
     public:
@@ -301,7 +300,7 @@ struct ChainIterator: public Iterator<ChainIterator<It>, typename It::InT, typen
          */
         // void for_each(std::function<void(OutT)> fn) noexcept
         template<typename F>
-        void for_each(F fn) noexcept
+        void for_each(F &&fn) noexcept
         {
             it1_.for_each(fn);
             it2_.for_each(fn);
@@ -309,7 +308,7 @@ struct ChainIterator: public Iterator<ChainIterator<It>, typename It::InT, typen
 
         // void for_each2(std::function<void(OutT)> fn) noexcept
         template<typename F>
-        void for_each2(F fn) noexcept
+        void for_each2(F &&fn) noexcept
         {
             it1_.for_each2(fn);
             it2_.for_each2(fn);
