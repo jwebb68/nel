@@ -9,13 +9,15 @@
 
 typedef nel::heaped::Box<U8Buf<256>> Box1;
 
-nel::Log &operator<<(nel::Log &outs, Box1 const &v) {
+nel::Log &operator<<(nel::Log &outs, Box1 const &v)
+{
     NEL_UNUSED(v);
     outs << "Box1()";
     return outs;
 }
 
-void box1() {
+void box1()
+{
     U8Buf<256> v = U8Buf<256>((uint8_t)0x66);
     auto r = Box1::try_from(std::move(v));
     Box1 b = r.unwrap();
@@ -23,13 +25,12 @@ void box1() {
     nel::log << b << '\n';
 }
 
-void box2() {
+void box2()
+{
     auto r = Box1::try_from((uint8_t)0x67);
     Box1 b = r.unwrap();
 
     nel::log << b << '\n';
 }
 
-
-int main() {
-}
+int main() {}

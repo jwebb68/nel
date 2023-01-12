@@ -4,7 +4,4 @@
 #include <nel/log.hh>
 #include <nel/defs.hh>
 
-
-int main()
-{
-}
+int main() {}

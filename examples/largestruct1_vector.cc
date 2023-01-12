@@ -9,13 +9,15 @@
 
 typedef nel::heaped::Vector<U8Buf<256>> Vec1;
 
-void ex1() {
+void ex1()
+{
     Vec1 vec1 = Vec1::with_capacity(5);
 
     nel::log << vec1 << '\n';
 }
 
-void ex2() {
+void ex2()
+{
     Vec1 vec1 = Vec1::with_capacity(5);
 
     U8Buf<256> v = U8Buf<256>((uint8_t)0x66);
@@ -24,7 +26,8 @@ void ex2() {
     nel::log << vec1 << '\n';
 }
 
-void ex3() {
+void ex3()
+{
     Vec1 vec1 = Vec1::with_capacity(5);
 
     vec1.push_back((uint8_t)0x67);
@@ -32,7 +35,8 @@ void ex3() {
     nel::log << vec1 << '\n';
 }
 
-void ex41() {
+void ex41()
+{
     auto r = Vec1::try_from({
         ((uint8_t)0x67),
         ((uint8_t)0x68),
@@ -51,16 +55,15 @@ void ex41() {
         // if (up[0]) { x = up[1]; ... }
         // T x;
         // if (e.some(x)) { ... }
-        if (e.is_none()) {
-            break;
-        }
+        if (e.is_none()) { break; }
         // calls is_some() but always is_some..
         // opt does optimise it out but is there a better way?
         nel::log << e.unwrap() << '\n';
     }
 }
 
-void ex42() {
+void ex42()
+{
     auto r = Vec1::try_from({
         ((uint8_t)0x67),
         ((uint8_t)0x68),
@@ -69,12 +72,11 @@ void ex42() {
     Vec1 vec1 = r.unwrap();
 
     auto it = vec1.iter();
-    it.for_each([&](U8Buf<256> &e)->void{
-        nel::log << e << '\n';
-    });
+    it.for_each([&](U8Buf<256> &e) -> void { nel::log << e << '\n'; });
 }
 
-void ex43() {
+void ex43()
+{
     auto r = Vec1::try_from({
         ((uint8_t)0x67),
         ((uint8_t)0x68),
@@ -89,7 +91,8 @@ void ex43() {
     }
 }
 
-void ex44() {
+void ex44()
+{
     auto r = Vec1::try_from({
         ((uint8_t)0x67),
         ((uint8_t)0x68),
@@ -98,12 +101,11 @@ void ex44() {
     Vec1 vec1 = r.unwrap();
 
     auto it = vec1.iter();
-    it.for_each2([&](U8Buf<256> &e)->void{
-        nel::log << e << '\n';
-    });
+    it.for_each2([&](U8Buf<256> &e) -> void { nel::log << e << '\n'; });
 }
 
-int main() {
+int main()
+{
     nel::log << "ex1:b" << '\n';
     ex1();
     nel::log << "ex1:e" << '\n';

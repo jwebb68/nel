@@ -10,13 +10,15 @@
 
 typedef nel::heapless::Vector<U8Buf<256>, 10> Vec1;
 
-void ex1() {
+void ex1()
+{
     Vec1 vec1 = Vec1::empty();
 
     nel::log << vec1 << '\n';
 }
 
-void ex2() {
+void ex2()
+{
     Vec1 vec1 = Vec1::empty();
 
     U8Buf<256> v = U8Buf<256>((uint8_t)0x66);
@@ -25,7 +27,8 @@ void ex2() {
     nel::log << vec1 << '\n';
 }
 
-void ex3() {
+void ex3()
+{
     Vec1 vec1 = Vec1::empty();
 
     vec1.push_back((uint8_t)0x67);
@@ -33,7 +36,8 @@ void ex3() {
     nel::log << vec1 << '\n';
 }
 
-void ex41() {
+void ex41()
+{
     Vec1 vec1 = Vec1::empty();
 
     vec1.push_back((uint8_t)0x67);
@@ -53,16 +57,15 @@ void ex41() {
         // if (up[0]) { x = up[1]; ... }
         // T x;
         // if (e.some(x)) { ... }
-        if (e.is_none()) {
-            break;
-        }
+        if (e.is_none()) { break; }
         // calls is_some() but always is_some..
         // opt does optimise it out but is there a better way?
         nel::log << e.unwrap() << '\n';
     }
 }
 
-void ex42() {
+void ex42()
+{
     Vec1 vec1 = Vec1::empty();
 
     vec1.push_back((uint8_t)0x67);
@@ -78,11 +81,11 @@ void ex42() {
     }
 }
 
-
-void ex51() {
+void ex51()
+{
     Vec1 vec1 = Vec1::empty();
 
-    for (uint8_t f=1; f < 10; ++f) {
+    for (uint8_t f = 1; f < 10; ++f) {
         vec1.push_back(f);
     }
 
@@ -97,19 +100,18 @@ void ex51() {
         // if (up[0]) { x = up[1]; ... }
         // T x;
         // if (e.some(x)) { ... }
-        if (e.is_none()) {
-            break;
-        }
+        if (e.is_none()) { break; }
         // calls is_some() but always is_some..
         // opt does optimise it out but is there a better way?
         nel::log << e.unwrap() << '\n';
     }
 }
 
-void ex52() {
+void ex52()
+{
     Vec1 vec1 = Vec1::empty();
 
-    for (uint8_t f=1; f < 10; ++f) {
+    for (uint8_t f = 1; f < 10; ++f) {
         vec1.push_back(f);
     }
 
@@ -120,7 +122,8 @@ void ex52() {
     }
 }
 
-int main() {
+int main()
+{
     nel::log << "ex1:b" << '\n';
     ex1();
     nel::log << "ex1:e" << '\n';
