@@ -102,7 +102,15 @@ struct Iterator {
         U fold(U &&initial, F &&fn) noexcept
         {
             U acc = std::move(initial);
-            for_each([&](OutT &v) { fn(acc, v); });
+            for_each([&acc, &fn](OutT v) { fn(acc, v); });
+            return acc;
+        }
+
+        template<typename U, typename F>
+        U fold2(U &&initial, F &&fn) noexcept
+        {
+            U acc = std::move(initial);
+            for_each2([&acc, &fn](OutT v) { fn(acc, v); });
             return acc;
         }
 
