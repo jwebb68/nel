@@ -220,11 +220,13 @@ struct Slice {
          *
          * The iterator is invalidated if the slice goes out of scope/destroyed.
          */
+        typedef SliceIterator<T> IteratorMut;
         constexpr SliceIterator<T> iter(void) noexcept
         {
             return SliceIterator<T>(content_, len());
         }
 
+        typedef SliceIterator<T const> Iterator;
         constexpr SliceIterator<T const> const iter(void) const noexcept
         {
             return SliceIterator<T const>(content_, len());
