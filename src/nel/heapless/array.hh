@@ -282,29 +282,7 @@ struct Array {
         friend Log &operator<<(Log &outs, Array const &v) noexcept
         {
             outs << "Array<" << v.len() << ">{";
-#if 1
-            outs << '\n';
-            Index i = 0;
-            v.iter().for_each([&outs, &i](T const &e) {
-                outs << '[' << i << "]:" << e << '\n';
-                ++i;
-            });
-#elif 0
-            outs << '\n';
-            Index i = 0;
-            v.iter().for_each2([&outs, &i](T const &e) {
-                outs << '[' << i << "]:" << e << '\n';
-                ++i;
-            });
-#else
-            auto it = v.iter();
-            Index i = 0;
-            outs << "[" << i << "]:" << it.deref();
-            it.for_each2([&](T const &e) {
-                outs << ',' << '[' << i << "]:" << e;
-                ++i;
-            });
-#endif
+            outs << v.iter();
             outs << '}';
             return outs;
         }

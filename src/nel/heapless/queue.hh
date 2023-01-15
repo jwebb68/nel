@@ -229,31 +229,7 @@ struct Queue {
         friend Log &operator<<(Log &outs, Queue const &v) noexcept
         {
             outs << "Queue<" << N << ">(" << v.len() << "){";
-#if 0
-            outs << '\n';
-            Index rp = v.rp_;
-            for (Index i = 0; i < v.len(); ++i) {
-                outs << '[' << i << "]:" << v.store_[rp] << '\n';
-                rp += 1;
-                if (rp >= v.len()) { rp = 0; }
-            }
-#elif 1
-            auto it = v.iter();
-            outs << '\n';
-            Index i = 0;
-            it.for_each([&](T const &e) {
-                outs << '[' << i << "]:" << e << '\n';
-                ++i;
-            });
-#else
-            auto it = v.iter();
-            outs << '\n';
-            Index i = 0;
-            it.for_each2([&](T const &e) {
-                outs << '[' << i << "]:" << e << '\n';
-                ++i;
-            });
-#endif
+            outs << v.iter();
             outs << '}';
             return outs;
         }

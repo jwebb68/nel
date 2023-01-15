@@ -20,6 +20,7 @@ struct FirstNIterator;
 } // namespace nel
 
 #include <nel/optional.hh>
+#include <nel/log.hh>
 #include <nel/defs.hh>
 
 //#include <functional> //std::function
@@ -112,6 +113,42 @@ struct Iterator {
             U acc = std::move(initial);
             for_each2([&acc, &fn](OutT v) { fn(acc, v); });
             return acc;
+        }
+
+    public:
+        friend Log &operator<<(Log &outs, ItT const &it)
+        {
+            outs << '[';
+            // copy/clone since want to mutate..
+            ItT it2 = it;
+#if 0
+            OutT v = it2.next();
+            if (v.is_some()) {
+                outs << v.unwrap();
+                //Index i = 0;
+                //it2.for_each([&outs, &i](OutT const &e) {
+                    //outs << '[' << i << "]:" << e << '\n';
+                    //++i;
+                //});
+                it2.for_each([&outs](OutT const &e) {
+                    outs << ',' << e;
+                });
+            }
+#elif 1
+            if (!it2.is_done()) {
+                outs << it2.deref();
+                it2.inc();
+                // Index i = 0;
+                // it2.for_each2([&outs, &i](OutT const &e) {
+                //     outs << '[' << i << "]:" << e << '\n';
+                //     ++i;
+                // });
+                it2.for_each2([&outs](OutT const &e) { outs << ',' << e; });
+            }
+#endif
+            outs << ']';
+
+            return outs;
         }
 
     public:
