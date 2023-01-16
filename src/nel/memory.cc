@@ -135,7 +135,7 @@ void *realloc_aligned(void *old_p, Length align, Length size) noexcept
         // new alloc.. or moved in realloc.
         // align to next highest al boundary.
         void *p1 = new_a;
-        Length sz2 = size + align;
+        size_t sz2 = size + align;
         uint8_t *aligneda_u8 = as_u8ptr_mut(std::align(align, size, p1, sz2));
         // TODO: handle realign fails..
         // if realign fails, object is invalid!!
