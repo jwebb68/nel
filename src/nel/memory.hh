@@ -4,7 +4,6 @@
 
 #include <nel/defs.hh>
 
-#include <utility> // std::move, std::swap
 #include <cstdint> // uint8_t
 
 namespace nel
@@ -42,7 +41,7 @@ template<typename T>
 void memmove(T *d, T *s, Length n) noexcept
 {
     for (Index i = 0; i < n; ++i) {
-        d[i] = std::move(s[i]);
+        d[i] = move(s[i]);
     }
 }
 
@@ -112,10 +111,16 @@ bool try_memset(T *const d, T const &s, Length n) noexcept
  * swap items [s,s+n) with [d,d+n)
  */
 template<typename T>
+void swap(T &d, T &s) noexcept
+{
+    d.swap(s);
+}
+
+template<typename T>
 void memswap(T *const d, T *const s, Length n) noexcept
 {
     for (Index i = 0; i < n; ++i) {
-        std::swap(*d, *s);
+        swap(*d, *s);
     }
 }
 

@@ -5,7 +5,7 @@
 
 TEST_CASE("heaped::Box", "[heaped][box]")
 {
-    // must be able to create an empty array..
+    // must be able to create a boxed value
     auto a1 = nel::heaped::Box<int>::try_from(1).unwrap();
 
     // must create not empty.
@@ -16,7 +16,7 @@ TEST_CASE("heaped::Box::move", "[heaped][box]")
 {
     // must be able to move box contents from one box to another.
     auto a1 = nel::heaped::Box<int>::try_from(1).unwrap();
-    auto a2 = std::move(a1);
+    auto a2 = move(a1);
 
     // moved from is no empty
     REQUIRE(!a1.has_value());
@@ -65,7 +65,7 @@ TEST_CASE("heaped::Box::has_value", "[heaped][box]")
     REQUIRE(a1.has_value());
 
     // moving the boxed value to another causes the variable to lose it's value.
-    auto a2 = std::move(a1);
+    auto a2 = move(a1);
     REQUIRE(!a1.has_value());
     REQUIRE(a2.has_value());
 }

@@ -21,7 +21,7 @@ TEST_CASE("heapless::Queue::move", "[heapless][queue]")
         // empty array can be moved to another location
         auto a2 = nel::heapless::Queue<int, 3>::empty();
         auto a1 = nel::heapless::Queue<int, 3>::empty();
-        a2 = std::move(a1);
+        a2 = move(a1);
         // how to test?
     }
     {
@@ -31,7 +31,7 @@ TEST_CASE("heapless::Queue::move", "[heapless][queue]")
         a4.put(0);
         a4.put(1);
 
-        a3 = std::move(a4);
+        a3 = move(a4);
 
         REQUIRE(a4.len() == 0);
         REQUIRE(a3.len() == 2);

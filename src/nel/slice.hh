@@ -143,7 +143,7 @@ struct Slice {
          */
         constexpr Optional<T &> try_get(Index idx) noexcept
         {
-            return (idx >= len_) ? None : Some(content_[idx]);
+            return (idx >= len_) ? None : Optional<T &>::Some(content_[idx]);
         }
 
         constexpr Optional<T const &> try_get(Index idx) const noexcept
@@ -221,12 +221,14 @@ struct Slice {
          * The iterator is invalidated if the slice goes out of scope/destroyed.
          */
         typedef SliceIterator<T> IteratorMut;
+
         constexpr SliceIterator<T> iter(void) noexcept
         {
             return SliceIterator<T>(content_, len());
         }
 
         typedef SliceIterator<T const> Iterator;
+
         constexpr SliceIterator<T const> const iter(void) const noexcept
         {
             return SliceIterator<T const>(content_, len());

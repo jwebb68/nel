@@ -5,8 +5,6 @@
 #include <nel/log.hh>
 #include <nel/defs.hh>
 
-#include <utility> // std::move
-
 typedef nel::heapless::Queue<U8Buf<256>, 5> Queue1;
 
 void ex1()
@@ -21,7 +19,7 @@ void ex2()
     auto queue1 = Queue1::empty();
 
     U8Buf<256> v = U8Buf<256>((uint8_t)0x66);
-    queue1.put(std::move(v));
+    queue1.put(move(v));
 
     nel::log << queue1 << '\n';
 }

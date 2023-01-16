@@ -22,7 +22,6 @@ struct Node;
 #include <nel/defs.hh>
 
 #include <new> // Inplace new
-#include <utility> // std::move, std::forward
 #include <cstdlib> // std::free, std::malloc, std::realloc
 
 namespace nel
@@ -125,6 +124,7 @@ struct Node {
         constexpr Node(Node &&) noexcept = delete;
         constexpr Node &operator=(Node &&) noexcept = delete;
 
+#if 0
         // use placement new to init.
         // want this as a static func so ca return errors..
         constexpr Node(std::initializer_list<T> &&l) noexcept
@@ -133,12 +133,14 @@ struct Node {
             nel_panic_if_not(l.size() <= capacity(), "not big enough");
             Index i = 0;
             for (auto it = l.begin(); i < capacity() && it != l.end(); ++it, ++i) {
-                new (&values_[i]) T(std::forward<T>(*it));
+                new (&values_[i]) T(forward<T>(*it));
             }
             len_ = i;
         }
+#endif
 
     public:
+#if 0
         static constexpr Optional<Node *> try_from(std::initializer_list<T> &&l) noexcept
         {
             // cannot use Optional<Node> as size is not known at compile time.
@@ -147,6 +149,7 @@ struct Node {
             if (p == nullptr) { return None; }
             return p->push_back(l).ok().template map<Node *>([p]() -> Node * { return p; });
         }
+#endif
 
         // use placement new to init.
         constexpr Node(T const &f) noexcept
@@ -261,14 +264,15 @@ struct Node {
                 // TODO: don't want to create a T on error though..
                 // but if one is already created then return it.
                 // must the arg be moved on error?
-                return Result<void, T>::Err(std::forward<Args>(args)...);
+                return Result<void, T>::Err(forward<Args>(args)...);
             }
 
-            new (&values_[len()]) T(std::forward<Args>(args)...);
+            new (&values_[len()]) T(forward<Args>(args)...);
             len_ += 1;
             return Result<void, T>::Ok();
         }
 
+#if 0
         Result<void, std::initializer_list<T>> push_back(std::initializer_list<T> l) noexcept
         {
             typedef std::initializer_list<T> U;
@@ -281,11 +285,12 @@ struct Node {
 
             Index i = len_;
             for (auto it = l.begin(); it != l.end(); ++i, ++it) {
-                new (&values_[i]) T(std::move(*it));
+                new (&values_[i]) T(move(*it));
             }
             len_ = i;
             return Result<void, U>::Ok();
         }
+#endif
 
         // rename to try_pop_back?
         Optional<T> pop_back(void) noexcept
@@ -294,7 +299,7 @@ struct Node {
 
             len_ -= 1;
             T &e = values_[len()];
-            auto o = Some(std::move(e));
+            auto o = Some(move(e));
             // should be safe to  destroy, value has been moved out.
             e.~T();
             return o;

@@ -37,7 +37,6 @@ namespace heapless
 template<typename T, Length const N>
 struct Vector {
     public:
-
     private:
         // Number initialised.
         Length len_;
@@ -71,11 +70,11 @@ struct Vector {
 
         // Moving ok
         Vector(Vector &&o) noexcept
-            : len_(std::move(o.len_))
+            : len_(move(o.len_))
         {
             o.len_ = 0;
             for (Index i = 0; i < len(); ++i) {
-                new (&values_[i]) T(std::move(o.values_[i]));
+                new (&values_[i]) T(move(o.values_[i]));
             }
         }
 
@@ -86,7 +85,7 @@ struct Vector {
                 // So move to final dest.
                 // Only as move cannot fail and leave this destructed.
                 this->~Vector();
-                new (this) Vector(std::move(o));
+                new (this) Vector(move(o));
             }
             return *this;
         }
@@ -102,6 +101,7 @@ struct Vector {
             return Vector();
         }
 
+#if 0
         /**
          * Attempt to create vector from initialiser list
          *
@@ -115,13 +115,14 @@ struct Vector {
         // want copying but not via ctor (may not be poss), so it becomes a try_ returning an err.
         static constexpr Optional<Vector> try_from(std::initializer_list<T> l) noexcept
         {
-            if (l.size() != N) { return Optional<Vector>::None(); }
+            if (l.size() != N) { return None; }
             Vector v = Vector::empty();
             auto r = v.push_back(l);
-            if (r.is_err()) { return Optional<Vector>::None(); }
-            return Optional<Vector>::Some(std::move(v));
+            if (r.is_err()) { return None; }
+            return Optional<Vector>::Some(move(v));
             // TODO: can all of this create the vec inplace in the optional?
         }
+#endif
 
     public:
         /**
@@ -295,15 +296,16 @@ struct Vector {
         {
             if (len() >= capacity()) {
                 // Really? must one be created for err?
-                return Result<void, T>::Err(std::forward<Args>(args)...);
+                return Result<void, T>::Err(forward<Args>(args)...);
             }
             // Remember, values at len and beyond are uninitialised.
             // So need to use new to construct them.
-            new (&values_[len()]) T(std::forward<Args>(args)...);
+            new (&values_[len()]) T(forward<Args>(args)...);
             len_ += 1;
             return Result<void, T>::Ok();
         }
 
+#if 0
         Result<void, std::initializer_list<T>> push_back(std::initializer_list<T> l) noexcept
         {
             if (len() + l.size() > capacity()) {
@@ -314,11 +316,12 @@ struct Vector {
             // So need to use new to construct them.
             Index i = len();
             for (auto it = l.begin(); it != l.end(); ++i, ++it) {
-                new (&values_[i]) T(std::move(*it));
+                new (&values_[i]) T(move(*it));
             }
             len_ = i;
             return Result<void, std::initializer_list<T>>::Ok();
         }
+#endif
 
         // move contents of vec into this?
         // Result<void, Vector<T>> push_back(Vector<T> &l) noexcept?
@@ -338,7 +341,7 @@ struct Vector {
             if (len() == 0) { return None; }
             len_ -= 1;
             T &e = values_[len()];
-            auto v = Some(std::move(e));
+            auto v = Some(move(e));
             e.~T();
             return v;
         }

@@ -6,8 +6,6 @@
 #include <nel/log.hh>
 #include <nel/defs.hh>
 
-#include <utility> // std::move
-
 typedef nel::heapless::Vector<U8Buf<256>, 10> Vec1;
 
 void ex1()
@@ -22,7 +20,7 @@ void ex2()
     Vec1 vec1 = Vec1::empty();
 
     U8Buf<256> v = U8Buf<256>((uint8_t)0x66);
-    vec1.push_back(std::move(v));
+    vec1.push_back(move(v));
 
     nel::log << vec1 << '\n';
 }

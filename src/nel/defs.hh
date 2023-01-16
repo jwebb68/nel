@@ -14,4 +14,28 @@ typedef long unsigned int Count;
 
 } // namespace nel
 
+template<typename T>
+constexpr T &&move(T &v)
+{
+    return static_cast<T &&>(v);
+}
+
+template<typename T>
+constexpr T &&move(T &&v)
+{
+    return static_cast<T &&>(v);
+}
+
+template<typename T>
+constexpr T &&forward(T &v)
+{
+    return static_cast<T &&>(v);
+}
+
+template<typename T>
+constexpr T &&forward(T &&v)
+{
+    return static_cast<T &&>(v);
+}
+
 #endif // NEL_DEFS_HH

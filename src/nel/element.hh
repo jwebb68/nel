@@ -8,7 +8,7 @@ template<typename T>
 struct Element;
 } // namespace nel
 
-#include <utility> // std::move, std::forward
+#include <nel/defs.hh> // move, forward
 
 namespace nel
 {
@@ -30,20 +30,20 @@ struct Element {
         constexpr Element &operator=(Element &&o) noexcept = default;
 
         Element(T &&val) noexcept
-            : value_(std::forward<T>(val))
+            : value_(forward<T>(val))
         {
         }
 
         template<typename... Args>
         Element(Args &&...args) noexcept
-            : value_(std::forward<Args>(args)...)
+            : value_(forward<Args>(args)...)
         {
         }
 
     public:
         T &&unwrap(void) noexcept
         {
-            return std::forward<T>(value_);
+            return forward<T>(value_);
         }
 
         T const &get(void) const noexcept

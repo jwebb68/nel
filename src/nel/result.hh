@@ -15,9 +15,6 @@ class Result;
 #include <nel/log.hh>
 #include <nel/panic.hh>
 
-//#include <functional> // std::function
-#include <utility> // std::move, std::forward
-
 namespace nel
 {
 
@@ -116,11 +113,11 @@ class Result
             o.tag_ = Tag::INVAL;
             switch (tag_) {
                 case Tag::OK:
-                    new (&ok_) Element<T>(std::move(o.ok_));
+                    new (&ok_) Element<T>(move(o.ok_));
                     break;
 
                 case Tag::ERR:
-                    new (&err_) Element<E>(std::move(o.err_));
+                    new (&err_) Element<E>(move(o.err_));
                     break;
 
                 case Tag::INVAL:
@@ -140,11 +137,11 @@ class Result
                 o.tag_ = Tag::INVAL;
                 switch (tag_) {
                     case Tag::OK:
-                        ok_ = std::move(o.ok_);
+                        ok_ = move(o.ok_);
                         break;
 
                     case Tag::ERR:
-                        err_ = std::move(o.err_);
+                        err_ = move(o.err_);
                         break;
 
                     case Tag::INVAL:
@@ -175,27 +172,27 @@ class Result
     private:
         constexpr Result(Phantom<Tag::OK> const, T &&v) noexcept
             : tag_(Tag::OK)
-            , ok_(std::forward<T>(v))
+            , ok_(forward<T>(v))
         {
         }
 
         template<typename... Args>
         constexpr Result(Phantom<Tag::OK> const, Args &&...args) noexcept
             : tag_(Tag::OK)
-            , ok_(std::forward<Args>(args)...)
+            , ok_(forward<Args>(args)...)
         {
         }
 
         constexpr Result(Phantom<Tag::ERR> const, E &&v) noexcept
             : tag_(Tag::ERR)
-            , err_(std::forward<E>(v))
+            , err_(forward<E>(v))
         {
         }
 
         template<typename... Args>
         constexpr Result(Phantom<Tag::ERR> const, Args &&...args) noexcept
             : tag_(Tag::ERR)
-            , err_(std::forward<Args>(args)...)
+            , err_(forward<Args>(args)...)
         {
         }
 
@@ -209,7 +206,7 @@ class Result
          */
         constexpr static Result Ok(T &&val) noexcept
         {
-            return Result(Phantom<Tag::OK>(), std::forward<T>(val));
+            return Result(Phantom<Tag::OK>(), forward<T>(val));
         }
 
         /**
@@ -222,7 +219,7 @@ class Result
         template<typename... Args>
         constexpr static Result Ok(Args &&...args) noexcept
         {
-            return Result(Phantom<Tag::OK>(), std::forward<Args>(args)...);
+            return Result(Phantom<Tag::OK>(), forward<Args>(args)...);
         }
 
         /**
@@ -234,7 +231,7 @@ class Result
          */
         constexpr static Result Err(E &&val) noexcept
         {
-            return Result(Phantom<Tag::ERR>(), std::forward<E>(val));
+            return Result(Phantom<Tag::ERR>(), forward<E>(val));
         }
 
         /**
@@ -247,7 +244,7 @@ class Result
         template<typename... Args>
         constexpr static Result Err(Args &&...args) noexcept
         {
-            return Result(Phantom<Tag::ERR>(), std::forward<Args>(args)...);
+            return Result(Phantom<Tag::ERR>(), forward<Args>(args)...);
         }
 
     private:
@@ -359,7 +356,7 @@ class Result
         {
             auto tag = tag_;
             tag_ = Tag::INVAL;
-            return match<V>(tag, std::forward<Fn1>(on_ok), std::forward<Fn2>(on_err));
+            return match<V>(tag, forward<Fn1>(on_ok), forward<Fn2>(on_err));
         }
 
     public:
@@ -437,7 +434,7 @@ class Result
         T unwrap_or(T &&v) noexcept
         {
             return consume<T>([this](void) -> T { return ok_.unwrap(); },
-                              [&v](void) -> T { return std::forward<T>(v); });
+                              [&v](void) -> T { return forward<T>(v); });
         }
 
         /**
@@ -455,7 +452,7 @@ class Result
         T unwrap_or(Args &&...args) noexcept
         {
             return consume<T>([this](void) -> T { return ok_.unwrap(); },
-                              [&args...](void) -> T { return T(std::forward<Args>(args)...); });
+                              [&args...](void) -> T { return T(forward<Args>(args)...); });
         }
 
         /**
@@ -471,7 +468,7 @@ class Result
          */
         E unwrap_err_or(E &&v) noexcept
         {
-            return consume<E>([&v](void) -> E { return std::forward<E>(v); },
+            return consume<E>([&v](void) -> E { return forward<E>(v); },
                               [this](void) -> E { return err_.unwrap(); });
         }
 
@@ -489,7 +486,7 @@ class Result
         template<typename... Args>
         E unwrap_err_or(Args &&...args) noexcept
         {
-            return consume<E>([&args...](void) -> E { return E(std::forward<Args>(args)...); },
+            return consume<E>([&args...](void) -> E { return E(forward<Args>(args)...); },
                               [this](void) -> E { return err_.unwrap(); });
         }
 
@@ -620,7 +617,7 @@ class Result<void, E>
                 case Tag::OK:
                     break;
                 case Tag::ERR:
-                    new (&err_) Element<E>(std::move(o.err_));
+                    new (&err_) Element<E>(move(o.err_));
                     break;
                 case Tag::INVAL:
                     break;
@@ -638,7 +635,7 @@ class Result<void, E>
                     case Tag::OK:
                         break;
                     case Tag::ERR:
-                        err_ = std::move(o.err_);
+                        err_ = move(o.err_);
                         break;
                     case Tag::INVAL:
                         break;
@@ -668,14 +665,14 @@ class Result<void, E>
 
         constexpr Result(Phantom<Tag::ERR> const, E &&v) noexcept
             : tag_(Tag::ERR)
-            , err_(std::forward<E>(v))
+            , err_(forward<E>(v))
         {
         }
 
         template<typename... Args>
         constexpr Result(Phantom<Tag::ERR> const, Args &&...args) noexcept
             : tag_(Tag::ERR)
-            , err_(std::forward<Args>(args)...)
+            , err_(forward<Args>(args)...)
         {
         }
 
@@ -694,7 +691,7 @@ class Result<void, E>
 
         constexpr static Result Err(E &&v) noexcept
         {
-            return Result(Phantom<Tag::ERR>(), std::forward<E>(v));
+            return Result(Phantom<Tag::ERR>(), forward<E>(v));
         }
 
         /**
@@ -707,7 +704,7 @@ class Result<void, E>
         template<typename... Args>
         constexpr static Result Err(Args &&...args) noexcept
         {
-            return Result(Phantom<Tag::ERR>(), std::forward<Args>(args)...);
+            return Result(Phantom<Tag::ERR>(), forward<Args>(args)...);
         }
 
     private:
@@ -819,7 +816,7 @@ class Result<void, E>
         {
             auto tag = tag_;
             tag_ = Tag::INVAL;
-            return match<V>(tag, std::forward<Fn1>(on_ok), std::forward<Fn2>(on_err));
+            return match<V>(tag, forward<Fn1>(on_ok), forward<Fn2>(on_err));
         }
 
     public:
@@ -898,7 +895,7 @@ class Result<void, E>
 
         E unwrap_err_or(E &&v) noexcept
         {
-            return consume<E>([&v](void) -> E { std::forward<E>(v); },
+            return consume<E>([&v](void) -> E { forward<E>(v); },
                               [this](void) -> E { return err_.unwrap(); });
         }
 
@@ -916,7 +913,7 @@ class Result<void, E>
         template<typename... Args>
         E unwrap_err_or(Args &&...args) noexcept
         {
-            return consume<E>([&args...](void) -> E { return E(std::forward<Args>(args)...); },
+            return consume<E>([&args...](void) -> E { return E(forward<Args>(args)...); },
                               [this](void) -> E { return err_.unwrap(); });
         }
 
@@ -994,7 +991,7 @@ class Result<void, E>
 // Calc v as a temp to keep f single eval-ed
 #define NEL_RESULT_TRY(f) \
     __extension__({ \
-        auto v = std::move(f); \
+        auto v = move(f); \
         if (v.is_err()) { return v; } \
         v.unwrap(); \
     })

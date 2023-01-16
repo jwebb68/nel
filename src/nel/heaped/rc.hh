@@ -17,8 +17,6 @@ struct RC;
 #include <nel/panic.hh>
 #include <nel/defs.hh>
 
-#include <utility> // std::move, std::forward
-
 namespace nel
 {
 namespace heaped
@@ -51,7 +49,7 @@ struct RC {
                 constexpr Node(Args &&...args) noexcept
                     : n_refs_(1)
                     , has_value_(true)
-                    , value_(std::forward<Args>(args)...)
+                    , value_(forward<Args>(args)...)
                 {
                 }
 
@@ -154,7 +152,7 @@ struct RC {
 
         void swap(RC &o) noexcept
         {
-            std::swap(node_, o.node_);
+            swap(node_, o.node_);
         }
 
         constexpr RC(void) noexcept
@@ -163,7 +161,7 @@ struct RC {
         }
 
         constexpr RC(RC &&o) noexcept
-            : node_(std::move(o.node_))
+            : node_(move(o.node_))
         {
             o.node_ = nullptr;
         }
@@ -172,21 +170,21 @@ struct RC {
         {
             if (this != &o) {
                 this->~RC();
-                new (this) RC(std::move(o));
+                new (this) RC(move(o));
             }
             return *this;
         }
 
     public:
         constexpr RC(T &&v) noexcept
-            : node_(new Node(std::move(v)))
+            : node_(new Node(move(v)))
         {
             // Node created pre-grabbed.
         }
 
         template<typename... Args>
         constexpr RC(Args &&...args) noexcept
-            : node_(new Node(std::forward<Args>(args)...))
+            : node_(new Node(forward<Args>(args)...))
         {
             // Node created pre-grabbed.
         }

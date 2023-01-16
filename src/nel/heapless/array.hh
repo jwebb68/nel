@@ -48,6 +48,7 @@ struct Array {
         // but needed internally..
         constexpr Array(void) = default;
 
+#if 0
         constexpr Array(std::initializer_list<T> l)
         {
             // Interesting
@@ -57,15 +58,16 @@ struct Array {
             Index i = 0;
             for (auto it = l.begin(); i < N && it != l.end(); ++it, ++i) {
                 // TODO: init list elements want to be copied, not moved..
-                new (&values_[i]) T(std::move(*it));
+                new (&values_[i]) T(move(*it));
             }
         }
+#endif
 
         // If type has copy, then could fill? use slice for that..
 
         // fill constructor
         // TODO:  what if copy of T fails..? try_fill? how?
-        Array(T const &v)
+        constexpr Array(T const &v)
         {
             iter().for_each([&](T &e) { new (&e) T(v); });
         }
@@ -84,7 +86,7 @@ struct Array {
         constexpr Array(Array &&o) noexcept
         {
             for (Index i = 0; i < N; ++i) {
-                new (&values_[i]) T(std::move(o.values_[i]));
+                new (&values_[i]) T(move(o.values_[i]));
             }
         }
 
@@ -95,7 +97,7 @@ struct Array {
                 // quicker to just move o into this.
                 // Only because move cannot fail (and leave this destructed).
                 this->~Array();
-                new (this) Array(std::move(o));
+                new (this) Array(move(o));
             }
             return *this;
         }
@@ -108,15 +110,14 @@ struct Array {
          * @return array filled with copies of value.
          * @warning UB if copying of v fails.
          */
-        static Array filled(T const &v)
+        constexpr static Array filled(T const &v)
         {
-            Array a = Array(v);
-            return a;
+            return Array(v);
         }
 
 #if 0
         /**
-         * Atempt to create and Initialise an array with given value.
+         * Attempt to create and Initialise an array with given value.
          * @return on success: array filled with copies of value.
          * @return on fail: None
          */
@@ -126,6 +127,7 @@ struct Array {
         }
 #endif
 
+#if 0
         /**
          * Attempt to create an array from initialiser list
          *
@@ -144,6 +146,7 @@ struct Array {
             // prob only if initlist ctor is public, which I don't want.
             return (l.size() != N) ? None : Some(Array(l));
         }
+#endif
 
     public:
         /**

@@ -102,7 +102,7 @@ struct Iterator {
         template<typename U, typename F>
         U fold(U &&initial, F &&fn) noexcept
         {
-            U acc = std::move(initial);
+            U acc = move(initial);
             for_each([&acc, &fn](OutT v) { fn(acc, v); });
             return acc;
         }
@@ -110,7 +110,7 @@ struct Iterator {
         template<typename U, typename F>
         U fold2(U &&initial, F &&fn) noexcept
         {
-            U acc = std::move(initial);
+            U acc = move(initial);
             for_each2([&acc, &fn](OutT v) { fn(acc, v); });
             return acc;
         }
@@ -127,10 +127,10 @@ struct Iterator {
                 outs << v.unwrap();
                 //Index i = 0;
                 //it2.for_each([&outs, &i](OutT const &e) {
-                    //outs << '[' << i << "]:" << e << '\n';
-                    //++i;
+                //outs << '[' << i << "]:" << e << '\n';
+                //++i;
                 //});
-                it2.for_each([&outs](OutT const &e) {
+                it2.for_each([&outs](OutT const & e) {
                     outs << ',' << e;
                 });
             }
@@ -155,7 +155,7 @@ struct Iterator {
         // annoyingly, new iters need to be added to base iter for fluent style extensions
         FirstNIterator<ItT> first_n(Count const limit) noexcept
         {
-            return FirstNIterator<ItT>(std::move(self()), limit);
+            return FirstNIterator<ItT>(move(self()), limit);
         }
 
         // template<typename U>
@@ -164,12 +164,12 @@ struct Iterator {
         template<typename U, typename Fn>
         MappingIterator<ItT, U, Fn> map(Fn &&fn) noexcept
         {
-            return MappingIterator<ItT, U, Fn>(std::move(self()), std::forward<Fn>(fn));
+            return MappingIterator<ItT, U, Fn>(move(self()), forward<Fn>(fn));
         }
 
         ChainIterator<ItT> chain(ItT &&other) noexcept
         {
-            return ChainIterator<ItT>(std::move(self()), std::move(other));
+            return ChainIterator<ItT>(move(self()), move(other));
         }
 };
 
@@ -201,8 +201,8 @@ struct MappingIterator: public Iterator<MappingIterator<It, V, Fn>, typename It:
 
     public:
         MappingIterator(It &&inner, FnT &&fn) noexcept
-            : inner_(std::move(inner))
-            , fn_(std::forward<FnT>(fn))
+            : inner_(move(inner))
+            , fn_(forward<FnT>(fn))
         {
         }
 
@@ -252,7 +252,7 @@ struct FirstNIterator: public Iterator<FirstNIterator<It>, typename It::InT, typ
 
     public:
         FirstNIterator(It &&inner, Length limit) noexcept
-            : inner_(std::move(inner))
+            : inner_(move(inner))
             , current_(0)
             , limit_(limit)
         {
@@ -299,8 +299,8 @@ struct ChainIterator: public Iterator<ChainIterator<It>, typename It::InT, typen
 
     public:
         ChainIterator(It &&it1, It &&it2) noexcept
-            : it1_(std::move(it1))
-            , it2_(std::move(it2))
+            : it1_(move(it1))
+            , it2_(move(it2))
         {
         }
 

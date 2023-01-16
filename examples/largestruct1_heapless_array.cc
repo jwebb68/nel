@@ -6,8 +6,6 @@
 #include <nel/log.hh>
 #include <nel/defs.hh>
 
-#include <utility> // std::move
-
 typedef nel::heapless::Array<U8Buf<256>, 8> Array1;
 
 void ex1()

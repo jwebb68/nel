@@ -47,7 +47,7 @@ TEST_CASE("heapless::Vector::move", "[heapless][vector]")
     {
         // empty Vector can be moved
         auto a1 = nel::heapless::Vector<int, 3>::empty();
-        auto a2 = std::move(a1);
+        auto a2 = move(a1);
         REQUIRE(a1.is_empty());
         REQUIRE(a2.is_empty());
     }
@@ -57,7 +57,7 @@ TEST_CASE("heapless::Vector::move", "[heapless][vector]")
         auto a3 = nel::heapless::Vector<int, 3>::empty();
         a3.push_back(2);
 
-        auto a2 = std::move(a3);
+        auto a2 = move(a3);
         REQUIRE(!a2.is_empty());
         REQUIRE(a3.is_empty());
     }
@@ -66,7 +66,7 @@ TEST_CASE("heapless::Vector::move", "[heapless][vector]")
         // testing const Vector moving, but should fail at compile time.
         // auto const c1 = nel::heapless::Vector<int, 3>::empty();
         // auto const c2 = nel::heapless::Vector<int, 3>::fill(2,1);
-        // c2 = std::move(c1);
+        // c2 = move(c1);
     }
 }
 
@@ -198,7 +198,7 @@ TEST_CASE("heapless::Vector::slice()", "[heapless][Vector]")
         REQUIRE(!sa2.is_empty());
         REQUIRE(sa2.len() == 1);
 
-        auto const ca2 = std::move(a2);
+        auto const ca2 = move(a2);
         auto sca2 = ca2.slice();
         REQUIRE(!sca2.is_empty());
         REQUIRE(sca2.len() == 1);
@@ -248,7 +248,7 @@ TEST_CASE("heapless::Vector::subslice(b,e)", "[heapless][vector]")
         auto a1 = nel::heapless::Vector<int, 3>::empty();
         a1.push_back(1);
         a1.push_back(2);
-        auto const c1 = std::move(a1);
+        auto const c1 = move(a1);
 
         auto sc1 = c1.subslice(0, 0);
         REQUIRE(sc1.is_empty());
@@ -333,7 +333,7 @@ TEST_CASE("heapless::Vector::try_get()", "[heapless][Vector]")
         REQUIRE(sa2.is_some());
         REQUIRE(sa2.unwrap() == 1);
 
-        auto const ca2 = std::move(a2);
+        auto const ca2 = move(a2);
         auto sca2 = ca2.try_get(0);
         REQUIRE(sca2.is_some());
         REQUIRE(sca2.unwrap() == 1);
@@ -346,7 +346,7 @@ TEST_CASE("heapless::Vector::try_get()", "[heapless][Vector]")
         auto sa2 = a2.try_get(1);
         REQUIRE(sa2.is_none());
 
-        auto const ca2 = std::move(a2);
+        auto const ca2 = move(a2);
         auto sca2 = ca2.try_get(1);
         REQUIRE(sca2.is_none());
     }

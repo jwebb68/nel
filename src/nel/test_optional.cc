@@ -23,17 +23,17 @@ TEST_CASE("optional(None): unwrap_or(2) must produce 2", "[optional]")
     REQUIRE(val == 2);
 }
 
-TEST_CASE("std::move(optional)-ctor for some must move val to dest", "[optional]")
+TEST_CASE("move(optional)-ctor for some must move val to dest", "[optional]")
 {
     nel::Optional<int> opt1c = nel::Some(1);
-    auto opt2 = std::move(opt1c);
+    auto opt2 = move(opt1c);
 
     auto val = opt2.unwrap();
 
     REQUIRE(val == 1);
 }
 
-TEST_CASE("std::move(optional)-ctor for none must move val to dest", "[optional]")
+TEST_CASE("move(optional)-ctor for none must move val to dest", "[optional]")
 {
     nel::Optional<int> opt1d = nel::None;
 
@@ -44,11 +44,11 @@ TEST_CASE("std::move(optional)-ctor for none must move val to dest", "[optional]
 
 #if 0
 // disabled until panic testing is available
-TEST_CASE("std::move(optional)-ctor for inval must move val to dest", "[optional]")
+TEST_CASE("move(optional)-ctor for inval must move val to dest", "[optional]")
 {
     nel::Optional<int> opt1e = nel::None;
-    auto opt2 = std::move(opt1e);
-    auto opt3 = std::move(opt1e);
+    auto opt2 = move(opt1e);
+    auto opt3 = move(opt1e);
 
     REQUIRE(!opt3.is_some());
     REQUIRE(!opt3.is_none());
@@ -57,10 +57,10 @@ TEST_CASE("std::move(optional)-ctor for inval must move val to dest", "[optional
 
 #if 0
 // disabled until panic testing is available
-TEST_CASE("std::move(optional)-ctor for some must invalidate src", "[optional]")
+TEST_CASE("move(optional)-ctor for some must invalidate src", "[optional]")
 {
     nel::Optional<int> opt1f = nel::Some(1);
-    auto opt2 = std::move(opt1f);
+    auto opt2 = move(opt1f);
 
     REQUIRE(!opt1f.is_some());
     REQUIRE(!opt1f.is_none());
@@ -69,10 +69,10 @@ TEST_CASE("std::move(optional)-ctor for some must invalidate src", "[optional]")
 
 #if 0
 // disabled until panic testing is available
-TEST_CASE("std::move(optional)-ctor for none must invalidate src", "[optional]")
+TEST_CASE("move(optional)-ctor for none must invalidate src", "[optional]")
 {
     nel::Optional<int> opt1g = nel::None;
-    auto opt2 = std::move(opt1g);
+    auto opt2 = move(opt1g);
 
     REQUIRE(!opt1g.is_some());
     REQUIRE(!opt1g.is_none());
@@ -81,33 +81,33 @@ TEST_CASE("std::move(optional)-ctor for none must invalidate src", "[optional]")
 
 #if 0
 // disabled until panic testing is available
-TEST_CASE("std::move(optional)-ctor for inval must invalidate src", "[optional]")
+TEST_CASE("move(optional)-ctor for inval must invalidate src", "[optional]")
 {
     nel::Optional<int> opt1 = nel::None;
-    auto opt2 = std::move(opt1);
-    auto opt3 = std::move(opt1);
+    auto opt2 = move(opt1);
+    auto opt3 = move(opt1);
 
     REQUIRE(!opt1.is_some());
     REQUIRE(!opt1.is_none());
 }
 #endif
 
-TEST_CASE("std::move(optional)-ass for some must move val to dest", "[optional]")
+TEST_CASE("move(optional)-ass for some must move val to dest", "[optional]")
 {
     nel::Optional<int> opt1 = nel::Some(1);
     nel::Optional<int> opt2 = nel::Some(2);
-    opt2 = std::move(opt1);
+    opt2 = move(opt1);
 
     auto val = opt2.unwrap();
 
     REQUIRE(val == 1);
 }
 
-TEST_CASE("std::move(optional)-ass for none must move val to dest", "[optional]")
+TEST_CASE("move(optional)-ass for none must move val to dest", "[optional]")
 {
     nel::Optional<int> opt1 = nel::None;
     nel::Optional<int> opt2 = nel::Some(1);
-    opt2 = std::move(opt1);
+    opt2 = move(opt1);
 
     auto val = opt2.unwrap_or(2);
 
@@ -116,13 +116,13 @@ TEST_CASE("std::move(optional)-ass for none must move val to dest", "[optional]"
 
 #if 0
 // disabled until panic testing is available
-TEST_CASE("std::move(optional)-ass for inval must move val to dest", "[optional]")
+TEST_CASE("move(optional)-ass for inval must move val to dest", "[optional]")
 {
     nel::Optional<int> opt1 = nel::None;
-    auto opt2 = std::move(opt1);
+    auto opt2 = move(opt1);
 
     nel::Optional<int> opt3 = nel::Some(1);
-    opt3 = std::move(opt1);
+    opt3 = move(opt1);
 
     REQUIRE(!opt3.is_some());
     REQUIRE(!opt3.is_none());
@@ -131,12 +131,12 @@ TEST_CASE("std::move(optional)-ass for inval must move val to dest", "[optional]
 
 #if 0
 // disabled until panic testing is available
-TEST_CASE("std::move(optional)-ass for some must invalidate src", "[optional]")
+TEST_CASE("move(optional)-ass for some must invalidate src", "[optional]")
 {
     nel::Optional<int> opt1 = nel::Some(1);
 
     nel::Optional<int> opt2 = nel::Some(2);
-    opt2 = std::move(opt1);
+    opt2 = move(opt1);
 
     REQUIRE(!opt1.is_some());
     REQUIRE(!opt1.is_none());
@@ -145,12 +145,12 @@ TEST_CASE("std::move(optional)-ass for some must invalidate src", "[optional]")
 
 #if 0
 // disabled until panic testing is available
-TEST_CASE("std::move(optional)-ass for none must invalidate src", "[optional]")
+TEST_CASE("move(optional)-ass for none must invalidate src", "[optional]")
 {
     nel::Optional<int> opt1 = nel::None;
 
     nel::Optional<int> opt2 = nel::Some(2);
-    opt2 = std::move(opt1);
+    opt2 = move(opt1);
 
     REQUIRE(!opt1.is_some());
     REQUIRE(!opt1.is_none());
@@ -159,13 +159,13 @@ TEST_CASE("std::move(optional)-ass for none must invalidate src", "[optional]")
 
 #if 0
 // disabled until panic testing is available
-TEST_CASE("std::move(optional)-ass for inval must invalidate src", "[optional]")
+TEST_CASE("move(optional)-ass for inval must invalidate src", "[optional]")
 {
     nel::Optional<int> opt1 = nel::None;
-    auto opt2 = std::move(opt1);
+    auto opt2 = move(opt1);
 
     nel::Optional<int> opt3 = nel::Some(2);
-    opt3 = std::move(opt1);
+    opt3 = move(opt1);
 
     REQUIRE(!opt1.is_some());
     REQUIRE(!opt1.is_none());
@@ -191,7 +191,7 @@ TEST_CASE("Optional.is_some for none must give false", "[optional]")
 TEST_CASE("Optional.is_some for inval must panic", "[optional]")
 {
     nel::Optional<int> opt1 = nel::None;
-    auto opt2 = std::move(opt1);
+    auto opt2 = move(opt1);
 
     REQUIRE(!opt1.is_some());
 }
@@ -223,7 +223,7 @@ TEST_CASE("Optional.is_some for none must not alter src", "[optional]")
 TEST_CASE("Optional.is_some for inval must not alter src", "[optional]")
 {
     nel::Optional<int> opt1 = nel::None;
-    auto opt2 = std::move(opt1);
+    auto opt2 = move(opt1);
 
     auto is = opt1.is_some();
     NEL_UNUSED(is);
@@ -252,7 +252,7 @@ TEST_CASE("Optional.is_none for none must give true", "[optional]")
 TEST_CASE("Optional.is_none for inval must panic", "[optional]")
 {
     nel::Optional<int> opt1 = nel::None;
-    auto opt2 = std::move(opt1);
+    auto opt2 = move(opt1);
 
     REQUIRE(!opt1.is_none());
 }
@@ -284,7 +284,7 @@ TEST_CASE("Optional.is_none for none must not alter src", "[optional]")
 TEST_CASE("Optional.is_none for inval must not alter src", "[optional]")
 {
     nel::Optional<int> opt1 = nel::None;
-    auto opt2 = std::move(opt1);
+    auto opt2 = move(opt1);
 
     auto is = opt1.is_none();
     NEL_UNUSED(is);
@@ -352,7 +352,7 @@ TEST_CASE("Optional.unwrap with default for None must give or value", "[optional
 TEST_CASE("Optional.unwrap with default for Inval must give or value", "[optional]")
 {
     nel::Optional<int> opt1c = nel::None;
-    auto opt2 = std::move(opt1c);
+    auto opt2 = move(opt1c);
 
     auto val = opt1c.unwrap_or(2);
 
@@ -393,7 +393,7 @@ TEST_CASE("Optional.unwrap with default for None must invalidate src", "[optiona
 TEST_CASE("Optional.unwrap with default for Inval must invalidate src", "[optional]")
 {
     nel::Optional<int> opt1f = nel::None;
-    auto opt2 = std::move(opt1f);
+    auto opt2 = move(opt1f);
 
     auto val = opt1f.unwrap_or(2);
     NEL_UNUSED(val);
@@ -433,7 +433,7 @@ TEST_CASE("Optional.eq for some with inval must give false", "[optional]")
     nel::Optional<int> opt1 = nel::Some(1);
 
     auto opt2 = nel::Some(1);
-    auto opt3 = std::move(opt2);
+    auto opt3 = move(opt2);
 
     REQUIRE(!(opt1 == opt2));
 }
@@ -478,7 +478,7 @@ TEST_CASE("Optional.eq for some with inval must not change src", "[optional]")
     nel::Optional<int> opt1 = nel::Some(1);
 
     auto opt2 = nel::Some(1);
-    auto opt3 = std::move(opt2);
+    auto opt3 = move(opt2);
 
     auto is_eq = opt1 == opt2;
     NEL_UNUSED(is_eq);
@@ -508,7 +508,7 @@ TEST_CASE("Optional.eq for none with inval must give false", "[optional]")
     nel::Optional<int> opt1 = nel::None;
 
     auto opt2 = nel::Some(1);
-    auto opt3 = std::move(opt2);
+    auto opt3 = move(opt2);
 
     REQUIRE(!(opt1 == opt2));
 }
@@ -542,7 +542,7 @@ TEST_CASE("Optional.eq for none with inval must not change src", "[optional]")
     nel::Optional<int> opt1 = nel::None;
 
     nel::Optional<int> opt2 = nel::Some(1);
-    auto opt3 = std::move(opt2);
+    auto opt3 = move(opt2);
 
     auto is_eq = opt1 == opt2;
     NEL_UNUSED(is_eq);
@@ -555,7 +555,7 @@ TEST_CASE("Optional.eq for none with inval must not change src", "[optional]")
 TEST_CASE("Optional.eq for inval with some must give false", "[optional]")
 {
     nel::Optional<int> opt1 = nel::None;
-    auto opt2 = std::move(opt1);
+    auto opt2 = move(opt1);
 
     REQUIRE(!(opt1 == nel::Some(1)));
 }
@@ -565,7 +565,7 @@ TEST_CASE("Optional.eq for inval with some must give false", "[optional]")
 TEST_CASE("Optional.eq for inval with none must give false", "[optional]")
 {
     nel::Optional<int> opt1 = nel::None;
-    auto opt2 = std::move(opt1);
+    auto opt2 = move(opt1);
 
     REQUIRE(!(opt1 == None));
 }
@@ -574,10 +574,10 @@ TEST_CASE("Optional.eq for inval with none must give false", "[optional]")
 TEST_CASE("Optional.eq for inval with inval must give true", "[optional]")
 {
     nel::Optional<int> opt1 = nel::None;
-    auto opt2 = std::move(opt1);
+    auto opt2 = move(opt1);
 
     nel::Optional<int> opt3 = nel::Some(1);
-    auto opt4 = std::move(opt3);
+    auto opt4 = move(opt3);
 
     REQUIRE(opt1 == opt3);
 }
@@ -587,7 +587,7 @@ TEST_CASE("Optional.eq for inval with inval must give true", "[optional]")
 TEST_CASE("Optional.eq for inval with some must not change src", "[optional]")
 {
     nel::Optional<int> opt1 = nel::None;
-    auto opt2 = std::move(opt1);
+    auto opt2 = move(opt1);
 
     nel::Optional<int> is_eq = opt1 == nel::Some(1);
     NEL_UNUSED(is_eq);
@@ -601,7 +601,7 @@ TEST_CASE("Optional.eq for inval with some must not change src", "[optional]")
 TEST_CASE("Optional.eq for inval with none must not change src", "[optional]")
 {
     nel::Optional<int> opt1 = nel::None;
-    auto opt2 = std::move(opt1);
+    auto opt2 = move(opt1);
 
     nel::Optional<int> is_eq = opt1 == nel::None;
     NEL_UNUSED(is_eq);
@@ -614,10 +614,10 @@ TEST_CASE("Optional.eq for inval with none must not change src", "[optional]")
 TEST_CASE("Optional.eq for inval with inval must not change src", "[optional]")
 {
     nel::Optional<int> opt1 = nel::None;
-    auto opt2 = std::move(opt1);
+    auto opt2 = move(opt1);
 
     nel::Optional<int> opt3 = nel::Some(1);
-    auto opt4 = std::move(opt3);
+    auto opt4 = move(opt3);
 
     auto is_eq = opt1 == opt3;
     NEL_UNUSED(is_eq);
@@ -657,7 +657,7 @@ TEST_CASE("Optional.neq for some with inval must give true", "[optional]")
     nel::Optional<int> opt1 = nel::Some(1);
 
     nel::Optional<int> opt2 = nel::Some(1);
-    auto opt3 = std::move(opt2);
+    auto opt3 = move(opt2);
 
     REQUIRE(opt1 != opt2);
 }
@@ -701,7 +701,7 @@ TEST_CASE("Optional.neq for some with inval must not alter src", "[optional]")
     nel::Optional<int> opt1 = nel::Some(1);
 
     nel::Optional<int> opt2 = nel::Some(2);
-    auto opt3 = std::move(opt2);
+    auto opt3 = move(opt2);
 
     auto is_neq = opt1 != opt2;
     NEL_UNUSED(is_neq);
@@ -732,7 +732,7 @@ TEST_CASE("Optional.neq for none with inval must give true", "[optional]")
     nel::Optional<int> opt1 = nel::None;
 
     nel::Optional<int> opt2 = nel::Some(1);
-    auto opt3 = std::move(opt2);
+    auto opt3 = move(opt2);
 
     REQUIRE(opt1 != opt2);
 }
@@ -765,7 +765,7 @@ TEST_CASE("Optional.neq for none with inval must not alter src", "[optional]")
     nel::Optional<int> opt1 = nel::None;
 
     nel::Optional<int> opt2 = nel::Some(1);
-    auto opt3 = std::move(opt2);
+    auto opt3 = move(opt2);
 
     auto is_neq = opt1 != opt2;
     NEL_UNUSED(is_neq);
@@ -777,7 +777,7 @@ TEST_CASE("Optional.neq for none with inval must not alter src", "[optional]")
 TEST_CASE("Optional.neq for inval with some must give true", "[optional]")
 {
     nel::Optional<int> opt1 = nel::None;
-    auto opt2 = std::move(opt1);
+    auto opt2 = move(opt1);
 
     REQUIRE(opt1 != nel::Some(1));
 }
@@ -786,7 +786,7 @@ TEST_CASE("Optional.neq for inval with some must give true", "[optional]")
 TEST_CASE("Optional.neq for inval with none must give true", "[optional]")
 {
     nel::Optional<int> opt1 = nel::None;
-    auto opt2 = std::move(opt1);
+    auto opt2 = move(opt1);
 
     REQUIRE(opt1 != None);
 }
@@ -795,10 +795,10 @@ TEST_CASE("Optional.neq for inval with none must give true", "[optional]")
 TEST_CASE("Optional.neq for inval with inval must give false", "[optional]")
 {
     nel::Optional<int> opt1 = nel::None;
-    auto opt2 = std::move(opt1);
+    auto opt2 = move(opt1);
 
     nel::Optional<int> opt3 = nel::Some(1);
-    auto opt4 = std::move(opt3);
+    auto opt4 = move(opt3);
 
     REQUIRE(!(opt1 != opt3));
 }
@@ -807,7 +807,7 @@ TEST_CASE("Optional.neq for inval with inval must give false", "[optional]")
 TEST_CASE("Optional.neq for inval with some must not alter src", "[optional]")
 {
     nel::Optional<int> opt1 = nel::None;
-    auto opt2 = std::move(opt1);
+    auto opt2 = move(opt1);
 
     auto is_neq = opt1 != nel::Some(1);
     NEL_UNUSED(is_neq);
@@ -820,7 +820,7 @@ TEST_CASE("Optional.neq for inval with some must not alter src", "[optional]")
 TEST_CASE("Optional.neq for inval with none must not alter src", "[optional]")
 {
     nel::Optional<int> opt1 = nel::None;
-    auto opt2 = std::move(opt1);
+    auto opt2 = move(opt1);
 
     nel::Optional<int> is_neq = opt1 != nel::None;
     NEL_UNUSED(is_neq);
@@ -833,10 +833,10 @@ TEST_CASE("Optional.neq for inval with none must not alter src", "[optional]")
 TEST_CASE("Optional.neq for inval with inval must not alter src", "[optional]")
 {
     nel::Optional<int> opt1 = nel::None;
-    auto opt2 = std::move(opt1);
+    auto opt2 = move(opt1);
 
     nel::Optional<int> opt3 = nel::Some(1);
-    auto opt4 = std::move(opt3);
+    auto opt4 = move(opt3);
 
     auto is_neq = opt1 != opt3;
     NEL_UNUSED(is_neq);

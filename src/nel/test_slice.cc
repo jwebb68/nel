@@ -192,7 +192,7 @@ TEST_CASE("Slice::try_get()", "[slice]")
         REQUIRE(sa2.is_some());
         REQUIRE(sa2.unwrap() == 3);
 
-        auto const cs1 = std::move(s1);
+        auto const cs1 = move(s1);
         auto scs1 = cs1.try_get(0);
         REQUIRE(scs1.is_some());
         REQUIRE(scs1.unwrap() == 3);
@@ -205,7 +205,7 @@ TEST_CASE("Slice::try_get()", "[slice]")
         auto sa2 = s1.try_get(5);
         REQUIRE(sa2.is_none());
 
-        auto const cs1 = std::move(s1);
+        auto const cs1 = move(s1);
         auto scs1 = cs1.try_get(5);
         REQUIRE(scs1.is_none());
     }

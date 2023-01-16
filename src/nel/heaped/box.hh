@@ -16,9 +16,7 @@ struct Box;
 #include <nel/result.hh>
 #include <nel/element.hh>
 #include <nel/panic.hh>
-
-#include <utility> // std::move, std::forward
-#include <memory> // std::unique_ptr
+#include <nel/defs.hh>
 
 namespace nel
 {
@@ -36,7 +34,7 @@ struct Box {
 
     private:
         typedef Element<T> ElementT;
-        std::unique_ptr<ElementT> value_;
+        ElementT *value_;
 
     private:
         constexpr Box(ElementT *const p) noexcept
@@ -45,23 +43,47 @@ struct Box {
         }
 
     public:
-        ~Box(void) = default;
+        ~Box(void)
+        {
+            if (value_ != nullptr) { delete value_; }
+        }
 
         // No default, must create a T.
-        constexpr Box(void) noexcept = delete;
+        // constexpr Box(void) noexcept = delete;
+        constexpr Box(void) noexcept
+            : value_(nullptr)
+        {
+        }
 
         // No copying..
         constexpr Box(Box const &o) noexcept = delete;
         constexpr Box &operator=(Box const &o) noexcept = delete;
 
         // Can move though.
-        constexpr Box(Box &&) noexcept = default;
-        constexpr Box &operator=(Box &&) noexcept = default;
+        constexpr Box(Box &&o) noexcept
+        {
+            value_ = o.value_;
+            o.value_ = nullptr;
+        }
+
+        constexpr Box &operator=(Box &&o) noexcept
+        {
+            if (this != &o) {
+                value_ = o.value_;
+                o.value_ = nullptr;
+            }
+            return *this;
+        }
+
+        constexpr Box(T &&v) noexcept
+            : value_(new Element<T>(forward<T>(v)))
+        {
+        }
 
         // works for moving-into as well.
         template<typename... Args>
         constexpr Box(Args &&...args) noexcept
-            : value_(new Element<T>(std::forward<Args>(args)...))
+            : value_(new Element<T>(forward<Args>(args)...))
         {
         }
 
@@ -76,8 +98,9 @@ struct Box {
         constexpr static Result<Box, T> try_from(T &&val) noexcept
         {
             // for new: on fail, val not moved
-            ElementT *const p = new ElementT(val);
-            return (p == nullptr) ? Result<Box, T>::Err(val) : Result<Box, T>::Ok(Box(p));
+            ElementT *const p = new ElementT(move(val));
+            if (p == nullptr) { return Result<Box, T>::Err(val); }
+            return Result<Box, T>::Ok(Box(p));
         }
 
     public:
@@ -141,8 +164,10 @@ struct Box {
         constexpr T unwrap(void) noexcept
         {
             nel_panic_if_not(has_value(), "not a value");
-            std::unique_ptr<ElementT> t = std::move(value_);
-            return t->unwrap();
+            T t = value_->unwrap();
+            delete value_;
+            value_ = nullptr;
+            return t;
         }
 
         // No comparators by design.

@@ -70,6 +70,7 @@ struct Array {
         ~Array(void) noexcept
         {
             ArrayNode::free(item_);
+            item_ = nullptr;
         }
 
     private:
@@ -84,19 +85,16 @@ struct Array {
         // Moving is allowed since it's a fast O(1) op.
         // and does not create any extra resources..
         constexpr Array(Array &&o) noexcept
-            : item_(std::move(o.item_))
         {
+            item_ = o.item_;
             o.item_ = nullptr;
         }
 
         constexpr Array &operator=(Array &&o) noexcept
         {
             if (this != &o) {
-                // Fast.
-                // Move once, not twice.
-                // But only works if Array<T>(&&) does not throw/error.
-                this->~Array();
-                new (this) Array(std::move(o));
+                item_ = o.item_;
+                o.item_ = nullptr;
             }
             return *this;
         }
@@ -114,7 +112,7 @@ struct Array {
             return Array();
         }
 
-#if 0
+#if 1
         /**
          * Create an array, of size n, initial value f in all entries.
          *
@@ -132,7 +130,7 @@ struct Array {
         }
 #endif
 
-#if 1
+#if 0
         /**
          * Attempt to create an array from initialiser list
          *
@@ -148,7 +146,7 @@ struct Array {
         // TODO: determine how efficient this implementation is..
         static constexpr Optional<Array> try_from(std::initializer_list<T> &&l) noexcept
         {
-            return ArrayNode::try_from(std::move(l)).template map<Array>([](ArrayNode *p) -> Array {
+            return ArrayNode::try_from(move(l)).template map<Array>([](ArrayNode * p) -> Array {
                 return Array(p);
             });
         }

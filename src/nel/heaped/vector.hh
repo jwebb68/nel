@@ -19,6 +19,7 @@ struct Vector;
 #include <nel/optional.hh>
 #include <nel/result.hh>
 #include <nel/log.hh>
+#include <nel/defs.hh>
 
 namespace nel
 {
@@ -72,7 +73,7 @@ struct Vector {
 
         // moving ok.
         constexpr Vector(Vector &&o) noexcept
-            : item_(std::move(o.item_))
+            : item_(move(o.item_))
         {
             o.item_ = nullptr;
         }
@@ -81,7 +82,7 @@ struct Vector {
         {
             if (this != &o) {
                 this->~Vector();
-                new (this) Vector(std::move(o));
+                new (this) Vector(move(o));
             }
             return *this;
         }
@@ -111,6 +112,7 @@ struct Vector {
             return a;
         }
 
+#if 0
         /**
          * Attempt to create vector from initialiser list
          *
@@ -121,8 +123,9 @@ struct Vector {
         static constexpr Optional<Vector> try_from(std::initializer_list<T> &&l) noexcept
         {
             Vector a = Vector::empty();
-            return a.push_back(l).ok().template map<Vector>([&a]() { return std::move(a); });
+            return a.push_back(l).ok().template map<Vector>([&a]() { return move(a); });
         }
+#endif
 
     public:
         /**
@@ -335,6 +338,7 @@ struct Vector {
             return item_->push_back(val);
         }
 
+#if 0
         // TODO: poss not consistent, as not returning Result<void, T>
         Result<void, std::initializer_list<T>> push_back(std::initializer_list<T> l) noexcept
         {
@@ -345,15 +349,16 @@ struct Vector {
             if (item_ == nullptr) { return Result<void, U>::Err(l); }
             return item_->push_back(l);
         }
+#endif
 
         template<typename... Args>
         Result<void, T> push_back(Args &&...args) noexcept
         {
             bool ok;
             ok = try_reserve(len() + 1);
-            if (!ok) { return Result<void, T>::Err(std::forward<Args>(args)...); }
-            if (item_ == nullptr) { return Result<void, T>::Err(std::forward<Args>(args)...); }
-            return item_->push_back(std::forward<Args>(args)...);
+            if (!ok) { return Result<void, T>::Err(forward<Args>(args)...); }
+            if (item_ == nullptr) { return Result<void, T>::Err(forward<Args>(args)...); }
+            return item_->push_back(forward<Args>(args)...);
         }
 
         // move contents of vec into this?

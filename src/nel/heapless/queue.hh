@@ -78,7 +78,7 @@ struct Queue {
             T *d = &store_[rp_];
             T *s = &o.store_[rp_];
             for (Index l = len_; l != 0; --l) {
-                new (d) T(std::move(*s));
+                new (d) T(move(*s));
                 s += 1;
                 if (s == &o.store_[N]) { s = &o.store_[0]; }
                 d += 1;
@@ -92,7 +92,7 @@ struct Queue {
         {
             if (this != &o) {
                 this->~Queue();
-                new (this) Queue(std::move(o));
+                new (this) Queue(move(o));
             }
             return *this;
         }
@@ -170,7 +170,7 @@ struct Queue {
         {
             if (is_empty()) { return None; }
             len_ -= 1;
-            auto r = Some(std::move(store_[rp_]));
+            auto r = Some(move(store_[rp_]));
             rp_ += 1;
             if (rp_ == N) { rp_ = 0; }
             return r;

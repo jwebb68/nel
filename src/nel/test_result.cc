@@ -53,11 +53,11 @@ TEST_CASE("Result::Err for err must produce err", "[result]")
     REQUIRE(res.unwrap_err() == FAIL);
 }
 
-TEST_CASE("std::move(Result)-ctor for ok must move ok to dest", "[result]")
+TEST_CASE("move(Result)-ctor for ok must move ok to dest", "[result]")
 {
     auto res = TestResult::Ok(1);
 
-    auto res2 = std::move(res);
+    auto res2 = move(res);
 
     REQUIRE(res2.is_ok());
     REQUIRE(!res2.is_err());
@@ -67,11 +67,11 @@ TEST_CASE("std::move(Result)-ctor for ok must move ok to dest", "[result]")
     REQUIRE(val == 1);
 }
 
-TEST_CASE("std::move(Result)-ctor for err must move err to dest", "[result]")
+TEST_CASE("move(Result)-ctor for err must move err to dest", "[result]")
 {
     auto res = TestResult::Err(FAIL);
 
-    auto res2 = std::move(res);
+    auto res2 = move(res);
 
     REQUIRE(!res2.is_ok());
     REQUIRE(res2.is_err());
@@ -83,11 +83,11 @@ TEST_CASE("std::move(Result)-ctor for err must move err to dest", "[result]")
 
 #if 0
 // disabled until panic testing is available
-TEST_CASE("std::move(Result)-ctor for inval must move inval to dest", "[result]")
+TEST_CASE("move(Result)-ctor for inval must move inval to dest", "[result]")
 {
     auto res = TestResult::Err(FAIL);
-    auto res2 = std::move(res);
-    auto res3 = std::move(res);
+    auto res2 = move(res);
+    auto res3 = move(res);
 
     REQUIRE(!res3.is_ok());
     REQUIRE(!res3.is_err());
@@ -96,10 +96,10 @@ TEST_CASE("std::move(Result)-ctor for inval must move inval to dest", "[result]"
 
 #if 0
 // disabled until panic testing is available
-TEST_CASE("std::move(Result)-ctor for ok must invalidate src", "[result]")
+TEST_CASE("move(Result)-ctor for ok must invalidate src", "[result]")
 {
     auto res = TestResult::Ok(1);
-    auto res2 = std::move(res);
+    auto res2 = move(res);
 
     REQUIRE(!res.is_ok());
     REQUIRE(!res.is_err());
@@ -108,10 +108,10 @@ TEST_CASE("std::move(Result)-ctor for ok must invalidate src", "[result]")
 
 #if 0
 // disabled until panic testing is available
-TEST_CASE("std::move(Result)-ctor for err must invalidate src", "[result]")
+TEST_CASE("move(Result)-ctor for err must invalidate src", "[result]")
 {
     auto res = TestResult::Err(FAIL);
-    auto res2 = std::move(res);
+    auto res2 = move(res);
 
     REQUIRE(!res.is_ok());
     REQUIRE(!res.is_err());
@@ -120,23 +120,23 @@ TEST_CASE("std::move(Result)-ctor for err must invalidate src", "[result]")
 
 #if 0
 // disabled until panic testing is available
-TEST_CASE("std::move(Result)-ctor for inval must invalidate src", "[result]")
+TEST_CASE("move(Result)-ctor for inval must invalidate src", "[result]")
 {
     auto res = TestResult::Err(FAIL);
-    auto res2 = std::move(res);
-    auto res3 = std::move(res);
+    auto res2 = move(res);
+    auto res3 = move(res);
 
     REQUIRE(!res.is_ok());
     REQUIRE(!res.is_err());
 }
 #endif
 
-TEST_CASE("std::move(Result)-ass for ok must move ok val to dest", "[result]")
+TEST_CASE("move(Result)-ass for ok must move ok val to dest", "[result]")
 {
     auto res = TestResult::Ok(1);
 
     auto res2 = TestResult::Ok(2);
-    res2 = std::move(res);
+    res2 = move(res);
 
     REQUIRE(res2.is_ok());
     REQUIRE(!res2.is_err());
@@ -145,12 +145,12 @@ TEST_CASE("std::move(Result)-ass for ok must move ok val to dest", "[result]")
     REQUIRE(val == 1);
 }
 
-TEST_CASE("std::move(Result)-ass for err must move err val to dest", "[result]")
+TEST_CASE("move(Result)-ass for err must move err val to dest", "[result]")
 {
     auto res = TestResult::Err(FAIL);
 
     auto res2 = TestResult::Ok(2);
-    res2 = std::move(res);
+    res2 = move(res);
 
     REQUIRE(!res2.is_ok());
     REQUIRE(res2.is_err());
@@ -161,15 +161,15 @@ TEST_CASE("std::move(Result)-ass for err must move err val to dest", "[result]")
 
 #if 0
 // disabled until panic testing is available
-TEST_CASE("std::move(Result)-ass for inval must move inval to dest", "[result]")
+TEST_CASE("move(Result)-ass for inval must move inval to dest", "[result]")
 {
     auto res = TestResult::Err(FAIL);
     auto res2 = TestResult::Ok(2);
-    res2 = std::move(res);
+    res2 = move(res);
 
     auto res3 = TestResult::Ok(3);
 
-    res3 = std::move(res);
+    res3 = move(res);
 
     REQUIRE(!res3.is_ok());
     REQUIRE(!res3.is_err());
@@ -178,12 +178,12 @@ TEST_CASE("std::move(Result)-ass for inval must move inval to dest", "[result]")
 
 #if 0
 // disabled until panic testing is available
-TEST_CASE("std::move(Result)-ass for ok must invalidate src", "[result]")
+TEST_CASE("move(Result)-ass for ok must invalidate src", "[result]")
 {
     auto res = TestResult::Ok(1);
     auto res2 = TestResult::Ok(2);
 
-    res2 = std::move(res);
+    res2 = move(res);
 
     REQUIRE(!res.is_ok());
     REQUIRE(!res.is_err());
@@ -192,12 +192,12 @@ TEST_CASE("std::move(Result)-ass for ok must invalidate src", "[result]")
 
 #if 0
 // disabled until panic testing is available
-TEST_CASE("std::move(Result)-ass for err must invalidate src", "[result]")
+TEST_CASE("move(Result)-ass for err must invalidate src", "[result]")
 {
     auto res = TestResult::Err(FAIL);
     auto res2 = TestResult::Ok(2);
 
-    res2 = std::move(res);
+    res2 = move(res);
 
     REQUIRE(!res.is_ok());
     REQUIRE(!res.is_err());
@@ -206,15 +206,15 @@ TEST_CASE("std::move(Result)-ass for err must invalidate src", "[result]")
 
 #if 0
 // disabled until panic testing is available
-TEST_CASE("std::move(Result)-ass for inval must invalidate src", "[result]")
+TEST_CASE("move(Result)-ass for inval must invalidate src", "[result]")
 {
     auto res = TestResult::Err(FAIL);
     auto res2 = TestResult::Ok(2);
-    res2 = std::move(res);
+    res2 = move(res);
 
     auto res3 = TestResult::Ok(3);
 
-    res3 = std::move(res);
+    res3 = move(res);
 
     REQUIRE(!res.is_ok());
     REQUIRE(!res.is_err());
@@ -252,7 +252,7 @@ TEST_CASE("Result.ok for err must produce none", "[result]")
 TEST_CASE("Result.ok for inval must panic", "[result]")
 {
     auto res = TestResult::Err(FAIL);
-    auto res2 = std::move(res);
+    auto res2 = move(res);
 
     // should panic here..
     auto val = res.ok();
@@ -295,7 +295,7 @@ TEST_CASE("Result.ok for err must invalidate src", "[result]")
 TEST_CASE("Result.ok for inval must invalidate src", "[result]")
 {
     auto res = TestResult::Err(FAIL);
-    auto res2 = std::move(res);
+    auto res2 = move(res);
 
     auto val = res.ok();
     NEL_UNUSED(val);
@@ -336,7 +336,7 @@ TEST_CASE("Result.err for err must not produce none", "[result]")
 TEST_CASE("Result.err for inval must panic", "[result]")
 {
     auto res = TestResult::Ok(1);
-    auto res2 = std::move(res);
+    auto res2 = move(res);
 
     auto val = res.err();
 
@@ -376,7 +376,7 @@ TEST_CASE("Result.err for err must invalidate src", "[result]")
 TEST_CASE("Result.err for inval must invalidate src", "[result]")
 {
     auto res = TestResult::Err(FAIL);
-    auto res2 = std::move(res);
+    auto res2 = move(res);
 
     auto val = res.err();
     NEL_UNUSED(val);
@@ -405,7 +405,7 @@ TEST_CASE("Result.is_ok for err must give false", "[result]")
 TEST_CASE("Result.is_ok for inval must panic", "[result]")
 {
     auto res = TestResult::Ok(1);
-    auto res2 = std::move(res);
+    auto res2 = move(res);
 
     REQUIRE(!res.is_ok());
 }
@@ -436,7 +436,7 @@ TEST_CASE("Result.is_ok for err must not alter src", "[result]")
 TEST_CASE("Result.is_ok for inval must not alter src", "[result]")
 {
     auto res = TestResult::Ok(1);
-    auto res2 = std::move(res);
+    auto res2 = move(res);
 
     auto is_ok = res.is_ok();
     NEL_UNUSED(is_ok);
@@ -465,7 +465,7 @@ TEST_CASE("Result.is_err for err must give true", "[result]")
 TEST_CASE("Result.is_err for inval must panic", "[result]")
 {
     auto res = TestResult::Ok(1);
-    auto res2 = std::move(res);
+    auto res2 = move(res);
 
     REQUIRE(!res.is_err());
 }
@@ -510,7 +510,7 @@ TEST_CASE("Result.unwrap for err aborts", "[result]")
 TEST_CASE("Result.unwrap for inval aborts", "[result]")
 {
     auto res = TestResult::Ok(1);
-    auto res2 = std::move(res);
+    auto res2 = move(res);
 
     auto val = res.unwrap();
 
@@ -558,7 +558,7 @@ TEST_CASE("Result.unwrap_err for ok aborts", "[result]")
 TEST_CASE("Result.unwrap_err for inval aborts", "[result]")
 {
     auto res = TestResult::Ok(1);
-    auto res2 = std::move(res);
+    auto res2 = move(res);
 
     auto val = res.unwrap();
 
@@ -590,7 +590,7 @@ TEST_CASE("Result.unwrap_or for err must give or value", "[result]")
 TEST_CASE("Result.unwrap_or for invalid must give or value", "[result]")
 {
     auto res = TestResult::Err(FAIL);
-    auto res2 = std::move(res);
+    auto res2 = move(res);
 
     auto val = res.unwrap_or(2);
 
@@ -628,7 +628,7 @@ TEST_CASE("Result.unwrap_or for err must invalidate src", "[result]")
 TEST_CASE("Result.unwrap_or for invalid must stay invalid", "[result]")
 {
     auto res = TestResult::Err(FAIL);
-    auto res2 = std::move(res);
+    auto res2 = move(res);
 
     auto val = res.unwrap_or(2);
     NEL_UNUSED(val);
@@ -661,7 +661,7 @@ TEST_CASE("Result.unwrap_err_or for err must give err value", "[result]")
 TEST_CASE("Result.unwrap_err_or for invalid must give or value", "[result]")
 {
     auto res = TestResult::Err(FAIL);
-    auto res2 = std::move(res);
+    auto res2 = move(res);
 
     auto val = res.unwrap_err_or(NOENT);
 
@@ -702,7 +702,7 @@ TEST_CASE("Result.unwrap_err_or for err must invalidate src", "[result]")
 TEST_CASE("Result.unwrap_err_or for invalid must invalidate src", "[result]")
 {
     auto res = TestResult::Err(FAIL);
-    auto res2 = std::move(res);
+    auto res2 = move(res);
 
     auto val = res.unwrap_err_or(NOENT);
     NEL_UNUSED(val);
@@ -751,7 +751,7 @@ TEST_CASE("Result.map for err must not change err val", "[result]")
 TEST_CASE("Result.map for inval must stay inval", "[result]")
 {
     auto res = TestResult::Err(FAIL);
-    auto res2 = std::move(res);
+    auto res2 = move(res);
 
     // TODO: nasty, want bool to be auto-inferred as it's the return type of
     // map1, i.e. want res.map(map1).unwrap();
@@ -799,7 +799,7 @@ TEST_CASE("Result.map for err must invalidate src", "[result]")
 TEST_CASE("Result.map for inval must invalidate src", "[result]")
 {
     auto res = TestResult::Err(FAIL);
-    auto res2 = std::move(res);
+    auto res2 = move(res);
 
     // TODO: nasty, want bool to be auto-inferred as it's the return type of
     // map1, i.e. want res.map(map1).unwrap();
@@ -850,7 +850,7 @@ TEST_CASE("Result.map_err for err must change err val", "[result]")
 TEST_CASE("Result.map_err for inval must stay inval", "[result]")
 {
     auto res = TestResult::Err(FAIL);
-    auto res2 = std::move(res);
+    auto res2 = move(res);
 
     // TODO: nasty, want bool to be auto-inferred as it's the return type of
     // map1, i.e. want res.map(map1).unwrap();
@@ -898,7 +898,7 @@ TEST_CASE("Result.map_err for err must invalidate src", "[result]")
 TEST_CASE("Result.map_err for inval must invalidate src", "[result]")
 {
     auto res = TestResult::Err(FAIL);
-    auto res2 = std::move(res);
+    auto res2 = move(res);
 
     // TODO: nasty, want bool to be auto-inferred as it's the return type of
     // map1, i.e. want res.map(map1).unwrap();
@@ -1030,7 +1030,7 @@ TEST_CASE("Result::eq for ok with inval must give false", "[result]")
     auto res1 = TestResult::Ok(1);
 
     auto res2 = TestResult::Ok(2);
-    auto res3 = std::move(res2);
+    auto res3 = move(res2);
 
     REQUIRE(!(res1 == res2));
 }
@@ -1074,7 +1074,7 @@ TEST_CASE("Result::eq for ok with inval must not alter src", "[result]")
     auto res1 = TestResult::Ok(2);
 
     auto res2 = TestResult::Ok(1);
-    auto res3 = std::move(res2);
+    auto res3 = move(res2);
 
     auto is_eq = res1 == res2;
     NEL_UNUSED(is_eq);
@@ -1113,7 +1113,7 @@ TEST_CASE("Result::eq for err with inval must give false", "[result]")
     auto res1 = TestResult::Err(FAIL);
 
     auto res2 = TestResult::Err(NOENT);
-    auto res3 = std::move(res2);
+    auto res3 = move(res2);
 
     REQUIRE(!(res1 == res2));
 }
@@ -1157,7 +1157,7 @@ TEST_CASE("Result::eq for err with inval must not alter src", "[result]")
     auto res1 = TestResult::Err(FAIL);
 
     auto res2 = TestResult::Err(NOENT);
-    auto res3 = std::move(res2);
+    auto res3 = move(res2);
 
     auto is_eq = res1 == res2;
     NEL_UNUSED(is_eq);
@@ -1170,7 +1170,7 @@ TEST_CASE("Result::eq for err with inval must not alter src", "[result]")
 TEST_CASE("Result::eq for inval with ok must give false", "[result]")
 {
     auto res1 = TestResult::Err(FAIL);
-    auto res2 = std::move(res1);
+    auto res2 = move(res1);
 
     REQUIRE(!(res1 == TestResult::Ok(1)));
 }
@@ -1179,7 +1179,7 @@ TEST_CASE("Result::eq for inval with ok must give false", "[result]")
 TEST_CASE("Result::eq for inval with err must give false", "[result]")
 {
     auto res1 = TestResult::Err(FAIL);
-    auto res2 = std::move(res1);
+    auto res2 = move(res1);
 
     REQUIRE(!(res1 == TestResult::Err(FAIL)));
 }
@@ -1188,10 +1188,10 @@ TEST_CASE("Result::eq for inval with err must give false", "[result]")
 TEST_CASE("Result::eq for inval with inval must give true", "[result]")
 {
     auto res1 = TestResult::Ok(2);
-    auto res2 = std::move(res1);
+    auto res2 = move(res1);
 
     auto res3 = TestResult::Err(FAIL);
-    auto res4 = std::move(res3);
+    auto res4 = move(res3);
 
     REQUIRE(res1 == res3);
 }
@@ -1200,7 +1200,7 @@ TEST_CASE("Result::eq for inval with inval must give true", "[result]")
 TEST_CASE("Result::eq for inval with ok must not alter src", "[result]")
 {
     auto res1 = TestResult::Err(FAIL);
-    auto res2 = std::move(res1);
+    auto res2 = move(res1);
 
     auto is_eq = res1 == TestResult::Ok(1);
     NEL_UNUSED(is_eq);
@@ -1213,7 +1213,7 @@ TEST_CASE("Result::eq for inval with ok must not alter src", "[result]")
 TEST_CASE("Result::eq for inval with err must not alter src", "[result]")
 {
     auto res1 = TestResult::Err(FAIL);
-    auto res2 = std::move(res1);
+    auto res2 = move(res1);
 
     auto is_eq = res1 == TestResult::Err(FAIL);
     NEL_UNUSED(is_eq);
@@ -1226,10 +1226,10 @@ TEST_CASE("Result::eq for inval with err must not alter src", "[result]")
 TEST_CASE("Result::eq for inval with inval must not alter src", "[result]")
 {
     auto res1 = TestResult::Ok(2);
-    auto res2 = std::move(res1);
+    auto res2 = move(res1);
 
     auto res3 = TestResult::Err(FAIL);
-    auto res4 = std::move(res3);
+    auto res4 = move(res3);
 
     auto is_eq = res1 == res3;
     NEL_UNUSED(is_eq);
@@ -1268,7 +1268,7 @@ TEST_CASE("Result::neq for ok with inval must give true", "[result]")
     auto res1 = TestResult::Ok(2);
 
     auto res2 = TestResult::Ok(2);
-    auto res3 = std::move(res2);
+    auto res3 = move(res2);
 
     REQUIRE(res1 != res2);
 }
@@ -1312,7 +1312,7 @@ TEST_CASE("Result::neq for ok with inval must not alter src", "[result]")
     auto res1 = TestResult::Ok(2);
 
     auto res2 = TestResult::Ok(3);
-    auto res3 = std::move(res2);
+    auto res3 = move(res2);
 
     auto is_neq = res1 != res2;
     NEL_UNUSED(is_neq);
@@ -1350,7 +1350,7 @@ TEST_CASE("Result::neq for err with inval must give true", "[result]")
     auto res1 = TestResult::Err(FAIL);
 
     auto res2 = TestResult::Ok(2);
-    auto res3 = std::move(res2);
+    auto res3 = move(res2);
 
     REQUIRE(res1 != res2);
 }
@@ -1394,7 +1394,7 @@ TEST_CASE("Result::neq for err with inval must not alter src", "[result]")
     auto res1 = TestResult::Err(FAIL);
 
     auto res2 = TestResult::Ok(2);
-    auto res3 = std::move(res2);
+    auto res3 = move(res2);
 
     auto is_neq = res1 != res2;
     NEL_UNUSED(is_neq);
@@ -1406,7 +1406,7 @@ TEST_CASE("Result::neq for err with inval must not alter src", "[result]")
 TEST_CASE("Result::neq for inval with ok must give true", "[result]")
 {
     auto res1 = TestResult::Ok(1);
-    auto res2 = std::move(res1);
+    auto res2 = move(res1);
 
     REQUIRE(res1 != TestResult::Ok(1));
 }
@@ -1415,7 +1415,7 @@ TEST_CASE("Result::neq for inval with ok must give true", "[result]")
 TEST_CASE("Result::neq for inval with err must give true", "[result]")
 {
     auto res1 = TestResult::Err(FAIL);
-    auto res2 = std::move(res1);
+    auto res2 = move(res1);
 
     REQUIRE(res1 != TestResult::Err(FAIL));
 }
@@ -1424,10 +1424,10 @@ TEST_CASE("Result::neq for inval with err must give true", "[result]")
 TEST_CASE("Result::neq for inval with inval must give false", "[result]")
 {
     auto res1 = TestResult::Ok(2);
-    auto res2 = std::move(res1);
+    auto res2 = move(res1);
 
     auto res3 = TestResult::Err(FAIL);
-    auto res4 = std::move(res3);
+    auto res4 = move(res3);
 
     REQUIRE(!(res1 != res3));
 }
@@ -1436,7 +1436,7 @@ TEST_CASE("Result::neq for inval with inval must give false", "[result]")
 TEST_CASE("Result::neq for inval with ok must not alter src", "[result]")
 {
     auto res1 = TestResult::Err(FAIL);
-    auto res2 = std::move(res1);
+    auto res2 = move(res1);
 
     auto is_neq = res1 != TestResult::Ok(1);
     NEL_UNUSED(is_neq);
@@ -1449,7 +1449,7 @@ TEST_CASE("Result::neq for inval with ok must not alter src", "[result]")
 TEST_CASE("Result::neq for inval with err must not alter src", "[result]")
 {
     auto res1 = TestResult::Err(FAIL);
-    auto res2 = std::move(res1);
+    auto res2 = move(res1);
 
     auto is_neq = res1 != TestResult::Err(FAIL);
     NEL_UNUSED(is_neq);
@@ -1462,10 +1462,10 @@ TEST_CASE("Result::neq for inval with err must not alter src", "[result]")
 TEST_CASE("Result::neq for inval with inval must not alter src", "[result]")
 {
     auto res1 = TestResult::Ok(2);
-    auto res2 = std::move(res1);
+    auto res2 = move(res1);
 
     auto res3 = TestResult::Err(FAIL);
-    auto res4 = std::move(res3);
+    auto res4 = move(res3);
 
     auto is_neq = res1 != res4;
     NEL_UNUSED(is_neq);

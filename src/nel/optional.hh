@@ -17,8 +17,6 @@ class NoneT;
 #include <nel/panic.hh>
 
 #include <new> // new (*) T(...)
-//#include <functional> // std::function
-#include <utility> // std::move, std::forward
 
 namespace nel
 {
@@ -139,7 +137,7 @@ class Optional
             o.tag_ = Tag::INVAL;
             switch (tag_) {
                 case Tag::SOME:
-                    new (&some_) Element<T>(std::move(o.some_));
+                    new (&some_) Element<T>(move(o.some_));
                     break;
                 case Tag::NONE:
                     break;
@@ -165,7 +163,7 @@ class Optional
                 o.tag_ = Tag::INVAL;
                 switch (tag_) {
                     case Tag::SOME:
-                        some_ = std::move(o.some_);
+                        some_ = move(o.some_);
                         break;
                     case Tag::NONE:
                         break;
@@ -189,13 +187,13 @@ class Optional
     private:
         constexpr Optional(Phantom<Tag::SOME> const, T &&v) noexcept
             : tag_(Tag::SOME)
-            , some_(std::forward<T>(v))
+            , some_(forward<T>(v))
         {
         }
 
         // template<typename... Args>
         // constexpr Optional(Phantom<SOME> const, Args &&...args) noexcept
-        //     : tag_(SOME), some_(std::forward<Args>(args)...) {}
+        //     : tag_(SOME), some_(forward<Args>(args)...) {}
 
     public:
         // Default constructor.
@@ -230,7 +228,7 @@ class Optional
         constexpr static Optional Some(T &&v) noexcept
         {
             // using forward<>() instead of move() allows using T as references .
-            return Optional(Phantom<Tag::SOME>(), std::forward<T>(v));
+            return Optional(Phantom<Tag::SOME>(), forward<T>(v));
         }
 
         // /**
@@ -241,7 +239,7 @@ class Optional
         // template<typename... Args>
         // constexpr static Optional Some(Args &&...args) noexcept
         // {
-        //     return Optional(Phantom<Tag::SOME>(), std::forward<Args>(args)...);
+        //     return Optional(Phantom<Tag::SOME>(), forward<Args>(args)...);
         // }
 
     private:
@@ -363,7 +361,7 @@ class Optional
         {
             auto tag = tag_;
             tag_ = Tag::INVAL;
-            return match<V>(tag, std::forward<Fn1>(on_some), std::forward<Fn2>(on_none));
+            return match<V>(tag, forward<Fn1>(on_some), forward<Fn2>(on_none));
         }
 
     public:
@@ -398,12 +396,12 @@ class Optional
         T unwrap_or(T &&v) noexcept
         {
             return consume<T>([this](void) -> T { return some_.unwrap(); },
-                              [&v](void) -> T { return std::forward<T>(v); });
+                              [&v](void) -> T { return forward<T>(v); });
             // move into temp, will need to be moved or it'll be destroyed.
-            // auto t = std::forward<T>(v);
+            // auto t = forward<T>(v);
             // bool const is_some = this->is_some();
             // tag_ = Tag::INVAL;
-            // return is_some ? some_.unwrap() : std::forward<T>(t);
+            // return is_some ? some_.unwrap() : forward<T>(t);
         }
 
         /**
@@ -416,12 +414,12 @@ class Optional
         T unwrap(Args &&...args) noexcept
         {
             return consume<T>([this](void) -> T { return some_.unwrap(); },
-                              [&args...](void) -> bool { return T(std::forward<Args>(args)...); });
+                              [&args...](void) -> bool { return T(forward<Args>(args)...); });
 
             // // TODO: are args destroyed if a some?
             // bool const is_some = this->is_some();
             // tag_ = Tag::INVAL;
-            // return is_some ? some_.unwrap() : T(std::forward<Args>(args)...);
+            // return is_some ? some_.unwrap() : T(forward<Args>(args)...);
         }
 
         // Why no access via references?
@@ -444,7 +442,7 @@ class Optional
         Optional or_(Optional &&o) noexcept
         {
             return consume<Optional>([this](void) -> Optional { return *this; },
-                                     [&o](void) -> Optional { return std::move(o); });
+                                     [&o](void) -> Optional { return move(o); });
         }
 
         template<typename Fn>
@@ -487,7 +485,7 @@ class Optional
 template<typename T>
 constexpr Optional<T> Some(T &&v) noexcept
 {
-    return Optional<T>::Some(std::forward<T>(v));
+    return Optional<T>::Some(forward<T>(v));
 }
 
 template<>
@@ -750,7 +748,7 @@ class Optional<void>
         {
             auto tag = tag_;
             tag_ = Tag::INVAL;
-            return match<V>(tag, std::forward<Fn1>(on_some), std::forward<Fn2>(on_none));
+            return match<V>(tag, forward<Fn1>(on_some), forward<Fn2>(on_none));
         }
 
     public:
