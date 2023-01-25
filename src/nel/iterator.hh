@@ -103,7 +103,7 @@ struct Iterator {
         U fold(U &&initial, F &&fn) noexcept
         {
             U acc = move(initial);
-            for_each([&acc, &fn](OutT v) { fn(acc, v); });
+            self().for_each([&acc, &fn](OutT v) { fn(acc, v); });
             return acc;
         }
 
@@ -111,7 +111,7 @@ struct Iterator {
         U fold2(U &&initial, F &&fn) noexcept
         {
             U acc = move(initial);
-            for_each2([&acc, &fn](OutT v) { fn(acc, v); });
+            self().for_each2([&acc, &fn](OutT v) { fn(acc, v); });
             return acc;
         }
 
