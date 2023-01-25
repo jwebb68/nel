@@ -7,13 +7,13 @@
 namespace nel
 {
 
-[[noreturn]] void panic_(char const *file_name, int line_num, char const *const msg) noexcept;
+[[noreturn]] void panic_(char const *file_name, int line_num, char const *const msg);
 
-void panic_if_(char const *file_name, int line_num, char const *const msg, bool pred) noexcept;
+void panic_if_(char const *file_name, int line_num, char const *const msg, bool pred);
 
-[[noreturn]] void abort(void) noexcept;
+[[noreturn]] void abort(void);
 
-void assert_(char const *file_name, int line_num, char const *const msg, bool pred) noexcept;
+void assert_(char const *file_name, int line_num, char const *const msg, bool pred);
 
 } // namespace nel
 

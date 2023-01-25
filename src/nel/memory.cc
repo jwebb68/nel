@@ -10,7 +10,7 @@
 namespace nel
 {
 
-void memcpy(uint8_t *const d, uint8_t const *const s, Length const n) noexcept
+void memcpy(uint8_t *const d, uint8_t const *const s, Length const n)
 {
     // for (Index i=0; i < n; ++i) {
     //     d[i] = s[i];
@@ -22,7 +22,7 @@ void memcpy(uint8_t *const d, uint8_t const *const s, Length const n) noexcept
     std::memcpy(d, s, n);
 }
 
-void memset(uint8_t *const d, uint8_t const s, Length const n) noexcept
+void memset(uint8_t *const d, uint8_t const s, Length const n)
 {
     // for (Index i=0; i < n; ++i) {
     //     d[i] = s;
@@ -33,7 +33,7 @@ void memset(uint8_t *const d, uint8_t const s, Length const n) noexcept
     std::memset(d, s, n);
 }
 
-void memmove(uint8_t *const d, uint8_t *const s, Length const n) noexcept
+void memmove(uint8_t *const d, uint8_t *const s, Length const n)
 {
     // for (Index i=0; i < n; ++i) {
     //     d[i] = s[i];
@@ -70,7 +70,7 @@ void memmove(uint8_t *const d, uint8_t *const s, Length const n) noexcept
     memset(s, 0xa5, n);
 }
 
-void memswap(uint8_t *const d, uint8_t *const s, Length const n) noexcept
+void memswap(uint8_t *const d, uint8_t *const s, Length const n)
 {
     // for (Index i=0; i < n; ++i) {
     //     uint8_t t = d[i];
@@ -119,7 +119,7 @@ static uint8_t *as_u8ptr_mut(void *p)
     return reinterpret_cast<uint8_t *>(p);
 }
 
-void *realloc_aligned(void *old_p, Length align, Length size) noexcept
+void *realloc_aligned(void *old_p, Length align, Length size)
 {
     Alloc *old_a = Alloc::from_payload_ptr(old_p);
 
@@ -153,7 +153,7 @@ void *realloc_aligned(void *old_p, Length align, Length size) noexcept
     return new_p;
 }
 
-void *malloc_aligned(Length align, Length size) noexcept
+void *malloc_aligned(Length align, Length size)
 {
     return realloc_aligned(nullptr, align, size);
 }

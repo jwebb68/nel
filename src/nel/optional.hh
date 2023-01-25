@@ -95,7 +95,7 @@ class Optional
         };
 
     public:
-        constexpr ~Optional(void) noexcept
+        constexpr ~Optional(void)
         {
             switch (tag_) {
                 case Tag::SOME:
@@ -131,7 +131,7 @@ class Optional
         constexpr Optional &operator=(Optional const &o) const = delete;
 
     public:
-        constexpr Optional(Optional &&o) noexcept
+        constexpr Optional(Optional &&o)
         {
             tag_ = o.tag_;
             o.tag_ = Tag::INVAL;
@@ -156,7 +156,7 @@ class Optional
             }
         }
 
-        constexpr Optional &operator=(Optional &&o) noexcept
+        constexpr Optional &operator=(Optional &&o)
         {
             if (this != &o) {
                 tag_ = o.tag_;
@@ -185,14 +185,14 @@ class Optional
         }
 
     private:
-        constexpr Optional(Phantom<Tag::SOME> const, T &&v) noexcept
+        constexpr Optional(Phantom<Tag::SOME> const, T &&v)
             : tag_(Tag::SOME)
             , some_(forward<T>(v))
         {
         }
 
         // template<typename... Args>
-        // constexpr Optional(Phantom<SOME> const, Args &&...args) noexcept
+        // constexpr Optional(Phantom<SOME> const, Args &&...args)
         //     : tag_(SOME), some_(forward<Args>(args)...) {}
 
     public:
@@ -202,7 +202,7 @@ class Optional
         // really? Default to None/Inval?
         // But use of move-ctor mandates an inval state, so can have a default.
         // Optional(void) = delete;
-        constexpr Optional(void) noexcept
+        constexpr Optional(void)
             : tag_(Tag::INVAL)
         {
         }
@@ -215,7 +215,7 @@ class Optional
          *
          * @returns an Optional 'wrapping' a None
          */
-        constexpr Optional(NoneT const &) noexcept
+        constexpr Optional(NoneT const &)
             : tag_(Tag::NONE)
         {
         }
@@ -225,7 +225,7 @@ class Optional
          *
          * @returns an Optional 'wrapping' the value moved.
          */
-        constexpr static Optional Some(T &&v) noexcept
+        constexpr static Optional Some(T &&v)
         {
             // using forward<>() instead of move() allows using T as references .
             return Optional(Phantom<Tag::SOME>(), forward<T>(v));
@@ -237,7 +237,7 @@ class Optional
         //  * @returns an Optional 'wrapping' the value created from the values given.
         //  */
         // template<typename... Args>
-        // constexpr static Optional Some(Args &&...args) noexcept
+        // constexpr static Optional Some(Args &&...args)
         // {
         //     return Optional(Phantom<Tag::SOME>(), forward<Args>(args)...);
         // }
@@ -246,9 +246,9 @@ class Optional
         // don't use std::function.. it's bloatware..
         // template<typename V>
         // constexpr V match(Tag tag, std::function<V(void)> on_some, std::function<V(void)>
-        // on_none) const noexcept {
+        // on_none) const  {
         template<typename V, typename Fn1, typename Fn2>
-        constexpr V match(Tag tag, Fn1 &&on_some, Fn2 &&on_none) const noexcept
+        constexpr V match(Tag tag, Fn1 &&on_some, Fn2 &&on_none) const
         {
             switch (tag) {
                 case Tag::SOME:
@@ -288,7 +288,7 @@ class Optional
          * `this` is not consumed by the operation.
          * `o` is not consumed by the operation.
          */
-        constexpr bool operator==(Optional const &o) const noexcept
+        constexpr bool operator==(Optional const &o) const
         {
             if (this == &o) { return true; }
             if (tag_ == o.tag_) {
@@ -309,7 +309,7 @@ class Optional
          * `this` is not consumed by the operation.
          * `o` is not consumed by the operation.
          */
-        constexpr bool operator!=(Optional const &o) const noexcept
+        constexpr bool operator!=(Optional const &o) const
         {
             if (this == &o) { return false; }
             if (tag_ == o.tag_) {
@@ -329,7 +329,7 @@ class Optional
          *
          * The optional is not consumed by the operation.
          */
-        constexpr bool is_some(void) const noexcept
+        constexpr bool is_some(void) const
         {
             return match<bool>(
                 tag_,
@@ -344,7 +344,7 @@ class Optional
          *
          * The optional is not consumed by the operation.
          */
-        constexpr bool is_none(void) const noexcept
+        constexpr bool is_none(void) const
         {
             return match<bool>(
                 tag_,
@@ -377,7 +377,7 @@ class Optional
          *
          * @warning If the optional does not contain a Some, then abort/panic.
          */
-        T unwrap(void) noexcept
+        T unwrap(void)
         {
             return consume<T>([this](void) -> T { return some_.unwrap(); },
                               [](void) -> T { nel_panic("not a Some"); });
@@ -393,7 +393,7 @@ class Optional
          * @returns value contained by the Optional if it's a 'Some'.
          * @returns value passed in if it's a 'None'.
          */
-        T unwrap_or(T &&v) noexcept
+        T unwrap_or(T &&v)
         {
             return consume<T>([this](void) -> T { return some_.unwrap(); },
                               [&v](void) -> T { return forward<T>(v); });
@@ -411,7 +411,7 @@ class Optional
          * @returns if not Some, consumes args and creates value to return.
          */
         template<typename... Args>
-        T unwrap(Args &&...args) noexcept
+        T unwrap(Args &&...args)
         {
             return consume<T>([this](void) -> T { return some_.unwrap(); },
                               [&args...](void) -> bool { return T(forward<Args>(args)...); });
@@ -427,9 +427,9 @@ class Optional
 
     public:
         // template<typename U>
-        // Optional<U> map(std::function<U(T &)> fn) noexcept
+        // Optional<U> map(std::function<U(T &)> fn)
         template<typename U, typename Fn>
-        Optional<U> map(Fn &&fn) noexcept
+        Optional<U> map(Fn &&fn)
         {
             return consume<Optional<U>>(
                 [this, &fn](void) -> Optional<U> {
@@ -439,14 +439,14 @@ class Optional
                 [](void) -> Optional<U> { return None; });
         }
 
-        Optional or_(Optional &&o) noexcept
+        Optional or_(Optional &&o)
         {
             return consume<Optional>([this](void) -> Optional { return *this; },
                                      [&o](void) -> Optional { return move(o); });
         }
 
         template<typename Fn>
-        Optional or_else(Fn &&fn) noexcept
+        Optional or_else(Fn &&fn)
         {
             return consume<Optional>([this](void) -> Optional { return *this; },
                                      [&fn](void) -> Optional { return fn(); });
@@ -454,7 +454,7 @@ class Optional
 
     public:
         // friend std::ostream &operator<<(std::ostream &outs, Optional const &val) {
-        friend Log &operator<<(Log &outs, Optional const &val) noexcept
+        friend Log &operator<<(Log &outs, Optional const &val)
         {
             switch (val.tag_) {
                 case Tag::NONE:
@@ -483,7 +483,7 @@ class Optional
 };
 
 template<typename T>
-constexpr Optional<T> Some(T &&v) noexcept
+constexpr Optional<T> Some(T &&v)
 {
     return Optional<T>::Some(forward<T>(v));
 }
@@ -506,7 +506,7 @@ class Optional<void>
         };
 
     public:
-        constexpr ~Optional(void) noexcept
+        constexpr ~Optional(void)
         {
             switch (tag_) {
                 case Tag::SOME:
@@ -534,7 +534,7 @@ class Optional<void>
         constexpr Optional &operator=(Optional const &o) const = delete;
 
     public:
-        constexpr Optional(Optional &&o) noexcept
+        constexpr Optional(Optional &&o)
         {
             tag_ = o.tag_;
             o.tag_ = Tag::INVAL;
@@ -558,7 +558,7 @@ class Optional<void>
             }
         }
 
-        constexpr Optional &operator=(Optional &&o) noexcept
+        constexpr Optional &operator=(Optional &&o)
         {
             if (this != &o) {
                 tag_ = o.tag_;
@@ -586,7 +586,7 @@ class Optional<void>
         }
 
     private:
-        constexpr Optional(Phantom<Tag::SOME> const) noexcept
+        constexpr Optional(Phantom<Tag::SOME> const)
             : tag_(Tag::SOME)
         {
         }
@@ -598,7 +598,7 @@ class Optional<void>
         // really? Default to None/Inval?
         // But use of move-ctor mandates an inval state, so can have a default.
         // Optional(void) = delete;
-        constexpr Optional(void) noexcept
+        constexpr Optional(void)
             : tag_(Tag::INVAL)
         {
         }
@@ -612,7 +612,7 @@ class Optional<void>
          *
          * @returns an Optional 'wrapping' a None
          */
-        constexpr Optional(NoneT const &) noexcept
+        constexpr Optional(NoneT const &)
             : tag_(Tag::NONE)
         {
         }
@@ -623,7 +623,7 @@ class Optional<void>
          * @returns an Optional 'wrapping' the value created from the values given.
          */
         // Cannot be constexpr since struct has non-trivial dtor..
-        constexpr static Optional Some(void) noexcept
+        constexpr static Optional Some(void)
         {
             return Optional(Phantom<Tag::SOME>());
         }
@@ -632,9 +632,9 @@ class Optional<void>
         // don't use std::function.. it's bloatware..
         // template<typename V>
         // constexpr V match(Tag tag, std::function<V(void)> on_some, std::function<V(void)>
-        // on_none) const noexcept {
+        // on_none) const  {
         template<typename V, typename Fn1, typename Fn2>
-        constexpr V match(Tag tag, Fn1 &&on_some, Fn2 &&on_none) const noexcept
+        constexpr V match(Tag tag, Fn1 &&on_some, Fn2 &&on_none) const
         {
             switch (tag) {
                 case Tag::SOME:
@@ -674,7 +674,7 @@ class Optional<void>
          * `this` is not consumed by the operation.
          * `o` is not consumed by the operation.
          */
-        constexpr bool operator==(Optional const &o) const noexcept
+        constexpr bool operator==(Optional const &o) const
         {
             if (this == &o) { return true; }
             if (tag_ == o.tag_) {
@@ -695,7 +695,7 @@ class Optional<void>
          * `this` is not consumed by the operation.
          * `o` is not consumed by the operation.
          */
-        constexpr bool operator!=(Optional const &o) const noexcept
+        constexpr bool operator!=(Optional const &o) const
         {
             if (this == &o) { return false; }
             if (tag_ == o.tag_) {
@@ -715,7 +715,7 @@ class Optional<void>
          *
          * The optional is not consumed by the operation.
          */
-        constexpr bool is_some(void) const noexcept
+        constexpr bool is_some(void) const
 
         {
             return match<bool>(
@@ -731,7 +731,7 @@ class Optional<void>
          *
          * The optional is not consumed by the operation.
          */
-        constexpr bool is_none(void) const noexcept
+        constexpr bool is_none(void) const
         {
             return match<bool>(
                 tag_,
@@ -764,7 +764,7 @@ class Optional<void>
          *
          * If the optional does not contain a Some, then abort/panic.
          */
-        void unwrap(void) noexcept
+        void unwrap(void)
         {
             return consume<void>([](void) {}, [](void) { nel_panic("not a Some"); });
         }
@@ -777,7 +777,7 @@ class Optional<void>
          * @returns if Some, consumes and returns the value contained by the Optional.
          * @returns if not Some, consumes and returns `other`.
          */
-        void unwrap_or(void) noexcept
+        void unwrap_or(void)
         {
             return consume<void>([](void) {}, [](void) {});
         }
@@ -787,9 +787,9 @@ class Optional<void>
 
     public:
         // template<typename U>
-        // Optional<U> map(std::function<U(void)> fn) noexcept
+        // Optional<U> map(std::function<U(void)> fn)
         template<typename U, typename Fn>
-        Optional<U> map(Fn &&fn) noexcept
+        Optional<U> map(Fn &&fn)
         {
             return consume<Optional<U>>([&fn](void)
                                             -> Optional<U> { return Optional<U>::Some(fn()); },
@@ -798,7 +798,7 @@ class Optional<void>
 
     public:
         // friend std::ostream &operator<<(std::ostream &outs, Optional const &val) {
-        friend Log &operator<<(Log &outs, Optional const &val) noexcept
+        friend Log &operator<<(Log &outs, Optional const &val)
         {
             switch (val.tag_) {
                 case Tag::NONE:

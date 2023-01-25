@@ -55,7 +55,7 @@ struct Node {
         // But, can use realloc for better growing..
         // TODO: handle alignment..
         // An aligning malloc?
-        static void free(Node *old) noexcept
+        static void free(Node *old)
         {
             if (old != nullptr) { old->~Node(); }
             std::free(old);
@@ -73,14 +73,14 @@ struct Node {
         //     // p % alignment == 0?
         //     return ((Length)p & (align-1)) == 0;
         // }
-        static Node *malloc(Count capacity) noexcept
+        static Node *malloc(Count capacity)
         {
             Node *new_n = realloc(nullptr, capacity);
             new_n->len_ = 0;
             return new_n;
         }
 
-        static Node *realloc(Node *const old_n, Count const new_cap) noexcept
+        static Node *realloc(Node *const old_n, Count const new_cap)
         {
             // Size of region to allocate excluding align padding.
             // Assume alignof(T) is included in align of Node.
@@ -109,7 +109,7 @@ struct Node {
 #endif
 
     public:
-        ~Node(void) noexcept
+        ~Node(void)
         {
             for (Index i = 0; i < len(); ++i) {
                 values_[i].~T();
@@ -117,17 +117,17 @@ struct Node {
         }
 
         // No copying..
-        constexpr Node(Node const &) noexcept = delete;
-        constexpr Node &operator=(Node const &) const noexcept = delete;
+        constexpr Node(Node const &) = delete;
+        constexpr Node &operator=(Node const &) const = delete;
 
         // No moving
-        constexpr Node(Node &&) noexcept = delete;
-        constexpr Node &operator=(Node &&) noexcept = delete;
+        constexpr Node(Node &&) = delete;
+        constexpr Node &operator=(Node &&) = delete;
 
 #if 0
         // use placement new to init.
         // want this as a static func so ca return errors..
-        constexpr Node(std::initializer_list<T> &&l) noexcept
+        constexpr Node(std::initializer_list<T> &&l)
         {
             // How to fail if not big enough.
             nel_panic_if_not(l.size() <= capacity(), "not big enough");
@@ -141,7 +141,7 @@ struct Node {
 
     public:
 #if 0
-        static constexpr Optional<Node *> try_from(std::initializer_list<T> &&l) noexcept
+        static constexpr Optional<Node *> try_from(std::initializer_list<T> &&l)
         {
             // cannot use Optional<Node> as size is not known at compile time.
             // TODO: maybe should be try_malloc?
@@ -152,7 +152,7 @@ struct Node {
 #endif
 
         // use placement new to init.
-        constexpr Node(T const &f) noexcept
+        constexpr Node(T const &f)
         {
             // auto it = Slice<T>::from(values_, capacity()).iter();
             // while (true) {
@@ -180,39 +180,39 @@ struct Node {
         }
 
     public:
-        constexpr T *ptr(void) noexcept
+        constexpr T *ptr(void)
         {
             return values_;
         }
 
-        constexpr T const *ptr(void) const noexcept
+        constexpr T const *ptr(void) const
         {
             return values_;
         }
 
     public:
-        constexpr Count capacity(void) const noexcept
+        constexpr Count capacity(void) const
         {
             return alloc_;
         }
 
-        constexpr Length len(void) const noexcept
+        constexpr Length len(void) const
         {
             return len_;
         }
 
-        constexpr bool is_empty(void) const noexcept
+        constexpr bool is_empty(void) const
         {
             return len() == 0;
         }
 
     public:
-        constexpr Slice<T> slice(void) noexcept
+        constexpr Slice<T> slice(void)
         {
             return Slice<T>::from(values_, len());
         }
 
-        constexpr Slice<T const> slice(void) const noexcept
+        constexpr Slice<T const> slice(void) const
         {
             return Slice<T const>::from(values_, len());
         }
@@ -220,7 +220,7 @@ struct Node {
     public:
         // why would a node allow it's items to be destroyed?
         // vector empty/clear..
-        void clear(void) noexcept
+        void clear(void)
         {
             iter().for_each([](T &e) { e.~T(); });
             len_ = 0;
@@ -258,7 +258,7 @@ struct Node {
 
         // rename to try-push_back?
         template<typename... Args>
-        Result<void, T> push_back(Args &&...args) noexcept
+        Result<void, T> push_back(Args &&...args)
         {
             if (len() >= capacity()) {
                 // TODO: don't want to create a T on error though..
@@ -273,7 +273,7 @@ struct Node {
         }
 
 #if 0
-        Result<void, std::initializer_list<T>> push_back(std::initializer_list<T> l) noexcept
+        Result<void, std::initializer_list<T>> push_back(std::initializer_list<T> l)
         {
             typedef std::initializer_list<T> U;
             if (len() + l.size() > capacity()) {
@@ -293,7 +293,7 @@ struct Node {
 #endif
 
         // rename to try_pop_back?
-        Optional<T> pop_back(void) noexcept
+        Optional<T> pop_back(void)
         {
             if (len() == 0) { return Optional<T>::None(); }
 
@@ -306,18 +306,18 @@ struct Node {
         }
 
     public:
-        constexpr auto iter(void) const noexcept
+        constexpr auto iter(void) const
         {
             return slice().iter();
         }
 
-        constexpr auto iter(void) noexcept
+        constexpr auto iter(void)
         {
             return slice().iter();
         }
 
     public:
-        friend Log &operator<<(Log &outs, Node const &v) noexcept
+        friend Log &operator<<(Log &outs, Node const &v)
         {
             outs << v.iter();
             return outs;

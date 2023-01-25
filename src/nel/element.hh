@@ -26,42 +26,42 @@ struct Element {
         Element(Element const &) = delete;
         Element &operator=(Element const &) const = delete;
 
-        constexpr Element(Element &&o) noexcept = default;
-        constexpr Element &operator=(Element &&o) noexcept = default;
+        constexpr Element(Element &&o) = default;
+        constexpr Element &operator=(Element &&o) = default;
 
-        Element(T &&val) noexcept
+        Element(T &&val)
             : value_(forward<T>(val))
         {
         }
 
         template<typename... Args>
-        Element(Args &&...args) noexcept
+        Element(Args &&...args)
             : value_(forward<Args>(args)...)
         {
         }
 
     public:
-        T &&unwrap(void) noexcept
+        T &&unwrap(void)
         {
             return forward<T>(value_);
         }
 
-        T const &get(void) const noexcept
+        T const &get(void) const
         {
             return value_;
         }
 
-        T &get(void) noexcept
+        T &get(void)
         {
             return value_;
         }
 
-        T const &operator*(void) const noexcept
+        T const &operator*(void) const
         {
             return value_;
         }
 
-        T &operator*(void) noexcept
+        T &operator*(void)
         {
             return value_;
         }

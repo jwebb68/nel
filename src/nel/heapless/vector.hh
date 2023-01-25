@@ -69,7 +69,7 @@ struct Vector {
         constexpr Vector &operator=(Vector const &o) = delete;
 
         // Moving ok
-        Vector(Vector &&o) noexcept
+        Vector(Vector &&o)
             : len_(move(o.len_))
         {
             o.len_ = 0;
@@ -78,7 +78,7 @@ struct Vector {
             }
         }
 
-        Vector &operator=(Vector &&o) noexcept
+        Vector &operator=(Vector &&o)
         {
             if (this != &o) {
                 // Expensive to call swap on large inplace object.
@@ -96,7 +96,7 @@ struct Vector {
          *
          * @returns the vector created.
          */
-        static constexpr Vector empty(void) noexcept
+        static constexpr Vector empty(void)
         {
             return Vector();
         }
@@ -113,7 +113,7 @@ struct Vector {
         // vec create using init lists
         // want moving not copying.
         // want copying but not via ctor (may not be poss), so it becomes a try_ returning an err.
-        static constexpr Optional<Vector> try_from(std::initializer_list<T> l) noexcept
+        static constexpr Optional<Vector> try_from(std::initializer_list<T> l)
         {
             if (l.size() != N) { return None; }
             Vector v = Vector::empty();
@@ -132,7 +132,7 @@ struct Vector {
          *
          * @returns the current allocation amount.
          */
-        constexpr Count capacity(void) const noexcept
+        constexpr Count capacity(void) const
         {
             return N;
         }
@@ -142,7 +142,7 @@ struct Vector {
          *
          * @returns the current in use count.
          */
-        constexpr Length len(void) const noexcept
+        constexpr Length len(void) const
         {
             return len_;
         }
@@ -152,7 +152,7 @@ struct Vector {
          *
          * @returns true if in-use is 0, else false.
          */
-        constexpr bool is_empty(void) const noexcept
+        constexpr bool is_empty(void) const
         {
             return len_ == 0;
         }
@@ -160,7 +160,7 @@ struct Vector {
         /**
          * Clears the vector, i.e. removes and destroys all in-use elements.
          */
-        void clear(void) noexcept
+        void clear(void)
         {
             for (Index i = 0; i < len(); ++i) {
                 values_[i].~T();
@@ -177,11 +177,11 @@ struct Vector {
          * @returns reference to the item
          * @warning Will panic if idx is out-of-range for vector
          */
-        constexpr T &operator[](Index idx) noexcept
+        constexpr T &operator[](Index idx)
         {
             return slice()[idx];
         }
-        constexpr T const &operator[](Index idx) const noexcept
+        constexpr T const &operator[](Index idx) const
         {
             return slice()[idx];
         }
@@ -196,12 +196,12 @@ struct Vector {
          * @returns If idx is out-of range, return None.
          * @returns else return ref to item at index..
          */
-        constexpr Optional<T &> try_get(Index idx) noexcept
+        constexpr Optional<T &> try_get(Index idx)
         {
             return slice().try_get(idx);
         }
 
-        constexpr Optional<T const &> try_get(Index idx) const noexcept
+        constexpr Optional<T const &> try_get(Index idx) const
         {
             return slice().try_get(idx);
         }
@@ -215,12 +215,12 @@ struct Vector {
          *
          * @returns a slice over the the vector.
          */
-        constexpr Slice<T> slice(void) noexcept
+        constexpr Slice<T> slice(void)
         {
             return Slice<T>::from(values_, len());
         }
 
-        constexpr Slice<T const> const slice(void) const noexcept
+        constexpr Slice<T const> const slice(void) const
         {
             return Slice<T const>::from(values_, len());
         }
@@ -237,12 +237,12 @@ struct Vector {
          * @returns if e > vec len, clamp to last elem.
          * @returns else return slice over region b..e of vec.
          */
-        constexpr Slice<T> subslice(Index b, Index e) noexcept
+        constexpr Slice<T> subslice(Index b, Index e)
         {
             return slice().subslice(b, e);
         }
 
-        constexpr Slice<T const> subslice(Index b, Index e) const noexcept
+        constexpr Slice<T const> subslice(Index b, Index e) const
         {
             return slice().subslice(b, e);
         }
@@ -262,7 +262,7 @@ struct Vector {
          * @returns true if new capacity is same as current..
          * @returns false otherwise.
          */
-        bool try_reserve(Count new_capacity) noexcept
+        bool try_reserve(Count new_capacity)
         {
             return new_capacity == N;
         }
@@ -278,7 +278,7 @@ struct Vector {
         // on fail still move, but return.
         // allow inplace create instead of move.
         // if fails to store, can create be avoided..?
-        Result<void, T> push_back(T &&val) noexcept
+        Result<void, T> push_back(T &&val)
         {
             if (len() >= capacity()) {
                 // Really? must one be created for err?
@@ -292,7 +292,7 @@ struct Vector {
         }
 
         template<typename... Args>
-        Result<void, T> push_back(Args &&...args) noexcept
+        Result<void, T> push_back(Args &&...args)
         {
             if (len() >= capacity()) {
                 // Really? must one be created for err?
@@ -306,7 +306,7 @@ struct Vector {
         }
 
 #if 0
-        Result<void, std::initializer_list<T>> push_back(std::initializer_list<T> l) noexcept
+        Result<void, std::initializer_list<T>> push_back(std::initializer_list<T> l)
         {
             if (len() + l.size() > capacity()) {
                 // Really? must one be created for err?
@@ -324,11 +324,11 @@ struct Vector {
 #endif
 
         // move contents of vec into this?
-        // Result<void, Vector<T>> push_back(Vector<T> &l) noexcept?
+        // Result<void, Vector<T>> push_back(Vector<T> &l) ?
         // move contents of slice into this?
-        // Result<void, Slice<T>> push_back(Slice<T> &l) noexcept?
+        // Result<void, Slice<T>> push_back(Slice<T> &l) ?
         // move contents of iter into this? into_vec?
-        // Result<void, Slice<T>> push_back(Iter<T> &l) noexcept?
+        // Result<void, Slice<T>> push_back(Iter<T> &l) ?
 
         /**
          * Remove and return the last item in the vec.
@@ -336,7 +336,7 @@ struct Vector {
          * @returns on success: Optional::Some holding the value
          * @returns on fail: Optional::None
          */
-        Optional<T> pop_back(void) noexcept
+        Optional<T> pop_back(void)
         {
             if (len() == 0) { return None; }
             len_ -= 1;
@@ -362,12 +362,12 @@ struct Vector {
          *
          * @returns The iterator.
          */
-        constexpr auto iter(void) noexcept
+        constexpr auto iter(void)
         {
             return slice().iter();
         }
 
-        constexpr auto iter(void) const noexcept
+        constexpr auto iter(void) const
         {
             return slice().iter();
         }
@@ -383,7 +383,7 @@ struct Vector {
         // TODO: replace <<(Log ) with dbgfmt, so separate out from
         // any other form of conversion to charstring.
         // TODO: insert into formatter and not final dest type.
-        friend Log &operator<<(Log &outs, Vector const &v) noexcept
+        friend Log &operator<<(Log &outs, Vector const &v)
         {
             outs << "Vector<" << N << ">(" << v.len() << "){";
             outs << v.iter();

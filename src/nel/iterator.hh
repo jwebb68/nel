@@ -40,13 +40,13 @@ struct Iterator {
         typedef IT InT;
 
     private:
-        constexpr ItT &self(void) noexcept
+        constexpr ItT &self(void)
         {
             ItT &it = static_cast<ItT &>(*this);
             return it;
         }
 
-        constexpr ItT const &self(void) const noexcept
+        constexpr ItT const &self(void) const
         {
             ItT const &it = static_cast<ItT const &>(*this);
             return it;
@@ -56,9 +56,9 @@ struct Iterator {
         Optional<OutT> next(void);
 
     public:
-        constexpr bool is_done(void) const noexcept;
-        void inc(void) noexcept;
-        OutT deref(void) noexcept;
+        constexpr bool is_done(void) const;
+        void inc(void);
+        OutT deref(void);
 
     public:
         /**
@@ -66,9 +66,9 @@ struct Iterator {
          *
          * @param fn func to apply to each item in iterator
          */
-        // void for_each(std::function<void(OutT)> fn) noexcept
+        // void for_each(std::function<void(OutT)> fn)
         template<typename F>
-        void for_each(F &&fn) noexcept
+        void for_each(F &&fn)
         {
             while (true) {
                 Optional<OutT> r = self().next();
@@ -79,9 +79,9 @@ struct Iterator {
             }
         }
 
-        // void for_each2(std::function<void(OutT)> fn) noexcept
+        // void for_each2(std::function<void(OutT)> fn)
         template<typename F>
-        void for_each2(F &&fn) noexcept
+        void for_each2(F &&fn)
         {
             for (; !self().is_done(); self().inc()) {
                 fn(self().deref());
@@ -98,9 +98,9 @@ struct Iterator {
          * @note for fn, acc is the folded value, e is the item to fold into it.
          */
         // template<typename U>
-        // U fold(U &&initial, std::function<void(U &acc, OutT e)> fn) noexcept
+        // U fold(U &&initial, std::function<void(U &acc, OutT e)> fn)
         template<typename U, typename F>
-        U fold(U &&initial, F &&fn) noexcept
+        U fold(U &&initial, F &&fn)
         {
             U acc = move(initial);
             self().for_each([&acc, &fn](OutT v) { fn(acc, v); });
@@ -108,7 +108,7 @@ struct Iterator {
         }
 
         template<typename U, typename F>
-        U fold2(U &&initial, F &&fn) noexcept
+        U fold2(U &&initial, F &&fn)
         {
             U acc = move(initial);
             self().for_each2([&acc, &fn](OutT v) { fn(acc, v); });
@@ -153,21 +153,21 @@ struct Iterator {
 
     public:
         // annoyingly, new iters need to be added to base iter for fluent style extensions
-        FirstNIterator<ItT> first_n(Count const limit) noexcept
+        FirstNIterator<ItT> first_n(Count const limit)
         {
             return FirstNIterator<ItT>(move(self()), limit);
         }
 
         // template<typename U>
-        // MappingIterator<ItT, U> map(std::function<U(OutT &)> fn) noexcept
+        // MappingIterator<ItT, U> map(std::function<U(OutT &)> fn)
         // template<typename Fn, typename U>
         template<typename U, typename Fn>
-        MappingIterator<ItT, U, Fn> map(Fn &&fn) noexcept
+        MappingIterator<ItT, U, Fn> map(Fn &&fn)
         {
             return MappingIterator<ItT, U, Fn>(move(self()), forward<Fn>(fn));
         }
 
-        ChainIterator<ItT> chain(ItT &&other) noexcept
+        ChainIterator<ItT> chain(ItT &&other)
         {
             return ChainIterator<ItT>(move(self()), move(other));
         }
@@ -200,7 +200,7 @@ struct MappingIterator: public Iterator<MappingIterator<It, V, Fn>, typename It:
         FnT fn_;
 
     public:
-        MappingIterator(It &&inner, FnT &&fn) noexcept
+        MappingIterator(It &&inner, FnT &&fn)
             : inner_(move(inner))
             , fn_(forward<FnT>(fn))
         {
@@ -213,7 +213,7 @@ struct MappingIterator: public Iterator<MappingIterator<It, V, Fn>, typename It:
          * @returns Optional::Some if iterator still active.
          * @returns Optional::None if iterator exhausted.
          */
-        Optional<OutT> next(void) noexcept
+        Optional<OutT> next(void)
         {
             // c++ butt ugly language, giving butt ugly constrcts..
             // WTF should I need 'template' here..?
@@ -221,17 +221,17 @@ struct MappingIterator: public Iterator<MappingIterator<It, V, Fn>, typename It:
         }
 
     public:
-        constexpr bool is_done(void) const noexcept
+        constexpr bool is_done(void) const
         {
             return inner_.is_done();
         }
 
-        void inc(void) noexcept
+        void inc(void)
         {
             inner_.inc();
         }
 
-        OutT deref(void) noexcept
+        OutT deref(void)
         {
             return fn_(inner_.deref());
         }
@@ -251,7 +251,7 @@ struct FirstNIterator: public Iterator<FirstNIterator<It>, typename It::InT, typ
         Length const limit_;
 
     public:
-        FirstNIterator(It &&inner, Length limit) noexcept
+        FirstNIterator(It &&inner, Length limit)
             : inner_(move(inner))
             , current_(0)
             , limit_(limit)
@@ -265,24 +265,24 @@ struct FirstNIterator: public Iterator<FirstNIterator<It>, typename It::InT, typ
          * @returns Optional::Some if iterator still active.
          * @returns Optional::None if iterator exhausted.
          */
-        Optional<OutT> next(void) noexcept
+        Optional<OutT> next(void)
         {
             return (current_ < limit_) ? ++current_, inner_.next() : None;
         }
 
     public:
-        constexpr bool is_done(void) const noexcept
+        constexpr bool is_done(void) const
         {
             return (current_ >= limit_);
         }
 
-        void inc(void) noexcept
+        void inc(void)
         {
             inner_.inc();
             ++current_;
         }
 
-        OutT deref(void) noexcept
+        OutT deref(void)
         {
             return inner_.deref();
         }
@@ -298,7 +298,7 @@ struct ChainIterator: public Iterator<ChainIterator<It>, typename It::InT, typen
         It it2_;
 
     public:
-        ChainIterator(It &&it1, It &&it2) noexcept
+        ChainIterator(It &&it1, It &&it2)
             : it1_(move(it1))
             , it2_(move(it2))
         {
@@ -311,18 +311,18 @@ struct ChainIterator: public Iterator<ChainIterator<It>, typename It::InT, typen
          * @returns Optional::Some if iterator still active.
          * @returns Optional::None if iterator exhausted.
          */
-        Optional<OutT> next(void) noexcept
+        Optional<OutT> next(void)
         {
             return it1_.next().or_else([&](void) -> Optional<OutT> { return it2_.next(); });
         }
 
     public:
-        constexpr bool is_done(void) const noexcept
+        constexpr bool is_done(void) const
         {
             return it1_.is_done() && it2_.is_done();
         }
 
-        void inc(void) noexcept
+        void inc(void)
         {
             if (!it1_.is_done()) {
                 it1_.inc();
@@ -331,7 +331,7 @@ struct ChainIterator: public Iterator<ChainIterator<It>, typename It::InT, typen
             }
         }
 
-        OutT deref(void) noexcept
+        OutT deref(void)
         {
             return (!it1_.is_done()) ? it1_.deref() : it2_.deref();
         }
@@ -343,17 +343,17 @@ struct ChainIterator: public Iterator<ChainIterator<It>, typename It::InT, typen
          *
          * @param fn func to apply to each item in iterator
          */
-        // void for_each(std::function<void(OutT)> fn) noexcept
+        // void for_each(std::function<void(OutT)> fn)
         template<typename F>
-        void for_each(F &&fn) noexcept
+        void for_each(F &&fn)
         {
             it1_.for_each(fn);
             it2_.for_each(fn);
         }
 
-        // void for_each2(std::function<void(OutT)> fn) noexcept
+        // void for_each2(std::function<void(OutT)> fn)
         template<typename F>
-        void for_each2(F &&fn) noexcept
+        void for_each2(F &&fn)
         {
             it1_.for_each2(fn);
             it2_.for_each2(fn);

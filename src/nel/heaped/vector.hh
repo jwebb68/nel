@@ -46,7 +46,7 @@ struct Vector {
         VectorNode *item_;
 
     private:
-        constexpr Vector(VectorNode *const n) noexcept
+        constexpr Vector(VectorNode *const n)
             : item_(n)
         {
         }
@@ -62,7 +62,7 @@ struct Vector {
 
         // default ctor is ok since it cannot throw.
         // TODO: but is it 'correct'? i.e. must arrays be created initialised?
-        constexpr Vector(void) noexcept
+        constexpr Vector(void)
             : item_(nullptr)
         {
         }
@@ -72,13 +72,13 @@ struct Vector {
         constexpr Vector &operator=(Vector const &o) = delete;
 
         // moving ok.
-        constexpr Vector(Vector &&o) noexcept
+        constexpr Vector(Vector &&o)
             : item_(move(o.item_))
         {
             o.item_ = nullptr;
         }
 
-        constexpr Vector &operator=(Vector &&o) noexcept
+        constexpr Vector &operator=(Vector &&o)
         {
             if (this != &o) {
                 this->~Vector();
@@ -93,7 +93,7 @@ struct Vector {
          *
          * @returns the vector created.
          */
-        static constexpr Vector empty(void) noexcept
+        static constexpr Vector empty(void)
         {
             return Vector();
         }
@@ -105,7 +105,7 @@ struct Vector {
          *
          * @returns the vector.
          */
-        static constexpr Vector with_capacity(Count cap) noexcept
+        static constexpr Vector with_capacity(Count cap)
         {
             if (cap == 0) { return Vector(); }
             Vector a(VectorNode::malloc(cap));
@@ -120,7 +120,7 @@ struct Vector {
          * @return on success, an Optional::Some holding the created vector.
          * @return on fail: Optional::None
          */
-        static constexpr Optional<Vector> try_from(std::initializer_list<T> &&l) noexcept
+        static constexpr Optional<Vector> try_from(std::initializer_list<T> &&l)
         {
             Vector a = Vector::empty();
             return a.push_back(l).ok().template map<Vector>([&a]() { return move(a); });
@@ -135,7 +135,7 @@ struct Vector {
          *
          * @returns the current allocation amount.
          */
-        constexpr Count capacity(void) const noexcept
+        constexpr Count capacity(void) const
         {
             return (item_ == nullptr) ? 0 : item_->capacity();
         }
@@ -145,7 +145,7 @@ struct Vector {
          *
          * @returns the current in use count.
          */
-        constexpr Length len(void) const noexcept
+        constexpr Length len(void) const
         {
             return (item_ == nullptr) ? 0 : item_->len();
         }
@@ -155,7 +155,7 @@ struct Vector {
          *
          * @returns true if in-use is 0, else false.
          */
-        constexpr bool is_empty(void) const noexcept
+        constexpr bool is_empty(void) const
         {
             return item_ == nullptr || item_->is_empty();
         }
@@ -163,7 +163,7 @@ struct Vector {
         /**
          * Clears the vector, i.e. removes and destroys all in-use elements.
          */
-        void clear(void) noexcept
+        void clear(void)
         {
             if (item_ != nullptr) { item_->clear(); }
         }
@@ -177,13 +177,13 @@ struct Vector {
          * @returns reference to the item
          * @warning Will panic if idx is out-of-range for vector
          */
-        constexpr T &operator[](Index idx) noexcept
+        constexpr T &operator[](Index idx)
         {
             // nel_panic_if(item_ == nullptr, "invalid vector");
             // return *item_[idx];
             return slice()[idx];
         }
-        constexpr T const &operator[](Index idx) const noexcept
+        constexpr T const &operator[](Index idx) const
         {
             // nel_panic_if(item_ == nullptr, "invalid vector");
             // return *item_[idx];
@@ -200,12 +200,12 @@ struct Vector {
          * @returns If idx is out-of range, return None.
          * @returns else return ref to item at index..
          */
-        constexpr Optional<T &> try_get(Index idx) noexcept
+        constexpr Optional<T &> try_get(Index idx)
         {
             return slice().try_get(idx);
         }
 
-        constexpr Optional<T const &> try_get(Index idx) const noexcept
+        constexpr Optional<T const &> try_get(Index idx) const
         {
             return slice().try_get(idx);
         }
@@ -219,12 +219,12 @@ struct Vector {
          *
          * @returns a slice over the the vector.
          */
-        constexpr Slice<T> slice(void) noexcept
+        constexpr Slice<T> slice(void)
         {
             return (item_ == nullptr) ? Slice<T>::empty() : item_->slice();
         }
 
-        constexpr Slice<T const> slice(void) const noexcept
+        constexpr Slice<T const> slice(void) const
         {
             return (item_ == nullptr) ? Slice<T const>::empty()
                                       : reinterpret_cast<VectorNode const *>(item_)->slice();
@@ -242,12 +242,12 @@ struct Vector {
          * @returns if e > vec len, clamp to last elem.
          * @returns else return slice over region b..e of vec.
          */
-        constexpr Slice<T> subslice(Index b, Index e) noexcept
+        constexpr Slice<T> subslice(Index b, Index e)
         {
             return slice().subslice(b, e);
         }
 
-        constexpr Slice<T const> subslice(Index b, Index e) const noexcept
+        constexpr Slice<T const> subslice(Index b, Index e) const
         {
             return slice().subslice(b, e);
         }
@@ -287,7 +287,7 @@ struct Vector {
         // What to return on reserve fail?
         // Result<void, ?> ?
         // Optional<void> aka bool?
-        bool try_reserve(Count new_cap) noexcept
+        bool try_reserve(Count new_cap)
         {
             // TODO: handle alignment issues here.
             // TODO: quanta as a template param?
@@ -329,7 +329,7 @@ struct Vector {
          * @returns if successful, Result<void, T>::Ok()
          * @returns if unsuccessful, Result<void, T>::Err() holding val
          */
-        Result<void, T> push_back(T &&val) noexcept
+        Result<void, T> push_back(T &&val)
         {
             bool ok;
             ok = try_reserve(len() + 1);
@@ -340,7 +340,7 @@ struct Vector {
 
 #if 0
         // TODO: poss not consistent, as not returning Result<void, T>
-        Result<void, std::initializer_list<T>> push_back(std::initializer_list<T> l) noexcept
+        Result<void, std::initializer_list<T>> push_back(std::initializer_list<T> l)
         {
             typedef std::initializer_list<T> U;
             bool ok;
@@ -352,7 +352,7 @@ struct Vector {
 #endif
 
         template<typename... Args>
-        Result<void, T> push_back(Args &&...args) noexcept
+        Result<void, T> push_back(Args &&...args)
         {
             bool ok;
             ok = try_reserve(len() + 1);
@@ -362,11 +362,11 @@ struct Vector {
         }
 
         // move contents of vec into this?
-        // Result<void, Vector<T>> push_back(Vector<T> &l) noexcept?
+        // Result<void, Vector<T>> push_back(Vector<T> &l) ?
         // move contents of slice into this?
-        // Result<void, Slice<T>> push_back(Slice<T> &l) noexcept?
+        // Result<void, Slice<T>> push_back(Slice<T> &l) ?
         // move contents of iter into this? into_vec?
-        // Result<void, Slice<T>> push_back(Iter<T> &l) noexcept?
+        // Result<void, Slice<T>> push_back(Iter<T> &l) ?
 
         /**
          * Remove and return the last item in the vec.
@@ -374,7 +374,7 @@ struct Vector {
          * @returns on success: Optional::Some holding the value
          * @returns on fail: Optional::None
          */
-        Optional<T> pop_back(void) noexcept
+        Optional<T> pop_back(void)
         {
             return (item_ == nullptr) ? Optional<T>::None() : item_->pop_back();
         }
@@ -395,12 +395,12 @@ struct Vector {
          *
          * @returns The iterator.
          */
-        constexpr auto iter(void) const noexcept
+        constexpr auto iter(void) const
         {
             return slice().iter();
         }
 
-        constexpr auto iter(void) noexcept
+        constexpr auto iter(void)
         {
             return slice().iter();
         }
@@ -416,7 +416,7 @@ struct Vector {
         // TODO: replace <<(Log ) with dbgfmt, so separate out from
         // any other form of conversion to charstring.
         // TODO: insert into formatter and not final dest type.
-        friend Log &operator<<(Log &outs, Vector const &v) noexcept
+        friend Log &operator<<(Log &outs, Vector const &v)
         {
             outs << "Vector(" << v.len() << "){";
 #if 1

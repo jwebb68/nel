@@ -82,7 +82,7 @@ class Result
         };
 
     public:
-        constexpr ~Result(void) noexcept
+        constexpr ~Result(void)
         {
             switch (tag_) {
                 case Tag::OK:
@@ -107,7 +107,7 @@ class Result
             }
         }
 
-        constexpr Result(Result &&o) noexcept
+        constexpr Result(Result &&o)
         {
             tag_ = o.tag_;
             o.tag_ = Tag::INVAL;
@@ -130,7 +130,7 @@ class Result
             }
         }
 
-        Result &operator=(Result &&o) noexcept
+        Result &operator=(Result &&o)
         {
             if (this != &o) {
                 tag_ = o.tag_;
@@ -164,33 +164,33 @@ class Result
     public:
         // Don't really want default ctor, but move semantics brought in a
         // inval state, which can be used for it.
-        constexpr Result(void) noexcept
+        constexpr Result(void)
             : tag_(Tag::INVAL)
         {
         }
 
     private:
-        constexpr Result(Phantom<Tag::OK> const, T &&v) noexcept
+        constexpr Result(Phantom<Tag::OK> const, T &&v)
             : tag_(Tag::OK)
             , ok_(forward<T>(v))
         {
         }
 
         template<typename... Args>
-        constexpr Result(Phantom<Tag::OK> const, Args &&...args) noexcept
+        constexpr Result(Phantom<Tag::OK> const, Args &&...args)
             : tag_(Tag::OK)
             , ok_(forward<Args>(args)...)
         {
         }
 
-        constexpr Result(Phantom<Tag::ERR> const, E &&v) noexcept
+        constexpr Result(Phantom<Tag::ERR> const, E &&v)
             : tag_(Tag::ERR)
             , err_(forward<E>(v))
         {
         }
 
         template<typename... Args>
-        constexpr Result(Phantom<Tag::ERR> const, Args &&...args) noexcept
+        constexpr Result(Phantom<Tag::ERR> const, Args &&...args)
             : tag_(Tag::ERR)
             , err_(forward<Args>(args)...)
         {
@@ -204,7 +204,7 @@ class Result
          *
          * @returns a Result 'wrapping' the value given as an ok value.
          */
-        constexpr static Result Ok(T &&val) noexcept
+        constexpr static Result Ok(T &&val)
         {
             return Result(Phantom<Tag::OK>(), forward<T>(val));
         }
@@ -217,7 +217,7 @@ class Result
          * @returns a Result 'wrapping' the values given to construct an ok value inplace.
          */
         template<typename... Args>
-        constexpr static Result Ok(Args &&...args) noexcept
+        constexpr static Result Ok(Args &&...args)
         {
             return Result(Phantom<Tag::OK>(), forward<Args>(args)...);
         }
@@ -229,7 +229,7 @@ class Result
          *
          * @returns a Result 'wrapping' the value given as an err value.
          */
-        constexpr static Result Err(E &&val) noexcept
+        constexpr static Result Err(E &&val)
         {
             return Result(Phantom<Tag::ERR>(), forward<E>(val));
         }
@@ -242,7 +242,7 @@ class Result
          * @returns a Result 'wrapping' the values given to construct an Err value inplace.
          */
         template<typename... Args>
-        constexpr static Result Err(Args &&...args) noexcept
+        constexpr static Result Err(Args &&...args)
         {
             return Result(Phantom<Tag::ERR>(), forward<Args>(args)...);
         }
@@ -251,9 +251,9 @@ class Result
         //  don't use std::function, it's bloatware
         // template<typename V>
         // constexpr V match(Tag tag, std::function<V(void)> &&on_ok, std::function<V(void)>
-        // &&on_err) const noexcept {
+        // &&on_err) const  {
         template<typename V, typename Fn1, typename Fn2>
-        constexpr V match(Tag tag, Fn1 &&on_ok, Fn2 &&on_err) const noexcept
+        constexpr V match(Tag tag, Fn1 &&on_ok, Fn2 &&on_err) const
         {
             switch (tag) {
                 case Tag::OK:
@@ -284,7 +284,7 @@ class Result
          * `this` is not consumed by the operation.
          * `o` is not consumed by the operation.
          */
-        constexpr bool operator==(Result const &o) const noexcept
+        constexpr bool operator==(Result const &o) const
         {
             if (this == &o) { return true; }
             if (tag_ == o.tag_) {
@@ -305,7 +305,7 @@ class Result
          * `this` is not consumed by the operation.
          * `o` is not consumed by the operation.
          */
-        constexpr bool operator!=(Result const &o) const noexcept
+        constexpr bool operator!=(Result const &o) const
         {
             if (this == &o) { return false; }
             if (tag_ == o.tag_) {
@@ -325,7 +325,7 @@ class Result
          *
          * `this` is not consumed by this op.
          */
-        constexpr bool is_ok(void) const noexcept
+        constexpr bool is_ok(void) const
         {
             return match<bool>(
                 tag_,
@@ -340,7 +340,7 @@ class Result
          *
          * `this` is not consumed by this op.
          */
-        constexpr bool is_err(void) const noexcept
+        constexpr bool is_err(void) const
         {
             return match<bool>(
                 tag_,
@@ -370,7 +370,7 @@ class Result
          *
          * `this` is consumed and invalidated after.
          */
-        Optional<T> ok(void) noexcept
+        Optional<T> ok(void)
         {
             return consume<Optional<T>>([this](void) -> Optional<T> { return Some(ok_.unwrap()); },
                                         [](void) -> Optional<T> { return None; });
@@ -384,7 +384,7 @@ class Result
          *
          * `this` is consumed and invalidated after.
          */
-        Optional<E> err(void) noexcept
+        Optional<E> err(void)
         {
             return consume<Optional<E>>([](void) -> Optional<E> { return None; },
                                         [this](void) -> Optional<E> {
@@ -400,7 +400,7 @@ class Result
          *
          * `this` is consumed by the operation.
          */
-        T unwrap(void) noexcept
+        T unwrap(void)
         {
             return consume<T>([this](void) -> T { return ok_.unwrap(); },
                               [](void) -> T { nel_panic("not an OK"); });
@@ -414,7 +414,7 @@ class Result
          *
          * this is consumed by the operation.
          */
-        E unwrap_err(void) noexcept
+        E unwrap_err(void)
         {
             return consume<E>([](void) -> E { nel_panic("not an err"); },
                               [this](void) -> E { return err_.unwrap(); });
@@ -431,7 +431,7 @@ class Result
          * `this` is consumed by the operation.
          * `v` is consumed by the operation.
          */
-        T unwrap_or(T &&v) noexcept
+        T unwrap_or(T &&v)
         {
             return consume<T>([this](void) -> T { return ok_.unwrap(); },
                               [&v](void) -> T { return forward<T>(v); });
@@ -449,7 +449,7 @@ class Result
          * `args` are consumed by the operation.
          */
         template<typename... Args>
-        T unwrap_or(Args &&...args) noexcept
+        T unwrap_or(Args &&...args)
         {
             return consume<T>([this](void) -> T { return ok_.unwrap(); },
                               [&args...](void) -> T { return T(forward<Args>(args)...); });
@@ -466,7 +466,7 @@ class Result
          * `this` is consumed by the operation.
          * `v` is consumed by the operation.
          */
-        E unwrap_err_or(E &&v) noexcept
+        E unwrap_err_or(E &&v)
         {
             return consume<E>([&v](void) -> E { return forward<E>(v); },
                               [this](void) -> E { return err_.unwrap(); });
@@ -484,7 +484,7 @@ class Result
          * `args` are consumed by the operation.
          */
         template<typename... Args>
-        E unwrap_err_or(Args &&...args) noexcept
+        E unwrap_err_or(Args &&...args)
         {
             return consume<E>([&args...](void) -> E { return E(forward<Args>(args)...); },
                               [this](void) -> E { return err_.unwrap(); });
@@ -501,9 +501,9 @@ class Result
          */
         // would this be better as a free func?
         // template<class U>
-        // Result<U, E> map(std::function<U(T &&)> fn) noexcept
+        // Result<U, E> map(std::function<U(T &&)> fn)
         template<class U, typename Fn>
-        Result<U, E> map(Fn &&fn) noexcept
+        Result<U, E> map(Fn &&fn)
         {
             return consume<
                 Result<U, E>>([this, &fn](void)
@@ -524,9 +524,9 @@ class Result
          */
         // would this be better as a free func?
         // template<class F>
-        // Result<T, F> map_err(std::function<F(E &&)> fn) noexcept
+        // Result<T, F> map_err(std::function<F(E &&)> fn)
         template<class F, typename Fn>
-        Result<T, F> map_err(Fn &&fn) noexcept
+        Result<T, F> map_err(Fn &&fn)
         {
             // TODO: remove need to explicitly cast to result in each of the
             //       branches.. i.e. the Result<U,E>() bit, should be Ok(..) or Err(..)
@@ -540,7 +540,7 @@ class Result
 
     public:
         // friend std::ostream &operator<<(std::ostream &outs, Result const &val) {
-        friend Log &operator<<(Log &outs, Result const &val) noexcept
+        friend Log &operator<<(Log &outs, Result const &val)
         {
             switch (val.tag_) {
                 case Tag::OK:
@@ -585,7 +585,7 @@ class Result<void, E>
         };
 
     public:
-        constexpr ~Result(void) noexcept
+        constexpr ~Result(void)
         {
             switch (tag_) {
                 case Tag::OK:
@@ -609,7 +609,7 @@ class Result<void, E>
             }
         }
 
-        constexpr Result(Result &&o) noexcept
+        constexpr Result(Result &&o)
         {
             tag_ = o.tag_;
             o.tag_ = Tag::INVAL;
@@ -626,7 +626,7 @@ class Result<void, E>
             }
         }
 
-        constexpr Result &operator=(Result &&o) noexcept
+        constexpr Result &operator=(Result &&o)
         {
             if (this != &o) {
                 tag_ = o.tag_;
@@ -652,25 +652,25 @@ class Result<void, E>
 
         // Don't really want default ctor, but move semantics brought in a
         // inval state, which can be used for it.
-        constexpr Result(void) noexcept
+        constexpr Result(void)
             : tag_(Tag::INVAL)
         {
         }
 
     private:
-        constexpr Result(Phantom<Tag::OK> const) noexcept
+        constexpr Result(Phantom<Tag::OK> const)
             : tag_(Tag::OK)
         {
         }
 
-        constexpr Result(Phantom<Tag::ERR> const, E &&v) noexcept
+        constexpr Result(Phantom<Tag::ERR> const, E &&v)
             : tag_(Tag::ERR)
             , err_(forward<E>(v))
         {
         }
 
         template<typename... Args>
-        constexpr Result(Phantom<Tag::ERR> const, Args &&...args) noexcept
+        constexpr Result(Phantom<Tag::ERR> const, Args &&...args)
             : tag_(Tag::ERR)
             , err_(forward<Args>(args)...)
         {
@@ -684,12 +684,12 @@ class Result<void, E>
          *
          * @returns a Result 'wrapping' the value given as an ok value.
          */
-        constexpr static Result Ok(void) noexcept
+        constexpr static Result Ok(void)
         {
             return Result(Phantom<Tag::OK>());
         }
 
-        constexpr static Result Err(E &&v) noexcept
+        constexpr static Result Err(E &&v)
         {
             return Result(Phantom<Tag::ERR>(), forward<E>(v));
         }
@@ -702,7 +702,7 @@ class Result<void, E>
          * @returns a Result 'wrapping' the values given to construct an Err value inplace.
          */
         template<typename... Args>
-        constexpr static Result Err(Args &&...args) noexcept
+        constexpr static Result Err(Args &&...args)
         {
             return Result(Phantom<Tag::ERR>(), forward<Args>(args)...);
         }
@@ -711,9 +711,9 @@ class Result<void, E>
         // template<typename V>
         // constexpr V
         // match(Tag tag, std::function<V(void)> on_ok, std::function<V(void)> on_err) const
-        // noexcept
+        //
         template<typename V, typename Fn1, typename Fn2>
-        constexpr V match(Tag tag, Fn1 &&on_ok, Fn2 &&on_err) const noexcept
+        constexpr V match(Tag tag, Fn1 &&on_ok, Fn2 &&on_err) const
         {
             switch (tag) {
                 case Tag::OK:
@@ -744,7 +744,7 @@ class Result<void, E>
          * `this` is not consumed by the operation.
          * `o` is not consumed by the operation.
          */
-        constexpr bool operator==(Result const &o) const noexcept
+        constexpr bool operator==(Result const &o) const
         {
             if (this == &o) { return true; }
             if (tag_ == o.tag_) {
@@ -765,7 +765,7 @@ class Result<void, E>
          * `this` is not consumed by the operation.
          * `o` is not consumed by the operation.
          */
-        constexpr bool operator!=(Result const &o) const noexcept
+        constexpr bool operator!=(Result const &o) const
         {
             if (this == &o) { return false; }
             if (tag_ == o.tag_) {
@@ -785,7 +785,7 @@ class Result<void, E>
          *
          * `this` is not consumed by this op.
          */
-        constexpr bool is_ok(void) const noexcept
+        constexpr bool is_ok(void) const
         {
             return match<bool>(
                 tag_,
@@ -800,7 +800,7 @@ class Result<void, E>
          *
          * `this` is not consumed by this op.
          */
-        constexpr bool is_err(void) const noexcept
+        constexpr bool is_err(void) const
         {
             return match<bool>(
                 tag_,
@@ -828,7 +828,7 @@ class Result<void, E>
          *
          * `this` is consumed and invalidated after.
          */
-        Optional<void> ok(void) noexcept
+        Optional<void> ok(void)
         {
             return consume<Optional<void>>([](void) -> Optional<void> { return Some(); },
                                            [](void) -> Optional<void> { return None; });
@@ -842,7 +842,7 @@ class Result<void, E>
          *
          * `this` is consumed and invalidated after.
          */
-        Optional<E> err(void) noexcept
+        Optional<E> err(void)
         {
             return consume<Optional<E>>([](void) -> Optional<E> { return None; },
                                         [this](void) -> Optional<E> {
@@ -858,7 +858,7 @@ class Result<void, E>
          *
          * `this` is consumed by the operation.
          */
-        void unwrap(void) noexcept
+        void unwrap(void)
         {
             return consume<void>([](void) {}, [](void) { nel_panic("not an ok"); });
         }
@@ -871,7 +871,7 @@ class Result<void, E>
          *
          * `this` is consumed by the operation.
          */
-        E unwrap_err(void) noexcept
+        E unwrap_err(void)
         {
             return consume<E>([](void) -> E { nel_panic("not an err"); },
                               [this](void) -> E { return err_.unwrap(); });
@@ -888,12 +888,12 @@ class Result<void, E>
          * `this` is consumed by the operation.
          * `o` is consumed by the operation.
          */
-        void unwrap_or(void) noexcept
+        void unwrap_or(void)
         {
             return consume<void>([](void) {}, [](void) {});
         }
 
-        E unwrap_err_or(E &&v) noexcept
+        E unwrap_err_or(E &&v)
         {
             return consume<E>([&v](void) -> E { forward<E>(v); },
                               [this](void) -> E { return err_.unwrap(); });
@@ -911,7 +911,7 @@ class Result<void, E>
          * `args` are consumed by the operation.
          */
         template<typename... Args>
-        E unwrap_err_or(Args &&...args) noexcept
+        E unwrap_err_or(Args &&...args)
         {
             return consume<E>([&args...](void) -> E { return E(forward<Args>(args)...); },
                               [this](void) -> E { return err_.unwrap(); });
@@ -928,9 +928,9 @@ class Result<void, E>
          */
         // would this be better as a free func?
         // template<class U>
-        // Result<U, E> map(std::function<U(void)> fn) noexcept
+        // Result<U, E> map(std::function<U(void)> fn)
         template<typename U, typename Fn>
-        Result<U, E> map(Fn &&fn) noexcept
+        Result<U, E> map(Fn &&fn)
         {
             // TODO: remove need to explicitly cast to result in each of the
             //       branches.. i.e. the Result<U,E>() bit, should be Ok(..) or Err(..)
@@ -952,9 +952,9 @@ class Result<void, E>
          */
         // would this be better as a free func?
         // template<class F>
-        // Result<void, F> map_err(std::function<F(E &&)> fn) noexcept
+        // Result<void, F> map_err(std::function<F(E &&)> fn)
         template<typename F, typename Fn>
-        Result<void, F> map_err(Fn &&fn) noexcept
+        Result<void, F> map_err(Fn &&fn)
         {
             // TODO: remove need to explicitly cast to result in each of the
             //       branches.. i.e. the Result<U,E>() bit, should be Ok(..), Err(..)
@@ -965,7 +965,7 @@ class Result<void, E>
         }
 
     public:
-        friend Log &operator<<(Log &outs, Result const &val) noexcept
+        friend Log &operator<<(Log &outs, Result const &val)
         {
             switch (val.tag_) {
                 case Tag::OK:

@@ -32,25 +32,25 @@ struct Slice {
         Length len_;
 
     private:
-        constexpr Slice(void) noexcept
+        constexpr Slice(void)
             : content_(nullptr)
             , len_(0)
         {
         }
 
-        constexpr Slice(std::nullptr_t, Length l) noexcept
+        constexpr Slice(std::nullptr_t, Length l)
             : content_(nullptr)
             , len_(l)
         {
         }
 
-        constexpr Slice(T p[], Length len) noexcept
+        constexpr Slice(T p[], Length len)
             : content_(p)
             , len_(len)
         {
         }
 
-        constexpr Slice(T *const b, T *const e) noexcept
+        constexpr Slice(T *const b, T *const e)
             : content_(b)
             , len_(e - b)
         {
@@ -58,18 +58,18 @@ struct Slice {
 
     public:
         // Copying a slice is ok as it does not own the data it points to.
-        constexpr Slice(Slice const &) noexcept = default;
-        constexpr Slice &operator=(Slice const &) noexcept = default;
+        constexpr Slice(Slice const &) = default;
+        constexpr Slice &operator=(Slice const &) = default;
 
         // moving a slice is ok.
-        constexpr Slice(Slice &&o) noexcept = default;
-        constexpr Slice &operator=(Slice &&o) noexcept = default;
+        constexpr Slice(Slice &&o) = default;
+        constexpr Slice &operator=(Slice &&o) = default;
 
     public:
         /**
          * Create an empty slice.
          */
-        static constexpr Slice empty(void) noexcept
+        static constexpr Slice empty(void)
         {
             return Slice();
         }
@@ -79,12 +79,12 @@ struct Slice {
          *
          * Slice is invalidated if p goes out of scope or is deleted/destroyed.
          */
-        static constexpr Slice from(T p[], Length len) noexcept
+        static constexpr Slice from(T p[], Length len)
         {
             return Slice(p, len);
         }
 
-        static constexpr Slice from(T *const b, T *const e) noexcept
+        static constexpr Slice from(T *const b, T *const e)
         {
             return Slice(b, e);
         }
@@ -95,7 +95,7 @@ struct Slice {
          *
          * @returns true if slice is empty, false otherwise.
          */
-        constexpr bool is_empty(void) const noexcept
+        constexpr bool is_empty(void) const
         {
             return len() == 0;
         }
@@ -105,7 +105,7 @@ struct Slice {
          *
          * @returns number of elements in the slice.
          */
-        constexpr Length len(void) const noexcept
+        constexpr Length len(void) const
         {
             return len_;
         }
@@ -120,12 +120,12 @@ struct Slice {
          * @warning Will panic if idx is out-of-range for slice
          */
         // TODO: use try_get as index access can fail.
-        constexpr T &operator[](Index idx) noexcept
+        constexpr T &operator[](Index idx)
         {
             nel_panic_if_not(idx < len(), "index out of range");
             return content_[idx];
         }
-        constexpr T const &operator[](Index idx) const noexcept
+        constexpr T const &operator[](Index idx) const
         {
             nel_panic_if_not(idx < len(), "index out of range");
             return content_[idx];
@@ -141,12 +141,12 @@ struct Slice {
          * @returns If idx is out-of range, return None.
          * @returns else return ref to item at index..
          */
-        constexpr Optional<T &> try_get(Index idx) noexcept
+        constexpr Optional<T &> try_get(Index idx)
         {
             return (idx >= len_) ? None : Optional<T &>::Some(content_[idx]);
         }
 
-        constexpr Optional<T const &> try_get(Index idx) const noexcept
+        constexpr Optional<T const &> try_get(Index idx) const
         {
             return (idx >= len_) ? None : Optional<T const &>::Some(content_[idx]);
         }
@@ -158,7 +158,7 @@ struct Slice {
          * T must be bitcopyable (i.e. not need special copy semantics.
          * value at each location is not destroyed.
          */
-        void fill(T const &f) noexcept
+        void fill(T const &f)
         {
             nel::memset(content_, f, len());
         }
@@ -180,7 +180,7 @@ struct Slice {
          * @returns if e > array len, clamp to last elem.
          * @returns else return slice over region b..e of slice.
          */
-        Slice<T> subslice(Index b, Index e) noexcept
+        Slice<T> subslice(Index b, Index e)
         {
             if (b >= e) { return Slice<T>::empty(); }
             if (b >= len_) { return Slice<T>::empty(); }
@@ -188,7 +188,7 @@ struct Slice {
             return Slice(&content_[b], e - b);
         }
 
-        Slice<T const> subslice(Index b, Index e) const noexcept
+        Slice<T const> subslice(Index b, Index e) const
         {
             if (b >= e) { return Slice<T const>::empty(); }
             if (b >= len_) { return Slice<T const>::empty(); }
@@ -198,18 +198,18 @@ struct Slice {
 
     public:
         // TODO: use try_copy_from as operation can fail.
-        // Result<void, ??> try_copy_from(Slice const &o) noexcept ?
-        // Optional<void> try_copy_from(Slice const &o) noexcept ?
-        // void copy_from(Slice const &o) noexcept
+        // Result<void, ??> try_copy_from(Slice const &o)  ?
+        // Optional<void> try_copy_from(Slice const &o)  ?
+        // void copy_from(Slice const &o)
         // {
         //     nel_panic_if(len() != o.len(), "not same size");
         //     nel::memcpy(content_, o.content_, len());
         // }
 
         // TODO: use try_move_from as operation can fail.
-        // Result<void, ??> try_move_from(Slice &o) noexcept ?
-        // Optional<void> try_move_from(Slice &o) noexcept ?
-        // void move_from(Slice &o) noexcept
+        // Result<void, ??> try_move_from(Slice &o)  ?
+        // Optional<void> try_move_from(Slice &o)  ?
+        // void move_from(Slice &o)
         // {
         //     nel_panic_if(len() != o.len(), "not same size");
         //     nel::memmove(content_, o.content_, len());
@@ -222,14 +222,14 @@ struct Slice {
          */
         typedef SliceIterator<T> IteratorMut;
 
-        constexpr SliceIterator<T> iter(void) noexcept
+        constexpr SliceIterator<T> iter(void)
         {
             return SliceIterator<T>(content_, len());
         }
 
         typedef SliceIterator<T const> Iterator;
 
-        constexpr SliceIterator<T const> const iter(void) const noexcept
+        constexpr SliceIterator<T const> const iter(void) const
         {
             return SliceIterator<T const>(content_, len());
         }
@@ -248,7 +248,7 @@ struct Slice {
         // instead of insert into log, can it format into ? which log implements?
         // so it doesn't matter about the destination..
         // and can format-insert into any char endpoint.
-        friend Log &operator<<(Log &outs, Slice const &v) noexcept
+        friend Log &operator<<(Log &outs, Slice const &v)
         {
             outs << "Slice(" << v.len() << "){";
 #if 0
@@ -302,13 +302,13 @@ class SliceIterator: public Iterator<SliceIterator<T>, T &, T &>
         // copy ok
         // move ok
     public:
-        constexpr SliceIterator(T arr[], Count len) noexcept
+        constexpr SliceIterator(T arr[], Count len)
             : b_(arr)
             , e_(arr + len)
         {
         }
 
-        constexpr SliceIterator(T *const b, T *const e) noexcept
+        constexpr SliceIterator(T *const b, T *const e)
             : b_(b)
             , e_(e)
         {
@@ -325,7 +325,7 @@ class SliceIterator: public Iterator<SliceIterator<T>, T &, T &>
         // if T == U then coping.. want to avoid.
         // mutating.non-consuming
         // non-mutating.non-consuming
-        Optional<OutT> next(void) noexcept
+        Optional<OutT> next(void)
         {
             // Some() takes a move, so want to move the reference into the optional.
             // ref(),
@@ -334,17 +334,17 @@ class SliceIterator: public Iterator<SliceIterator<T>, T &, T &>
         }
 
     public:
-        constexpr bool is_done(void) const noexcept
+        constexpr bool is_done(void) const
         {
             return (b_ == e_);
         }
 
-        void inc(void) noexcept
+        void inc(void)
         {
             ++b_;
         }
 
-        OutT deref(void) noexcept
+        OutT deref(void)
         {
             return *b_;
         }

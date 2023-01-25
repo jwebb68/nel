@@ -13,32 +13,32 @@ namespace nel
  * copy memory [s,s+n) to [d,d+n)
  * Caller is required to make sure there is enough space allocated in d
  */
-void memcpy(uint8_t *const d, uint8_t const *const s, Length const n) noexcept;
+void memcpy(uint8_t *const d, uint8_t const *const s, Length const n);
 
 /**
  * set memory [d,d+n) to value s
  * Caller is required to make sure there is enough space allocated in d
  */
-void memset(uint8_t *const d, uint8_t const s, Length const n) noexcept;
+void memset(uint8_t *const d, uint8_t const s, Length const n);
 
 /**
  * move memory [s,s+n) to [d,d+n)
  * Caller is required to make sure there is enough space allocated in d
  * [s,s+n) is set to default debug pattern (0xa5)
  */
-void memmove(uint8_t *const d, uint8_t *const s, Length const n) noexcept;
+void memmove(uint8_t *const d, uint8_t *const s, Length const n);
 
 /**
  * bytewise swap memory [s,s+n) with [d,d+n)
  */
-void memswap(uint8_t *const d, uint8_t *const s, Length const n) noexcept;
+void memswap(uint8_t *const d, uint8_t *const s, Length const n);
 
 /**
  * move items [s,s+n) to [d,d+n)
  * caller must ensure there is enough space in d.
  */
 template<typename T>
-void memmove(T *d, T *s, Length n) noexcept
+void memmove(T *d, T *s, Length n)
 {
     for (Index i = 0; i < n; ++i) {
         d[i] = move(s[i]);
@@ -50,7 +50,7 @@ void memmove(T *d, T *s, Length n) noexcept
  * caller must ensure there is enough space in d.
  */
 template<typename T>
-void memcpy(T *const d, T const *const s, Length n) noexcept
+void memcpy(T *const d, T const *const s, Length n)
 {
     for (Index i = 0; i < n; ++i) {
         d[i] = s[i];
@@ -58,7 +58,7 @@ void memcpy(T *const d, T const *const s, Length n) noexcept
 }
 
 template<typename T>
-bool try_memcpy(T *const d, T const *const s, Length n) noexcept
+bool try_memcpy(T *const d, T const *const s, Length n)
 {
     for (Index i = 0; i < n; ++i) {
         auto r = T::try_copy(s[i]);
@@ -81,7 +81,7 @@ bool try_memcpy(T *const d, T const *const s, Length n) noexcept
  * caller must ensure there is enough space in d.
  */
 template<typename T>
-void memset(T *const d, T const &s, Length n) noexcept
+void memset(T *const d, T const &s, Length n)
 {
     for (Index i = 0; i < n; ++i) {
         d[i] = s;
@@ -89,7 +89,7 @@ void memset(T *const d, T const &s, Length n) noexcept
 }
 
 template<typename T>
-bool try_memset(T *const d, T const &s, Length n) noexcept
+bool try_memset(T *const d, T const &s, Length n)
 {
     for (Index i = 0; i < n; ++i) {
         auto r = T::try_copy(s);
@@ -111,13 +111,13 @@ bool try_memset(T *const d, T const &s, Length n) noexcept
  * swap items [s,s+n) with [d,d+n)
  */
 template<typename T>
-void swap(T &d, T &s) noexcept
+void swap(T &d, T &s)
 {
     d.swap(s);
 }
 
 template<typename T>
-void memswap(T *const d, T *const s, Length n) noexcept
+void memswap(T *const d, T *const s, Length n)
 {
     for (Index i = 0; i < n; ++i) {
         swap(*d, *s);

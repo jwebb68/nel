@@ -88,7 +88,7 @@ struct Queue {
             o.wp_ = o.rp_ = 0;
         }
 
-        constexpr Queue &operator=(Queue &&o) noexcept
+        constexpr Queue &operator=(Queue &&o)
         {
             if (this != &o) {
                 this->~Queue();
@@ -103,7 +103,7 @@ struct Queue {
          *
          * @returns the queue created.
          */
-        constexpr static Queue empty(void) noexcept
+        constexpr static Queue empty(void)
         {
             return Queue();
         }
@@ -179,7 +179,7 @@ struct Queue {
     public:
         typedef ChainIterator<SliceIterator<T>> QueueIteratorMut;
 
-        QueueIteratorMut iter(void) noexcept
+        QueueIteratorMut iter(void)
         {
             if (len() == 0) {
                 auto s1 = Slice<T>::empty();
@@ -198,7 +198,7 @@ struct Queue {
 
         typedef ChainIterator<SliceIterator<T const>> QueueIterator;
 
-        QueueIterator iter(void) const noexcept
+        QueueIterator iter(void) const
         {
             if (len() == 0) {
                 auto s1 = Slice<T const>::empty();
@@ -226,7 +226,7 @@ struct Queue {
         // TODO: replace <<(Log ) with dbgfmt, so separate out from
         // any other form of conversion to charstring.
         // TODO: insert into formatter and not final dest type.
-        friend Log &operator<<(Log &outs, Queue const &v) noexcept
+        friend Log &operator<<(Log &outs, Queue const &v)
         {
             outs << "Queue<" << N << ">(" << v.len() << "){";
             outs << v.iter();

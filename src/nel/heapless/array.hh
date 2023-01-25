@@ -83,14 +83,14 @@ struct Array {
         constexpr Array &operator=(Array const &o) = delete;
 
         // Moving allowed.
-        constexpr Array(Array &&o) noexcept
+        constexpr Array(Array &&o)
         {
             for (Index i = 0; i < N; ++i) {
                 new (&values_[i]) T(move(o.values_[i]));
             }
         }
 
-        constexpr Array &operator=(Array &&o) noexcept
+        constexpr Array &operator=(Array &&o)
         {
             if (this != &o) {
                 // Expensive to move o to temp, then to swap o and this (using moves)
@@ -140,7 +140,7 @@ struct Array {
         // want moving not copying.
         // want copying but not via ctor (may not be poss), so it becomes a try_ returning an err.
         // If type has copy, then could fill? use slice for that..
-        static constexpr Optional<Array> try_from(std::initializer_list<T> l) noexcept
+        static constexpr Optional<Array> try_from(std::initializer_list<T> l)
         {
             // TODO: can the array create be made inplace into the optional?
             // prob only if initlist ctor is public, which I don't want.
@@ -154,7 +154,7 @@ struct Array {
          *
          * @returns true if array is empty, false otherwise.
          */
-        constexpr bool is_empty(void) const noexcept
+        constexpr bool is_empty(void) const
         {
             return len() == 0;
         }
@@ -183,11 +183,11 @@ struct Array {
          * @warning Will panic if idx is out-of-range for array.
          */
         // as array access can fail, redo to try_get() and return v or error
-        constexpr T &operator[](Index idx) noexcept
+        constexpr T &operator[](Index idx)
         {
             return slice()[idx];
         }
-        constexpr T const &operator[](Index idx) const noexcept
+        constexpr T const &operator[](Index idx) const
         {
             return slice()[idx];
         }
@@ -201,12 +201,12 @@ struct Array {
          * @returns If idx is out-of range, return None.
          * @returns else return ref to item at index..
          */
-        constexpr Optional<T &> try_get(Index idx) noexcept
+        constexpr Optional<T &> try_get(Index idx)
         {
             return slice().try_get(idx);
         }
 
-        constexpr Optional<T const &> try_get(Index idx) const noexcept
+        constexpr Optional<T const &> try_get(Index idx) const
         {
             return slice().try_get(idx);
         }
@@ -244,12 +244,12 @@ struct Array {
          * @returns if e > array len, clamp to last elem.
          * @returns else return slice over region b..e of array.
          */
-        constexpr Slice<T> subslice(Index b, Index e) noexcept
+        constexpr Slice<T> subslice(Index b, Index e)
         {
             return slice().subslice(b, e);
         }
 
-        constexpr Slice<T const> subslice(Index b, Index e) const noexcept
+        constexpr Slice<T const> subslice(Index b, Index e) const
         {
             return slice().subslice(b, e);
         }
@@ -282,7 +282,7 @@ struct Array {
         // TODO: replace <<(Log ) with dbgfmt, so separate out from
         // any other form of conversion to charstring.
         // TODO: insert into formatter and not final dest type.
-        friend Log &operator<<(Log &outs, Array const &v) noexcept
+        friend Log &operator<<(Log &outs, Array const &v)
         {
             outs << "Array<" << v.len() << ">{";
             outs << v.iter();
