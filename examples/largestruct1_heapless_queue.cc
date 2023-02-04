@@ -3,6 +3,7 @@
 
 #include <nel/heapless/queue.hh>
 #include <nel/log.hh>
+#include <nel/memory.hh>
 #include <nel/defs.hh>
 
 typedef nel::heapless::Queue<U8Buf<256>, 5> Queue1;
@@ -19,7 +20,7 @@ void ex2()
     auto queue1 = Queue1::empty();
 
     U8Buf<256> v = U8Buf<256>((uint8_t)0x66);
-    queue1.put(move(v));
+    queue1.push(nel::move(v)).is_ok();
 
     nel::log << queue1 << '\n';
 }
@@ -28,11 +29,11 @@ void ex3()
 {
     auto queue1 = Queue1::empty();
 
-    queue1.put((uint8_t)0x67);
+    queue1.push((uint8_t)0x67).is_ok();
 
     nel::log << queue1 << '\n';
 
-    auto e = queue1.get();
+    auto e = queue1.pop();
     nel::log << e << '\n';
 }
 

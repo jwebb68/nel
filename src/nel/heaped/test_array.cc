@@ -1,6 +1,8 @@
 // -*- mode: c++; indent-tabs-mode: nil; tab-width: 4 -*-
 #include <nel/heaped/array.hh>
 
+#include <nel/memory.hh> // nel::move()
+
 #include <catch2/catch.hpp>
 
 TEST_CASE("heaped::Array::empty", "[heaped][array]")
@@ -24,21 +26,21 @@ TEST_CASE("heaped::Array::move", "[heaped][array]")
     nel::heaped::Array<int> a1 = nel::heaped::Array<int>::empty();
     // nel::heaped::Array<int> a2 = nel::heaped::Array<int>::try_from({2}).unwrap();
     auto a2 = nel::heaped::Array<int>::filled(2, 1);
-    a2 = move(a1);
+    a2 = nel::move(a1);
     REQUIRE(a1.is_empty());
     REQUIRE(a2.is_empty());
 
     // not empty array can be moved
     // auto a3 = nel::heaped::Array<int>::try_from({2}).unwrap();
     auto a3 = nel::heaped::Array<int>::filled(2, 4);
-    a2 = move(a3);
+    a2 = nel::move(a3);
     REQUIRE(!a2.is_empty());
     REQUIRE(a3.is_empty());
 
     // testing const array moving, but should fail at compile time.
     // auto const c1 = nel::heaped::Array<int>::empty();
     // auto const c2 = nel::heaped::Array<int>::filled(2,1);
-    // c2 = move(c1);
+    // c2 = nel::move(c1);
 }
 
 #if 0
@@ -199,16 +201,16 @@ TEST_CASE("heaped::Array::slice()", "[heaped][array]")
     REQUIRE(sa3.len() == 1);
 }
 
-TEST_CASE("heaped::Array::subslice(b,e)", "[heaped][array]")
+TEST_CASE("heaped::Array::slice(b,e)", "[heaped][array]")
 {
     {
         // sub slice of empty array is empty.
         auto a1 = nel::heaped::Array<int>::empty();
-        auto sa1 = a1.subslice(0, 1);
+        auto sa1 = a1.slice(0, 1);
         REQUIRE(sa1.is_empty());
 
         auto const c1 = nel::heaped::Array<int>::empty();
-        auto sc1 = c1.subslice(0, 1);
+        auto sc1 = c1.slice(0, 1);
         REQUIRE(sc1.is_empty());
     }
 
@@ -218,25 +220,25 @@ TEST_CASE("heaped::Array::subslice(b,e)", "[heaped][array]")
         auto a1 = nel::heaped::Array<int>::filled(3, 3);
 
         // auto a1 = nel::heaped::Array<int>::filled(3, 3);
-        auto sa1 = a1.subslice(0, 0);
+        auto sa1 = a1.slice(0, 0);
         REQUIRE(sa1.is_empty());
         REQUIRE(sa1.len() == 0);
 
-        // in-range subslice is not empty
-        auto sa12 = a1.subslice(0, 1);
+        // in-range slice is not empty
+        auto sa12 = a1.slice(0, 1);
         REQUIRE(!sa12.is_empty());
         REQUIRE(sa12.len() == 1);
 
-        // out-of-range subslice is empty
-        auto sa13 = a1.subslice(3, 4);
+        // out-of-range slice is empty
+        auto sa13 = a1.slice(3, 4);
         REQUIRE(sa13.is_empty());
 
-        // partially out-of-range subslice is not empty, and has only up to valid items
-        auto sa14 = a1.subslice(2, 4);
+        // partially out-of-range slice is not empty, and has only up to valid items
+        auto sa14 = a1.slice(2, 4);
         REQUIRE(!sa14.is_empty());
 
-        // partially out-of-range subslice is not empty, and has only up to valid items
-        auto sa15 = a1.subslice(0, 4);
+        // partially out-of-range slice is not empty, and has only up to valid items
+        auto sa15 = a1.slice(0, 4);
         REQUIRE(!sa15.is_empty());
         REQUIRE(sa15.len() == 3);
     }
@@ -244,22 +246,22 @@ TEST_CASE("heaped::Array::subslice(b,e)", "[heaped][array]")
     {
         auto const c1 = nel::heaped::Array<int>::filled(3, 3);
         // auto const c1 = nel::heaped::Array<int>::filled(5, 3);
-        auto sc1 = c1.subslice(0, 0);
+        auto sc1 = c1.slice(0, 0);
         REQUIRE(sc1.is_empty());
 
         // sub slice of non-empty array is not empty.
-        auto sc2 = c1.subslice(0, 1);
+        auto sc2 = c1.slice(0, 1);
         REQUIRE(!sc2.is_empty());
         REQUIRE(sc2.len() == 1);
 
-        auto sc3 = c1.subslice(3, 4);
+        auto sc3 = c1.slice(3, 4);
         REQUIRE(sc3.is_empty());
 
-        auto sc4 = c1.subslice(2, 4);
+        auto sc4 = c1.slice(2, 4);
         REQUIRE(!sc4.is_empty());
         REQUIRE(sc4.len() == 1);
 
-        auto sc5 = c1.subslice(0, 4);
+        auto sc5 = c1.slice(0, 4);
         REQUIRE(!sc5.is_empty());
         REQUIRE(sc5.len() == 3);
     }

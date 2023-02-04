@@ -1,6 +1,6 @@
 // -*- mode: c++; indent-tabs-mode: nil; tab-width: 4 -*-
-#ifndef NEL_HEAPLESS_SLICE_HH
-#define NEL_HEAPLESS_SLICE_HH
+#if !defined(NEL_SLICE_HH)
+#    define NEL_SLICE_HH
 
 namespace nel
 {
@@ -13,23 +13,36 @@ struct SliceIterator;
 
 } // namespace nel
 
-#include <nel/iterator.hh>
-#include <nel/memory.hh>
-#include <nel/panic.hh>
-#include <nel/defs.hh>
+#    include <nel/iterator.hh>
+#    include <nel/memory.hh>
+//#    include <printio.hh>
+#    include <nel/panic.hh>
+#    include <nel/defs.hh>
 
 namespace nel
 {
 
 /**
- * A contiguous region
+ * Slice
+ * models a block of contiguous ram.
+ * Shared, multiple slices can point to the same ram region.
+ * can be created from ptr+len or 2 ptrs (begin/end).
+ * When slice is destroyed, the block if ram is not destroyed.
+ * Items can be iterated over.
+ * Items can be accessed via [] oper (TODO).
+ * slice is empty if len is 0, regardless of ptr value.
  */
+
 template<typename T>
 struct Slice {
     private:
         T *const content_;
         // Implicit start at 0.
         Length len_;
+
+    public:
+        // slices can be copied and assigned to as they don't own the
+        // values they reference.
 
     private:
         constexpr Slice(void)
@@ -100,6 +113,21 @@ struct Slice {
             return len() == 0;
         }
 
+        constexpr operator bool() const
+        {
+            return !is_empty();
+        }
+
+        /**
+         * Determine numer of elements in the slice.
+         *
+         * @returns number of elements in the slice.
+         */
+        constexpr T *ptr(void) const
+        {
+            return content_;
+        }
+
         /**
          * Determine numer of elements in the slice.
          *
@@ -110,7 +138,28 @@ struct Slice {
             return len_;
         }
 
-#if 0
+        constexpr T &unchecked_get(Index idx)
+        {
+            return content_[idx];
+        }
+
+        constexpr T const &unchecked_get(Index idx) const
+        {
+            return content_[idx];
+        }
+
+        constexpr T &checked_get(Index idx)
+        {
+            nel_panic_if_not(idx < len(), "index out of range");
+            return unchecked_get(idx);
+        }
+
+        constexpr T const &checked_get(Index idx) const
+        {
+            nel_panic_if_not(idx < len(), "index out of range");
+            return unchecked_get(idx);
+        }
+
         /**
          * Item access in slice.
          *
@@ -122,15 +171,13 @@ struct Slice {
         // TODO: use try_get as index access can fail.
         constexpr T &operator[](Index idx)
         {
-            nel_panic_if_not(idx < len(), "index out of range");
-            return content_[idx];
+            return checked_get(idx);
         }
+
         constexpr T const &operator[](Index idx) const
         {
-            nel_panic_if_not(idx < len(), "index out of range");
-            return content_[idx];
+            return checked_get(idx);
         }
-#endif
 
         /**
          * Return a reference to the value at idx or None.
@@ -149,6 +196,17 @@ struct Slice {
         constexpr Optional<T const &> try_get(Index idx) const
         {
             return (idx >= len_) ? None : Optional<T const &>::Some(content_[idx]);
+        }
+
+    public:
+        constexpr bool operator==(Slice const &o) const
+        {
+            return content_ == o.content_ && len_ == o.len_;
+        }
+
+        constexpr bool operator!=(Slice const &o) const
+        {
+            return content_ != o.content_ || len_ != o.len_;
         }
 
     public:
@@ -180,7 +238,7 @@ struct Slice {
          * @returns if e > array len, clamp to last elem.
          * @returns else return slice over region b..e of slice.
          */
-        Slice<T> subslice(Index b, Index e)
+        Slice<T> slice(Index b, Index e)
         {
             if (b >= e) { return Slice<T>::empty(); }
             if (b >= len_) { return Slice<T>::empty(); }
@@ -188,7 +246,7 @@ struct Slice {
             return Slice(&content_[b], e - b);
         }
 
-        Slice<T const> subslice(Index b, Index e) const
+        Slice<T const> slice(Index b, Index e) const
         {
             if (b >= e) { return Slice<T const>::empty(); }
             if (b >= len_) { return Slice<T const>::empty(); }
@@ -214,6 +272,7 @@ struct Slice {
         //     nel_panic_if(len() != o.len(), "not same size");
         //     nel::memmove(content_, o.content_, len());
         // }
+
     public:
         /**
          * Return an iterator that will iterate over the slice
@@ -251,27 +310,27 @@ struct Slice {
         friend Log &operator<<(Log &outs, Slice const &v)
         {
             outs << "Slice(" << v.len() << "){";
-#if 0
+#    if 0
             auto it = v.iter();
             auto itv = it.next();
             if (itv.is_none()) { goto exit; }
             outs << itv.unwrap();
             it.for_each([&outs](T const & e) { outs << ' ' << e;})
 exit:
-#elif 0
+#    elif 0
             if (v.len() > 0) {
                 outs << v.content_[0];
                 for (Index i = 1; i < v.len(); ++i) {
                     outs << ' ' << v.content_[i];
                 }
             }
-#else
+#    else
             auto it = v.iter();
             if (!it.is_done()) {
                 outs << it.deref();
                 it.for_each2([&outs](T const &e) { outs << ' ' << e; });
             }
-#endif
+#    endif
             outs << '}';
             return outs;
         }
@@ -294,13 +353,37 @@ class SliceIterator: public Iterator<SliceIterator<T>, T &, T &>
 
     private:
         T *b_;
-        T *const e_;
+        T *e_;
 
     public:
         constexpr SliceIterator(void) = delete;
 
+    public:
         // copy ok
+        SliceIterator(SliceIterator const &o) = default;
+        SliceIterator &operator=(SliceIterator const &o) = default;
+
+    public:
         // move ok
+        SliceIterator(SliceIterator &&o)
+            : b_(nel::move(o.b_))
+            , e_(nel::move(o.e_))
+        {
+            o.b_ = nullptr;
+            o.e_ = nullptr;
+        }
+
+        SliceIterator &operator=(SliceIterator &&o)
+        {
+            if (this != &o) {
+                b_ = nel::move(o.b_);
+                e_ = nel::move(o.e_);
+                o.b_ = nullptr;
+                o.e_ = nullptr;
+            }
+            return *this;
+        }
+
     public:
         constexpr SliceIterator(T arr[], Count len)
             : b_(arr)
@@ -350,6 +433,6 @@ class SliceIterator: public Iterator<SliceIterator<T>, T &, T &>
         }
 };
 
-} // namespace nel
+}; // namespace nel
 
-#endif // NEL_HEAPLESS_SLICE_HH
+#endif // defined(NEL_SLICE_HH)

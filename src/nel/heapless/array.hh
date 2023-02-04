@@ -1,8 +1,8 @@
 // -*- mode: c++; indent-tabs-mode: nil; tab-width: 4 -*-
-#ifndef NEL_HEAPLESS_ARRAY_HH
-#define NEL_HEAPLESS_ARRAY_HH
+#if !defined(NEL_HEAPLESS_ARRAY_HH)
+#    define NEL_HEAPLESS_ARRAY_HH
 
-#include <nel/defs.hh> //NEL_UNUSED, Length
+#    include <nel/defs.hh> //NEL_UNUSED, Length
 
 namespace nel
 {
@@ -15,10 +15,13 @@ struct Array;
 } // namespace heapless
 } // namespace nel
 
-#include <nel/iterator.hh>
-#include <nel/slice.hh>
-#include <nel/log.hh>
-#include <nel/panic.hh>
+#    include <nel/iterator.hh>
+#    include <nel/slice.hh>
+#    include <nel/memory.hh> // move
+//#    include <printio.hh>
+#    include <nel/log.hh>
+
+#    include <new>
 
 namespace nel
 {
@@ -26,14 +29,15 @@ namespace heapless
 {
 
 /**
- * Fixed size array, owning the values
- * All items allocated when created.
- * All items deleted when destroyed.
- * cannot have size changed once created
- * All elements are initialised (this may be an issue)
- * have safe access to elems
- * can subslice array, safely
- * can iter array
+ * Array
+ * Manages a block of ram within itself (i.e. heapless)
+ * all elements are initialised.
+ * all elements are destroyed when array is destroyed.
+ * Array cannot be resized.
+ * Elements can be accessed by [].
+ * Elements can be iterated over.
+ * Array can be moved, calling the move operator on each elem.
+ * Array cannot be copied implicitly.
  */
 template<typename T, Length const N>
 struct Array {
@@ -43,12 +47,80 @@ struct Array {
         // does this class follow suite? nope, expects these to be initialised.
         T values_[N];
 
+    public:
+        /**
+         * Destroy array and it's elements.
+         */
+        ~Array(void)
+        {
+            iter().for_each([&](T &v) -> void { v.~T(); });
+        }
+
     private:
+        // prevent implicit copying/assignment as it's expensive.
+        Array(Array const &) = delete;
+        Array operator=(Array const &) = delete;
+
+    public:
+        /**
+         * construct array by moving from other
+         */
+        Array(Array &&o)
+        {
+            T *d = &values_[0];
+            o.iter().for_each([&](T &v) -> void {
+                new (d) T(move(v));
+                ++d;
+            });
+        }
+
+        /**
+         * move contents of array from other to this
+         */
+        Array &operator=(Array &&o)
+        {
+            if (this != &o) {
+                T *d = &values_[0];
+                o.iter().for_each([&](T &v) -> void {
+                    *d = move(v);
+                    ++d;
+                });
+            }
+            return *this;
+        }
+
+    public:
+        // allow copy/assign, as explicit as it's expensive.
+        // TODO: make these static constructor funcs, that can fail, returning error if so.
+        // maybe want a Result<T,E> i.e. Result<Array<..>, Err>.
+        // TODO: error handling using Results
+        bool NEL_WARN_UNUSED_RESULT try_copy_from(Array const &src)
+        {
+            return try_copy_from(src.values_);
+        }
+
+        bool NEL_WARN_UNUSED_RESULT try_copy_from(T const src[N])
+        {
+            T const *s = src;
+            // don't want to use a for_each here as when the copy fails will need to clean up.
+            // and cannot do that with a for_each.
+            for (T *d = values_; d != values_ + N; ++d) {
+                // maybe assign oper is not the best..
+                // how to indicate fail if so?
+                // bool ok = d.try_copy_from(*s); ?
+                *d = *s;
+                ++s;
+            }
+            return true;
+        }
+
+    public:
         // no default construction
         // but needed internally..
         constexpr Array(void) = default;
 
-#if 0
+    private:
+#    if 0
         constexpr Array(std::initializer_list<T> l)
         {
             // Interesting
@@ -61,7 +133,7 @@ struct Array {
                 new (&values_[i]) T(move(*it));
             }
         }
-#endif
+#    endif
 
         // If type has copy, then could fill? use slice for that..
 
@@ -73,36 +145,6 @@ struct Array {
         }
 
     public:
-        /**
-         * Destroy array and it's elements.
-         */
-        ~Array(void) = default;
-
-        // No copying.
-        constexpr Array(Array const &o) = delete;
-        constexpr Array &operator=(Array const &o) = delete;
-
-        // Moving allowed.
-        constexpr Array(Array &&o)
-        {
-            for (Index i = 0; i < N; ++i) {
-                new (&values_[i]) T(move(o.values_[i]));
-            }
-        }
-
-        constexpr Array &operator=(Array &&o)
-        {
-            if (this != &o) {
-                // Expensive to move o to temp, then to swap o and this (using moves)
-                // quicker to just move o into this.
-                // Only because move cannot fail (and leave this destructed).
-                this->~Array();
-                new (this) Array(move(o));
-            }
-            return *this;
-        }
-
-    public:
         // heapless arrays cannot be created 'empty'
 
         /**
@@ -110,24 +152,33 @@ struct Array {
          * @return array filled with copies of value.
          * @warning UB if copying of v fails.
          */
-        constexpr static Array filled(T const &v)
+        // not very good as failure to copy v will panic.
+        // and don't want panics from lib code.
+        constexpr static Array filled_with(T const &v)
         {
             return Array(v);
         }
 
-#if 0
+#    if 0
         /**
          * Attempt to create and Initialise an array with given value.
          * @return on success: array filled with copies of value.
          * @return on fail: None
          */
-        static constexpr Optional<Array> try_filled(T const &v)
+        // TODO: should fail return an error i.e. Result<Array, Err>?
+        static constexpr Optional<Array> try_filled_with(T const &v)
         {
+            // cannot use ctor here as ctor cannot return on fail
+            // so will need to create array uninitialsed
+            // then populate with copies of v
+            // if copying of v fails, destroy those already created (returning to uninitialsed)
+            // then exit
+            // but this will call array::dtor which will attempt to destroy the values again..
             return Array(v);
         }
-#endif
+#    endif
 
-#if 0
+#    if 0
         /**
          * Attempt to create an array from initialiser list
          *
@@ -146,7 +197,7 @@ struct Array {
             // prob only if initlist ctor is public, which I don't want.
             return (l.size() != N) ? None : Some(Array(l));
         }
-#endif
+#    endif
 
     public:
         /**
@@ -157,6 +208,21 @@ struct Array {
         constexpr bool is_empty(void) const
         {
             return len() == 0;
+        }
+
+        /**
+         * get pointer to start of data
+         *
+         * @returns ptr to start of array elements
+         */
+        constexpr T *ptr(void)
+        {
+            return &values_[0];
+        }
+
+        constexpr T const *ptr(void) const
+        {
+            return &values_[0];
         }
 
         /**
@@ -173,25 +239,60 @@ struct Array {
         // Move item out (idx).
         // [const] ref item (idx)
 
-#if 0
         /**
-         * Item access in array.
+         * Item access.
          *
          * @param idx The index of the item to get.
          *
          * @returns reference to the item.
-         * @warning Will panic if idx is out-of-range for array.
+         * @warning Will panic if idx is out-of-range.
          */
-        // as array access can fail, redo to try_get() and return v or error
+        constexpr T &checked_get(Index idx)
+        {
+            return slice().checked_get(idx);
+        }
+
+        constexpr T const &checked_get(Index idx) const
+        {
+            return slice().checked_get(idx);
+        }
+
+        /**
+         * Item access.
+         *
+         * @param idx The index of the item to get.
+         *
+         * @returns reference to the item.
+         * @warning UB if index is out of range.
+         */
+        constexpr T &unchecked_get(Index idx)
+        {
+            return slice().unchecked_get(idx);
+        }
+
+        constexpr T const &unchecked_get(Index idx) const
+        {
+            return slice().unchecked_get(idx);
+        }
+
+        /**
+         * Item access.
+         *
+         * @param idx The index of the item to get.
+         *
+         * @returns reference to the item.
+         * @warning Will panic if idx is out-of-range.
+         */
+        // as access can fail, redo to try_get() and return v or error
         constexpr T &operator[](Index idx)
         {
             return slice()[idx];
         }
+
         constexpr T const &operator[](Index idx) const
         {
             return slice()[idx];
         }
-#endif
 
         /**
          * Return a reference to the value at idx or None.
@@ -244,14 +345,14 @@ struct Array {
          * @returns if e > array len, clamp to last elem.
          * @returns else return slice over region b..e of array.
          */
-        constexpr Slice<T> subslice(Index b, Index e)
+        constexpr Slice<T> slice(Index b, Index e)
         {
-            return slice().subslice(b, e);
+            return slice().slice(b, e);
         }
 
-        constexpr Slice<T const> subslice(Index b, Index e) const
+        constexpr Slice<T const> slice(Index b, Index e) const
         {
-            return slice().subslice(b, e);
+            return slice().slice(b, e);
         }
 
         /**
@@ -291,7 +392,7 @@ struct Array {
         }
 };
 
-} // namespace heapless
-} // namespace nel
+}; // namespace heapless
+}; // namespace nel
 
-#endif // NEL_HEAPLESS_ARRAY_HH
+#endif // defined(NEL_HEAPLESS_ARRAY_HH)

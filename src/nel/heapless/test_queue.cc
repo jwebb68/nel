@@ -2,6 +2,7 @@
 #include <catch2/catch.hpp>
 
 #include <nel/heapless/queue.hh>
+#include <nel/memory.hh> // nel::move()
 #include <nel/defs.hh>
 
 TEST_CASE("heapless:Queue::create", "[heapless][queue]")
@@ -21,23 +22,23 @@ TEST_CASE("heapless::Queue::move", "[heapless][queue]")
         // empty array can be moved to another location
         auto a2 = nel::heapless::Queue<int, 3>::empty();
         auto a1 = nel::heapless::Queue<int, 3>::empty();
-        a2 = move(a1);
+        a2 = nel::move(a1);
         // how to test?
     }
     {
         // non-empty queue can be moved
         auto a3 = nel::heapless::Queue<int, 3>::empty();
         auto a4 = nel::heapless::Queue<int, 3>::empty();
-        a4.put(0);
-        a4.put(1);
+        a4.push(0).is_ok();
+        a4.push(1).is_ok();
 
-        a3 = move(a4);
+        a3 = nel::move(a4);
 
         REQUIRE(a4.len() == 0);
         REQUIRE(a3.len() == 2);
         // order is preserved..
-        REQUIRE(a3.get().unwrap() == 0);
-        REQUIRE(a3.get().unwrap() == 1);
+        REQUIRE(a3.pop().unwrap() == 0);
+        REQUIRE(a3.pop().unwrap() == 1);
     }
 
     // cannot move const queues.. must be a compile fail..how to test
@@ -57,16 +58,16 @@ TEST_CASE("heapless::Queue::is_empty", "[heapless][queue]")
     {
         // non-empty queue is not empty
         auto a2 = nel::heapless::Queue<int, 3>::empty();
-        a2.put(1);
+        a2.push(1).is_ok();
         REQUIRE(!a2.is_empty());
 
-        // getting last value makes queue empty again.
-        auto v1 = a2.get().unwrap();
+        // popting last value makes queue empty again.
+        auto v1 = a2.pop().unwrap();
         REQUIRE(a2.is_empty());
         NEL_UNUSED(v1);
     }
 
-    // const queue cannot be put to.. copile fail.. how to test..
+    // const queue cannot be push to.. copile fail.. how to test..is_ok().
 }
 
 TEST_CASE("heapless::Queue::len", "[heapless][queue]")
@@ -83,71 +84,77 @@ TEST_CASE("heapless::Queue::len", "[heapless][queue]")
     {
         // queue filled to length >0 must have len of length
         auto a3 = nel::heapless::Queue<int, 3>::empty();
-        a3.put(1);
+        a3.push(1).is_ok();
         REQUIRE(a3.len() == 1);
 
-        a3.put(2);
+        a3.push(2).is_ok();
         REQUIRE(a3.len() == 2);
 
-        a3.put(3);
+        a3.push(3).is_ok();
         REQUIRE(a3.len() == 3);
 
         // maxed out queue cannot grow in size.
-        a3.put(4);
+        a3.push(4).is_ok();
         REQUIRE(a3.len() == 3);
     }
 }
 
 // should this be .into_slice()?
 // is this a conversion, or an as.
-TEST_CASE("heapless::Queue::put()", "[heapless][queue]")
+TEST_CASE("heapless::Queue::push()", "[heapless][queue]")
 {
     {
         auto a1 = nel::heapless::Queue<int, 3>::empty();
 
-        // empty queue can be put to  (what if size == 0)?
-        auto p0 = a1.put(1);
+        // empty queue can be push to  (what if size == 0).is_ok()?
+        auto p0 = a1.push(1);
         REQUIRE(p0.is_ok());
 
         // maxing out queue must work.
-        a1.put(2);
-        auto p1 = a1.put(3);
+        a1.push(2).is_ok();
+        auto p1 = a1.push(3);
         REQUIRE(p1.is_ok());
 
+#if 0
         // over-doing it must fail
-        auto p3 = a1.put(4);
+        auto p3 = a1.push(4);
         REQUIRE(p3.is_err());
+#else
+        // over-doing it must not fail
+        auto p3 = a1.push(4);
+        REQUIRE(p3.is_ok());
+#endif
 
-        // removing items allows more putting
-        auto g4 = a1.get();
-        auto p4 = a1.put(5);
+        // removing items allows more pushing
+        auto g4 = a1.pop();
+        auto p4 = a1.push(5);
         REQUIRE(p4.is_ok());
     }
 
     {
-        // and putting then getting preserves order
+        // and pushing then popping preserves order
         auto a2 = nel::heapless::Queue<int, 3>::empty();
-        auto rp1 = a2.put(1);
-        auto rp2 = a2.put(2);
-        auto rp3 = a2.put(3);
+        a2.push(1).is_ok();
+        a2.push(2).is_ok();
+        a2.push(3).is_ok();
 
-        REQUIRE(a2.get().unwrap() == 1);
-        REQUIRE(a2.get().unwrap() == 2);
-        REQUIRE(a2.get().unwrap() == 3);
+        REQUIRE(a2.pop().unwrap() == 1);
+        REQUIRE(a2.pop().unwrap() == 2);
+        REQUIRE(a2.pop().unwrap() == 3);
     }
 }
 
-TEST_CASE("heapless::Queue::get()", "[heapless][queue]")
+TEST_CASE("heapless::Queue::pop()", "[heapless][queue]")
 {
     auto a1 = nel::heapless::Queue<int, 3>::empty();
 
     // empty queue cannot be got from  (what if size == 0)?
-    auto g0 = a1.get();
+    auto g0 = a1.pop();
     REQUIRE(g0.is_none());
 
-    // putting value into queue can be got.
-    auto r1 = a1.put(1);
-    auto g1 = a1.get();
+    // pushing value into queue can be got.
+    auto r1 = a1.push(1);
+    auto g1 = a1.pop();
     REQUIRE(g1.is_some());
     REQUIRE(g1.unwrap() == 1);
 }

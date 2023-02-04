@@ -20,7 +20,7 @@ void ex2()
     Vec1 vec1 = Vec1::empty();
 
     U8Buf<256> v = U8Buf<256>((uint8_t)0x66);
-    vec1.push_back(move(v));
+    vec1.push(nel::move(v)).is_ok();
 
     nel::log << vec1 << '\n';
 }
@@ -29,7 +29,7 @@ void ex3()
 {
     Vec1 vec1 = Vec1::empty();
 
-    vec1.push_back((uint8_t)0x67);
+    vec1.push((uint8_t)0x67).is_ok();
 
     nel::log << vec1 << '\n';
 }
@@ -38,11 +38,11 @@ void ex41()
 {
     Vec1 vec1 = Vec1::empty();
 
-    vec1.push_back((uint8_t)0x67);
-    vec1.push_back((uint8_t)0x68);
-    vec1.push_back((uint8_t)0x69);
+    vec1.push((uint8_t)0x67).is_ok();
+    vec1.push((uint8_t)0x68).is_ok();
+    vec1.push((uint8_t)0x69).is_ok();
 
-    vec1.pop_back();
+    vec1.pop();
 
     auto it = vec1.iter();
     while (true) {
@@ -66,11 +66,11 @@ void ex42()
 {
     Vec1 vec1 = Vec1::empty();
 
-    vec1.push_back((uint8_t)0x67);
-    vec1.push_back((uint8_t)0x68);
-    vec1.push_back((uint8_t)0x69);
+    vec1.push((uint8_t)0x67).is_ok();
+    vec1.push((uint8_t)0x68).is_ok();
+    vec1.push((uint8_t)0x69).is_ok();
 
-    vec1.pop_back();
+    vec1.pop();
 
     auto it = vec1.iter();
     for (; !it.is_done(); it.inc()) {
@@ -84,7 +84,7 @@ void ex51()
     Vec1 vec1 = Vec1::empty();
 
     for (uint8_t f = 1; f < 10; ++f) {
-        vec1.push_back(f);
+        vec1.push(f).is_ok();
     }
 
     auto it = vec1.iter().first_n(3);
@@ -110,7 +110,7 @@ void ex52()
     Vec1 vec1 = Vec1::empty();
 
     for (uint8_t f = 1; f < 10; ++f) {
-        vec1.push_back(f);
+        vec1.push(f).is_ok();
     }
 
     auto it = vec1.iter().first_n(3);

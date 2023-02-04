@@ -250,14 +250,14 @@ struct Array {
          * @returns if e > array len, clamp to last elem.
          * @returns else return slice over region b..e of array.
          */
-        constexpr Slice<T> subslice(Index b, Index e)
+        constexpr Slice<T> slice(Index b, Index e)
         {
-            return slice().subslice(b, e);
+            return slice().slice(b, e);
         }
 
-        constexpr Slice<T const> subslice(Index b, Index e) const
+        constexpr Slice<T const> slice(Index b, Index e) const
         {
-            return slice().subslice(b, e);
+            return slice().slice(b, e);
         }
 
         /**

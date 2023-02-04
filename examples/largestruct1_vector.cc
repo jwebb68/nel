@@ -3,6 +3,7 @@
 
 #include <nel/heaped/vector.hh>
 #include <nel/log.hh>
+#include <nel/memory.hh> // move()
 #include <nel/defs.hh>
 
 typedef nel::heaped::Vector<U8Buf<256>> Vec1;
@@ -19,7 +20,7 @@ void ex2()
     Vec1 vec1 = Vec1::with_capacity(5);
 
     U8Buf<256> v = U8Buf<256>((uint8_t)0x66);
-    vec1.push_back(move(v));
+    vec1.push(nel::move(v)).is_ok();
 
     nel::log << vec1 << '\n';
 }
@@ -28,7 +29,7 @@ void ex3()
 {
     Vec1 vec1 = Vec1::with_capacity(5);
 
-    vec1.push_back((uint8_t)0x67);
+    vec1.push((uint8_t)0x67).is_ok();
 
     nel::log << vec1 << '\n';
 }
@@ -37,9 +38,9 @@ void ex41()
 {
     Vec1 vec1 = Vec1::with_capacity(5);
 
-    vec1.push_back((uint8_t)0x67);
-    vec1.push_back((uint8_t)0x68);
-    vec1.push_back((uint8_t)0x69);
+    vec1.push((uint8_t)0x67).is_ok();
+    vec1.push((uint8_t)0x68).is_ok();
+    vec1.push((uint8_t)0x69).is_ok();
 
     auto it = vec1.iter();
     while (true) {
@@ -63,9 +64,9 @@ void ex42()
 {
     Vec1 vec1 = Vec1::with_capacity(5);
 
-    vec1.push_back((uint8_t)0x67);
-    vec1.push_back((uint8_t)0x68);
-    vec1.push_back((uint8_t)0x69);
+    vec1.push((uint8_t)0x67).is_ok();
+    vec1.push((uint8_t)0x68).is_ok();
+    vec1.push((uint8_t)0x69).is_ok();
 
     auto it = vec1.iter();
     it.for_each([&](U8Buf<256> &e) -> void { nel::log << e << '\n'; });
@@ -75,9 +76,9 @@ void ex43()
 {
     Vec1 vec1 = Vec1::with_capacity(5);
 
-    vec1.push_back((uint8_t)0x67);
-    vec1.push_back((uint8_t)0x68);
-    vec1.push_back((uint8_t)0x69);
+    vec1.push((uint8_t)0x67).is_ok();
+    vec1.push((uint8_t)0x68).is_ok();
+    vec1.push((uint8_t)0x69).is_ok();
 
     auto it = vec1.iter();
     for (; !it.is_done(); it.inc()) {
@@ -90,9 +91,9 @@ void ex44()
 {
     Vec1 vec1 = Vec1::with_capacity(5);
 
-    vec1.push_back((uint8_t)0x67);
-    vec1.push_back((uint8_t)0x68);
-    vec1.push_back((uint8_t)0x69);
+    vec1.push((uint8_t)0x67).is_ok();
+    vec1.push((uint8_t)0x68).is_ok();
+    vec1.push((uint8_t)0x69).is_ok();
 
     auto it = vec1.iter();
     it.for_each2([&](U8Buf<256> &e) -> void { nel::log << e << '\n'; });

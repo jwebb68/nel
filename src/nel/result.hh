@@ -1,6 +1,6 @@
 // -*- mode: c++; indent-tabs-mode: nil; tab-width: 4 -*-
-#ifndef NEL_RESULT_HH
-#define NEL_RESULT_HH
+#if !defined(NEL_RESULT_HH)
+#    define NEL_RESULT_HH
 
 namespace nel
 {
@@ -10,10 +10,10 @@ class Result;
 
 } // namespace nel
 
-#include <nel/optional.hh>
-#include <nel/element.hh>
-#include <nel/log.hh>
-#include <nel/panic.hh>
+#    include <nel/optional.hh>
+#    include <nel/element.hh>
+#    include <nel/log.hh>
+#    include <nel/panic.hh>
 
 namespace nel
 {
@@ -82,7 +82,7 @@ class Result
         };
 
     public:
-        constexpr ~Result(void)
+        ~Result(void)
         {
             switch (tag_) {
                 case Tag::OK:
@@ -539,7 +539,6 @@ class Result
         }
 
     public:
-        // friend std::ostream &operator<<(std::ostream &outs, Result const &val) {
         friend Log &operator<<(Log &outs, Result const &val)
         {
             switch (val.tag_) {
@@ -585,7 +584,7 @@ class Result<void, E>
         };
 
     public:
-        constexpr ~Result(void)
+        ~Result(void)
         {
             switch (tag_) {
                 case Tag::OK:
@@ -989,13 +988,13 @@ class Result<void, E>
 };
 
 // Calc v as a temp to keep f single eval-ed
-#define NEL_RESULT_TRY(f) \
-    __extension__({ \
-        auto v = move(f); \
-        if (v.is_err()) { return v; } \
-        v.unwrap(); \
-    })
+#    define NEL_RESULT_TRY(f) \
+        __extension__({ \
+            auto v = move(f); \
+            if (v.is_err()) { return v; } \
+            v.unwrap(); \
+        })
 
 } // namespace nel
 
-#endif // NEL_RESULT_HH
+#endif // !defined(NEL_RESULT_HH)

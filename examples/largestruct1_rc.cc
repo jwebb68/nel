@@ -3,6 +3,7 @@
 
 #include <nel/heaped/rc.hh>
 #include <nel/log.hh>
+#include <nel/memory.hh> // move()
 #include <nel/defs.hh>
 
 typedef nel::heaped::RC<U8Buf<256>> RC1;
@@ -17,7 +18,7 @@ nel::Log &operator<<(nel::Log &outs, RC1 const &v)
 void rc1()
 {
     U8Buf<256> v = U8Buf<256>((uint8_t)0x66);
-    RC1 rc1(move(v));
+    RC1 rc1(nel::move(v));
 
     nel::log << rc1 << '\n';
 }

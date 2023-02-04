@@ -1,6 +1,6 @@
 // -*- mode: c++; indent-tabs-mode: nil; tab-width: 4 -*-
-#ifndef NEL_OPTIONAL_HH
-#define NEL_OPTIONAL_HH
+#if !defined(NEL_OPTIONAL_HH)
+#    define NEL_OPTIONAL_HH
 
 namespace nel
 {
@@ -12,11 +12,11 @@ class NoneT;
 
 } // namespace nel
 
-#include <nel/element.hh>
-#include <nel/log.hh>
-#include <nel/panic.hh>
+#    include <nel/element.hh>
+#    include <nel/log.hh>
+#    include <nel/panic.hh>
 
-#include <new> // new (*) T(...)
+#    include <new> // new (*) T(...)
 
 namespace nel
 {
@@ -95,7 +95,7 @@ class Optional
         };
 
     public:
-        constexpr ~Optional(void)
+        ~Optional(void)
         {
             switch (tag_) {
                 case Tag::SOME:
@@ -127,11 +127,11 @@ class Optional
 
     private:
         // Don't want copy semantics here, use move instead.
-        constexpr Optional(Optional const &o) = delete;
-        constexpr Optional &operator=(Optional const &o) const = delete;
+        Optional(Optional const &o) = delete;
+        Optional &operator=(Optional const &o) = delete;
 
     public:
-        constexpr Optional(Optional &&o)
+        Optional(Optional &&o)
         {
             tag_ = o.tag_;
             o.tag_ = Tag::INVAL;
@@ -156,7 +156,7 @@ class Optional
             }
         }
 
-        constexpr Optional &operator=(Optional &&o)
+        Optional &operator=(Optional &&o)
         {
             if (this != &o) {
                 tag_ = o.tag_;
@@ -441,19 +441,20 @@ class Optional
 
         Optional or_(Optional &&o)
         {
-            return consume<Optional>([this](void) -> Optional { return *this; },
+            return consume<Optional>([this](void)
+                                         -> Optional { return Optional::Some(some_.unwrap()); },
                                      [&o](void) -> Optional { return move(o); });
         }
 
         template<typename Fn>
         Optional or_else(Fn &&fn)
         {
-            return consume<Optional>([this](void) -> Optional { return *this; },
+            return consume<Optional>([this](void)
+                                         -> Optional { return Optional::Some(some_.unwrap()); },
                                      [&fn](void) -> Optional { return fn(); });
         }
 
     public:
-        // friend std::ostream &operator<<(std::ostream &outs, Optional const &val) {
         friend Log &operator<<(Log &outs, Optional const &val)
         {
             switch (val.tag_) {
@@ -506,7 +507,7 @@ class Optional<void>
         };
 
     public:
-        constexpr ~Optional(void)
+        ~Optional(void)
         {
             switch (tag_) {
                 case Tag::SOME:
@@ -530,11 +531,11 @@ class Optional<void>
 
     private:
         // Don't want copy semantics here, use move instead.
-        constexpr Optional(Optional const &o) = delete;
-        constexpr Optional &operator=(Optional const &o) const = delete;
+        Optional(Optional const &o) = delete;
+        Optional &operator=(Optional const &o) = delete;
 
     public:
-        constexpr Optional(Optional &&o)
+        Optional(Optional &&o)
         {
             tag_ = o.tag_;
             o.tag_ = Tag::INVAL;
@@ -558,7 +559,7 @@ class Optional<void>
             }
         }
 
-        constexpr Optional &operator=(Optional &&o)
+        Optional &operator=(Optional &&o)
         {
             if (this != &o) {
                 tag_ = o.tag_;
@@ -623,7 +624,7 @@ class Optional<void>
          * @returns an Optional 'wrapping' the value created from the values given.
          */
         // Cannot be constexpr since struct has non-trivial dtor..
-        constexpr static Optional Some(void)
+        static Optional Some(void)
         {
             return Optional(Phantom<Tag::SOME>());
         }
@@ -634,7 +635,7 @@ class Optional<void>
         // constexpr V match(Tag tag, std::function<V(void)> on_some, std::function<V(void)>
         // on_none) const  {
         template<typename V, typename Fn1, typename Fn2>
-        constexpr V match(Tag tag, Fn1 &&on_some, Fn2 &&on_none) const
+        V match(Tag tag, Fn1 &&on_some, Fn2 &&on_none) const
         {
             switch (tag) {
                 case Tag::SOME:
@@ -674,7 +675,7 @@ class Optional<void>
          * `this` is not consumed by the operation.
          * `o` is not consumed by the operation.
          */
-        constexpr bool operator==(Optional const &o) const
+        bool operator==(Optional const &o) const
         {
             if (this == &o) { return true; }
             if (tag_ == o.tag_) {
@@ -695,7 +696,7 @@ class Optional<void>
          * `this` is not consumed by the operation.
          * `o` is not consumed by the operation.
          */
-        constexpr bool operator!=(Optional const &o) const
+        bool operator!=(Optional const &o) const
         {
             if (this == &o) { return false; }
             if (tag_ == o.tag_) {
@@ -715,7 +716,7 @@ class Optional<void>
          *
          * The optional is not consumed by the operation.
          */
-        constexpr bool is_some(void) const
+        bool is_some(void) const
 
         {
             return match<bool>(
@@ -731,7 +732,7 @@ class Optional<void>
          *
          * The optional is not consumed by the operation.
          */
-        constexpr bool is_none(void) const
+        bool is_none(void) const
         {
             return match<bool>(
                 tag_,
@@ -797,7 +798,6 @@ class Optional<void>
         }
 
     public:
-        // friend std::ostream &operator<<(std::ostream &outs, Optional const &val) {
         friend Log &operator<<(Log &outs, Optional const &val)
         {
             switch (val.tag_) {
@@ -824,11 +824,12 @@ class Optional<void>
         }
 };
 
-constexpr Optional<void> Some(void)
+// Optional<void> Some(void)
+inline Optional<void> Some(void)
 {
     return Optional<void>::Some();
 }
 
 } // namespace nel
 
-#endif // NEL_OPTIONAL_HH
+#endif // !defined(NEL_OPTIONAL_HH)

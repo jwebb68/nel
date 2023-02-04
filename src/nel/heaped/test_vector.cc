@@ -1,5 +1,6 @@
 // -*- mode: c++; indent-tabs-mode: nil; tab-width: 4 -*-
 #include <nel/heaped/vector.hh>
+#include <nel/memory.hh> // movenel::()
 
 #include <catch2/catch.hpp>
 
@@ -42,7 +43,7 @@ TEST_CASE("heaped::Vector::move", "[heaped][vector]")
     {
         // empty Vector can be moved
         auto a1 = nel::heaped::Vector<int>::empty();
-        auto a2 = move(a1);
+        auto a2 = nel::move(a1);
         REQUIRE(a1.is_empty());
         REQUIRE(a2.is_empty());
     }
@@ -50,9 +51,9 @@ TEST_CASE("heaped::Vector::move", "[heaped][vector]")
     {
         // not empty vector can be moved
         auto a3 = nel::heaped::Vector<int>::empty();
-        a3.push_back(2);
+        a3.push(2).is_ok();
 
-        auto a2 = move(a3);
+        auto a2 = nel::move(a3);
         REQUIRE(!a2.is_empty());
         REQUIRE(a3.is_empty());
     }
@@ -61,7 +62,7 @@ TEST_CASE("heaped::Vector::move", "[heaped][vector]")
         // testing const Vector moving, but should fail at compile time.
         // auto const c1 = nel::heaped::Vector<int>::empty();
         // auto const c2 = nel::heaped::Vector<int>::filled(2,1);
-        // c2 = move(c1);
+        // c2 = nel::move(c1);
     }
 }
 
@@ -92,7 +93,7 @@ TEST_CASE("heaped::Vector::is_empty", "[heaped][vector]")
         // vector filled to length >0 must not be empty
         // auto a1 = nel::heaped::Vector<int>::try_from({2}).unwrap();
         auto a1 = nel::heaped::Vector<int>::empty();
-        a1.push_back(2);
+        a1.push(2).is_ok();
         REQUIRE(!a1.is_empty());
 
 #if 0
@@ -136,7 +137,7 @@ TEST_CASE("heaped::Vector::capacity", "[heaped][Vector]")
         // vector filled to length >0 must have len of length
         // auto a3 = nel::heaped::Vector<int>::try_from({2}).unwrap();
         auto a3 = nel::heaped::Vector<int>::empty();
-        a3.push_back(2);
+        a3.push(2).is_ok();
         REQUIRE(a3.capacity() >= 1);
 
 #if 0
@@ -182,7 +183,7 @@ TEST_CASE("heaped::Vector::len", "[heaped][Vector]")
         // vector filled to length >0 must have len of length
         // auto const c3 = nel::heaped::Vector<int>::try_from({2}).unwrap();
         auto a3 = nel::heaped::Vector<int>::empty();
-        a3.push_back(2);
+        a3.push(2).is_ok();
         REQUIRE(a3.len() == 1);
 
 #if 0
@@ -232,8 +233,8 @@ TEST_CASE("heaped::Vector::clear", "[heaped][Vector]")
         nel::Count cap;
         // auto a3 = nel::heaped::Vector<int>::try_from({2, 2}).unwrap();
         auto a3 = nel::heaped::Vector<int>::empty();
-        a3.push_back(2);
-        a3.push_back(2);
+        a3.push(2).is_ok();
+        a3.push(2).is_ok();
 
         cap = a3.capacity();
         a3.clear();
@@ -273,15 +274,15 @@ TEST_CASE("heaped::Vector::reserve", "[heaped][Vector]")
     {
         // auto a1 = nel::heaped::Vector<int>::try_from({2, 2, 2, 2, 2, 2, 2, 2, 2}).unwrap();
         auto a1 = nel::heaped::Vector<int>::empty();
-        a1.push_back(2);
-        a1.push_back(2);
-        a1.push_back(2);
-        a1.push_back(2);
-        a1.push_back(2);
-        a1.push_back(2);
-        a1.push_back(2);
-        a1.push_back(2);
-        a1.push_back(2);
+        a1.push(2).is_ok();
+        a1.push(2).is_ok();
+        a1.push(2).is_ok();
+        a1.push(2).is_ok();
+        a1.push(2).is_ok();
+        a1.push(2).is_ok();
+        a1.push(2).is_ok();
+        a1.push(2).is_ok();
+        a1.push(2).is_ok();
 
         REQUIRE(a1.try_reserve(10));
         REQUIRE(a1.capacity() >= 10);
@@ -322,7 +323,7 @@ TEST_CASE("heaped::Vector::slice()", "[heaped][Vector]")
         // full slice of non-empty vector is not empty.
         // auto a2 = nel::heaped::Vector<int>::try_from({2}).unwrap();
         auto a2 = nel::heaped::Vector<int>::empty();
-        a2.push_back(2);
+        a2.push(2).is_ok();
 
         auto sa2 = a2.slice();
         REQUIRE(!sa2.is_empty());
@@ -338,67 +339,67 @@ TEST_CASE("heaped::Vector::slice()", "[heaped][Vector]")
     }
 }
 
-TEST_CASE("heaped::Vector::subslice(b,e)", "[heaped][vector]")
+TEST_CASE("heaped::Vector::slice(b,e)", "[heaped][vector]")
 {
     {
         // sub slice of empty vec is empty.
         auto a1 = nel::heaped::Vector<int>::empty();
-        auto sa1 = a1.subslice(0, 0);
+        auto sa1 = a1.slice(0, 0);
         REQUIRE(sa1.is_empty());
         REQUIRE(sa1.len() == 0);
 
-        auto sa2 = a1.subslice(3, 5);
+        auto sa2 = a1.slice(3, 5);
         REQUIRE(sa2.is_empty());
         REQUIRE(sa2.len() == 0);
     }
 
     {
-        // in-range subslice is not empty
+        // in-range slice is not empty
         auto a1 = nel::heaped::Vector<int>::empty();
-        a1.push_back(1);
-        a1.push_back(2);
+        a1.push(1).is_ok();
+        a1.push(2).is_ok();
 
-        auto sa12 = a1.subslice(0, 1);
+        auto sa12 = a1.slice(0, 1);
         REQUIRE(!sa12.is_empty());
         REQUIRE(sa12.len() == 1);
 
-        // out-of-range subslice is empty
-        auto sa13 = a1.subslice(3, 4);
+        // out-of-range slice is empty
+        auto sa13 = a1.slice(3, 4);
         REQUIRE(sa13.is_empty());
 
-        // partially out-of-range subslice is not empty, and has only up to valid items
-        auto sa14 = a1.subslice(1, 4);
+        // partially out-of-range slice is not empty, and has only up to valid items
+        auto sa14 = a1.slice(1, 4);
         REQUIRE(!sa14.is_empty());
         REQUIRE(sa14.len() == 1);
 
-        // partially out-of-range subslice is not empty, and has only up to valid items
-        auto sa15 = a1.subslice(0, 4);
+        // partially out-of-range slice is not empty, and has only up to valid items
+        auto sa15 = a1.slice(0, 4);
         REQUIRE(!sa15.is_empty());
         REQUIRE(sa15.len() == 2);
     }
 
     {
         auto a1 = nel::heaped::Vector<int>::empty();
-        a1.push_back(1);
-        a1.push_back(2);
-        auto const c1 = move(a1);
+        a1.push(1).is_ok();
+        a1.push(2).is_ok();
+        auto const c1 = nel::move(a1);
 
-        auto sc1 = c1.subslice(0, 0);
+        auto sc1 = c1.slice(0, 0);
         REQUIRE(sc1.is_empty());
 
         // sub slice of non-empty array is not empty.
-        auto sc2 = c1.subslice(0, 1);
+        auto sc2 = c1.slice(0, 1);
         REQUIRE(!sc2.is_empty());
         REQUIRE(sc2.len() == 1);
 
-        auto sc3 = c1.subslice(3, 4);
+        auto sc3 = c1.slice(3, 4);
         REQUIRE(sc3.is_empty());
 
-        auto sc4 = c1.subslice(1, 4);
+        auto sc4 = c1.slice(1, 4);
         REQUIRE(!sc4.is_empty());
         REQUIRE(sc4.len() == 1);
 
-        auto sc5 = c1.subslice(0, 4);
+        auto sc5 = c1.slice(0, 4);
         REQUIRE(!sc5.is_empty());
         REQUIRE(sc5.len() == 2);
     }
@@ -423,8 +424,8 @@ TEST_CASE("heaped::Vector::iter()", "[heaped][Vector]")
         // can create iter on non empty vectors.
         // auto a2 = nel::heaped::Vector<int>::try_from({3, 4}).unwrap();
         auto a2 = nel::heaped::Vector<int>::empty();
-        a2.push_back(3);
-        a2.push_back(4);
+        a2.push(3).is_ok();
+        a2.push(4).is_ok();
 
         auto it2 = a2.iter();
         REQUIRE(it2.next().unwrap() == 3);
@@ -459,9 +460,9 @@ TEST_CASE("heaped::Vector::try_get", "[heaped][vector]")
         // in-range get on non-empty vec is not empty.
         // auto a2 = nel::heaped::Vector<int>::try_from({1, 1, 1}).unwrap();
         auto a2 = nel::heaped::Vector<int>::empty();
-        a2.push_back(1);
-        a2.push_back(1);
-        a2.push_back(1);
+        a2.push(1).is_ok();
+        a2.push(1).is_ok();
+        a2.push(1).is_ok();
 
         auto sa2 = a2.try_get(0);
         REQUIRE(sa2.is_some());
@@ -479,9 +480,9 @@ TEST_CASE("heaped::Vector::try_get", "[heaped][vector]")
     {
         // out-of-range get on non-empty vec must return none.
         auto a2 = nel::heaped::Vector<int>::empty();
-        a2.push_back(5);
-        a2.push_back(5);
-        a2.push_back(5);
+        a2.push(5).is_ok();
+        a2.push(5).is_ok();
+        a2.push(5).is_ok();
 
         auto sa2 = a2.try_get(3);
         REQUIRE(sa2.is_none());

@@ -1,6 +1,6 @@
 // -*- mode: c++; indent-tabs-mode: nil; tab-width: 4 -*-
-#ifndef NEL_ELEMENT_HH
-#define NEL_ELEMENT_HH
+#if !defined(NEL_ELEMENT_HH)
+#    define NEL_ELEMENT_HH
 
 namespace nel
 {
@@ -8,7 +8,7 @@ template<typename T>
 struct Element;
 } // namespace nel
 
-#include <nel/defs.hh> // move, forward
+#    include <nel/memory.hh> // move, forward
 
 namespace nel
 {
@@ -65,8 +65,18 @@ struct Element {
         {
             return value_;
         }
+
+        constexpr bool operator==(Element const &o) const
+        {
+            return value_ == o.value_;
+        }
+
+        constexpr bool operator!=(Element const &o) const
+        {
+            return value_ != o.value_;
+        }
 };
 
 } // namespace nel
 
-#endif // NEL_ELEMENT_HH
+#endif // !defined(NEL_ELEMENT_HH)

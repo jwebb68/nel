@@ -1,6 +1,6 @@
 // -*- mode: c++; indent-tabs-mode: nil; tab-width: 4 -*-
-#ifndef NEL_ITERATOR_HH
-#define NEL_ITERATOR_HH
+#if !defined(NEL_ITERATOR_HH)
+#    define NEL_ITERATOR_HH
 
 namespace nel
 {
@@ -19,20 +19,22 @@ struct FirstNIterator;
 
 } // namespace nel
 
-#include <nel/optional.hh>
-#include <nel/log.hh>
-#include <nel/defs.hh>
+#    include <nel/optional.hh>
+#    include <nel/log.hh>
+#    include <nel/defs.hh>
 
 //#include <functional> //std::function
-
-namespace nel
-{
 
 /**
  * A fluent-style/iterator 'trait'
  *
- * Use as a mixin to get functionals defined on it for all iterators
+ * Can be created,
+ * Can be iterated over using next(),
+ * Maybe iterated using (is_done/incr/deref),
  */
+
+namespace nel
+{
 template<typename ItT, typename IT, typename OT>
 struct Iterator {
     public:
@@ -58,7 +60,23 @@ struct Iterator {
     public:
         constexpr bool is_done(void) const;
         void inc(void);
-        OutT deref(void);
+        constexpr OutT deref(void);
+
+        constexpr operator bool(void) const
+        {
+            return !self().is_done();
+        }
+
+        Iterator &operator++(void)
+        {
+            self().inc();
+            return *this;
+        }
+
+        constexpr OutT operator*(void)
+        {
+            return self().deref();
+        }
 
     public:
         /**
@@ -121,7 +139,7 @@ struct Iterator {
             outs << '[';
             // copy/clone since want to mutate..
             ItT it2 = it;
-#if 0
+#    if 0
             OutT v = it2.next();
             if (v.is_some()) {
                 outs << v.unwrap();
@@ -134,7 +152,7 @@ struct Iterator {
                     outs << ',' << e;
                 });
             }
-#elif 1
+#    elif 1
             if (!it2.is_done()) {
                 outs << it2.deref();
                 it2.inc();
@@ -145,7 +163,7 @@ struct Iterator {
                 // });
                 it2.for_each2([&outs](OutT const &e) { outs << ',' << e; });
             }
-#endif
+#    endif
             outs << ']';
 
             return outs;
@@ -153,7 +171,7 @@ struct Iterator {
 
     public:
         // annoyingly, new iters need to be added to base iter for fluent style extensions
-        FirstNIterator<ItT> first_n(Count const limit)
+        constexpr FirstNIterator<ItT> first_n(Count const limit)
         {
             return FirstNIterator<ItT>(move(self()), limit);
         }
@@ -162,12 +180,12 @@ struct Iterator {
         // MappingIterator<ItT, U> map(std::function<U(OutT &)> fn)
         // template<typename Fn, typename U>
         template<typename U, typename Fn>
-        MappingIterator<ItT, U, Fn> map(Fn &&fn)
+        constexpr MappingIterator<ItT, U, Fn> map(Fn &&fn)
         {
             return MappingIterator<ItT, U, Fn>(move(self()), forward<Fn>(fn));
         }
 
-        ChainIterator<ItT> chain(ItT &&other)
+        constexpr ChainIterator<ItT> chain(ItT &&other)
         {
             return ChainIterator<ItT>(move(self()), move(other));
         }
@@ -200,7 +218,7 @@ struct MappingIterator: public Iterator<MappingIterator<It, V, Fn>, typename It:
         FnT fn_;
 
     public:
-        MappingIterator(It &&inner, FnT &&fn)
+        constexpr MappingIterator(It &&inner, FnT &&fn)
             : inner_(move(inner))
             , fn_(forward<FnT>(fn))
         {
@@ -217,7 +235,8 @@ struct MappingIterator: public Iterator<MappingIterator<It, V, Fn>, typename It:
         {
             // c++ butt ugly language, giving butt ugly constrcts..
             // WTF should I need 'template' here..?
-            return inner_.next().template map<OutT>([this](It::OutT &e) -> V { return fn_(e); });
+            return inner_.next().template map<OutT>(
+                [this](typename It::OutT &e) -> V { return fn_(e); });
         }
 
     public:
@@ -251,7 +270,7 @@ struct FirstNIterator: public Iterator<FirstNIterator<It>, typename It::InT, typ
         Length const limit_;
 
     public:
-        FirstNIterator(It &&inner, Length limit)
+        constexpr FirstNIterator(It &&inner, Length limit)
             : inner_(move(inner))
             , current_(0)
             , limit_(limit)
@@ -291,14 +310,18 @@ struct FirstNIterator: public Iterator<FirstNIterator<It>, typename It::InT, typ
 template<typename It>
 struct ChainIterator: public Iterator<ChainIterator<It>, typename It::InT, typename It::OutT> {
     public:
-        typedef It::OutT OutT;
+        typedef typename It::OutT OutT;
 
     private:
         It it1_;
         It it2_;
 
     public:
-        ChainIterator(It &&it1, It &&it2)
+        // copying ok
+        // moving ok.
+
+    public:
+        constexpr ChainIterator(It &&it1, It &&it2)
             : it1_(move(it1))
             , it2_(move(it2))
         {
@@ -362,4 +385,4 @@ struct ChainIterator: public Iterator<ChainIterator<It>, typename It::InT, typen
 
 } // namespace nel
 
-#endif // NEL_ITERATOR_HH
+#endif // !defined(NEL_ITERATOR_HH)

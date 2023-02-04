@@ -11,9 +11,9 @@ void ex1(void)
 {
     Vec1 vec1 = Vec1::with_capacity(5);
 
-    vec1.push_back((uint8_t)0x67);
-    vec1.push_back((uint8_t)0x68);
-    vec1.push_back((uint8_t)0x69);
+    vec1.push((uint8_t)0x67).is_ok();
+    vec1.push((uint8_t)0x68).is_ok();
+    vec1.push((uint8_t)0x69).is_ok();
 
     auto s1 = vec1.slice();
     nel::log << s1.len() << '\n' << s1;

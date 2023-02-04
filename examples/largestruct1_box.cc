@@ -17,7 +17,7 @@ nel::Log &operator<<(nel::Log &outs, Box1 const &v)
 void box1()
 {
     U8Buf<256> v = U8Buf<256>((uint8_t)0x66);
-    auto r = Box1::try_from(move(v));
+    auto r = Box1::try_from(nel::move(v));
     Box1 b = r.unwrap();
 
     nel::log << b << '\n';

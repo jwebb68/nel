@@ -1,6 +1,6 @@
 // -*- mode: c++; indent-tabs-mode: nil; tab-width: 4 -*-
-#include <nel/panic.hh>
 #include <nel/memory.hh>
+#include <nel/panic.hh> // nel_*
 
 #include <cstdlib> //std::free, std::malloc, std::realloc
 #include <cstring> // std::memcpy, std::memset

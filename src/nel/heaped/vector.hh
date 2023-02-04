@@ -19,6 +19,7 @@ struct Vector;
 #include <nel/optional.hh>
 #include <nel/result.hh>
 #include <nel/log.hh>
+#include <nel/memory.hh>
 #include <nel/defs.hh>
 
 namespace nel
@@ -242,14 +243,14 @@ struct Vector {
          * @returns if e > vec len, clamp to last elem.
          * @returns else return slice over region b..e of vec.
          */
-        constexpr Slice<T> subslice(Index b, Index e)
+        constexpr Slice<T> slice(Index b, Index e)
         {
-            return slice().subslice(b, e);
+            return slice().slice(b, e);
         }
 
-        constexpr Slice<T const> subslice(Index b, Index e) const
+        constexpr Slice<T const> slice(Index b, Index e) const
         {
-            return slice().subslice(b, e);
+            return slice().slice(b, e);
         }
 
     public:
@@ -329,7 +330,7 @@ struct Vector {
          * @returns if successful, Result<void, T>::Ok()
          * @returns if unsuccessful, Result<void, T>::Err() holding val
          */
-        Result<void, T> push_back(T &&val)
+        Result<void, T> NEL_WARN_UNUSED_RESULT push(T &&val)
         {
             bool ok;
             ok = try_reserve(len() + 1);
@@ -352,7 +353,7 @@ struct Vector {
 #endif
 
         template<typename... Args>
-        Result<void, T> push_back(Args &&...args)
+        Result<void, T> NEL_WARN_UNUSED_RESULT push(Args &&...args)
         {
             bool ok;
             ok = try_reserve(len() + 1);
@@ -374,7 +375,7 @@ struct Vector {
          * @returns on success: Optional::Some holding the value
          * @returns on fail: Optional::None
          */
-        Optional<T> pop_back(void)
+        Optional<T> pop(void)
         {
             return (item_ == nullptr) ? Optional<T>::None() : item_->pop_back();
         }

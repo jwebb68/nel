@@ -1,8 +1,8 @@
 // -*- mode: c++; indent-tabs-mode: nil; tab-width: 4 -*-
-#ifndef NEL_HEAPLESS_QUEUE_HH
-#define NEL_HEAPLESS_QUEUE_HH
+#if !defined(NEL_HEAPLESS_QUEUE_HH)
+#    define NEL_HEAPLESS_QUEUE_HH
 
-#include <nel/defs.hh> //NEL_UNUSED, nel::Length
+#    include <nel/defs.hh> //NEL_UNUSED, Length
 
 namespace nel
 {
@@ -15,28 +15,43 @@ struct Queue;
 } // namespace heapless
 } // namespace nel
 
-#include <nel/iterator.hh>
-#include <nel/slice.hh>
-#include <nel/optional.hh>
-#include <nel/result.hh>
-#include <nel/log.hh>
-#include <nel/panic.hh>
+#    include <nel/iterator.hh>
+#    include <nel/slice.hh>
+#    include <nel/optional.hh>
+#    include <nel/result.hh>
+#    include <nel/memory.hh>
+#    include <nel/log.hh>
+
+#    include <new> // placement new
 
 namespace nel
 {
 namespace heapless
 {
+
 /**
- * A constrained queue of values (a FIFO queue)
+ * Queue
  *
- * Values stored inline in object (no heap usage)
+ * A constrained queue of values (a FIFO queue)
+ * A dynamic container of T.
+ * Manages a block of ram within itself (i.e. heapless)
  * Queue owns values , on destroy of queue, owned values destroyed as well.
+ * Elements moved in when pushed, moved out when popped.
+ * Once full, push will drop oldest value and overwrite.
+ * Once empty, pop will fail.
+ * All remaining elements are destroyed when queue is destroyed.
+ * Queue cannot be resized.
+ * Present Elements can be iterated over in push order.
+ * Queue can be moved, calling the move operator on each elem.
+ * Queue cannot be copied implicitly.
  * The FIFO ordering is preserved.
  */
 template<typename T, Length const N>
 struct Queue {
     public:
     private:
+        // cannot use Array<T,N> as Array wants all elems initialised.
+        // and this class does not want that.
         T store_[N];
         Length len_;
         Index wp_;
@@ -45,17 +60,11 @@ struct Queue {
     public:
         ~Queue(void)
         {
-            // delete in reverse, as allocated forward, so reducing heap fragmentation
-            // although a freespace coalescing allocator would obviate that need.
-            T *it = &store_[wp_];
-            for (Index l = len_; l != 0; --l) {
-                it -= 1;
-                it->~T();
-                if (it == &store_[0]) { it = &store_[N]; }
-            }
+            // TODO: delete in reverse as allocated forward..?
+            iter().for_each([&](T &v) -> void { v.~T(); });
         }
 
-    private:
+    public:
         Queue(void)
             : len_(0)
             , wp_(0)
@@ -63,36 +72,70 @@ struct Queue {
         {
         }
 
-    public:
+    private:
         // no implicit copying allowed
         constexpr Queue(Queue const &o) = delete;
         constexpr Queue &operator=(Queue const &o) = delete;
 
+    public:
         // moving allowed though.
         constexpr Queue(Queue &&o)
-            : len_(o.len_)
-            , wp_(o.wp_)
-            , rp_(o.rp_)
+            : len_(move(o.len_))
+            , wp_(move(o.wp_))
+            , rp_(move(o.rp_))
         {
-            // TODO: replace with slice().move_from(o.slice())
-            T *d = &store_[rp_];
-            T *s = &o.store_[rp_];
-            for (Index l = len_; l != 0; --l) {
-                new (d) T(move(*s));
-                s += 1;
-                if (s == &o.store_[N]) { s = &o.store_[0]; }
-                d += 1;
-                if (d == &store_[N]) { d = &store_[0]; }
-            }
             o.len_ = 0;
             o.wp_ = o.rp_ = 0;
+
+            // moved contents to this, o is now empty/invalid.
+            // but cannot destroy o.store_ as this now owns them.
+            if (len_ == 0) {
+            } else if (rp_ < wp_) {
+                T *s = &o.store_[rp_];
+                for (T *d = &store_[rp_]; d != &store_[wp_]; ++d) {
+                    new (d) T(move(*s));
+                    ++s;
+                }
+            } else {
+                T *s = &o.store_[rp_];
+                for (T *d = &store_[rp_]; d != &store_[N]; ++d) {
+                    new (d) T(move(*s));
+                    ++s;
+                }
+                s = &o.store_[0];
+                for (T *d = &store_[0]; d != &store_[wp_]; ++d) {
+                    new (d) T(move(*s));
+                    ++s;
+                }
+            }
         }
 
-        constexpr Queue &operator=(Queue &&o)
+        Queue &operator=(Queue &&o)
         {
             if (this != &o) {
-                this->~Queue();
-                new (this) Queue(move(o));
+                rp_ = move(o.rp_);
+                wp_ = move(o.wp_);
+                len_ = move(o.len_);
+                o.rp_ = o.wp_ = o.len_ = 0;
+                if (len_ == 0) {
+                } else if (rp_ < wp_) {
+                    T *s = &o.store_[rp_];
+                    for (T *d = &store_[rp_]; d != &store_[wp_]; ++d) {
+                        *d = move(*s);
+                        ++s;
+                    }
+                } else {
+                    T *s = &o.store_[rp_];
+                    for (T *d = &store_[rp_]; d != &store_[N]; ++d) {
+                        *d = move(*s);
+                        ++s;
+                    }
+                    s = &o.store_[0];
+                    for (T *d = &store_[0]; d != &store_[wp_]; ++d) {
+                        *d = move(*s);
+                        ++s;
+                    }
+                }
             }
             return *this;
         }
@@ -114,7 +157,7 @@ struct Queue {
          *
          * @returns true if queue is empty, false otherwise.
          */
-        bool is_empty(void) const
+        constexpr bool is_empty(void) const
         {
             return len_ == 0;
         }
@@ -124,7 +167,7 @@ struct Queue {
          *
          * @returns true if queue is full, false otherwise.
          */
-        bool is_full(void) const
+        constexpr bool is_full(void) const
         {
             return len_ == N;
         }
@@ -134,29 +177,61 @@ struct Queue {
          *
          * @returns number of items in the queue.
          */
-        Length len(void) const
+        constexpr Length len(void) const
         {
             return len_;
         }
 
         /**
-         * Put a value onto the queue.
+         * Return the capacity of the queue.
          *
-         * if successfull, val is moved into the queue
+         * @returns number of items.
+         */
+        constexpr Length capacity(void) const
+        {
+            return N;
+        }
+
+    public:
+        void clear(void)
+        {
+            iter().for_each([&](T &v) -> void { v.~T(); });
+            rp_ = wp_ = len_ = 0;
+        }
+
+        /**
+         * Push a value onto the queue.
+         *
+         * if successful, val is moved into the queue
          * if unsuccessful, val is still moved, just into the result.
          *
          * @param val The value to move into the queue.
          * @returns if successful, Result<void, T>::Ok()
          * @returns if unsuccessful, Result<void, T>::Err() holding val
          */
-        Result<void, T> put(T &&val)
+        Result<void, T> NEL_WARN_UNUSED_RESULT push(T &&val)
         {
+#    if 0
             if (is_full()) { return Result<void, T>::Err(val); }
             len_ += 1;
             new (&store_[wp_]) T(val);
             wp_ += 1;
             if (wp_ == N) { wp_ = 0; }
             return Result<void, T>::Ok();
+#    else
+            if (is_full()) {
+                // here , rp_ == wp_.
+                rp_ += 1;
+                if (rp_ >= capacity()) { rp_ = 0; }
+                store_[wp_] = move(val);
+            } else {
+                len_ += 1;
+                new (&store_[wp_]) T(val);
+            }
+            wp_ += 1;
+            if (wp_ >= capacity()) { wp_ = 0; }
+            return Result<void, T>::Ok();
+#    endif
         }
 
         /**
@@ -166,7 +241,7 @@ struct Queue {
          * @returns if successful, Optional<T>::Some(val)
          * @returns if unsuccessful, Optional<T>::None
          */
-        Optional<T> get(void)
+        Optional<T> pop(void)
         {
             if (is_empty()) { return None; }
             len_ -= 1;
@@ -174,6 +249,28 @@ struct Queue {
             rp_ += 1;
             if (rp_ == N) { rp_ = 0; }
             return r;
+        }
+
+        void drain(Length n)
+        {
+            if (len() == 0) {
+            } else if (n >= len()) {
+                clear();
+            } else if ((rp_ + n) < N) {
+                auto s1 = Slice<T>::from(&store_[rp_], &store_[rp_ + n]);
+                auto s2 = Slice<T>::empty();
+                auto it = QueueIteratorMut(s1.iter(), s2.iter());
+                it.for_each([&](T &v) -> void { v.~T(); });
+                rp_ += n;
+                len_ -= n;
+            } else {
+                auto s1 = Slice<T>::from(&store_[rp_], &store_[N]);
+                auto s2 = Slice<T>::from(&store_[0], &store_[n - N]);
+                auto it = QueueIteratorMut(s1.iter(), s2.iter());
+                it.for_each([&](T &v) -> void { v.~T(); });
+                rp_ = n - N;
+                len_ -= n;
+            }
         }
 
     public:
@@ -235,7 +332,7 @@ struct Queue {
         }
 };
 
-} // namespace heapless
-} // namespace nel
+}; // namespace heapless
+}; // namespace nel
 
-#endif // NEL_HEAPLESS_QUEUE_HH
+#endif // defined(NEL_HEAPLESS_QUEUE_HH)

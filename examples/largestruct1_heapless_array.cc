@@ -11,7 +11,7 @@ typedef nel::heapless::Array<U8Buf<256>, 8> Array1;
 void ex1()
 {
     // what should this give?
-    Array1 arr1 = Array1::filled(U8Buf<256>(0xff));
+    Array1 arr1 = Array1::filled_with(U8Buf<256>(0xff));
 
     nel::log << arr1 << '\n';
 }
@@ -54,7 +54,7 @@ void ex3()
 
 void ex3()
 {
-    Array1 arr1 = Array1::filled(U8Buf<256>(0xff));
+    Array1 arr1 = Array1::filled_with(U8Buf<256>(0xff));
 
     arr1.try_get(0).unwrap() = U8Buf<256>(0x11);
     arr1.try_get(5).unwrap() = U8Buf<256>(0x22);
@@ -63,7 +63,7 @@ void ex3()
 
 void ex41()
 {
-    Array1 arr1 = Array1::filled(U8Buf<256>(0xff));
+    Array1 arr1 = Array1::filled_with(U8Buf<256>(0xff));
 
     auto it = arr1.iter();
     while (true) {
@@ -85,14 +85,14 @@ void ex41()
 
 void ex42()
 {
-    Array1 arr1 = Array1::filled(U8Buf<256>(0xff));
+    Array1 arr1 = Array1::filled_with(U8Buf<256>(0xff));
 
     arr1.iter().for_each([&](U8Buf<256> &v) -> void { nel::log << v << '\n'; });
 }
 
 void ex51()
 {
-    Array1 arr1 = Array1::filled(U8Buf<256>(0xff));
+    Array1 arr1 = Array1::filled_with(U8Buf<256>(0xff));
 
     auto it = arr1.iter();
     for (; !it.is_done(); it.inc()) {
@@ -103,14 +103,14 @@ void ex51()
 
 void ex52()
 {
-    Array1 arr1 = Array1::filled(U8Buf<256>(0xff));
+    Array1 arr1 = Array1::filled_with(U8Buf<256>(0xff));
 
     arr1.iter().for_each2([&](U8Buf<256> &v) -> void { nel::log << v << '\n'; });
 }
 
 void ex61()
 {
-    Array1 arr1 = Array1::filled(U8Buf<256>(0xff));
+    Array1 arr1 = Array1::filled_with(U8Buf<256>(0xff));
 
     auto it = arr1.iter().first_n(2);
     Index i = 0;
@@ -134,7 +134,7 @@ void ex61()
 
 void ex62()
 {
-    Array1 arr1 = Array1::filled(U8Buf<256>(0xff));
+    Array1 arr1 = Array1::filled_with(U8Buf<256>(0xff));
 
     auto it = arr1.iter().first_n(2);
     Index i = 0;
@@ -146,7 +146,7 @@ void ex62()
 
 void ex71()
 {
-    Array1 arr1 = Array1::filled(U8Buf<256>(0xff));
+    Array1 arr1 = Array1::filled_with(U8Buf<256>(0xff));
 
     auto it = arr1.iter().first_n(2);
     Index i = 0;
@@ -160,7 +160,7 @@ void ex71()
 
 void ex72()
 {
-    Array1 arr1 = Array1::filled(U8Buf<256>(0xff));
+    Array1 arr1 = Array1::filled_with(U8Buf<256>(0xff));
 
     auto it = arr1.iter().first_n(2);
     Index i = 0;

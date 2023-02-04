@@ -1,10 +1,9 @@
 // -*- mode: c++; indent-tabs-mode: nil; tab-width: 4 -*-
-#ifndef NEL_MEMORY_HH
-#define NEL_MEMORY_HH
+#if !defined(NEL_MEMORY_HH)
+#    define NEL_MEMORY_HH
 
-#include <nel/defs.hh>
-
-#include <cstdint> // uint8_t
+#    include <nel/defs.hh> // Length
+#    include <inttypes.h> // uint8_t
 
 namespace nel
 {
@@ -124,6 +123,30 @@ void memswap(T *const d, T *const s, Length n)
     }
 }
 
-} // namespace nel
+template<typename T>
+constexpr T &&move(T &v)
+{
+    return static_cast<T &&>(v);
+}
 
-#endif // NEL_MEMORY_HH
+template<typename T>
+constexpr T &&move(T &&v)
+{
+    return static_cast<T &&>(v);
+}
+
+template<typename T>
+constexpr T &&forward(T &v)
+{
+    return static_cast<T &&>(v);
+}
+
+template<typename T>
+constexpr T &&forward(T &&v)
+{
+    return static_cast<T &&>(v);
+}
+
+}; // namespace nel
+
+#endif // defined(NEL_MEMORY_HH)
