@@ -7,11 +7,13 @@ Language: Cpp
 AccessModifierOffset: -2
 AlignAfterOpenBracket: Align
 #AlignAfterOpenBracket: BlockIndent
+AlignArrayOfStructures: Right
 AlignConsecutiveAssignments: false
 AlignConsecutiveDeclarations: false
 AlignConsecutiveMacros: None
 AlignEscapedNewlines: DontAlign
-AlignOperands: true
+#AlignOperands: true
+AlignOperands: AlignAfterOperator
 AlignTrailingComments: false
 AllowAllArgumentsOnNextLine: false
 #AllowAllConstructorInitializersOnNextLine: false
@@ -21,8 +23,8 @@ AllowShortBlocksOnASingleLine: Always
 AllowShortCaseLabelsOnASingleLine: false
 AllowShortEnumsOnASingleLine: false
 AllowShortFunctionsOnASingleLine: Empty
-AllowShortIfStatementsOnASingleLine: true
-#AllowShortIfStatementsOnASingleLine: AllIfsAndElse
+#AllowShortIfStatementsOnASingleLine: true
+AllowShortIfStatementsOnASingleLine: AllIfsAndElse
 AllowShortLambdasOnASingleLine: Inline
 AllowShortLoopsOnASingleLine: false
 AlwaysBreakAfterReturnType: None
@@ -33,12 +35,13 @@ BinPackParameters: false
 #BitFieldColonSpacingStyle: After
 #BinaryOperatorStyle: All
 BreakBeforeBraces: Linux
+BreakBeforeBinaryOperators: All
 BreakBeforeTernaryOperators: true
 BreakConstructorInitializers: BeforeComma
 BreakInheritanceList: BeforeComma
 BreakStringLiterals: true
 CompactNamespaces: false
-ConstructorInitializerAllOnOneLineOrOnePerLine: true
+##ConstructorInitializerAllOnOneLineOrOnePerLine: true
 Cpp11BracedListStyle: true
 #DeriveLineEnding: false
 DerivePointerAlignment: false
@@ -49,7 +52,7 @@ IndentAccessModifiers: true
 IndentCaseBlocks: false
 IndentCaseLabels: true
 #IndentExternBlockStyle: NoIndent
-#IndentGotoLabels: false
+IndentGotoLabels: false
 IndentPPDirectives: AfterHash
 IndentWrappedFunctionNames: false
 #InsertBraces: true
@@ -57,12 +60,15 @@ IndentWrappedFunctionNames: false
 KeepEmptyLinesAtTheStartOfBlocks: false
 NamespaceIndentation: None
 
+PackConstructorInitializers: Never
 PenaltyBreakBeforeFirstCallParameter: 10000
 
 PointerAlignment: Right
-
+#QualifierAssignment: Right
 ReflowComments: true
+#ReferenceAssignment: Right
 
+SeparateDefinitionBlocks: Always
 # don't sort includes
 # since we want the common ones last within a group and there isn't enough info in the name
 # to determine that.

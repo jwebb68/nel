@@ -1,5 +1,6 @@
-#ifndef NEL_ELEMENT_HH
-#define NEL_ELEMENT_HH
+// -*- mode: c++; indent-tabs-mode: nil; tab-width: 4 -*-
+#if !defined(NEL_ELEMENT_HH)
+#    define NEL_ELEMENT_HH
 
 namespace nel
 {
@@ -7,7 +8,7 @@ template<typename T>
 struct Element;
 } // namespace nel
 
-#include <utility> // std::move, std::forward
+#    include <nel/memory.hh> // move, forward
 
 namespace nel
 {
@@ -25,41 +26,57 @@ struct Element {
         Element(Element const &) = delete;
         Element &operator=(Element const &) const = delete;
 
-        constexpr Element(Element &&o) noexcept = default;
-        constexpr Element &operator=(Element &&o) noexcept = default;
+        constexpr Element(Element &&o) = default;
+        constexpr Element &operator=(Element &&o) = default;
 
-        Element(T &&val) noexcept: value_(std::forward<T>(val)) {}
+        Element(T &&val)
+            : value_(forward<T>(val))
+        {
+        }
 
         template<typename... Args>
-        Element(Args &&...args) noexcept: value_(std::forward<Args>(args)...)
+        Element(Args &&...args)
+            : value_(forward<Args>(args)...)
         {
         }
 
     public:
-        T unwrap(void) noexcept
+        T &&unwrap(void)
         {
-            return std::forward<T>(value_);
+            return forward<T>(value_);
         }
 
-        T const &get(void) const noexcept
-        {
-            return value_;
-        }
-        T &get(void) noexcept
+        T const &get(void) const
         {
             return value_;
         }
 
-        T const &operator*(void) const noexcept
+        T &get(void)
         {
             return value_;
         }
-        T &operator*(void) noexcept
+
+        T const &operator*(void) const
         {
             return value_;
+        }
+
+        T &operator*(void)
+        {
+            return value_;
+        }
+
+        constexpr bool operator==(Element const &o) const
+        {
+            return value_ == o.value_;
+        }
+
+        constexpr bool operator!=(Element const &o) const
+        {
+            return value_ != o.value_;
         }
 };
 
 } // namespace nel
 
-#endif // NEL_ELEMENT_HH
+#endif // !defined(NEL_ELEMENT_HH)

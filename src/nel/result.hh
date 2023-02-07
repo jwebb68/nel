@@ -1,5 +1,6 @@
-#ifndef NEL_RESULT_HH
-#define NEL_RESULT_HH
+// -*- mode: c++; indent-tabs-mode: nil; tab-width: 4 -*-
+#if !defined(NEL_RESULT_HH)
+#    define NEL_RESULT_HH
 
 namespace nel
 {
@@ -9,13 +10,10 @@ class Result;
 
 } // namespace nel
 
-#include <nel/optional.hh>
-#include <nel/element.hh>
-#include <nel/log.hh>
-#include <nel/panic.hh>
-
-#include <functional> // std::function
-#include <utility> // std::move, std::forward
+#    include <nel/optional.hh>
+#    include <nel/element.hh>
+#    include <nel/log.hh>
+#    include <nel/panic.hh>
 
 namespace nel
 {
@@ -65,59 +63,37 @@ class Result
 {
     public:
     private:
-        typedef T OkT;
-        typedef E ErrT;
-
         // Tagged enum thing.
         // Similar to std::variant but without the exception throwing behaviour.
         // Maybe make into a nel::Variant ?
-        enum Tag
-        {
+        enum class Tag {
             INVAL = 0,
             OK,
             ERR
         } tag_;
+
         template<enum Tag>
         struct Phantom {
         };
 
         union {
-                Element<OkT> ok_;
-                Element<ErrT> err_;
+                Element<T> ok_;
+                Element<E> err_;
         };
 
-        Result(Phantom<OK> const, OkT &&v) noexcept: tag_(OK), ok_(std::forward<OkT>(v)) {}
-
-        template<typename... Args>
-        Result(Phantom<OK> const, Args &&...args) noexcept
-            : tag_(OK), ok_(std::forward<Args>(args)...)
-        {
-        }
-
-        Result(Phantom<ERR> const, ErrT &&v) noexcept: tag_(ERR), err_(std::forward<ErrT>(v)) {}
-
-        template<typename... Args>
-        Result(Phantom<ERR> const, Args &&...args) noexcept
-            : tag_(ERR), err_(std::forward<Args>(args)...)
-        {
-        }
-
     public:
-        ~Result(void) noexcept
+        ~Result(void)
         {
             switch (tag_) {
-                case OK:
-                    ok_.~Element<OkT>();
-                    return;
+                case Tag::OK:
+                    ok_.~Element<T>();
                     break;
 
-                case ERR:
-                    err_.~Element<ErrT>();
-                    return;
+                case Tag::ERR:
+                    err_.~Element<E>();
                     break;
 
-                case INVAL:
-                    return;
+                case Tag::INVAL:
                     break;
 
                 // I want compile to fail if an enum case handler isn't present.
@@ -131,44 +107,94 @@ class Result
             }
         }
 
-        Result(Result &&o) noexcept: tag_(std::move(o.tag_))
+        constexpr Result(Result &&o)
         {
-            o.tag_ = INVAL;
+            tag_ = o.tag_;
+            o.tag_ = Tag::INVAL;
             switch (tag_) {
-                case OK:
-                    new (&ok_) Element<OkT>(std::move(o.ok_));
-                    return;
+                case Tag::OK:
+                    new (&ok_) Element<T>(move(o.ok_));
                     break;
-                case ERR:
-                    new (&err_) Element<ErrT>(std::move(o.err_));
-                    return;
+
+                case Tag::ERR:
+                    new (&err_) Element<E>(move(o.err_));
                     break;
-                case INVAL:
-                    return;
+
+                case Tag::INVAL:
                     break;
+
                 default:
                     // std::cerr << "invalid Result: tag=" << this->tag_ << std::endl;
                     // std::abort();
                     nel_panic("invalid Result");
             }
         }
-        Result &operator=(Result &&o) noexcept
+
+        Result &operator=(Result &&o)
         {
             if (this != &o) {
-                // only safe if move-ctor guaranteed to not throw
-                this->~Result();
-                new (this) Result(std::move(o));
+                tag_ = o.tag_;
+                o.tag_ = Tag::INVAL;
+                switch (tag_) {
+                    case Tag::OK:
+                        ok_ = move(o.ok_);
+                        break;
+
+                    case Tag::ERR:
+                        err_ = move(o.err_);
+                        break;
+
+                    case Tag::INVAL:
+                        break;
+
+                    default:
+                        // std::cerr << "invalid Result: tag=" << this->tag_ << std::endl;
+                        // std::abort();
+                        nel_panic("invalid Result");
+                }
             }
             return *this;
         }
 
+    private:
         // Not using copy semantics, results are only moveable..
         Result(Result const &) = delete;
         Result &operator=(Result const &) const = delete;
 
+    public:
         // Don't really want default ctor, but move semantics brought in a
         // inval state, which can be used for it.
-        constexpr Result(void) noexcept: tag_(INVAL) {}
+        constexpr Result(void)
+            : tag_(Tag::INVAL)
+        {
+        }
+
+    private:
+        constexpr Result(Phantom<Tag::OK> const, T &&v)
+            : tag_(Tag::OK)
+            , ok_(forward<T>(v))
+        {
+        }
+
+        template<typename... Args>
+        constexpr Result(Phantom<Tag::OK> const, Args &&...args)
+            : tag_(Tag::OK)
+            , ok_(forward<Args>(args)...)
+        {
+        }
+
+        constexpr Result(Phantom<Tag::ERR> const, E &&v)
+            : tag_(Tag::ERR)
+            , err_(forward<E>(v))
+        {
+        }
+
+        template<typename... Args>
+        constexpr Result(Phantom<Tag::ERR> const, Args &&...args)
+            : tag_(Tag::ERR)
+            , err_(forward<Args>(args)...)
+        {
+        }
 
     public:
         /**
@@ -178,9 +204,9 @@ class Result
          *
          * @returns a Result 'wrapping' the value given as an ok value.
          */
-        static Result Ok(OkT &&val) noexcept
+        constexpr static Result Ok(T &&val)
         {
-            return Result(Phantom<OK>(), std::forward<OkT>(val));
+            return Result(Phantom<Tag::OK>(), forward<T>(val));
         }
 
         /**
@@ -191,9 +217,9 @@ class Result
          * @returns a Result 'wrapping' the values given to construct an ok value inplace.
          */
         template<typename... Args>
-        static Result Ok(Args &&...args) noexcept
+        constexpr static Result Ok(Args &&...args)
         {
-            return Result(Phantom<OK>(), std::forward<Args>(args)...);
+            return Result(Phantom<Tag::OK>(), forward<Args>(args)...);
         }
 
         /**
@@ -203,9 +229,9 @@ class Result
          *
          * @returns a Result 'wrapping' the value given as an err value.
          */
-        static Result Err(ErrT &&val) noexcept
+        constexpr static Result Err(E &&val)
         {
-            return Result(Phantom<ERR>(), std::forward<ErrT>(val));
+            return Result(Phantom<Tag::ERR>(), forward<E>(val));
         }
 
         /**
@@ -216,9 +242,32 @@ class Result
          * @returns a Result 'wrapping' the values given to construct an Err value inplace.
          */
         template<typename... Args>
-        static Result Err(Args &&...args) noexcept
+        constexpr static Result Err(Args &&...args)
         {
-            return Result(Phantom<ERR>(), std::forward<Args>(args)...);
+            return Result(Phantom<Tag::ERR>(), forward<Args>(args)...);
+        }
+
+    private:
+        //  don't use std::function, it's bloatware
+        // template<typename V>
+        // constexpr V match(Tag tag, std::function<V(void)> &&on_ok, std::function<V(void)>
+        // &&on_err) const  {
+        template<typename V, typename Fn1, typename Fn2>
+        constexpr V match(Tag tag, Fn1 &&on_ok, Fn2 &&on_err) const
+        {
+            switch (tag) {
+                case Tag::OK:
+                    return on_ok();
+                case Tag::ERR:
+                    return on_err();
+                case Tag::INVAL:
+                // invalids are not values that should occur
+                // if they do it's a use-after-move-from op so must panic.
+                // or a use-before-initialised so again must panic.
+                default:
+                    nel_panic("invalid Result");
+                    // std::abort();
+            }
         }
 
     public:
@@ -235,24 +284,14 @@ class Result
          * `this` is not consumed by the operation.
          * `o` is not consumed by the operation.
          */
-        constexpr bool operator==(Result const &o) const noexcept
+        constexpr bool operator==(Result const &o) const
         {
             if (this == &o) { return true; }
             if (tag_ == o.tag_) {
-                switch (tag_) {
-                    case OK:
-                        return ok_ == o.ok_;
-                        break;
-                    case ERR:
-                        return err_ == o.err_;
-                        break;
-                    case INVAL:
-                        return true;
-                        break;
-                    default:
-                        nel_panic("invalid Result");
-                        // std::abort();
-                }
+                return match<bool>(
+                    tag_,
+                    [this, &o](void) -> bool { return ok_ == o.ok_; },
+                    [this, &o](void) -> bool { return err_ == o.err_; });
             }
             return false;
         }
@@ -266,24 +305,14 @@ class Result
          * `this` is not consumed by the operation.
          * `o` is not consumed by the operation.
          */
-        constexpr bool operator!=(Result const &o) const noexcept
+        constexpr bool operator!=(Result const &o) const
         {
             if (this == &o) { return false; }
             if (tag_ == o.tag_) {
-                switch (tag_) {
-                    case OK:
-                        return ok_ != o.ok_;
-                        break;
-                    case ERR:
-                        return err_ != o.err_;
-                        break;
-                    case INVAL:
-                        return false;
-                        break;
-                    default:
-                        nel_panic("invalid Result");
-                        // std::abort();
-                }
+                return match<bool>(
+                    tag_,
+                    [this, &o](void) -> bool { return ok_ != o.ok_; },
+                    [this, &o](void) -> bool { return err_ != o.err_; });
             }
             return true;
         }
@@ -296,9 +325,12 @@ class Result
          *
          * `this` is not consumed by this op.
          */
-        constexpr bool is_ok(void) const noexcept
+        constexpr bool is_ok(void) const
         {
-            return tag_ == OK;
+            return match<bool>(
+                tag_,
+                [this](void) -> bool { return true; },
+                [this](void) -> bool { return false; });
         }
 
         /**
@@ -308,9 +340,23 @@ class Result
          *
          * `this` is not consumed by this op.
          */
-        constexpr bool is_err(void) const noexcept
+        constexpr bool is_err(void) const
         {
-            return tag_ == ERR;
+            return match<bool>(
+                tag_,
+                [this](void) -> bool { return false; },
+                [this](void) -> bool { return true; });
+        }
+
+    private:
+        // template<typename V>
+        // V consume(std::function<V(void)> &&on_ok, std::function<V(void)> &&on_err) {
+        template<typename V, typename Fn1, typename Fn2>
+        V consume(Fn1 &&on_ok, Fn2 &&on_err)
+        {
+            auto tag = tag_;
+            tag_ = Tag::INVAL;
+            return match<V>(tag, forward<Fn1>(on_ok), forward<Fn2>(on_err));
         }
 
     public:
@@ -318,17 +364,16 @@ class Result
          * Return an optional containing the ok value or none.
          *
          * @returns if this is a Ok, returns Optional containing a Some with the ok value.
-         * @returns if this is not a Ok, returns Optional containing a None.
+         * @returns if this is an Err, returns Optional containing a None.
+         * Panics if invalid.
+         * Panics if unknown.
          *
          * `this` is consumed and invalidated after.
          */
-        Optional<OkT> ok(void) noexcept
+        Optional<T> ok(void)
         {
-            bool const is_ok = this->is_ok();
-            tag_ = INVAL;
-            // TODO: remove need to explicitly cast to Optional in each of the
-            //       branches.. i.e. the Optional<T>:: bit.
-            return is_ok ? Some(ok_.unwrap()) : None;
+            return consume<Optional<T>>([this](void) -> Optional<T> { return Some(ok_.unwrap()); },
+                                        [](void) -> Optional<T> { return None; });
         }
 
         /**
@@ -339,13 +384,12 @@ class Result
          *
          * `this` is consumed and invalidated after.
          */
-        Optional<ErrT> err(void) noexcept
+        Optional<E> err(void)
         {
-            bool const is_err = this->is_err();
-            tag_ = INVAL;
-            // TODO: remove need to explicitly cast to Optional in each of the
-            //       branches.. i.e. the Optional<E>:: bit.
-            return is_err ? Some(err_.unwrap()) : None;
+            return consume<Optional<E>>([](void) -> Optional<E> { return None; },
+                                        [this](void) -> Optional<E> {
+                                            return Some(err_.unwrap());
+                                        });
         }
 
         /**
@@ -356,11 +400,10 @@ class Result
          *
          * `this` is consumed by the operation.
          */
-        OkT unwrap(void) noexcept
+        T unwrap(void)
         {
-            nel_panic_if_not(is_ok(), "not an ok");
-            tag_ = INVAL;
-            return ok_.unwrap();
+            return consume<T>([this](void) -> T { return ok_.unwrap(); },
+                              [](void) -> T { nel_panic("not an OK"); });
         }
 
         /**
@@ -371,11 +414,10 @@ class Result
          *
          * this is consumed by the operation.
          */
-        ErrT unwrap_err(void) noexcept
+        E unwrap_err(void)
         {
-            nel_panic_if_not(is_err(), "not an err");
-            tag_ = INVAL;
-            return err_.unwrap();
+            return consume<E>([](void) -> E { nel_panic("not an err"); },
+                              [this](void) -> E { return err_.unwrap(); });
         }
 
         /**
@@ -389,11 +431,10 @@ class Result
          * `this` is consumed by the operation.
          * `v` is consumed by the operation.
          */
-        OkT unwrap_or(OkT &&v) noexcept
+        T unwrap_or(T &&v)
         {
-            bool const is_ok = this->is_ok();
-            tag_ = INVAL;
-            return is_ok ? ok_.unwrap() : std::forward<OkT>(v);
+            return consume<T>([this](void) -> T { return ok_.unwrap(); },
+                              [&v](void) -> T { return forward<T>(v); });
         }
 
         /**
@@ -408,11 +449,10 @@ class Result
          * `args` are consumed by the operation.
          */
         template<typename... Args>
-        OkT unwrap_or(Args &&...args) noexcept
+        T unwrap_or(Args &&...args)
         {
-            bool const is_ok = this->is_ok();
-            tag_ = INVAL;
-            return is_ok ? ok_.unwrap() : OkT(std::forward<Args>(args)...);
+            return consume<T>([this](void) -> T { return ok_.unwrap(); },
+                              [&args...](void) -> T { return T(forward<Args>(args)...); });
         }
 
         /**
@@ -426,11 +466,10 @@ class Result
          * `this` is consumed by the operation.
          * `v` is consumed by the operation.
          */
-        ErrT unwrap_err_or(ErrT &&v) noexcept
+        E unwrap_err_or(E &&v)
         {
-            bool const is_err = this->is_err();
-            tag_ = INVAL;
-            return is_err ? err_.unwrap() : std::forward<ErrT>(v);
+            return consume<E>([&v](void) -> E { return forward<E>(v); },
+                              [this](void) -> E { return err_.unwrap(); });
         }
 
         /**
@@ -445,11 +484,10 @@ class Result
          * `args` are consumed by the operation.
          */
         template<typename... Args>
-        ErrT unwrap_err_or(Args &&...args) noexcept
+        E unwrap_err_or(Args &&...args)
         {
-            bool const is_err = this->is_err();
-            tag_ = INVAL;
-            return is_err ? err_.unwrap() : ErrT(std::forward<Args>(args)...);
+            return consume<E>([&args...](void) -> E { return E(forward<Args>(args)...); },
+                              [this](void) -> E { return err_.unwrap(); });
         }
 
         /**
@@ -462,25 +500,17 @@ class Result
          * `this` is consumed by the operation.
          */
         // would this be better as a free func?
-        template<class U>
-        Result<U, E> map(std::function<U(OkT &&)> fn) noexcept
+        // template<class U>
+        // Result<U, E> map(std::function<U(T &&)> fn)
+        template<class U, typename Fn>
+        Result<U, E> map(Fn &&fn)
         {
-            // TODO: remove need to explicitly cast to result in each of the
-            //       branches.. i.e. the Result<U,E>() bit.
-            switch (tag_) {
-                case OK:
-                    return Result<U, ErrT>::Ok(fn(unwrap()));
-                    break;
-                case ERR:
-                    return Result<U, ErrT>::Err(unwrap_err());
-                    break;
-                case INVAL:
-                    return Result<U, ErrT>();
-                    break;
-                default:
-                    nel_panic("invalid Result");
-                    // std::abort();
-            }
+            return consume<
+                Result<U, E>>([this, &fn](void)
+                                  -> Result<U, E> { return Result<U, E>::Ok(fn(ok_.unwrap())); },
+                              [this](void) -> Result<U, E> {
+                                  return Result<U, E>::Err(err_.unwrap());
+                              });
         }
 
         /**
@@ -493,41 +523,34 @@ class Result
          * `this` is consumed by the operation.
          */
         // would this be better as a free func?
-        template<class F>
-        Result<OkT, F> map_err(std::function<F(ErrT &&)> fn) noexcept
+        // template<class F>
+        // Result<T, F> map_err(std::function<F(E &&)> fn)
+        template<class F, typename Fn>
+        Result<T, F> map_err(Fn &&fn)
         {
             // TODO: remove need to explicitly cast to result in each of the
-            //       branches.. i.e. the Result<U,E>() bit.
-            switch (tag_) {
-                case OK:
-                    return Result<OkT, F>::Ok(unwrap());
-                    break;
-                case ERR:
-                    return Result<OkT, F>::Err(fn(unwrap_err()));
-                    break;
-                case INVAL:
-                    return Result<OkT, F>();
-                    break;
-                default:
-                    // std::abort();
-                    nel_panic("invalid Result");
-            }
+            //       branches.. i.e. the Result<U,E>() bit, should be Ok(..) or Err(..)
+            return consume<
+                Result<T, F>>([this](
+                                  void) -> Result<T, F> { return Result<T, F>::Ok(ok_.unwrap()); },
+                              [this, &fn](void) -> Result<T, F> {
+                                  return Result<T, F>::Err(fn(err_.unwrap()));
+                              });
         }
 
     public:
-        // friend std::ostream &operator<<(std::ostream &outs, Result const &val) {
-        friend Log &operator<<(Log &outs, Result const &val) noexcept
+        friend Log &operator<<(Log &outs, Result const &val)
         {
             switch (val.tag_) {
-                case OK:
+                case Tag::OK:
                     outs << "Result(Ok(" << *val.ok_ << "))";
                     return outs;
                     break;
-                case ERR:
+                case Tag::ERR:
                     outs << "Result(Err(" << *val.err_ << "))";
                     return outs;
                     break;
-                case INVAL:
+                case Tag::INVAL:
                     outs << "Result(Inval)";
                     return outs;
                     break;
@@ -543,51 +566,35 @@ class Result<void, E>
 {
     public:
     private:
-        typedef void OkT;
-        typedef E ErrT;
-
         // Tagged enum thing.
         // Similar to std::variant but without the exception throwing behaviour.
         // Maybe make into a nel::Variant ?
-        enum Tag
-        {
+        enum class Tag {
             INVAL = 0,
             OK,
             ERR
         } tag_;
+
         template<enum Tag>
         struct Phantom {
         };
 
         union {
-                Element<ErrT> err_;
+                Element<E> err_;
         };
 
-        constexpr Result(Phantom<OK> const) noexcept: tag_(OK) {}
-
-        Result(Phantom<ERR> const, ErrT &&v) noexcept: tag_(ERR), err_(std::forward<ErrT>(v)) {}
-
-        template<typename... Args>
-        Result(Phantom<ERR> const, Args &&...args) noexcept
-            : tag_(ERR), err_(std::forward<Args>(args)...)
-        {
-        }
-
     public:
-        ~Result(void) noexcept
+        ~Result(void)
         {
             switch (tag_) {
-                case OK:
-                    return;
+                case Tag::OK:
                     break;
 
-                case ERR:
-                    err_.~Element<ErrT>();
-                    return;
+                case Tag::ERR:
+                    err_.~Element<E>();
                     break;
 
-                case INVAL:
-                    return;
+                case Tag::INVAL:
                     break;
 
                 // No default as I want compile to fail if an enum case handler
@@ -596,36 +603,44 @@ class Result<void, E>
                     // But, want to abort/panic if a unhandled case is encountered
                     // at runtime, much how a default hander would work if it was
                     // present.
-                    std::abort();
+                    nel::abort();
                     // nel_panic("invalid Result");
             }
         }
 
-        Result(Result &&o) noexcept: tag_(std::move(o.tag_))
+        constexpr Result(Result &&o)
         {
-            o.tag_ = INVAL;
+            tag_ = o.tag_;
+            o.tag_ = Tag::INVAL;
             switch (tag_) {
-                case OK:
-                    return;
+                case Tag::OK:
                     break;
-                case ERR:
-                    new (&err_) Element<ErrT>(std::forward<Element<ErrT>>(o.err_));
-                    return;
+                case Tag::ERR:
+                    new (&err_) Element<E>(move(o.err_));
                     break;
-                case INVAL:
-                    return;
+                case Tag::INVAL:
                     break;
                 default:
                     nel_panic("invalid Result");
             }
         }
 
-        Result &operator=(Result &&o) noexcept
+        constexpr Result &operator=(Result &&o)
         {
             if (this != &o) {
-                // Only safe if move-ctor guaranteed to not throw/error .
-                this->~Result();
-                new (this) Result(std::move(o));
+                tag_ = o.tag_;
+                o.tag_ = Tag::INVAL;
+                switch (tag_) {
+                    case Tag::OK:
+                        break;
+                    case Tag::ERR:
+                        err_ = move(o.err_);
+                        break;
+                    case Tag::INVAL:
+                        break;
+                    default:
+                        nel_panic("invalid Result");
+                }
             }
             return *this;
         }
@@ -636,7 +651,29 @@ class Result<void, E>
 
         // Don't really want default ctor, but move semantics brought in a
         // inval state, which can be used for it.
-        constexpr Result(void) noexcept: tag_(INVAL) {}
+        constexpr Result(void)
+            : tag_(Tag::INVAL)
+        {
+        }
+
+    private:
+        constexpr Result(Phantom<Tag::OK> const)
+            : tag_(Tag::OK)
+        {
+        }
+
+        constexpr Result(Phantom<Tag::ERR> const, E &&v)
+            : tag_(Tag::ERR)
+            , err_(forward<E>(v))
+        {
+        }
+
+        template<typename... Args>
+        constexpr Result(Phantom<Tag::ERR> const, Args &&...args)
+            : tag_(Tag::ERR)
+            , err_(forward<Args>(args)...)
+        {
+        }
 
     public:
         /**
@@ -646,14 +683,14 @@ class Result<void, E>
          *
          * @returns a Result 'wrapping' the value given as an ok value.
          */
-        static Result Ok(void) noexcept
+        constexpr static Result Ok(void)
         {
-            return Result(Phantom<OK>());
+            return Result(Phantom<Tag::OK>());
         }
 
-        static Result Err(ErrT &&v) noexcept
+        constexpr static Result Err(E &&v)
         {
-            return Result(Phantom<ERR>(), std::forward<ErrT>(v));
+            return Result(Phantom<Tag::ERR>(), forward<E>(v));
         }
 
         /**
@@ -664,9 +701,32 @@ class Result<void, E>
          * @returns a Result 'wrapping' the values given to construct an Err value inplace.
          */
         template<typename... Args>
-        static Result Err(Args &&...args) noexcept
+        constexpr static Result Err(Args &&...args)
         {
-            return Result(Phantom<ERR>(), std::forward<Args>(args)...);
+            return Result(Phantom<Tag::ERR>(), forward<Args>(args)...);
+        }
+
+    private:
+        // template<typename V>
+        // constexpr V
+        // match(Tag tag, std::function<V(void)> on_ok, std::function<V(void)> on_err) const
+        //
+        template<typename V, typename Fn1, typename Fn2>
+        constexpr V match(Tag tag, Fn1 &&on_ok, Fn2 &&on_err) const
+        {
+            switch (tag) {
+                case Tag::OK:
+                    return on_ok();
+                case Tag::ERR:
+                    return on_err();
+                case Tag::INVAL:
+                // invalids are not values that should occur
+                // if they do it's a use-after-move-from op so must panic.
+                // or a use-before-initialised so again must panic.
+                default:
+                    nel_panic("invalid Result");
+                    // std::abort();
+            }
         }
 
     public:
@@ -683,24 +743,14 @@ class Result<void, E>
          * `this` is not consumed by the operation.
          * `o` is not consumed by the operation.
          */
-        constexpr bool operator==(Result const &o) const noexcept
+        constexpr bool operator==(Result const &o) const
         {
             if (this == &o) { return true; }
             if (tag_ == o.tag_) {
-                switch (tag_) {
-                    case OK:
-                        return true;
-                        break;
-                    case ERR:
-                        return err_ == o.err_;
-                        break;
-                    case INVAL:
-                        return true;
-                        break;
-                    default:
-                        nel_panic("invalid Result");
-                        // std::abort();
-                }
+                return match<bool>(
+                    tag_,
+                    [](void) -> bool { return true; },
+                    [this, &o](void) -> bool { return err_ == o.err_; });
             }
             return false;
         }
@@ -714,24 +764,14 @@ class Result<void, E>
          * `this` is not consumed by the operation.
          * `o` is not consumed by the operation.
          */
-        constexpr bool operator!=(Result const &o) const noexcept
+        constexpr bool operator!=(Result const &o) const
         {
             if (this == &o) { return false; }
             if (tag_ == o.tag_) {
-                switch (tag_) {
-                    case OK:
-                        return false;
-                        break;
-                    case ERR:
-                        return err_ != o.err_;
-                        break;
-                    case INVAL:
-                        return false;
-                        break;
-                    default:
-                        nel_panic("invalid Result");
-                        // std::abort();
-                }
+                return match<bool>(
+                    tag_,
+                    [](void) -> bool { return false; },
+                    [this, &o](void) -> bool { return err_ != o.err_; });
             }
             return true;
         }
@@ -744,9 +784,12 @@ class Result<void, E>
          *
          * `this` is not consumed by this op.
          */
-        constexpr bool is_ok(void) const noexcept
+        constexpr bool is_ok(void) const
         {
-            return tag_ == OK;
+            return match<bool>(
+                tag_,
+                [](void) -> bool { return true; },
+                [](void) -> bool { return false; });
         }
 
         /**
@@ -756,9 +799,23 @@ class Result<void, E>
          *
          * `this` is not consumed by this op.
          */
-        constexpr bool is_err(void) const noexcept
+        constexpr bool is_err(void) const
         {
-            return tag_ == ERR;
+            return match<bool>(
+                tag_,
+                [](void) -> bool { return false; },
+                [](void) -> bool { return true; });
+        }
+
+    private:
+        // template<typename V>
+        // V consume(std::function<V(void)> on_ok, std::function<V(void)> on_err)
+        template<typename V, typename Fn1, typename Fn2>
+        V consume(Fn1 &&on_ok, Fn2 &&on_err)
+        {
+            auto tag = tag_;
+            tag_ = Tag::INVAL;
+            return match<V>(tag, forward<Fn1>(on_ok), forward<Fn2>(on_err));
         }
 
     public:
@@ -770,13 +827,10 @@ class Result<void, E>
          *
          * `this` is consumed and invalidated after.
          */
-        Optional<OkT> ok(void) noexcept
+        Optional<void> ok(void)
         {
-            bool const is_ok = this->is_ok();
-            tag_ = INVAL;
-            // TODO: remove need to explicitly cast to Optional in each of the
-            //       branches.. i.e. the Optional<T>:: bit.
-            return is_ok ? Some() : None;
+            return consume<Optional<void>>([](void) -> Optional<void> { return Some(); },
+                                           [](void) -> Optional<void> { return None; });
         }
 
         /**
@@ -787,13 +841,12 @@ class Result<void, E>
          *
          * `this` is consumed and invalidated after.
          */
-        Optional<ErrT> err(void) noexcept
+        Optional<E> err(void)
         {
-            bool const is_err = this->is_err();
-            tag_ = INVAL;
-            // TODO: remove need to explicitly cast to Optional in each of the
-            //       branches.. i.e. the Optional<E>:: bit.
-            return is_err ? Optional<ErrT>::Some(err_.unwrap()) : Optional<ErrT>::None();
+            return consume<Optional<E>>([](void) -> Optional<E> { return None; },
+                                        [this](void) -> Optional<E> {
+                                            return Some(err_.unwrap());
+                                        });
         }
 
         /**
@@ -804,10 +857,9 @@ class Result<void, E>
          *
          * `this` is consumed by the operation.
          */
-        void unwrap(void) noexcept
+        void unwrap(void)
         {
-            nel_panic_if_not(is_ok(), "not an ok");
-            tag_ = INVAL;
+            return consume<void>([](void) {}, [](void) { nel_panic("not an ok"); });
         }
 
         /**
@@ -818,11 +870,10 @@ class Result<void, E>
          *
          * `this` is consumed by the operation.
          */
-        ErrT unwrap_err(void) noexcept
+        E unwrap_err(void)
         {
-            nel_panic_if_not(is_err(), "not an err");
-            tag_ = INVAL;
-            return err_.unwrap();
+            return consume<E>([](void) -> E { nel_panic("not an err"); },
+                              [this](void) -> E { return err_.unwrap(); });
         }
 
         /**
@@ -836,16 +887,15 @@ class Result<void, E>
          * `this` is consumed by the operation.
          * `o` is consumed by the operation.
          */
-        void unwrap_or(void) noexcept
+        void unwrap_or(void)
         {
-            tag_ = INVAL;
+            return consume<void>([](void) {}, [](void) {});
         }
 
-        ErrT unwrap_err_or(ErrT &&v) noexcept
+        E unwrap_err_or(E &&v)
         {
-            bool const is_err = this->is_err();
-            tag_ = INVAL;
-            return is_err ? err_.unwrap() : std::forward<ErrT>(v);
+            return consume<E>([&v](void) -> E { forward<E>(v); },
+                              [this](void) -> E { return err_.unwrap(); });
         }
 
         /**
@@ -860,11 +910,10 @@ class Result<void, E>
          * `args` are consumed by the operation.
          */
         template<typename... Args>
-        ErrT unwrap_err_or(Args &&...args) noexcept
+        E unwrap_err_or(Args &&...args)
         {
-            bool const is_err = this->is_err();
-            tag_ = INVAL;
-            return is_err ? err_.unwrap() : E(std::forward<Args>(args)...);
+            return consume<E>([&args...](void) -> E { return E(forward<Args>(args)...); },
+                              [this](void) -> E { return err_.unwrap(); });
         }
 
         /**
@@ -877,25 +926,18 @@ class Result<void, E>
          * `this` is consumed by the operation.
          */
         // would this be better as a free func?
-        template<class U>
-        Result<U, ErrT> map(std::function<U(void)> fn) noexcept
+        // template<class U>
+        // Result<U, E> map(std::function<U(void)> fn)
+        template<typename U, typename Fn>
+        Result<U, E> map(Fn &&fn)
         {
             // TODO: remove need to explicitly cast to result in each of the
-            //       branches.. i.e. the Result<U,E>() bit.
-            switch (tag_) {
-                case OK:
-                    return Result<U, ErrT>::Ok(fn());
-                    break;
-                case ERR:
-                    return Result<U, ErrT>::Err(unwrap_err());
-                    break;
-                case INVAL:
-                    return Result<U, ErrT>();
-                    break;
-                default:
-                    nel_panic("invalid Result");
-                    // std::abort();
-            }
+            //       branches.. i.e. the Result<U,E>() bit, should be Ok(..) or Err(..)
+            return consume<Result<U, E>>([&fn](void)
+                                             -> Result<U, E> { return Result<U, E>::Ok(fn()); },
+                                         [this](void) -> Result<U, E> {
+                                             return Result<U, E>::Err(err_.unwrap());
+                                         });
         }
 
         /**
@@ -908,59 +950,51 @@ class Result<void, E>
          * `this` is consumed by the operation.
          */
         // would this be better as a free func?
-        template<class F>
-        Result<OkT, F> map_err(std::function<F(ErrT &&)> fn) noexcept
+        // template<class F>
+        // Result<void, F> map_err(std::function<F(E &&)> fn)
+        template<typename F, typename Fn>
+        Result<void, F> map_err(Fn &&fn)
         {
             // TODO: remove need to explicitly cast to result in each of the
-            //       branches.. i.e. the Result<U,E>() bit.
-            switch (tag_) {
-                case OK:
-                    return Result<OkT, F>::Ok();
-                    break;
-                case ERR:
-                    return Result<OkT, F>::Err(fn(unwrap_err()));
-                    break;
-                case INVAL:
-                    return Result<OkT, F>();
-                    break;
-                default:
-                    // std::abort();
-                    nel_panic("invalid Result");
-            }
+            //       branches.. i.e. the Result<U,E>() bit, should be Ok(..), Err(..)
+            return consume<Result<void, F>>([](void) -> E { return Result<void, F>::Ok(); },
+                                            [this, &fn](void) -> E {
+                                                return Result<void, F>::Err(fn(err_.unwrap()));
+                                            });
         }
 
     public:
-        // friend std::ostream &operator<<(std::ostream &outs, Result const &val) {
-        friend Log &operator<<(Log &outs, Result const &val) noexcept
+        friend Log &operator<<(Log &outs, Result const &val)
         {
             switch (val.tag_) {
-                case OK:
+                case Tag::OK:
                     outs << "Result(Ok())";
                     return outs;
                     break;
-                case ERR:
+                case Tag::ERR:
                     outs << "Result(Err(" << *val.err_ << "))";
                     return outs;
                     break;
-                case INVAL:
+                case Tag::INVAL:
                     outs << "Result(Inval)";
                     return outs;
                     break;
                 default:
                     outs << "Result(Unknown)";
             }
+
             return outs;
         }
 };
 
 // Calc v as a temp to keep f single eval-ed
-#define NEL_RESULT_TRY(f) \
-    __extension__({ \
-        auto v = std::move(f); \
-        if (v.is_err()) { return v; } \
-        v.unwrap(); \
-    })
+#    define NEL_RESULT_TRY(f) \
+        __extension__({ \
+            auto v = move(f); \
+            if (v.is_err()) { return v; } \
+            v.unwrap(); \
+        })
 
 } // namespace nel
 
-#endif // NEL_RESULT_HH
+#endif // !defined(NEL_RESULT_HH)

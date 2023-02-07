@@ -1,3 +1,4 @@
+// -*- mode: c++; indent-tabs-mode: nil; tab-width: 4 -*-
 #ifndef NEL_HEAPED_ARRAY_HH
 #define NEL_HEAPED_ARRAY_HH
 
@@ -13,9 +14,9 @@ struct Array;
 } // namespace nel
 
 #include <nel/heaped/node.hh>
-#include <nel/enumerator.hh>
 #include <nel/iterator.hh>
 #include <nel/slice.hh>
+#include <nel/optional.hh>
 #include <nel/log.hh>
 #include <nel/defs.hh>
 
@@ -52,39 +53,48 @@ struct Array {
         // Need default constr so can create unassigned vars
         // e.g Array<T> foo;
         // but then why would you want to?
-        constexpr Array(void) noexcept: item_(nullptr) {}
+        constexpr Array(void)
+            : item_(nullptr)
+        {
+        }
 
-        constexpr Array(ArrayNode *const n) noexcept: item_(n) {}
+        constexpr Array(ArrayNode *const n)
+            : item_(n)
+        {
+        }
 
     public:
         /**
          * destroy the array and all items contained.
          */
-        ~Array(void) noexcept
+        ~Array(void)
         {
             ArrayNode::free(item_);
+            item_ = nullptr;
         }
 
+    private:
         // No copying.
         // copying an array is very expensive, so disabled.
         // if a copy is required, then must be done explicitly.
         constexpr Array(Array const &o) = delete;
         constexpr Array &operator=(Array const &o) = delete;
 
+    public:
         // Moving allowed.
         // Moving is allowed since it's a fast O(1) op.
-        constexpr Array(Array &&o) noexcept: item_(std::move(o.item_))
+        // and does not create any extra resources..
+        constexpr Array(Array &&o)
         {
+            item_ = o.item_;
             o.item_ = nullptr;
         }
-        constexpr Array &operator=(Array &&o) noexcept
+
+        constexpr Array &operator=(Array &&o)
         {
             if (this != &o) {
-                // Fast.
-                // Move once, not twice.
-                // But only works if Array<T>(&&) does not throw/error.
-                this->~Array();
-                new (this) Array(std::move(o));
+                item_ = o.item_;
+                o.item_ = nullptr;
             }
             return *this;
         }
@@ -97,12 +107,12 @@ struct Array {
          *
          * @returns the created array
          */
-        static constexpr Array empty(void) noexcept
+        static constexpr Array empty(void)
         {
             return Array();
         }
 
-#if 0
+#if 1
         /**
          * Create an array, of size n, initial value f in all entries.
          *
@@ -120,6 +130,7 @@ struct Array {
         }
 #endif
 
+#if 0
         /**
          * Attempt to create an array from initialiser list
          *
@@ -129,15 +140,17 @@ struct Array {
          */
         // possibly experimental.
         // want moving not copying, but c++ default is to copy
-        // how to init is initlist in const space? (it'd be copying then)
+        // how to init the initlist in const space? (it'd be copying then)
         // want copying but not via ctor (may not be possible), so it becomes a try_ returning an
         // err.
         // TODO: determine how efficient this implementation is..
-        static constexpr Optional<Array> try_from(std::initializer_list<T> l) noexcept
+        static constexpr Optional<Array> try_from(std::initializer_list<T> &&l)
         {
-            return ArrayNode::try_from(l).map(
-                std::function([](ArrayNode *&&p) -> Array { return Array(p); }));
+            return ArrayNode::try_from(move(l)).template map<Array>([](ArrayNode * p) -> Array {
+                return Array(p);
+            });
         }
+#endif
 
     public:
         /**
@@ -145,7 +158,7 @@ struct Array {
          *
          * @returns true if array is empty, false otherwise.
          */
-        bool is_empty(void) const noexcept
+        bool is_empty(void) const
         {
             return len() == 0;
         }
@@ -155,7 +168,7 @@ struct Array {
          *
          * @returns number of items in the array.
          */
-        constexpr Length len(void) const noexcept
+        constexpr Length len(void) const
         {
             return (item_ == nullptr) ? 0 : item_->len();
         }
@@ -170,13 +183,13 @@ struct Array {
          * @warning Will panic if idx is out-of-range for array.
          */
         // as array access can fail, redo to try_get() and return v or error
-        constexpr T &operator[](Index idx) noexcept
+        constexpr T &operator[](Index idx)
         {
             // nel_panic_if_not(item_ != nullptr, "invalid array");
             // return (*item_)[idx];
             return slice()[idx];
         }
-        constexpr T const &operator[](Index idx) const noexcept
+        constexpr T const &operator[](Index idx) const
         {
             // nel_panic_if_not(item_ != nullptr, "invalid array");
             // return (*item_)[idx];
@@ -193,11 +206,12 @@ struct Array {
          * @returns If idx is out-of range, return None.
          * @returns else return ref to item at index..
          */
-        constexpr Optional<T &> try_get(Index idx) noexcept
+        constexpr Optional<T &> try_get(Index idx)
         {
             return slice().try_get(idx);
         }
-        constexpr Optional<T const &> try_get(Index idx) const noexcept
+
+        constexpr Optional<T const &> try_get(Index idx) const
         {
             return slice().try_get(idx);
         }
@@ -217,6 +231,7 @@ struct Array {
         {
             return (item_ == nullptr) ? Slice<T>::empty() : item_->slice();
         }
+
         constexpr Slice<T const> slice(void) const
         {
             return (item_ == nullptr) ? Slice<T const>::empty()
@@ -235,13 +250,14 @@ struct Array {
          * @returns if e > array len, clamp to last elem.
          * @returns else return slice over region b..e of array.
          */
-        constexpr Slice<T> subslice(Index b, Index e) noexcept
+        constexpr Slice<T> slice(Index b, Index e)
         {
-            return slice().subslice(b, e);
+            return slice().slice(b, e);
         }
-        constexpr Slice<T const> subslice(Index b, Index e) const noexcept
+
+        constexpr Slice<T const> slice(Index b, Index e) const
         {
-            return slice().subslice(b, e);
+            return slice().slice(b, e);
         }
 
         /**
@@ -251,22 +267,14 @@ struct Array {
          *
          * @returns The iterator.
          */
-        constexpr auto iter(void) noexcept
-        {
-            return slice().iter();
-        }
-        constexpr auto iter(void) const noexcept
+        constexpr auto iter(void)
         {
             return slice().iter();
         }
 
-        constexpr Enumerator<T const> enumerate(void) const
+        constexpr auto iter(void) const
         {
-            return slice().enumerate();
-        }
-        constexpr Enumerator<T> enumerate(void)
-        {
-            return slice().enumerate();
+            return slice().iter();
         }
 
     public:
@@ -280,14 +288,11 @@ struct Array {
         // TODO: replace <<(Log ) with dbgfmt, so separate out from
         // any other form of conversion to charstring.
         // TODO: insert into formatter and not final dest type.
-        friend Log &operator<<(Log &outs, Array const &v) noexcept
+        friend Log &operator<<(Log &outs, Array const &v)
         {
-            outs << "Array(" << v.len() << "){"
-                 << "\n";
-            for (Index i = 0; i < v.len(); ++i) {
-                outs << "[" << i << "]:" << v.values_[i] << "\n";
-            }
-            outs << "}";
+            outs << "Array(" << v.len() << "){";
+            outs << v.iter();
+            outs << '}';
             return outs;
         }
 };

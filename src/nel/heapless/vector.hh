@@ -1,7 +1,8 @@
-#ifndef NEL_HEAPLESS_VECTOR_HH
-#define NEL_HEAPLESS_VECTOR_HH
+// -*- mode: c++; indent-tabs-mode: nil; tab-width: 4 -*-
+#if !defined(NEL_HEAPLESS_VECTOR_HH)
+#    define NEL_HEAPLESS_VECTOR_HH
 
-#include <nel/defs.hh> //NEL_UNUSED, Length
+#    include <nel/defs.hh> //NEL_UNUSED, Length
 
 namespace nel
 {
@@ -14,12 +15,15 @@ struct Vector;
 } // namespace heapless
 } // namespace nel
 
-#include <nel/enumerator.hh>
-#include <nel/iterator.hh>
-#include <nel/slice.hh>
-#include <nel/optional.hh>
-#include <nel/result.hh>
-#include <nel/log.hh>
+#    include <nel/iterator.hh>
+#    include <nel/slice.hh>
+#    include <nel/optional.hh>
+#    include <nel/result.hh>
+//#    include <printio.hh>
+//#include <nel/log.hh>
+#    include <nel/memory.hh> // move
+
+#    include <new> //  placement new
 
 namespace nel
 {
@@ -31,9 +35,17 @@ namespace heapless
  *
  * A container of type T held in a contiguous block (a variable sized array.)
  * Capacity (max number of elements) is limited at create time.
- * Cannot be implicitly coped.
- * Can be implicitly moved.
- */
+ * Manages a block of ram within itself (i.e. heapless)
+ * Elements moved in when pushed, moved out when popped.
+ * Once full, push will fail.
+ * Once empty, pop will fail.
+ * All remaining elements are destroyed when vector is destroyed.
+ * Vector cannot be resized.
+// * Present Elements can be accessed by [].
+ * Present Elements can be iterated over.
+ * Vector can be moved, calling the move operator on each elem.
+ * Vector cannot be copied implicitly.
+*/
 template<typename T, Length const N>
 struct Vector {
     public:
@@ -52,35 +64,67 @@ struct Vector {
          */
         ~Vector(void)
         {
-            for (Index i = 0; i < len(); ++i) {
-                values_[i].~T();
-            }
+            iter().for_each([&](T &v) -> void { v.~T(); });
         }
 
         // default ctor is safe, will always succeed.
         // just expensive in ram if T or N are large.
-        constexpr Vector(void): len_(0) {}
+        constexpr Vector(void)
+            : len_(0)
+        {
+        }
 
+    private:
         // No copying..
-        constexpr Vector(Vector const &o) = delete;
-        constexpr Vector &operator=(Vector const &o) = delete;
+        Vector(Vector const &) = delete;
+        Vector &operator=(Vector const &) = delete;
 
+    public:
         // Moving ok
-        Vector(Vector &&o) noexcept: len_(std::move(o.len_))
+        Vector(Vector &&o)
+            : len_(move(o.len_))
         {
             o.len_ = 0;
-            for (Index i = 0; i < len(); ++i) {
-                new (&values_[i]) T(std::move(o.values_[i]));
+            // moved contents to this, o is now empty/invalid.
+            // but cannot destroy o.values_ as this now owns them.
+            T *s = &o.values_[0];
+            for (T *d = &values_[0]; d != &values_[len_]; ++d) {
+                new (d) T(move(*s));
+                ++s;
             }
         }
-        Vector &operator=(Vector &&o) noexcept
+
+        Vector &operator=(Vector &&o)
         {
             if (this != &o) {
-                // Expensive to call swap on large inplace object.
-                // So move to final dest.
-                // Only as move cannot fail and leave this destructed.
-                this->~Vector();
-                new (this) Vector(std::move(o));
+                if (len_ == o.len_) {
+                    T *s = &o.values_[0];
+                    for (T *d = &values_[0]; d != &values_[len_]; ++d) {
+                        *d = move(*s);
+                        ++s;
+                    }
+                } else if (len_ < o.len_) {
+                    T *s = &o.values_[0];
+                    T *d = &values_[0];
+                    for (; d != &values_[len_]; ++d) {
+                        *d = move(*s);
+                        ++s;
+                    }
+                    for (; s != &o.values_[o.len_]; ++s) {
+                        new (d) T(move(*s));
+                        ++d;
+                    }
+                } else if (len_ > o.len_) {
+                    T *s = &o.values_[0];
+                    T *d = &values_[0];
+                    for (; d != &values_[o.len_]; ++d) {
+                        *d = move(*s);
+                        ++s;
+                    }
+                    for (; d != &values_[len_]; ++d) {
+                        d->~T();
+                    }
+                }
             }
             return *this;
         }
@@ -91,11 +135,12 @@ struct Vector {
          *
          * @returns the vector created.
          */
-        static constexpr Vector empty(void) noexcept
+        static constexpr Vector empty(void)
         {
             return Vector();
         }
 
+#    if 0
         /**
          * Attempt to create vector from initialiser list
          *
@@ -107,15 +152,16 @@ struct Vector {
         // vec create using init lists
         // want moving not copying.
         // want copying but not via ctor (may not be poss), so it becomes a try_ returning an err.
-        static constexpr Optional<Vector> try_from(std::initializer_list<T> l) noexcept
+        static constexpr Optional<Vector> try_from(std::initializer_list<T> l)
         {
-            if (l.size() != N) { return Optional<Vector>::None(); }
+            if (l.size() != N) { return None; }
             Vector v = Vector::empty();
             auto r = v.push_back(l);
-            if (r.is_err()) { return Optional<Vector>::None(); }
-            return Optional<Vector>::Some(std::move(v));
+            if (r.is_err()) { return None; }
+            return Optional<Vector>::Some(move(v));
             // TODO: can all of this create the vec inplace in the optional?
         }
+#    endif
 
     public:
         /**
@@ -125,7 +171,7 @@ struct Vector {
          *
          * @returns the current allocation amount.
          */
-        constexpr Count capacity(void) const noexcept
+        constexpr Count capacity(void) const
         {
             return N;
         }
@@ -135,7 +181,7 @@ struct Vector {
          *
          * @returns the current in use count.
          */
-        constexpr Length len(void) const noexcept
+        constexpr Length len(void) const
         {
             return len_;
         }
@@ -145,55 +191,95 @@ struct Vector {
          *
          * @returns true if in-use is 0, else false.
          */
-        constexpr bool is_empty(void) const noexcept
+        constexpr bool is_empty(void) const
         {
             return len_ == 0;
         }
 
+        constexpr bool is_full(void) const
+        {
+            return len_ == N;
+        }
+
+    public:
         /**
          * Clears the vector, i.e. removes and destroys all in-use elements.
          */
-        void clear(void) noexcept
+        void clear(void)
         {
-            for (Index i = 0; i < len(); ++i) {
-                values_[i].~T();
-            }
+            iter().for_each([&](T &v) -> void { v.~T(); });
             len_ = 0;
         }
 
-#if 0
         /**
-         * Item access in vector.
+         * Item access.
+         *
+         * @param idx The index of the item to get.
+         *
+         * @returns reference to the item.
+         * @warning Will panic if idx is out-of-range.
+         */
+        constexpr T &checked_get(Index idx)
+        {
+            return slice().checked_get(idx);
+        }
+
+        constexpr T const &checked_get(Index idx) const
+        {
+            return slice().checked_get(idx);
+        }
+
+        /**
+         * Item access.
+         *
+         * @param idx The index of the item to get.
+         *
+         * @returns reference to the item.
+         * @warning UB if index is out of range.
+         */
+        constexpr T &unchecked_get(Index idx)
+        {
+            return slice().unchecked_get(idx);
+        }
+
+        constexpr T const &unchecked_get(Index idx) const
+        {
+            return slice().unchecked_get(idx);
+        }
+
+        /**
+         * Item access.
          *
          * @param idx The index of the item to get.
          *
          * @returns reference to the item
-         * @warning Will panic if idx is out-of-range for vector
+         * @warning Will panic if idx is out-of-range.
          */
-        constexpr T &operator[](Index idx) noexcept
+        // as access can fail, redo to try_get() and return v or error
+        constexpr T &operator[](Index idx)
         {
             return slice()[idx];
         }
-        constexpr T const &operator[](Index idx) const noexcept
+
+        constexpr T const &operator[](Index idx) const
         {
             return slice()[idx];
         }
-#endif // 0
 
         /**
          * Return a reference to the value at idx or None.
          *
          * @param idx index of element to get
          *
-         * @returns If the vector is empty, return None.
          * @returns If idx is out-of range, return None.
          * @returns else return ref to item at index..
          */
-        constexpr Optional<T &> try_get(Index idx) noexcept
+        constexpr Optional<T &> try_get(Index idx)
         {
             return slice().try_get(idx);
         }
-        constexpr Optional<T const &> try_get(Index idx) const noexcept
+
+        constexpr Optional<T const &> try_get(Index idx) const
         {
             return slice().try_get(idx);
         }
@@ -207,11 +293,12 @@ struct Vector {
          *
          * @returns a slice over the the vector.
          */
-        constexpr Slice<T> slice(void) noexcept
+        constexpr Slice<T> slice(void)
         {
             return Slice<T>::from(values_, len());
         }
-        constexpr Slice<T const> const slice(void) const noexcept
+
+        constexpr Slice<T const> const slice(void) const
         {
             return Slice<T const>::from(values_, len());
         }
@@ -228,13 +315,14 @@ struct Vector {
          * @returns if e > vec len, clamp to last elem.
          * @returns else return slice over region b..e of vec.
          */
-        constexpr Slice<T> subslice(Index b, Index e) noexcept
+        constexpr Slice<T> slice(Index b, Index e)
         {
-            return slice().subslice(b, e);
+            return slice().slice(b, e);
         }
-        constexpr Slice<T const> subslice(Index b, Index e) const noexcept
+
+        constexpr Slice<T const> slice(Index b, Index e) const
         {
-            return slice().subslice(b, e);
+            return slice().slice(b, e);
         }
 
         /**
@@ -252,7 +340,7 @@ struct Vector {
          * @returns true if new capacity is same as current..
          * @returns false otherwise.
          */
-        bool try_reserve(Count new_capacity) noexcept
+        bool try_reserve(Count new_capacity)
         {
             return new_capacity == N;
         }
@@ -268,7 +356,7 @@ struct Vector {
         // on fail still move, but return.
         // allow inplace create instead of move.
         // if fails to store, can create be avoided..?
-        Result<void, T> push_back(T &&val) noexcept
+        Result<void, T> NEL_WARN_UNUSED_RESULT push(T &&val)
         {
             if (len() >= capacity()) {
                 // Really? must one be created for err?
@@ -280,21 +368,25 @@ struct Vector {
             len_ += 1;
             return Result<void, T>::Ok();
         }
+
+#    if 0
         template<typename... Args>
-        Result<void, T> push_back(Args &&...args) noexcept
+        Result<void, T> push(Args &&...args)
         {
             if (len() >= capacity()) {
                 // Really? must one be created for err?
-                return Result<void, T>::Err(std::forward<Args>(args)...);
+                return Result<void, T>::Err(forward<Args>(args)...);
             }
             // Remember, values at len and beyond are uninitialised.
             // So need to use new to construct them.
-            new (&values_[len()]) T(std::forward<Args>(args)...);
+            new (&values_[len()]) T(forward<Args>(args)...);
             len_ += 1;
             return Result<void, T>::Ok();
         }
+#    endif
 
-        Result<void, std::initializer_list<T>> push_back(std::initializer_list<T> l) noexcept
+#    if 0
+        Result<void, std::initializer_list<T>> push(std::initializer_list<T> l)
         {
             if (len() + l.size() > capacity()) {
                 // Really? must one be created for err?
@@ -304,18 +396,19 @@ struct Vector {
             // So need to use new to construct them.
             Index i = len();
             for (auto it = l.begin(); it != l.end(); ++i, ++it) {
-                new (&values_[i]) T(std::move(*it));
+                new (&values_[i]) T(move(*it));
             }
             len_ = i;
             return Result<void, std::initializer_list<T>>::Ok();
         }
+#    endif
 
         // move contents of vec into this?
-        // Result<void, Vector<T>> push_back(Vector<T> &l) noexcept?
+        // Result<void, Vector<T>> push_back(Vector<T> &l) ?
         // move contents of slice into this?
-        // Result<void, Slice<T>> push_back(Slice<T> &l) noexcept?
+        // Result<void, Slice<T>> push_back(Slice<T> &l) ?
         // move contents of iter into this? into_vec?
-        // Result<void, Slice<T>> push_back(Iter<T> &l) noexcept?
+        // Result<void, Slice<T>> push_back(Iter<T> &l) ?
 
         /**
          * Remove and return the last item in the vec.
@@ -323,12 +416,12 @@ struct Vector {
          * @returns on success: Optional::Some holding the value
          * @returns on fail: Optional::None
          */
-        Optional<T> pop_back(void) noexcept
+        Optional<T> pop(void)
         {
             if (len() == 0) { return None; }
             len_ -= 1;
             T &e = values_[len()];
-            auto v = Some(std::move(e));
+            auto v = Some(move(e));
             e.~T();
             return v;
         }
@@ -349,22 +442,14 @@ struct Vector {
          *
          * @returns The iterator.
          */
-        constexpr auto iter(void) noexcept
-        {
-            return slice().iter();
-        }
-        constexpr auto iter(void) const noexcept
+        constexpr auto iter(void)
         {
             return slice().iter();
         }
 
-        constexpr Enumerator<T> enumerate(void) noexcept
+        constexpr auto iter(void) const
         {
-            return slice().enumerate();
-        }
-        constexpr Enumerator<T const> enumerate(void) const noexcept
-        {
-            return slice().enumerate();
+            return slice().iter();
         }
 
     public:
@@ -378,19 +463,16 @@ struct Vector {
         // TODO: replace <<(Log ) with dbgfmt, so separate out from
         // any other form of conversion to charstring.
         // TODO: insert into formatter and not final dest type.
-        friend Log &operator<<(Log &outs, Vector const &v) noexcept
+        friend Log &operator<<(Log &outs, Vector const &v)
         {
-            outs << "Vector<" << N << ">(" << v.len() << "){"
-                 << "\n";
-            for (Index i = 0; i < v.len(); ++i) {
-                outs << "[" << i << "]:" << v.values_[i] << "\n";
-            }
-            outs << "}";
+            outs << "Vector<" << N << ">(" << v.len() << "){";
+            outs << v.iter();
+            outs << '}';
             return outs;
         }
 };
 
-} // namespace heapless
-} // namespace nel
+}; // namespace heapless
+}; // namespace nel
 
-#endif // NEL_HEAPLESS_VECTOR_HH
+#endif // !defined(NEL_HEAPLESS_VECTOR_HH)

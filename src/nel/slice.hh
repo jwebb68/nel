@@ -1,5 +1,6 @@
-#ifndef NEL_HEAPLESS_SLICE_HH
-#define NEL_HEAPLESS_SLICE_HH
+// -*- mode: c++; indent-tabs-mode: nil; tab-width: 4 -*-
+#if !defined(NEL_SLICE_HH)
+#    define NEL_SLICE_HH
 
 namespace nel
 {
@@ -12,18 +13,26 @@ struct SliceIterator;
 
 } // namespace nel
 
-#include <nel/enumerator.hh>
-#include <nel/iterator.hh>
-#include <nel/memory.hh>
-#include <nel/panic.hh>
-#include <nel/defs.hh>
+#    include <nel/iterator.hh>
+#    include <nel/memory.hh>
+//#    include <printio.hh>
+#    include <nel/panic.hh>
+#    include <nel/defs.hh>
 
 namespace nel
 {
 
 /**
- * A contiguous region
+ * Slice
+ * models a block of contiguous ram.
+ * Shared, multiple slices can point to the same ram region.
+ * can be created from ptr+len or 2 ptrs (begin/end).
+ * When slice is destroyed, the block if ram is not destroyed.
+ * Items can be iterated over.
+ * Items can be accessed via [] oper (TODO).
+ * slice is empty if len is 0, regardless of ptr value.
  */
+
 template<typename T>
 struct Slice {
     private:
@@ -31,25 +40,49 @@ struct Slice {
         // Implicit start at 0.
         Length len_;
 
-    private:
-        constexpr Slice(void): content_(nullptr), len_(0) {}
+    public:
+        // slices can be copied and assigned to as they don't own the
+        // values they reference.
 
-        constexpr Slice(T p[], Length len) noexcept: content_(p), len_(len) {}
+    private:
+        constexpr Slice(void)
+            : content_(nullptr)
+            , len_(0)
+        {
+        }
+
+        constexpr Slice(std::nullptr_t, Length l)
+            : content_(nullptr)
+            , len_(l)
+        {
+        }
+
+        constexpr Slice(T p[], Length len)
+            : content_(p)
+            , len_(len)
+        {
+        }
+
+        constexpr Slice(T *const b, T *const e)
+            : content_(b)
+            , len_(e - b)
+        {
+        }
 
     public:
         // Copying a slice is ok as it does not own the data it points to.
-        constexpr Slice(Slice const &) noexcept = default;
-        constexpr Slice &operator=(Slice const &) noexcept = default;
+        constexpr Slice(Slice const &) = default;
+        constexpr Slice &operator=(Slice const &) = default;
 
         // moving a slice is ok.
-        constexpr Slice(Slice &&o) noexcept = default;
-        constexpr Slice &operator=(Slice &&o) noexcept = default;
+        constexpr Slice(Slice &&o) = default;
+        constexpr Slice &operator=(Slice &&o) = default;
 
     public:
         /**
          * Create an empty slice.
          */
-        static constexpr Slice empty(void) noexcept
+        static constexpr Slice empty(void)
         {
             return Slice();
         }
@@ -59,9 +92,14 @@ struct Slice {
          *
          * Slice is invalidated if p goes out of scope or is deleted/destroyed.
          */
-        static constexpr Slice from(T p[], Length len) noexcept
+        static constexpr Slice from(T p[], Length len)
         {
             return Slice(p, len);
+        }
+
+        static constexpr Slice from(T *const b, T *const e)
+        {
+            return Slice(b, e);
         }
 
     public:
@@ -70,9 +108,14 @@ struct Slice {
          *
          * @returns true if slice is empty, false otherwise.
          */
-        constexpr bool is_empty(void) const noexcept
+        constexpr bool is_empty(void) const
         {
             return len() == 0;
+        }
+
+        constexpr operator bool() const
+        {
+            return !is_empty();
         }
 
         /**
@@ -80,12 +123,43 @@ struct Slice {
          *
          * @returns number of elements in the slice.
          */
-        constexpr Length len(void) const noexcept
+        constexpr T *ptr(void) const
+        {
+            return content_;
+        }
+
+        /**
+         * Determine numer of elements in the slice.
+         *
+         * @returns number of elements in the slice.
+         */
+        constexpr Length len(void) const
         {
             return len_;
         }
 
-#if 0
+        constexpr T &unchecked_get(Index idx)
+        {
+            return content_[idx];
+        }
+
+        constexpr T const &unchecked_get(Index idx) const
+        {
+            return content_[idx];
+        }
+
+        constexpr T &checked_get(Index idx)
+        {
+            nel_panic_if_not(idx < len(), "index out of range");
+            return unchecked_get(idx);
+        }
+
+        constexpr T const &checked_get(Index idx) const
+        {
+            nel_panic_if_not(idx < len(), "index out of range");
+            return unchecked_get(idx);
+        }
+
         /**
          * Item access in slice.
          *
@@ -95,17 +169,15 @@ struct Slice {
          * @warning Will panic if idx is out-of-range for slice
          */
         // TODO: use try_get as index access can fail.
-        constexpr T &operator[](Index idx) noexcept
+        constexpr T &operator[](Index idx)
         {
-            nel_panic_if_not(idx < len(), "index out of range");
-            return content_[idx];
+            return checked_get(idx);
         }
-        constexpr T const &operator[](Index idx) const noexcept
+
+        constexpr T const &operator[](Index idx) const
         {
-            nel_panic_if_not(idx < len(), "index out of range");
-            return content_[idx];
+            return checked_get(idx);
         }
-#endif
 
         /**
          * Return a reference to the value at idx or None.
@@ -116,13 +188,25 @@ struct Slice {
          * @returns If idx is out-of range, return None.
          * @returns else return ref to item at index..
          */
-        constexpr Optional<T &> try_get(Index idx) noexcept
+        constexpr Optional<T &> try_get(Index idx)
         {
-            return (idx >= len_) ? None : Some(content_[idx]);
+            return (idx >= len_) ? None : Optional<T &>::Some(content_[idx]);
         }
-        constexpr Optional<T const &> try_get(Index idx) const noexcept
+
+        constexpr Optional<T const &> try_get(Index idx) const
         {
             return (idx >= len_) ? None : Optional<T const &>::Some(content_[idx]);
+        }
+
+    public:
+        constexpr bool operator==(Slice const &o) const
+        {
+            return content_ == o.content_ && len_ == o.len_;
+        }
+
+        constexpr bool operator!=(Slice const &o) const
+        {
+            return content_ != o.content_ || len_ != o.len_;
         }
 
     public:
@@ -132,7 +216,7 @@ struct Slice {
          * T must be bitcopyable (i.e. not need special copy semantics.
          * value at each location is not destroyed.
          */
-        void fill(T const &f) noexcept
+        void fill(T const &f)
         {
             nel::memset(content_, f, len());
         }
@@ -154,14 +238,15 @@ struct Slice {
          * @returns if e > array len, clamp to last elem.
          * @returns else return slice over region b..e of slice.
          */
-        Slice<T> subslice(Index b, Index e) noexcept
+        Slice<T> slice(Index b, Index e)
         {
             if (b >= e) { return Slice<T>::empty(); }
             if (b >= len_) { return Slice<T>::empty(); }
             if (e > len_) { e = len_; }
             return Slice(&content_[b], e - b);
         }
-        Slice<T const> subslice(Index b, Index e) const noexcept
+
+        Slice<T const> slice(Index b, Index e) const
         {
             if (b >= e) { return Slice<T const>::empty(); }
             if (b >= len_) { return Slice<T const>::empty(); }
@@ -171,54 +256,41 @@ struct Slice {
 
     public:
         // TODO: use try_copy_from as operation can fail.
-        // Result<void, ??> try_copy_from(Slice const &o) noexcept ?
-        // Optional<void> try_copy_from(Slice const &o) noexcept ?
-        // void copy_from(Slice const &o) noexcept
+        // Result<void, ??> try_copy_from(Slice const &o)  ?
+        // Optional<void> try_copy_from(Slice const &o)  ?
+        // void copy_from(Slice const &o)
         // {
         //     nel_panic_if(len() != o.len(), "not same size");
         //     nel::memcpy(content_, o.content_, len());
         // }
 
         // TODO: use try_move_from as operation can fail.
-        // Result<void, ??> try_move_from(Slice &o) noexcept ?
-        // Optional<void> try_move_from(Slice &o) noexcept ?
-        // void move_from(Slice &o) noexcept
+        // Result<void, ??> try_move_from(Slice &o)  ?
+        // Optional<void> try_move_from(Slice &o)  ?
+        // void move_from(Slice &o)
         // {
         //     nel_panic_if(len() != o.len(), "not same size");
         //     nel::memmove(content_, o.content_, len());
         // }
+
     public:
         /**
          * Return an iterator that will iterate over the slice
          *
          * The iterator is invalidated if the slice goes out of scope/destroyed.
          */
-#if 0
-        constexpr Iterator<T> iter(void) noexcept
-        {
-            return Iterator<T>(content_, len_);
-        }
-        constexpr Iterator<T const> const iter(void) const noexcept
-        {
-            return Iterator<T const>(content_, len_);
-        }
-#else
-        constexpr SliceIterator<T> iter(void) noexcept
+        typedef SliceIterator<T> IteratorMut;
+
+        constexpr SliceIterator<T> iter(void)
         {
             return SliceIterator<T>(content_, len());
         }
-        constexpr SliceIterator<T const> const iter(void) const noexcept
+
+        typedef SliceIterator<T const> Iterator;
+
+        constexpr SliceIterator<T const> const iter(void) const
         {
             return SliceIterator<T const>(content_, len());
-        }
-#endif
-        constexpr Enumerator<T> enumerate(void) noexcept
-        {
-            return Enumerator<T>(content_, len_);
-        }
-        constexpr Enumerator<T const> const enumerate(void) const noexcept
-        {
-            return Enumerator<T const>(content_, len_);
         }
 
     public:
@@ -235,25 +307,31 @@ struct Slice {
         // instead of insert into log, can it format into ? which log implements?
         // so it doesn't matter about the destination..
         // and can format-insert into any char endpoint.
-        friend Log &operator<<(Log &outs, Slice const &v) noexcept
+        friend Log &operator<<(Log &outs, Slice const &v)
         {
             outs << "Slice(" << v.len() << "){";
-            if (v.len() > 0) {
-#if 0
-                auto it = v.iter();
-                auto itv = it.next();
-                if (itv.is_none()) { goto exit; }
-                outs << itv.unwrap();
-                it.for_each([&outs](T const & e) { outs << " " << e;})
+#    if 0
+            auto it = v.iter();
+            auto itv = it.next();
+            if (itv.is_none()) { goto exit; }
+            outs << itv.unwrap();
+            it.for_each([&outs](T const & e) { outs << ' ' << e;})
 exit:
-#else
+#    elif 0
+            if (v.len() > 0) {
                 outs << v.content_[0];
                 for (Index i = 1; i < v.len(); ++i) {
-                    outs << " " << v.content_[i];
+                    outs << ' ' << v.content_[i];
                 }
-#endif
             }
-            outs << "}";
+#    else
+            auto it = v.iter();
+            if (!it.is_done()) {
+                outs << it.deref();
+                it.for_each2([&outs](T const &e) { outs << ' ' << e; });
+            }
+#    endif
+            outs << '}';
             return outs;
         }
 };
@@ -267,21 +345,57 @@ exit:
  */
 // TODO: maybe make length a template param..
 template<typename T>
-class SliceIterator: public Iterator<SliceIterator<T>, T, T &>
+class SliceIterator: public Iterator<SliceIterator<T>, T &, T &>
 {
     public:
+        typedef T &InT;
+        typedef T &OutT;
+
     private:
-        T *const ptr_;
-        Count const len_;
-        Index pos_;
+        T *b_;
+        T *e_;
 
     public:
         constexpr SliceIterator(void) = delete;
 
-        // copy ok
-        // move ok
     public:
-        constexpr SliceIterator(T arr[], Count len) noexcept: ptr_(arr), len_(len), pos_(0) {}
+        // copy ok
+        SliceIterator(SliceIterator const &o) = default;
+        SliceIterator &operator=(SliceIterator const &o) = default;
+
+    public:
+        // move ok
+        SliceIterator(SliceIterator &&o)
+            : b_(nel::move(o.b_))
+            , e_(nel::move(o.e_))
+        {
+            o.b_ = nullptr;
+            o.e_ = nullptr;
+        }
+
+        SliceIterator &operator=(SliceIterator &&o)
+        {
+            if (this != &o) {
+                b_ = nel::move(o.b_);
+                e_ = nel::move(o.e_);
+                o.b_ = nullptr;
+                o.e_ = nullptr;
+            }
+            return *this;
+        }
+
+    public:
+        constexpr SliceIterator(T arr[], Count len)
+            : b_(arr)
+            , e_(arr + len)
+        {
+        }
+
+        constexpr SliceIterator(T *const b, T *const e)
+            : b_(b)
+            , e_(e)
+        {
+        }
 
         /**
          * Return next item in iterator or None is no more.
@@ -294,20 +408,31 @@ class SliceIterator: public Iterator<SliceIterator<T>, T, T &>
         // if T == U then coping.. want to avoid.
         // mutating.non-consuming
         // non-mutating.non-consuming
-        Optional<T &> next(void) noexcept
+        Optional<OutT> next(void)
         {
             // Some() takes a move, so want to move the reference into the optional.
             // ref(),
-            if (pos_ >= len_) { return None; }
-            return Some(ptr_[pos_++]);
+            if (b_ == e_) { return None; }
+            return Some(*b_++);
         }
-        // consuming/moving/mutating iter
-        // Optional<T> next(void) noexcept
-        // {
-        //     return (pos_ < len_) ? Optional<T>::Some(std::move(ptr_[pos_++])) :
-        //     Optional<T>::None();
-        // }
-};
-} // namespace nel
 
-#endif // NEL_HEAPLESS_SLICE_HH
+    public:
+        constexpr bool is_done(void) const
+        {
+            return (b_ == e_);
+        }
+
+        void inc(void)
+        {
+            ++b_;
+        }
+
+        OutT deref(void)
+        {
+            return *b_;
+        }
+};
+
+}; // namespace nel
+
+#endif // defined(NEL_SLICE_HH)

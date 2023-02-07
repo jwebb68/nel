@@ -1,3 +1,4 @@
+// -*- mode: c++; indent-tabs-mode: nil; tab-width: 4 -*-
 #include "slice.hh"
 
 #include <catch2/catch.hpp>
@@ -71,65 +72,65 @@ TEST_CASE("Slice::fill()", "[slice]")
     REQUIRE(a1[3] == 2);
 }
 
-TEST_CASE("Slice::subslice(b,e)", "[heapless][vector]")
+TEST_CASE("Slice::slice(b,e)", "[heapless][vector]")
 {
     {
         // sub slice of empty vec is empty.
         auto s1 = nel::Slice<int>::empty();
-        auto sa1 = s1.subslice(0, 0);
+        auto sa1 = s1.slice(0, 0);
         REQUIRE(sa1.is_empty());
         REQUIRE(sa1.len() == 0);
 
-        auto sa2 = s1.subslice(3, 5);
+        auto sa2 = s1.slice(3, 5);
         REQUIRE(sa2.is_empty());
         REQUIRE(sa2.len() == 0);
     }
 
     {
-        // in-range subslice is not empty
+        // in-range slice is not empty
         int a1[] = {3, 1};
         auto s1 = nel::Slice<int>::from(a1, sizeof(a1) / sizeof(a1[0]));
 
-        auto sa12 = s1.subslice(0, 1);
+        auto sa12 = s1.slice(0, 1);
         REQUIRE(!sa12.is_empty());
         REQUIRE(sa12.len() == 1);
 
-        // out-of-range subslice is empty
-        auto sa13 = s1.subslice(3, 4);
+        // out-of-range slice is empty
+        auto sa13 = s1.slice(3, 4);
         REQUIRE(sa13.is_empty());
 
-        // partially out-of-range subslice is not empty, and has only up to valid items
-        auto sa14 = s1.subslice(1, 4);
+        // partially out-of-range slice is not empty, and has only up to valid items
+        auto sa14 = s1.slice(1, 4);
         REQUIRE(!sa14.is_empty());
         REQUIRE(sa14.len() == 1);
 
-        // partially out-of-range subslice is not empty, and has only up to valid items
-        auto sa15 = s1.subslice(0, 4);
+        // partially out-of-range slice is not empty, and has only up to valid items
+        auto sa15 = s1.slice(0, 4);
         REQUIRE(!sa15.is_empty());
         REQUIRE(sa15.len() == 2);
     }
 
     {
-        // in-range subslice is not empty
+        // in-range slice is not empty
         int const a1[] = {3, 1};
         auto s1 = nel::Slice<int const>::from(a1, sizeof(a1) / sizeof(a1[0]));
 
-        auto sc1 = s1.subslice(0, 0);
+        auto sc1 = s1.slice(0, 0);
         REQUIRE(sc1.is_empty());
 
         // sub slice of non-empty array is not empty.
-        auto sc2 = s1.subslice(0, 1);
+        auto sc2 = s1.slice(0, 1);
         REQUIRE(!sc2.is_empty());
         REQUIRE(sc2.len() == 1);
 
-        auto sc3 = s1.subslice(3, 4);
+        auto sc3 = s1.slice(3, 4);
         REQUIRE(sc3.is_empty());
 
-        auto sc4 = s1.subslice(1, 4);
+        auto sc4 = s1.slice(1, 4);
         REQUIRE(!sc4.is_empty());
         REQUIRE(sc4.len() == 1);
 
-        auto sc5 = s1.subslice(0, 4);
+        auto sc5 = s1.slice(0, 4);
         REQUIRE(!sc5.is_empty());
         REQUIRE(sc5.len() == 2);
     }
@@ -174,11 +175,11 @@ TEST_CASE("Slice::try_get()", "[slice]")
 {
     {
         // get on empty slice is always none.
-        auto s1 = nel::Slice<int>::from(NULL, 0);
+        auto s1 = nel::Slice<int>::empty();
         auto sa1 = s1.try_get(0);
         REQUIRE(sa1.is_none());
 
-        auto const c1 = nel::Slice<int>::from(NULL, 0);
+        auto const c1 = nel::Slice<int>::empty();
         auto sc1 = c1.try_get(0);
         REQUIRE(sc1.is_none());
     }
@@ -191,7 +192,7 @@ TEST_CASE("Slice::try_get()", "[slice]")
         REQUIRE(sa2.is_some());
         REQUIRE(sa2.unwrap() == 3);
 
-        auto const cs1 = std::move(s1);
+        auto const cs1 = move(s1);
         auto scs1 = cs1.try_get(0);
         REQUIRE(scs1.is_some());
         REQUIRE(scs1.unwrap() == 3);
@@ -204,7 +205,7 @@ TEST_CASE("Slice::try_get()", "[slice]")
         auto sa2 = s1.try_get(5);
         REQUIRE(sa2.is_none());
 
-        auto const cs1 = std::move(s1);
+        auto const cs1 = move(s1);
         auto scs1 = cs1.try_get(5);
         REQUIRE(scs1.is_none());
     }

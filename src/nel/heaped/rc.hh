@@ -1,3 +1,4 @@
+// -*- mode: c++; indent-tabs-mode: nil; tab-width: 4 -*-
 #ifndef NEL_HEAPED_RC_HH
 #define NEL_HEAPED_RC_HH
 
@@ -15,8 +16,6 @@ struct RC;
 #include <nel/element.hh>
 #include <nel/panic.hh>
 #include <nel/defs.hh>
-
-#include <utility> // std::move, std::forward
 
 namespace nel
 {
@@ -47,25 +46,29 @@ struct RC {
                 // constexpr Node(void) = delete;
 
                 template<typename... Args>
-                constexpr Node(Args &&...args) noexcept
-                    : n_refs_(1), has_value_(true), value_(std::forward<Args>(args)...)
+                constexpr Node(Args &&...args)
+                    : n_refs_(1)
+                    , has_value_(true)
+                    , value_(forward<Args>(args)...)
                 {
                 }
 
             public:
                 // Could be members, but then it'll end up with 'delete this' in the release impl..
                 // which I don't want.
-                static void grab(Node *const v) noexcept
+                static void grab(Node *const v)
                 {
                     if (v != nullptr) { ++v->n_refs_; }
                 }
-                static void release(Node *const v) noexcept
+
+                static void release(Node *const v)
                 {
                     if (v != nullptr) {
                         if (--v->n_refs_ == 0) { delete v; }
                     }
                 }
-                static T unwrap(Node *const v) noexcept
+
+                static T unwrap(Node *const v)
                 {
                     // Value moved out from value_ on unwrap().
                     // Value_ is eff. destroyed by unwrap().
@@ -78,17 +81,19 @@ struct RC {
                 }
 
             public:
-                T &ref(void) noexcept
+                T &ref(void)
                 {
                     nel_panic_if_not(has_value(), "invalid rc node");
                     return value_.get();
                 }
-                T const &ref(void) const noexcept
+
+                T const &ref(void) const
                 {
                     nel_panic_if_not(has_value(), "invalid rc node");
                     return value_.get();
                 }
-                bool has_value(void) const noexcept
+
+                bool has_value(void) const
                 {
                     return has_value_;
                 }
@@ -108,19 +113,22 @@ struct RC {
 
         // It's meant to be shared, so can copy this.
         // much badness, non-const ref for a copy?
-        constexpr RC(RC &o) noexcept: node_(nullptr)
+        constexpr RC(RC &o)
+            : node_(nullptr)
         {
             Node::grab(o.node_);
             node_ = o.node_;
         }
 
-        constexpr RC(RC const &o) noexcept: node_(nullptr)
+        constexpr RC(RC const &o)
+            : node_(nullptr)
         {
             Node::grab(o.node_);
             node_ = o.node_;
         }
-        // constexpr RC &operator=(RC const &o) const noexcept
-        constexpr RC &operator=(RC &o) noexcept
+
+        // constexpr RC &operator=(RC const &o) const
+        constexpr RC &operator=(RC &o)
         {
             if (this != &o) {
                 //~RC();
@@ -130,7 +138,8 @@ struct RC {
             }
             return *this;
         }
-        constexpr RC &operator=(RC const &o) const noexcept
+
+        constexpr RC &operator=(RC const &o) const
         {
             if (this != &o) {
                 //~RC();
@@ -140,34 +149,42 @@ struct RC {
             }
             return *this;
         }
-        void swap(RC &o) noexcept
+
+        void swap(RC &o)
         {
-            std::swap(node_, o.node_);
+            swap(node_, o.node_);
         }
 
-        constexpr RC(void) noexcept: node_(nullptr) {}
+        constexpr RC(void)
+            : node_(nullptr)
+        {
+        }
 
-        constexpr RC(RC &&o) noexcept: node_(std::move(o.node_))
+        constexpr RC(RC &&o)
+            : node_(move(o.node_))
         {
             o.node_ = nullptr;
         }
-        constexpr RC &operator=(RC &&o) noexcept
+
+        constexpr RC &operator=(RC &&o)
         {
             if (this != &o) {
                 this->~RC();
-                new (this) RC(std::move(o));
+                new (this) RC(move(o));
             }
             return *this;
         }
 
     public:
-        constexpr RC(T &&v) noexcept: node_(new Node(std::move(v)))
+        constexpr RC(T &&v)
+            : node_(new Node(move(v)))
         {
             // Node created pre-grabbed.
         }
 
         template<typename... Args>
-        constexpr RC(Args &&...args) noexcept: node_(new Node(std::forward<Args>(args)...))
+        constexpr RC(Args &&...args)
+            : node_(new Node(forward<Args>(args)...))
         {
             // Node created pre-grabbed.
         }
@@ -179,7 +196,7 @@ struct RC {
          * @returns reference to the boxed value
          * @warning Panics if no value to return (e.g. use after move).
          */
-        constexpr T &operator*(void) noexcept
+        constexpr T &operator*(void)
         {
             nel_panic_if_not(has_value(), "not a value");
             return node_->ref();
@@ -191,7 +208,7 @@ struct RC {
          * @returns reference to the boxed value
          * @warning Panics if no value to return (e.g. use after move).
          */
-        constexpr T const &operator*(void) const noexcept
+        constexpr T const &operator*(void) const
         {
             nel_panic_if_not(has_value(), "not a value");
             return node_->ref();
@@ -202,7 +219,7 @@ struct RC {
          *
          * @returns true if there is a value, false otherwise.
          */
-        constexpr bool has_value(void) const noexcept
+        constexpr bool has_value(void) const
         {
             return node_ != nullptr && node_->has_value();
         }
@@ -216,7 +233,7 @@ struct RC {
          * @returns the value in the box.
          * @warning Panics if no value to return (e.g. use after move).
          */
-        constexpr T unwrap(void) noexcept
+        constexpr T unwrap(void)
         {
             nel_panic_if_not(has_value(), "not a value");
             auto o = Node::unwrap(node_);
@@ -224,27 +241,27 @@ struct RC {
             return o;
         }
 
-        // constexpr bool operator==(RC const &o) const noexcept
+        // constexpr bool operator==(RC const &o) const
         // {
         //     return node_ == o.node_;
         // }
-        // constexpr bool operator!=(RC const &o) const noexcept
+        // constexpr bool operator!=(RC const &o) const
         // {
         //     return node_ != o.node_;
         // }
-        // constexpr bool operator<(RC const &o) const noexcept
+        // constexpr bool operator<(RC const &o) const
         // {
         //     return *(this) < *o;
         // }
-        // constexpr bool operator>(RC const &o) const noexcept
+        // constexpr bool operator>(RC const &o) const
         // {
         //     return *(this) > *o;
         // }
-        // constexpr bool operator<=(RC const &o) const noexcept
+        // constexpr bool operator<=(RC const &o) const
         // {
         //     return *(this) <= *o;
         // }
-        // constexpr bool operator>=(RC const &o) const noexcept
+        // constexpr bool operator>=(RC const &o) const
         // {
         //     return *(this) >= *o;
         // }

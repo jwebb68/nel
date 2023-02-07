@@ -195,8 +195,12 @@ nel_fast_CXXFLAGS :=
 
 all: build
 
-allsrc:=$(foreach f,$(modls),$(shell find src/$(f) -name '*.c' -o -name '*.cc'))
-allhdr:=$(foreach f,$(modls),$(shell find src/$(f) -name '*.h' -o -name '*.hh'))
+allsrc:=
+allsrc+=$(foreach f,$(modls),$(shell find src/$(f) -name '*.c' -o -name '*.cc'))
+allsrc+=$(shell find examples/$(f) -name '*.c' -o -name '*.cc')
+allhdr:=
+allhdr+=$(foreach f,$(modls),$(shell find src/$(f) -name '*.h' -o -name '*.hh'))
+allhdr+=$(shell find examples/$(f) -name '*.h' -o -name '*.hh')
 
 obj:=
 clean:=

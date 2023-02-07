@@ -1,4 +1,7 @@
+// -*- mode: c++; indent-tabs-mode: nil; tab-width: 4 -*-
 #include <nel/heaped/rc.hh>
+
+#include <nel/memory.hh> // move()
 
 #include <catch2/catch.hpp>
 
@@ -21,7 +24,7 @@ TEST_CASE("heaped::RC::copy", "[heaped][rc]")
 TEST_CASE("heaped::RC::move", "[heaped][rc]")
 {
     auto a1 = nel::heaped::RC<int>(1);
-    auto a2 = std::move(a1);
+    auto a2 = nel::move(a1);
 
     REQUIRE(!a1.has_value());
     REQUIRE(*a2 == 1);
@@ -45,7 +48,7 @@ TEST_CASE("heaped::RC::has_value", "[heaped][rc]")
     REQUIRE(a2.has_value());
 
     // moving removes the value.
-    auto a3 = std::move(a1);
+    auto a3 = nel::move(a1);
     REQUIRE(a3.has_value());
     REQUIRE(!a1.has_value());
 }
