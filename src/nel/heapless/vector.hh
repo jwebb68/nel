@@ -423,10 +423,7 @@ struct Vector {
         {
             if (len() == 0) { return None; }
             len_ -= 1;
-            T &e = values_[len()];
-            auto v = Some(move(e));
-            e.~T();
-            return v;
+            return Some(move(values_[len()]));
         }
 
         // insert_at(idx, T &&) ?
