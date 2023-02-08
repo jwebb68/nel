@@ -245,10 +245,10 @@ struct Queue {
         {
             if (is_empty()) { return None; }
             len_ -= 1;
-            auto r = Some(move(store_[rp_]));
+            auto rp = rp_;
             rp_ += 1;
             if (rp_ == N) { rp_ = 0; }
-            return r;
+            return Some(move(store_[rp]));
         }
 
         void drain(Length n)
