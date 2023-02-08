@@ -233,7 +233,7 @@ struct MappingIterator: public Iterator<MappingIterator<It, V, Fn>, typename It:
          */
         Optional<OutT> next(void)
         {
-            // c++ butt ugly language, giving butt ugly constrcts..
+            // c++ butt ugly language, giving butt ugly constructs..
             // WTF should I need 'template' here..?
             return inner_.next().template map<OutT>(
                 [this](typename It::OutT &e) -> V { return fn_(e); });

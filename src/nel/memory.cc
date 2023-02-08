@@ -129,7 +129,7 @@ void *realloc_aligned(void *old_p, Length align, Length size)
 
     void *new_p;
     if (old_p != nullptr && new_a == old_a) {
-        // reallocing and not moved in realloc.
+        // re-allocating and not moved in reallocation.
         new_p = old_p;
     } else {
         // new alloc.. or moved in realloc.
@@ -143,7 +143,7 @@ void *realloc_aligned(void *old_p, Length align, Length size)
         nel_assert((aligneda_u8 + size) <= (as_u8ptr_mut(new_a) + size + align));
         if (new_a != old_a && aligneda_u8 != as_u8ptr_mut(new_a)) {
             // if realloc'd and needed aligning then move data.
-            // more slowness, shame malloc cannot do this when allocing.
+            // more slowness, shame malloc cannot do this when allocating.
             std::memmove(aligneda_u8, new_a, size);
         }
         Alloc *aligned_a = reinterpret_cast<Alloc *>(aligneda_u8);

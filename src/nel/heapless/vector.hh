@@ -54,8 +54,8 @@ struct Vector {
         Length len_;
         // Must create with N uninitialised.
         // So really want only the memory allocated.
-        // Will manually initialise on push_back, deinitialise on pop_back/destruct
-        // C++: default array constr does not call default on each, but allocs uninit?
+        // Will manually initialise on push_back, de-initialise on pop_back/destruct
+        // C++: default array ctor does not call default on each, but allocs uninit?
         T values_[N];
 
     public:
@@ -68,14 +68,16 @@ struct Vector {
         }
 
         // default ctor is safe, will always succeed.
-        // just expensive in ram if T or N are large.
+        // and is fast.
+        // if sizeof(T) or N is large will just eat ram.
         constexpr Vector(void)
             : len_(0)
         {
         }
 
     private:
-        // No copying..
+        // No (implicit) copying..
+        // Copying means potential alloc of resource that may fail to alloc.
         Vector(Vector const &) = delete;
         Vector &operator=(Vector const &) = delete;
 
@@ -151,7 +153,8 @@ struct Vector {
         // possibly experimental.
         // vec create using init lists
         // want moving not copying.
-        // want copying but not via ctor (may not be poss), so it becomes a try_ returning an err.
+        // want copying but not via ctor (may not be possible), so it becomes
+        // a try_ returning an err.
         static constexpr Optional<Vector> try_from(std::initializer_list<T> l)
         {
             if (l.size() != N) { return None; }

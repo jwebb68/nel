@@ -387,7 +387,7 @@ class Optional
          * Return wrapped or supplied value.
          *
          * If a some, then return the wrapped value.
-         * If a none, return the suplied value.
+         * If a none, return the supplied value.
          * The optional is consumed regardless.
          *
          * @returns value contained by the Optional if it's a 'Some'.
@@ -664,8 +664,8 @@ class Optional<void>
     public:
         // Comparision operators
         // Implemented in terms of the operator on the type,
-        // as some types may have more optimal implementations of thatoperationthan the
-        // negation of it's opposite.
+        // as some types may have more optimal implementations of that operation
+        // than the negation of it's opposite.
         /**
          * Is this equal by value to the optional given?
          *

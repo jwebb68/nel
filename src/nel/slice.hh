@@ -213,7 +213,7 @@ struct Slice {
         /**
          * fill the slice with the value given.
          *
-         * T must be bitcopyable (i.e. not need special copy semantics.
+         * T must be bit-copyable (i.e. not need special copy semantics).
          * value at each location is not destroyed.
          */
         void fill(T const &f)
@@ -223,7 +223,7 @@ struct Slice {
 
         // try_fill as creational
         // if fails, leaves slice in inconsistent state (partially created/initialised)
-        // try_fill as post initied
+        // try_fill as post initialised
         // just wastes cycles destroying things.
 
         /**

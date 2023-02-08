@@ -189,12 +189,13 @@ struct Array {
         // possibly experimental.
         // array create using init lists
         // want moving not copying.
-        // want copying but not via ctor (may not be poss), so it becomes a try_ returning an err.
+        // want copying but not via ctor (may not be possible), so it becomes
+        // a try_ returning an err.
         // If type has copy, then could fill? use slice for that..
         static constexpr Optional<Array> try_from(std::initializer_list<T> l)
         {
             // TODO: can the array create be made inplace into the optional?
-            // prob only if initlist ctor is public, which I don't want.
+            // prob only if initialiser list ctor is public, which I don't want.
             return (l.size() != N) ? None : Some(Array(l));
         }
 #    endif

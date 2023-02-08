@@ -28,7 +28,7 @@ void memset(uint8_t *const d, uint8_t const s, Length const n);
 void memmove(uint8_t *const d, uint8_t *const s, Length const n);
 
 /**
- * bytewise swap memory [s,s+n) with [d,d+n)
+ * byte-wise swap memory [s,s+n) with [d,d+n)
  */
 void memswap(uint8_t *const d, uint8_t *const s, Length const n);
 
