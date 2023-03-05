@@ -363,11 +363,11 @@ struct Vector {
         {
             if (len() >= capacity()) {
                 // Really? must one be created for err?
-                return Result<void, T>::Err(val);
+                return Result<void, T>::Err(move(val));
             }
             // Remember, values at len and beyond are uninitialised.
             // So need to use new to construct them.
-            new (&values_[len()]) T(val);
+            new (&values_[len()]) T(move(val));
             len_ += 1;
             return Result<void, T>::Ok();
         }
