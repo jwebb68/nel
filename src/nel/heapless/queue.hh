@@ -113,29 +113,13 @@ struct Queue {
         Queue &operator=(Queue &&o)
         {
             if (this != &o) {
-                rp_ = move(o.rp_);
-                wp_ = move(o.wp_);
-                len_ = move(o.len_);
-                o.rp_ = o.wp_ = o.len_ = 0;
-                if (len_ == 0) {
-                } else if (rp_ < wp_) {
-                    T *s = &o.store_[rp_];
-                    for (T *d = &store_[rp_]; d != &store_[wp_]; ++d) {
-                        *d = move(*s);
-                        ++s;
-                    }
-                } else {
-                    T *s = &o.store_[rp_];
-                    for (T *d = &store_[rp_]; d != &store_[N]; ++d) {
-                        *d = move(*s);
-                        ++s;
-                    }
-                    s = &o.store_[0];
-                    for (T *d = &store_[0]; d != &store_[wp_]; ++d) {
-                        *d = move(*s);
-                        ++s;
-                    }
-                }
+                // very non-simple, need to consider cases like:
+                // dest has fewer/more elems already alloc'd than src.
+                // dest has them in diff places..
+                // simpler to delete all of dest and then move from src.
+                // would be better to handle all cases and use move-assign per elem
+                ~Queue();
+                new (this) Queue(move(o));
             }
             return *this;
         }
