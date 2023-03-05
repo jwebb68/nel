@@ -212,9 +212,12 @@ struct Queue {
         Result<void, T> NEL_WARN_UNUSED_RESULT push(T &&val)
         {
 #    if 0
-            if (is_full()) { return Result<void, T>::Err(val); }
+// TODO: separate out behaviour into sep classes.. (or one with traits)
+// one for failing on full
+// one for dropping oldest on full
+            if (is_full()) { return Result<void, T>::Err(move(val)); }
             len_ += 1;
-            new (&store_[wp_]) T(val);
+            new (&store_[wp_]) T(move(val));
             wp_ += 1;
             if (wp_ == N) { wp_ = 0; }
             return Result<void, T>::Ok();
