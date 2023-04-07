@@ -23,7 +23,7 @@ struct FirstNIterator;
 #    include <nel/log.hh>
 #    include <nel/defs.hh>
 
-//#include <functional> //std::function
+// #include <functional> //std::function
 
 /**
  * A fluent-style/iterator 'trait'

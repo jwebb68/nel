@@ -15,7 +15,7 @@ struct SliceIterator;
 
 #    include <nel/iterator.hh>
 #    include <nel/memory.hh>
-//#    include <printio.hh>
+// #    include <printio.hh>
 #    include <nel/panic.hh>
 #    include <nel/defs.hh>
 

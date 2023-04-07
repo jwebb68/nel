@@ -19,8 +19,8 @@ struct Vector;
 #    include <nel/slice.hh>
 #    include <nel/optional.hh>
 #    include <nel/result.hh>
-//#    include <printio.hh>
-//#include <nel/log.hh>
+// #    include <printio.hh>
+// #include <nel/log.hh>
 #    include <nel/memory.hh> // move
 
 #    include <new> //  placement new
