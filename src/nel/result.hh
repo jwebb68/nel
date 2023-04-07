@@ -375,7 +375,8 @@ class Result
          */
         Optional<T> ok(void)
         {
-            return consume<Optional<T>>([this](void) -> Optional<T> { return Some(ok_.unwrap()); },
+            return consume<Optional<T>>([this](
+                                            void) -> Optional<T> { return Some(forward<T>(*ok_)); },
                                         [](void) -> Optional<T> { return None; });
         }
 
@@ -391,7 +392,7 @@ class Result
         {
             return consume<Optional<E>>([](void) -> Optional<E> { return None; },
                                         [this](void) -> Optional<E> {
-                                            return Some(err_.unwrap());
+                                            return Some(forward<E>(*err_));
                                         });
         }
 
@@ -405,7 +406,7 @@ class Result
          */
         T unwrap(void)
         {
-            return consume<T>([this](void) -> T { return ok_.unwrap(); },
+            return consume<T>([this](void) -> T { return forward<T>(*ok_); },
                               [](void) -> T { nel_panic("not an OK"); });
         }
 
@@ -420,7 +421,7 @@ class Result
         E unwrap_err(void)
         {
             return consume<E>([](void) -> E { nel_panic("not an err"); },
-                              [this](void) -> E { return err_.unwrap(); });
+                              [this](void) -> E { return forward<E>(*err_); });
         }
 
         /**
@@ -436,7 +437,7 @@ class Result
          */
         T unwrap_or(T &&v)
         {
-            return consume<T>([this](void) -> T { return ok_.unwrap(); },
+            return consume<T>([this](void) -> T { return forward<T>(*ok_); },
                               [&v](void) -> T { return forward<T>(v); });
         }
 
@@ -454,7 +455,7 @@ class Result
         template<typename... Args>
         T unwrap_or(Args &&...args)
         {
-            return consume<T>([this](void) -> T { return ok_.unwrap(); },
+            return consume<T>([this](void) -> T { return forward<T>(*ok_); },
                               [&args...](void) -> T { return T(forward<Args>(args)...); });
         }
 
@@ -472,7 +473,7 @@ class Result
         E unwrap_err_or(E &&v)
         {
             return consume<E>([&v](void) -> E { return forward<E>(v); },
-                              [this](void) -> E { return err_.unwrap(); });
+                              [this](void) -> E { return forward<E>(*err_); });
         }
 
         /**
@@ -490,7 +491,7 @@ class Result
         E unwrap_err_or(Args &&...args)
         {
             return consume<E>([&args...](void) -> E { return E(forward<Args>(args)...); },
-                              [this](void) -> E { return err_.unwrap(); });
+                              [this](void) -> E { return forward<E>(*err_); });
         }
 
         /**
@@ -508,12 +509,12 @@ class Result
         template<class U, typename Fn>
         Result<U, E> map(Fn &&fn)
         {
-            return consume<
-                Result<U, E>>([this, &fn](void)
-                                  -> Result<U, E> { return Result<U, E>::Ok(fn(ok_.unwrap())); },
-                              [this](void) -> Result<U, E> {
-                                  return Result<U, E>::Err(err_.unwrap());
-                              });
+            return consume<Result<
+                U,
+                E>>([this, &fn](void)
+                        -> Result<U,
+                                  E> { return Result<U, E>::Ok(forward<U>(fn(forward<T>(*ok_)))); },
+                    [this](void) -> Result<U, E> { return Result<U, E>::Err(forward<E>(*err_)); });
         }
 
         /**
@@ -534,10 +535,10 @@ class Result
             // TODO: remove need to explicitly cast to result in each of the
             //       branches.. i.e. the Result<U,E>() bit, should be Ok(..) or Err(..)
             return consume<
-                Result<T, F>>([this](
-                                  void) -> Result<T, F> { return Result<T, F>::Ok(ok_.unwrap()); },
+                Result<T, F>>([this](void)
+                                  -> Result<T, F> { return Result<T, F>::Ok(forward<T>(*ok_)); },
                               [this, &fn](void) -> Result<T, F> {
-                                  return Result<T, F>::Err(fn(err_.unwrap()));
+                                  return Result<T, F>::Err(forward<F>(fn(forward<E>(*err_))));
                               });
         }
 
@@ -849,7 +850,7 @@ class Result<void, E>
         {
             return consume<Optional<E>>([](void) -> Optional<E> { return None; },
                                         [this](void) -> Optional<E> {
-                                            return Some(err_.unwrap());
+                                            return Some(forward<E>(*err_));
                                         });
         }
 
@@ -877,7 +878,7 @@ class Result<void, E>
         E unwrap_err(void)
         {
             return consume<E>([](void) -> E { nel_panic("not an err"); },
-                              [this](void) -> E { return err_.unwrap(); });
+                              [this](void) -> E { return forward<E>(*err_); });
         }
 
         /**
@@ -898,8 +899,8 @@ class Result<void, E>
 
         E unwrap_err_or(E &&v)
         {
-            return consume<E>([&v](void) -> E { forward<E>(v); },
-                              [this](void) -> E { return err_.unwrap(); });
+            return consume<E>([&v](void) -> E { return forward<E>(v); },
+                              [this](void) -> E { return forward<E>(*err_); });
         }
 
         /**
@@ -917,7 +918,7 @@ class Result<void, E>
         E unwrap_err_or(Args &&...args)
         {
             return consume<E>([&args...](void) -> E { return E(forward<Args>(args)...); },
-                              [this](void) -> E { return err_.unwrap(); });
+                              [this](void) -> E { return forward<E>(*err_); });
         }
 
         /**
@@ -937,11 +938,12 @@ class Result<void, E>
         {
             // TODO: remove need to explicitly cast to result in each of the
             //       branches.. i.e. the Result<U,E>() bit, should be Ok(..) or Err(..)
-            return consume<Result<U, E>>([&fn](void)
-                                             -> Result<U, E> { return Result<U, E>::Ok(fn()); },
-                                         [this](void) -> Result<U, E> {
-                                             return Result<U, E>::Err(err_.unwrap());
-                                         });
+            return consume<
+                Result<U, E>>([&fn](void)
+                                  -> Result<U, E> { return Result<U, E>::Ok(forward<U>(fn())); },
+                              [this](void) -> Result<U, E> {
+                                  return Result<U, E>::Err(forward<E>(*err_));
+                              });
         }
 
         /**
@@ -963,7 +965,8 @@ class Result<void, E>
             //       branches.. i.e. the Result<U,E>() bit, should be Ok(..), Err(..)
             return consume<Result<void, F>>([](void) -> E { return Result<void, F>::Ok(); },
                                             [this, &fn](void) -> E {
-                                                return Result<void, F>::Err(fn(err_.unwrap()));
+                                                return Result<void, F>::Err(
+                                                    forward<F>(fn(forward<E>(*err_))));
                                             });
         }
 

@@ -76,7 +76,7 @@ struct RC
                     // Value_ is eff. destroyed by unwrap().
                     // So release the internal bit as no longer valid.
                     nel_panic_if_not(v->has_value_, "invalid rc node");
-                    auto o = v->value_.unwrap();
+                    auto o = move(*(v->value_));
                     v->has_value_ = false;
                     release(v);
                     return o;
@@ -86,13 +86,13 @@ struct RC
                 T &ref(void)
                 {
                     nel_panic_if_not(has_value(), "invalid rc node");
-                    return value_.get();
+                    return *value_;
                 }
 
                 T const &ref(void) const
                 {
                     nel_panic_if_not(has_value(), "invalid rc node");
-                    return value_.get();
+                    return *value_;
                 }
 
                 bool has_value(void) const

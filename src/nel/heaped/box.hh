@@ -1,6 +1,6 @@
 // -*- mode: c++; indent-tabs-mode: nil; tab-width: 4 -*-
-#ifndef NEL_HEAPED_BOX_HH
-#define NEL_HEAPED_BOX_HH
+#if !defined(NEL_HEAPED_BOX_HH)
+#    define NEL_HEAPED_BOX_HH
 
 namespace nel
 {
@@ -13,10 +13,11 @@ struct Box;
 } // namespace heaped
 } // namespace nel
 
-#include <nel/result.hh>
-#include <nel/element.hh>
-#include <nel/panic.hh>
-#include <nel/defs.hh>
+#    include <nel/result.hh>
+#    include <nel/element.hh>
+#    include <nel/panic.hh>
+#    include <nel/defs.hh>
+#    include <nel/memory.hh> // move,forward
 
 namespace nel
 {
@@ -100,8 +101,8 @@ struct Box
         {
             // for new: on fail, val not moved
             ElementT *const p = new ElementT(move(val));
-            if (p == nullptr) { return Result<Box, T>::Err(val); }
-            return Result<Box, T>::Ok(Box(p));
+            if (p == nullptr) { return Result<Box, T>::Err(move(val)); }
+            return Result<Box, T>::Ok(move(Box(p)));
         }
 
     public:
@@ -119,7 +120,7 @@ struct Box
         constexpr T &deref(void)
         {
             nel_panic_if_not(has_value(), "not a value");
-            return value_->get();
+            return *(*value_);
         }
 
         /**
@@ -136,7 +137,7 @@ struct Box
         constexpr T const &deref(void) const
         {
             nel_panic_if_not(has_value(), "not a value");
-            return value_->get();
+            return *(*value_);
         }
 
         /**
@@ -165,7 +166,7 @@ struct Box
         constexpr T unwrap(void)
         {
             nel_panic_if_not(has_value(), "not a value");
-            T t = value_->unwrap();
+            T t = move(*(*value_));
             delete value_;
             value_ = nullptr;
             return t;
@@ -178,4 +179,4 @@ struct Box
 } // namespace heaped
 } // namespace nel
 
-#endif // NEL_HEAPED_BOX_HH
+#endif // !defined(NEL_HEAPED_BOX_HH)

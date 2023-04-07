@@ -42,39 +42,34 @@ struct Element
         }
 
     public:
-        T &&unwrap(void)
+        constexpr T const &ref(void) const
         {
-            return forward<T>(value_);
+            return value_;
+        }
+
+        constexpr T &ref(void)
+        {
+            return value_;
         }
 
         constexpr T const &operator*(void) const
         {
-            return value_;
-        }
-
-        T &get(void)
-        {
-            return value_;
-        }
-
-        T const &operator*(void) const
-        {
-            return value_;
+            return ref();
         }
 
         constexpr T &operator*(void)
         {
-            return value_;
+            return ref();
         }
 
         constexpr bool operator==(Element const &o) const
         {
-            return value_ == o.value_;
+            return ref() == o.ref();
         }
 
         constexpr bool operator!=(Element const &o) const
         {
-            return value_ != o.value_;
+            return ref() != o.ref();
         }
 };
 

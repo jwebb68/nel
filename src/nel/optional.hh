@@ -381,7 +381,7 @@ class Optional
          */
         T unwrap(void)
         {
-            return consume<T>([this](void) -> T { return some_.unwrap(); },
+            return consume<T>([this](void) -> T { return forward<T>(*some_); },
                               [](void) -> T { nel_panic("not a Some"); });
         }
 
@@ -397,13 +397,8 @@ class Optional
          */
         T unwrap_or(T &&v)
         {
-            return consume<T>([this](void) -> T { return some_.unwrap(); },
+            return consume<T>([this](void) -> T { return forward<T>(*some_); },
                               [&v](void) -> T { return forward<T>(v); });
-            // move into temp, will need to be moved or it'll be destroyed.
-            // auto t = forward<T>(v);
-            // bool const is_some = this->is_some();
-            // tag_ = Tag::INVAL;
-            // return is_some ? some_.unwrap() : forward<T>(t);
         }
 
         /**
@@ -415,7 +410,7 @@ class Optional
         template<typename... Args>
         T unwrap(Args &&...args)
         {
-            return consume<T>([this](void) -> T { return some_.unwrap(); },
+            return consume<T>([this](void) -> T { return forward<T>(*some_); },
                               [&args...](void) -> bool { return T(forward<Args>(args)...); });
 
             // // TODO: are args destroyed if a some?
@@ -436,22 +431,22 @@ class Optional
             return consume<Optional<
                 U>>([this, &fn](void)
                         -> Optional<
-                            U> { return Optional<U>::Some(forward<U>(fn(some_.unwrap()))); },
+                            U> { return Optional<U>::Some(forward<U>(fn(forward<T>(*some_)))); },
                     [](void) -> Optional<U> { return None; });
         }
 
         Optional or_(Optional &&o)
         {
             return consume<Optional>([this](void)
-                                         -> Optional { return Optional::Some(some_.unwrap()); },
-                                     [&o](void) -> Optional { return move(o); });
+                                         -> Optional { return Optional::Some(forward<T>(*some_)); },
+                                     [&o](void) -> Optional { return forward<T>(o); });
         }
 
         template<typename Fn>
         Optional or_else(Fn &&fn)
         {
             return consume<Optional>([this](void)
-                                         -> Optional { return Optional::Some(some_.unwrap()); },
+                                         -> Optional { return Optional::Some(forward<T>(*some_)); },
                                      [&fn](void) -> Optional { return fn(); });
         }
 
@@ -794,9 +789,10 @@ class Optional<void>
         template<typename U, typename Fn>
         Optional<U> map(Fn &&fn)
         {
-            return consume<Optional<U>>([&fn](void)
-                                            -> Optional<U> { return Optional<U>::Some(fn()); },
-                                        [](void) -> Optional<U> { return None; });
+            return consume<
+                Optional<U>>([&fn](void)
+                                 -> Optional<U> { return Optional<U>::Some(forward<U>(fn())); },
+                             [](void) -> Optional<U> { return None; });
         }
 
     public:

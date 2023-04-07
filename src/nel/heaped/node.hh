@@ -1,6 +1,6 @@
 // -*- mode: c++; indent-tabs-mode: nil; tab-width: 4 -*-
-#ifndef NEL_HEAPED_NODE_HH
-#define NEL_HEAPED_NODE_HH
+#if !defined(NEL_HEAPED_NODE_HH)
+#    define NEL_HEAPED_NODE_HH
 
 namespace nel
 {
@@ -13,16 +13,17 @@ struct Node;
 } // namespace heaped
 } // namespace nel
 
-#include <nel/iterator.hh>
-#include <nel/optional.hh>
-#include <nel/result.hh>
-#include <nel/slice.hh>
-#include <nel/log.hh>
-#include <nel/panic.hh>
-#include <nel/defs.hh>
-#include <nel/new.hh> // Inplace new
+#    include <nel/iterator.hh>
+#    include <nel/optional.hh>
+#    include <nel/result.hh>
+#    include <nel/slice.hh>
+#    include <nel/log.hh>
+#    include <nel/panic.hh>
+#    include <nel/defs.hh>
+#    include <nel/memory.hh> // move,forward
+#    include <nel/new.hh> // new (p) T()
 
-#include <cstdlib> // std::free, std::malloc, std::realloc
+#    include <cstdlib> // std::free, std::malloc, std::realloc
 
 namespace nel
 {
@@ -46,11 +47,11 @@ struct Node
         // Manually do a delete.
         // Don't mix delete/new & malloc/realloc/free.
         // Keep consistent with allocators.
-#if defined(__clang__)
-#else
-#    pragma GCC diagnostic push
-#    pragma GCC diagnostic ignored "-Wclass-memaccess"
-#endif
+#    if defined(__clang__)
+#    else
+#        pragma GCC diagnostic push
+#        pragma GCC diagnostic ignored "-Wclass-memaccess"
+#    endif
         // Meh, cannot use new/delete.
         // Make own using malloc/free.
         // But, can use realloc for better growing..
@@ -104,10 +105,10 @@ struct Node
             new_n->alloc_ = new_cap;
             return new_n;
         }
-#if defined(__clang__)
-#else
-#    pragma GCC diagnostic pop
-#endif
+#    if defined(__clang__)
+#    else
+#        pragma GCC diagnostic pop
+#    endif
 
     public:
         ~Node(void)
@@ -125,7 +126,7 @@ struct Node
         constexpr Node(Node &&) = delete;
         constexpr Node &operator=(Node &&) = delete;
 
-#if 0
+#    if 0
         // use placement new to init.
         // want this as a static func so ca return errors..
         constexpr Node(std::initializer_list<T> &&l)
@@ -138,10 +139,10 @@ struct Node
             }
             len_ = i;
         }
-#endif
+#    endif
 
     public:
-#if 0
+#    if 0
         static constexpr Optional<Node *> try_from(std::initializer_list<T> &&l)
         {
             // cannot use Optional<Node> as size is not known at compile time.
@@ -150,7 +151,7 @@ struct Node
             if (p == nullptr) { return None; }
             return p->push_back(l).ok().template map<Node *>([p]() -> Node * { return p; });
         }
-#endif
+#    endif
 
         // use placement new to init.
         constexpr Node(T const &f)
@@ -273,7 +274,7 @@ struct Node
             return Result<void, T>::Ok();
         }
 
-#if 0
+#    if 0
         Result<void, std::initializer_list<T>> push_back(std::initializer_list<T> l)
         {
             typedef std::initializer_list<T> U;
@@ -291,7 +292,7 @@ struct Node
             len_ = i;
             return Result<void, U>::Ok();
         }
-#endif
+#    endif
 
         // rename to try_pop_back?
         Optional<T> pop_back(void)
@@ -328,4 +329,4 @@ struct Node
 } // namespace heaped
 } // namespace nel
 
-#endif // NEL_HEAPED_NODE_HH
+#endif // !defined(NEL_HEAPED_NODE_HH)
