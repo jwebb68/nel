@@ -73,7 +73,8 @@ class Result
         } tag_;
 
         template<enum Tag>
-        struct Phantom {
+        struct Phantom
+        {
         };
 
         union {
@@ -576,7 +577,8 @@ class Result<void, E>
         } tag_;
 
         template<enum Tag>
-        struct Phantom {
+        struct Phantom
+        {
         };
 
         union {

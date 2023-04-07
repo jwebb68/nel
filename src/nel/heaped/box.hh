@@ -27,7 +27,8 @@ namespace heaped
  * A T on the heap, owned (a bit like std::unique_ptr)
  */
 template<typename T>
-struct Box {
+struct Box
+{
     public:
         // heh, blatant rust-ism
         typedef Box Self;

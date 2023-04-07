@@ -47,7 +47,8 @@ namespace heapless
  * The FIFO ordering is preserved.
  */
 template<typename T, Length const N>
-struct Queue {
+struct Queue
+{
     public:
     private:
         // cannot use Array<T,N> as Array wants all elems initialised.

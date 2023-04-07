@@ -30,7 +30,8 @@ namespace heaped
 {
 
 template<typename T>
-struct Node {
+struct Node
+{
     public:
     private:
         // Number allocated.

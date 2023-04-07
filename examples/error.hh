@@ -30,7 +30,8 @@ nel::Log &operator<<(nel::Log &outs, ErrorCode const &val)
 // typedef uint16_t Lineno;
 typedef long unsigned int Lineno;
 
-struct Error {
+struct Error
+{
         // tot=16
     private:
         ErrorCode code; // offset:0, size:4 fsize:4

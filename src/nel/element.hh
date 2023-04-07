@@ -13,7 +13,8 @@ struct Element;
 namespace nel
 {
 template<typename T>
-struct Element {
+struct Element
+{
     private:
         T value_;
 

@@ -10,7 +10,8 @@ typedef long unsigned int Length;
 typedef long unsigned int Index;
 
 template<Length const N>
-struct U8Buf {
+struct U8Buf
+{
     private:
         uint8_t data_[N];
 

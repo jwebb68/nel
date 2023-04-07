@@ -34,7 +34,8 @@ namespace nel
  */
 
 template<typename T>
-struct Slice {
+struct Slice
+{
     private:
         T *const content_;
         // Implicit start at 0.

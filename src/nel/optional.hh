@@ -21,7 +21,8 @@ class NoneT;
 namespace nel
 {
 
-struct NoneT {
+struct NoneT
+{
 };
 
 static constexpr NoneT None = NoneT {};
@@ -84,7 +85,8 @@ class Optional
         } tag_;
 
         template<enum Tag>
-        struct Phantom {
+        struct Phantom
+        {
         };
 
         // Use union to disable certain default methods on T
@@ -503,7 +505,8 @@ class Optional<void>
         } tag_;
 
         template<enum Tag>
-        struct Phantom {
+        struct Phantom
+        {
         };
 
     public:

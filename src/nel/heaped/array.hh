@@ -40,7 +40,8 @@ namespace heaped
 // would mean types checked at compile time
 // cannot move to array of diff size.. checked at compile time
 template<typename T>
-struct Array {
+struct Array
+{
     public:
     private:
         typedef Node<T> ArrayNode;

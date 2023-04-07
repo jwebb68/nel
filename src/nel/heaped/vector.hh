@@ -36,7 +36,8 @@ namespace heaped
  * Can be implicitly moved.
  */
 template<typename T>
-struct Vector {
+struct Vector
+{
     public:
     private:
         // not using unique_ptr as didn't use new to alloc it.

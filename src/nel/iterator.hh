@@ -36,7 +36,8 @@ struct FirstNIterator;
 namespace nel
 {
 template<typename ItT, typename IT, typename OT>
-struct Iterator {
+struct Iterator
+{
     public:
         typedef OT OutT;
         typedef IT InT;
@@ -195,7 +196,8 @@ struct Iterator {
 // x.enum().for_each([&](??)->void {..});
 
 template<typename It, typename V, typename Fn>
-struct MappingIterator: public Iterator<MappingIterator<It, V, Fn>, typename It::InT, V> {
+struct MappingIterator: public Iterator<MappingIterator<It, V, Fn>, typename It::InT, V>
+{
         // turns an InT into an OutT via a It::OutT
 
         // e.g. vec<int>.iter()
@@ -260,7 +262,8 @@ struct MappingIterator: public Iterator<MappingIterator<It, V, Fn>, typename It:
  * Return first n items in iterator, stop iteration if more.
  */
 template<typename It>
-struct FirstNIterator: public Iterator<FirstNIterator<It>, typename It::InT, typename It::OutT> {
+struct FirstNIterator: public Iterator<FirstNIterator<It>, typename It::InT, typename It::OutT>
+{
     public:
         typedef typename It::OutT OutT;
 
@@ -308,7 +311,8 @@ struct FirstNIterator: public Iterator<FirstNIterator<It>, typename It::InT, typ
 };
 
 template<typename It>
-struct ChainIterator: public Iterator<ChainIterator<It>, typename It::InT, typename It::OutT> {
+struct ChainIterator: public Iterator<ChainIterator<It>, typename It::InT, typename It::OutT>
+{
     public:
         typedef typename It::OutT OutT;
 

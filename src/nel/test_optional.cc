@@ -867,7 +867,8 @@ TEST_CASE("optional::None auto into Optional", "[optional]")
     REQUIRE(foo_none().is_none());
 }
 
-struct Foo {
+struct Foo
+{
     public:
         ~Foo(void)
         {

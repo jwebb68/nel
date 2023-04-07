@@ -47,7 +47,8 @@ namespace heapless
  * Vector cannot be copied implicitly.
 */
 template<typename T, Length const N>
-struct Vector {
+struct Vector
+{
     public:
     private:
         // Number initialised.

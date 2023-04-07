@@ -84,7 +84,8 @@ void memswap(uint8_t *const d, uint8_t *const s, Length const n)
     }
 }
 
-struct Alloc {
+struct Alloc
+{
         Length align_;
         uint8_t payload[1];
 

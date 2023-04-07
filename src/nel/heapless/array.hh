@@ -40,7 +40,8 @@ namespace heapless
  * Array cannot be copied implicitly.
  */
 template<typename T, Length const N>
-struct Array {
+struct Array
+{
     public:
     private:
         // default ctor does not init this array.

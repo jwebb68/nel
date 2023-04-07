@@ -23,11 +23,13 @@ namespace heaped
 {
 
 template<typename T>
-struct RC {
+struct RC
+{
         // Contained value on the heap.
         // Single threaded reference counted sharing.
     private:
-        struct Node {
+        struct Node
+        {
             private:
                 Count n_refs_;
                 bool has_value_;

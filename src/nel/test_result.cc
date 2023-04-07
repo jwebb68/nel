@@ -934,7 +934,8 @@ TEST_CASE("Result::Err auto convert to Result", "[result]")
     REQUIRE(res.is_err());
 }
 
-struct Foo {
+struct Foo
+{
     public:
         ~Foo(void)
         {
