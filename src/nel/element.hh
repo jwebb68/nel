@@ -22,21 +22,21 @@ struct Element
         ~Element(void) = default;
 
         // Element(void) = delete;
-        Element(void) = default;
+        constexpr Element(void) = default;
 
-        Element(Element const &) = delete;
-        Element &operator=(Element const &) const = delete;
+        constexpr Element(Element const &) = delete;
+        constexpr Element &operator=(Element const &) const = delete;
 
         constexpr Element(Element &&o) = default;
         constexpr Element &operator=(Element &&o) = default;
 
-        Element(T &&val)
+        constexpr Element(T &&val)
             : value_(forward<T>(val))
         {
         }
 
         template<typename... Args>
-        Element(Args &&...args)
+        constexpr Element(Args &&...args)
             : value_(forward<Args>(args)...)
         {
         }
@@ -47,7 +47,7 @@ struct Element
             return forward<T>(value_);
         }
 
-        T const &get(void) const
+        constexpr T const &operator*(void) const
         {
             return value_;
         }
@@ -62,7 +62,7 @@ struct Element
             return value_;
         }
 
-        T &operator*(void)
+        constexpr T &operator*(void)
         {
             return value_;
         }
