@@ -8,6 +8,16 @@ namespace nel
 #    define NEL_WARN_UNUSED_RESULT __attribute__((warn_unused_result))
 #    define NEL_UNUSED(arg) ((void)(arg))
 
+template<typename T>
+constexpr void unused(T &&)
+{
+}
+
+template<typename T, typename... Ts>
+constexpr void unused(T &&, Ts &&...)
+{
+}
+
 // arm32:
 //__SIZEOF_INT = 4
 //__SIZEOF_LONG_INT = 4
