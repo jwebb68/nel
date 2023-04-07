@@ -52,10 +52,9 @@ struct Array
         /**
          * Destroy array and it's elements.
          */
-        ~Array(void)
-        {
-            iter().for_each([&](T &v) -> void { v.~T(); });
-        }
+        // do not need to implement.
+        // default one will dtuct elements.
+        ~Array() = default;
 
     private:
         // prevent implicit copying/assignment as it's expensive.
@@ -66,29 +65,16 @@ struct Array
         /**
          * construct array by moving from other
          */
-        Array(Array &&o)
-        {
-            T *d = &values_[0];
-            o.iter().for_each([&](T &v) -> void {
-                new (d) T(move(v));
-                ++d;
-            });
-        }
+        // do not need to implement
+        // default will move element-wise.
+        Array(Array &&) = default;
 
         /**
          * move contents of array from other to this
          */
-        Array &operator=(Array &&o)
-        {
-            if (this != &o) {
-                T *d = &values_[0];
-                o.iter().for_each([&](T &v) -> void {
-                    *d = move(v);
-                    ++d;
-                });
-            }
-            return *this;
-        }
+        // do not need to implement
+        // default will move element-wise.
+        Array &operator=(Array &&) = default;
 
     public:
         // allow copy/assign, as explicit as it's expensive.
@@ -119,6 +105,12 @@ struct Array
         // no default construction
         // but needed internally..
         constexpr Array(void) = default;
+
+        template<typename... Args>
+        constexpr Array(Args &&...args)
+            : values_(forward<Args>(args)...)
+        {
+        }
 
     private:
 #    if 0
