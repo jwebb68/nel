@@ -205,6 +205,14 @@ struct Slice
         {
             elem::set(ptr(), f, len());
         }
+#    if 0
+        // warn: T::try_copy_from() must leave dest element in valid state.
+        // TODO: use proper Error type. The error type is just a stand-in.
+        auto WARN_UNUSED_RESULT try_fill(Type const &f)
+        {
+            return elem::try_set(ptr(), f, len());
+        }
+#    endif //
 
         // TODO: use try_move_from as operation can fail.
         // move contents of other slice to this.
@@ -215,6 +223,15 @@ struct Slice
             elem::move(ptr(), o.ptr(), len());
         }
 
+#    if 0
+        Result<void, Error> WARN_UNUSED_RESULT try_move_from(Slice &o)
+        {
+            if (len() != o.len()) { return Result<void, Error>::Err(); };
+            elem::move(ptr(), o.ptr(), len());
+            return Result<void, Error>::Ok();
+        }
+#    endif
+
         // TODO: use try_copy_from as operation can fail.
         // copy contents of other slice to this.
         // panic if lengths are different
@@ -223,6 +240,13 @@ struct Slice
             nel_panic_if_not(len() == o.len(), "nel::Slice:copy_from: Different lengths");
             elem::copy(ptr(), o.ptr(), len());
         }
+#    if 0
+        Result<void, Error> WARN_UNUSED_RESULT try_copy_from(Slice const &o)
+        {
+            if (len() != o.len()) { return Result<void, Error>::Err(); };
+            return elem::try_copy(ptr(), o.ptr(), len());
+        }
+#    endif
 
         /**
          * Get a partial slice over the range of elements in the slice.
