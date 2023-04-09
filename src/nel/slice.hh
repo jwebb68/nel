@@ -206,10 +206,23 @@ struct Slice
             elem::set(ptr(), f, len());
         }
 
-        // try_fill as creational
-        // if fails, leaves slice in inconsistent state (partially created/initialised)
-        // try_fill as post initialised
-        // just wastes cycles destroying things.
+        // TODO: use try_move_from as operation can fail.
+        // move contents of other slice to this.
+        // panic if lengths are different
+        void move_from(Slice &o)
+        {
+            nel_panic_if_not(len() == o.len(), "nel::Slice:move_from: Different lengths");
+            elem::move(ptr(), o.ptr(), len());
+        }
+
+        // TODO: use try_copy_from as operation can fail.
+        // copy contents of other slice to this.
+        // panic if lengths are different
+        void copy_from(Slice const &o)
+        {
+            nel_panic_if_not(len() == o.len(), "nel::Slice:copy_from: Different lengths");
+            elem::copy(ptr(), o.ptr(), len());
+        }
 
         /**
          * Get a partial slice over the range of elements in the slice.
