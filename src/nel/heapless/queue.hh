@@ -51,6 +51,8 @@ template<typename T, Length const N>
 struct Queue
 {
     public:
+        typedef T Type;
+
     private:
         Length len_;
         Index wp_;
@@ -60,24 +62,24 @@ struct Queue
         // So really want only the memory allocated.
         // TODO: adjust for alignment
         // for now assume all types are in same alignment
-        Manual<T[N]> elems_;
+        Manual<Type[N]> elems_;
 
-        constexpr T *ptr()
+        constexpr Type *ptr()
         {
             return elems_.ptr()[0];
         }
 
-        constexpr T const *ptr() const
+        constexpr Type const *ptr() const
         {
             return elems_.ptr()[0];
         }
 
-        constexpr T *ptr(ptrdiff_t d)
+        constexpr Type *ptr(ptrdiff_t d)
         {
             return &ptr()[d];
         }
 
-        constexpr T const *ptr(ptrdiff_t d) const
+        constexpr Type const *ptr(ptrdiff_t d) const
         {
             return &ptr()[d];
         }
@@ -86,7 +88,7 @@ struct Queue
         ~Queue(void)
         {
             // TODO: delete in reverse as allocated forward..?
-            iter().for_each([&](T &v) -> void { v.~T(); });
+            iter().for_each([&](auto &v) -> void { v.~Type(); });
         }
 
     public:
@@ -119,20 +121,20 @@ struct Queue
                 T *s = o.ptr(rp_);
                 T *d = ptr(rp_);
                 for (; d != ptr(wp_); ++d) {
-                    new (d) T(move(*s));
+                    new (d) Type(move(*s));
                     ++s;
                 }
             } else {
                 T *s = o.ptr(rp_);
                 T *d = ptr(rp_);
                 for (; d != ptr(N); ++d) {
-                    new (d) T(move(*s));
+                    new (d) Type(move(*s));
                     ++s;
                 }
                 s = o.ptr();
                 d = ptr();
                 for (; d != ptr(wp_); ++d) {
-                    new (d) T(move(*s));
+                    new (d) Type(move(*s));
                     ++s;
                 }
             }
@@ -207,7 +209,7 @@ struct Queue
     public:
         void clear(void)
         {
-            iter().for_each([&](T &v) -> void { v.~T(); });
+            iter().for_each([&](auto &v) -> void { v.~Type(); });
             rp_ = wp_ = len_ = 0;
         }
 
@@ -221,15 +223,15 @@ struct Queue
          * @returns if successful, Result<void, T>::Ok()
          * @returns if unsuccessful, Result<void, T>::Err() holding val
          */
-        Result<void, T> NEL_WARN_UNUSED_RESULT push(T &&val)
+        Result<void, Type> NEL_WARN_UNUSED_RESULT push(Type &&val)
         {
 #    if 0
 // TODO: separate out behaviour into sep classes.. (or one with traits)
 // one for failing on full
 // one for dropping oldest on full
-            if (is_full()) { return Result<void, T>::Err(move(val)); }
+            if (is_full()) { return Result<void, Type>::Err(move(val)); }
             len_ += 1;
-            new (ptr(wp_)) T(move(val));
+            new (ptr(wp_)) Type(move(val));
             wp_ += 1;
             if (wp_ == N) { wp_ = 0; }
             return Result<void, T>::Ok();
@@ -241,11 +243,11 @@ struct Queue
                 *ptr(wp_) = move(val);
             } else {
                 len_ += 1;
-                new (ptr(wp_)) T(move(val));
+                new (ptr(wp_)) Type(move(val));
             }
             wp_ += 1;
             if (wp_ >= capacity()) { wp_ = 0; }
-            return Result<void, T>::Ok();
+            return Result<void, Type>::Ok();
 #    endif
         }
 
@@ -256,7 +258,7 @@ struct Queue
          * @returns if successful, Optional<T>::Some(val)
          * @returns if unsuccessful, Optional<T>::None
          */
-        Optional<T> pop(void)
+        Optional<Type> pop(void)
         {
             if (is_empty()) { return None; }
             len_ -= 1;
@@ -272,57 +274,57 @@ struct Queue
             } else if (n >= len()) {
                 clear();
             } else if ((rp_ + n) < N) {
-                auto s1 = Slice<T>::from(ptr(rp_), ptr(rp_ + n));
-                auto s2 = Slice<T>::empty();
+                auto s1 = Slice<Type>::from(ptr(rp_), ptr(rp_ + n));
+                auto s2 = Slice<Type>::empty();
                 auto it = QueueIteratorMut(s1.iter(), s2.iter());
-                it.for_each([&](T &v) -> void { v.~T(); });
+                it.for_each([&](auto &v) -> void { v.~Type(); });
                 rp_ += n;
                 len_ -= n;
             } else {
-                auto s1 = Slice<T>::from(ptr(rp_), ptr(N));
-                auto s2 = Slice<T>::from(ptr(), ptr(n - N));
+                auto s1 = Slice<Type>::from(ptr(rp_), ptr(N));
+                auto s2 = Slice<Type>::from(ptr(), ptr(n - N));
                 auto it = QueueIteratorMut(s1.iter(), s2.iter());
-                it.for_each([&](T &v) -> void { v.~T(); });
+                it.for_each([&](auto &v) -> void { v.~Type(); });
                 rp_ = n - N;
                 len_ -= n;
             }
         }
 
     public:
-        typedef ChainIterator<SliceIterator<T>> QueueIteratorMut;
+        typedef ChainIterator<SliceIterator<Type>> QueueIteratorMut;
 
         QueueIteratorMut iter(void)
         {
             if (len() == 0) {
-                auto s1 = Slice<T>::empty();
+                auto s1 = Slice<Type>::empty();
                 auto s2 = s1;
                 return QueueIteratorMut(s1.iter(), s2.iter());
             } else if (rp_ < wp_) {
-                auto s1 = Slice<T>::from(ptr(rp_), ptr(wp_));
-                auto s2 = Slice<T>::empty();
+                auto s1 = Slice<Type>::from(ptr(rp_), ptr(wp_));
+                auto s2 = Slice<Type>::empty();
                 return QueueIteratorMut(s1.iter(), s2.iter());
             } else {
-                auto s1 = Slice<T>::from(ptr(rp_), ptr(N));
-                auto s2 = Slice<T>::from(ptr(), ptr(wp_));
+                auto s1 = Slice<Type>::from(ptr(rp_), ptr(N));
+                auto s2 = Slice<Type>::from(ptr(), ptr(wp_));
                 return QueueIteratorMut(s1.iter(), s2.iter());
             }
         }
 
-        typedef ChainIterator<SliceIterator<T const>> QueueIterator;
+        typedef ChainIterator<SliceIterator<Type const>> QueueIterator;
 
         QueueIterator iter(void) const
         {
             if (len() == 0) {
-                auto s1 = Slice<T const>::empty();
+                auto s1 = Slice<Type const>::empty();
                 auto s2 = s1;
                 return QueueIterator(s1.iter(), s2.iter());
             } else if (rp_ < wp_) {
-                auto s1 = Slice<T const>::from(ptr(rp_), ptr(wp_));
-                auto s2 = Slice<T const>::empty();
+                auto s1 = Slice<Type const>::from(ptr(rp_), ptr(wp_));
+                auto s2 = Slice<Type const>::empty();
                 return QueueIterator(s1.iter(), s2.iter());
             } else {
-                auto s1 = Slice<T const>::from(ptr(rp_), ptr(N));
-                auto s2 = Slice<T const>::from(ptr(), ptr(wp_));
+                auto s1 = Slice<Type const>::from(ptr(rp_), ptr(N));
+                auto s2 = Slice<Type const>::from(ptr(), ptr(wp_));
                 return QueueIterator(s1.iter(), s2.iter());
             }
         }
