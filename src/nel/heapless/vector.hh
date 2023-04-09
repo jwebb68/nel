@@ -31,6 +31,18 @@ namespace nel
 namespace heapless
 {
 
+template<typename T>
+constexpr size_t pack_len(T const &)
+{
+    return 1;
+}
+
+template<typename T, typename... Ts>
+constexpr size_t pack_len(T const &, Ts... t)
+{
+    return 1 + pack_len(forward<Ts>(t)...);
+}
+
 /**
  * Vector
  *
@@ -177,6 +189,15 @@ struct Vector
             }
             return *this;
         }
+
+    public:
+        // // variadic array initialiser..
+        // template<typename... U>
+        // constexpr Vector(U &&...t)
+        //     : len_(pack_len(forward<U>(t)...))
+        //     , values_(forward<U>(t)...)
+        // {
+        // }
 
     public:
         /**
