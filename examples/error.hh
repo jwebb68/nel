@@ -39,7 +39,7 @@ struct Error
         const char *filename; // offset:8, size:8 fsize:8
 
     public:
-        Error(ErrorCode const &code, char const *filename, Lineno const line)
+        constexpr Error(ErrorCode const &code, char const *filename, Lineno const line)
             : code(code)
             , lineno(line)
             , filename(filename)

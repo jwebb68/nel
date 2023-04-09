@@ -203,6 +203,7 @@ class Result
         {
         }
 
+#    if 1
         // seems that the T&& variant is used and gets optimised to inplace create.
         // removing this prevents moving const objects (or implicit coping).
         // but if large >512bytes then does not get optimised out)
@@ -212,6 +213,7 @@ class Result
             , ok_(forward<Args>(args)...)
         {
         }
+#    endif
 
         constexpr Result(Phantom<Tag::ERR> const, E &&v)
             : tag_(Tag::ERR)
@@ -219,6 +221,7 @@ class Result
         {
         }
 
+#    if 1
         // seems that the T&& variant is used and gets optimised to inplace create.
         // removing this prevents moving const objects (or implicit coping).
         template<typename... Args>
@@ -227,6 +230,7 @@ class Result
             , err_(forward<Args>(args)...)
         {
         }
+#    endif
 
     public:
         /**
@@ -241,6 +245,7 @@ class Result
             return Result(Phantom<Tag::OK>(), forward<T>(val));
         }
 
+#    if 1
         /**
          * Create a result set to Ok value, using the values to construct the ok value.
          *
@@ -253,6 +258,7 @@ class Result
         {
             return Result(Phantom<Tag::OK>(), forward<Args>(args)...);
         }
+#    endif
 
         /**
          * Create a result set to Err value, using the value given.
@@ -266,6 +272,7 @@ class Result
             return Result(Phantom<Tag::ERR>(), forward<E>(val));
         }
 
+#    if 1
         /**
          * Create a result set to Err value, using the values to construct the err value.
          *
@@ -278,6 +285,7 @@ class Result
         {
             return Result(Phantom<Tag::ERR>(), forward<Args>(args)...);
         }
+#    endif
 
     private:
         //  don't use std::function, it's bloatware
