@@ -34,6 +34,7 @@ void ex3()
     nel::log << vec1 << '\n';
 }
 
+#if defined(RUST_LIKE)
 void ex41()
 {
     Vec1 vec1 = Vec1::with_capacity(5);
@@ -59,6 +60,7 @@ void ex41()
         nel::log << e.unwrap() << '\n';
     }
 }
+#endif
 
 void ex42()
 {
@@ -87,6 +89,7 @@ void ex43()
     }
 }
 
+#if defined(RUST_LIKE)
 void ex44()
 {
     Vec1 vec1 = Vec1::with_capacity(5);
@@ -98,6 +101,7 @@ void ex44()
     auto it = vec1.iter();
     it.for_each2([&](U8Buf<256> &e) -> void { nel::log << e << '\n'; });
 }
+#endif
 
 int main()
 {
@@ -110,16 +114,20 @@ int main()
     nel::log << "ex3:b" << '\n';
     ex3();
     nel::log << "ex3:e" << '\n';
+#if defined(RUST_LIKE)
     nel::log << "ex41:b" << '\n';
     ex41();
     nel::log << "ex41:e" << '\n';
+#endif
     nel::log << "ex42:b" << '\n';
     ex42();
     nel::log << "ex42:e" << '\n';
     nel::log << "ex43:b" << '\n';
     ex43();
     nel::log << "ex43:e" << '\n';
+#if defined(RUST_LIKE)
     nel::log << "ex44:b" << '\n';
     ex44();
     nel::log << "ex44:e" << '\n';
+#endif
 }

@@ -278,6 +278,7 @@ TEST_CASE("heaped::Array::slice(b,e)", "[heaped][array]")
 
 TEST_CASE("heaped::Array::iter()", "[heaped][array]")
 {
+#if defined(RUST_LIKE)
     // can create iter on empty arrays.
     auto a1 = nel::heaped::Array<int>::empty();
     auto it1 = a1.iter();
@@ -304,6 +305,7 @@ TEST_CASE("heaped::Array::iter()", "[heaped][array]")
     REQUIRE(itc2.next().unwrap() == 2);
     REQUIRE(itc2.next().unwrap() == 2);
     REQUIRE(itc2.next().is_none());
+#endif
 }
 
 TEST_CASE("heaped::Array::try_get", "[heaped][array]")

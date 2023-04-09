@@ -145,6 +145,7 @@ TEST_CASE("Slice::slice(b,e)", "[heapless][vector]")
 
 TEST_CASE("Slice::iter()", "[slice]")
 {
+#if defined(RUST_LIKE)
     auto s1 = nel::Slice<int>::empty();
     auto is1 = s1.iter();
     REQUIRE(is1.next().is_none());
@@ -176,6 +177,61 @@ TEST_CASE("Slice::iter()", "[slice]")
     is3.next().unwrap() = 5;
     auto is4 = s2.iter();
     REQUIRE(is4.next().unwrap() == 5);
+#endif
+
+#if defined(C_LIKE)
+    auto s1 = nel::Slice<int>::empty();
+    auto is1 = s1.iter();
+    REQUIRE(!is1);
+
+    auto const c1 = nel::Slice<int>::empty();
+    auto ic1 = c1.iter();
+    REQUIRE(!ic1);
+
+    int a1[] = {3, 1, 2, 4};
+    auto s2 = nel::Slice<int>::from(a1, sizeof(a1) / sizeof(a1[0]));
+    auto is2 = s2.iter();
+
+    REQUIRE(is2);
+    REQUIRE(*is2 == 3);
+    ++is2;
+    REQUIRE(is2);
+    REQUIRE(*is2 == 1);
+    ++is2;
+    REQUIRE(is2);
+    REQUIRE(*is2 == 2);
+    ++is2;
+    REQUIRE(is2);
+    REQUIRE(*is2 == 4);
+    ++is2;
+    REQUIRE(!is2);
+
+    auto const c2 = nel::Slice<int>::from(a1, sizeof(a1) / sizeof(a1[0]));
+    auto ic2 = c2.iter();
+
+    REQUIRE(ic2);
+    REQUIRE(*ic2 == 3);
+    ++ic2;
+    REQUIRE(ic2);
+    REQUIRE(*ic2 == 1);
+    ++ic2;
+    REQUIRE(ic2);
+    REQUIRE(*ic2 == 2);
+    ++ic2;
+    REQUIRE(ic2);
+    REQUIRE(*ic2 == 4);
+    ++ic2;
+    REQUIRE(!ic2);
+
+    // can assign through interator
+    auto is3 = s2.iter();
+    *is3 = 5;
+
+    auto is4 = s2.iter();
+    REQUIRE(is4);
+    REQUIRE(*is4 == 5);
+
+#endif
 }
 
 TEST_CASE("Slice::try_get()", "[slice]")

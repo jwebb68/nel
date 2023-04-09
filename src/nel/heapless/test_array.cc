@@ -438,6 +438,7 @@ TEST_CASE("heapless::Array::slice(b,e)", "[heapless][array]")
 
 TEST_CASE("heapless::Array::iter()", "[heapless][array]")
 {
+#if defined(RUST_LIKE)
     // can create iter on non empty arrays.
     // auto a2 = nel::heapless::Array<int, 3>::try_from({2, 2, 2}).unwrap();
     auto a2 = nel::heapless::Array<int, 3>::filled_with(2);
@@ -454,6 +455,24 @@ TEST_CASE("heapless::Array::iter()", "[heapless][array]")
     REQUIRE(itc2.next().unwrap() == 3);
     REQUIRE(itc2.next().unwrap() == 3);
     REQUIRE(itc2.next().is_none());
+#endif
+
+#if defined(C_LIKE)
+    // can create iter on non empty arrays.
+    // auto a2 = nel::heapless::Array<int, 3>::try_from({2, 2, 2}).unwrap();
+    auto a3 = nel::heapless::Array<int, 3>::filled_with(2);
+    auto it3 = a3.iter();
+    REQUIRE(it3);
+    REQUIRE(*it3 == 2);
+    ++it3;
+    REQUIRE(it3);
+    REQUIRE(*it3 == 2);
+    ++it3;
+    REQUIRE(it3);
+    REQUIRE(*it3 == 2);
+    ++it3;
+    REQUIRE(!it3);
+#endif
 }
 
 TEST_CASE("heapless::Array::try_get", "[heapless][array]")

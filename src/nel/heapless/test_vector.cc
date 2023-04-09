@@ -500,6 +500,7 @@ TEST_CASE("heapless::Vector::slice(b,e)", "[heapless][vector]")
 
 TEST_CASE("heapless::Vector::iter()", "[heapless][Vector]")
 {
+#if defined(RUST_LIKE)
     {
         // can create iter on empty vectors.
         auto a1 = nel::heapless::Vector<int, 3>::empty();
@@ -537,6 +538,58 @@ TEST_CASE("heapless::Vector::iter()", "[heapless][Vector]")
         // REQUIRE(it23.next().unwrap() == 2);
         // REQUIRE(it23.next().is_none());
     }
+#endif
+#if defined(C_LIKE)
+    {
+        // can create iter on empty vectors.
+        auto a1 = nel::heapless::Vector<int, 3>::empty();
+        auto it1 = a1.iter();
+        // and the iter is empty.
+        REQUIRE(!it1);
+
+        auto const c1 = nel::heapless::Vector<int, 3>::empty();
+        auto itc1 = c1.iter();
+        // and the iter is empty.
+        REQUIRE(!itc1);
+    }
+
+    {
+        // can create iter on non empty vectors.
+        auto a2 = nel::heapless::Vector<int, 3>::empty();
+        a2.push(2).unwrap();
+        a2.push(3).unwrap();
+
+        auto it21 = a2.iter();
+
+        REQUIRE(it21);
+        REQUIRE(*it21 == 2);
+
+        ++it21;
+        REQUIRE(it21);
+        REQUIRE(*it21 == 3);
+
+        ++it21;
+        REQUIRE(!it21);
+
+        // iter does not consume vec
+        auto it22 = a2.iter();
+        REQUIRE(it22);
+        REQUIRE(*it22 == 2);
+        ++it22;
+        REQUIRE(it22);
+        REQUIRE(*it22 == 3);
+        ++it22;
+        REQUIRE(!it22);
+
+        // how to get a non-mut iter (returning const refs) on a mut vec...?
+        // // can get mut iter (returns mur refs)
+        // auto it23 = a2.iter_mut();
+        // REQUIRE(it23.next().unwrap() == 2);
+        // REQUIRE(it23.next().unwrap() == 2);
+        // REQUIRE(it23.next().is_none());
+    }
+
+#endif
 }
 
 TEST_CASE("heapless::Vector::try_get()", "[heapless][Vector]")

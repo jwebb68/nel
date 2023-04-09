@@ -412,6 +412,7 @@ TEST_CASE("heapless::Queue::pop()", "[heapless][queue]")
 
 TEST_CASE("heapless::Queue::iter()", "[heapless][queue]")
 {
+#if defined(RUST_LIKE)
     {
         auto a1 = nel::heapless::Queue<int, 3>::empty();
         auto it = a1.iter();
@@ -442,6 +443,49 @@ TEST_CASE("heapless::Queue::iter()", "[heapless][queue]")
         REQUIRE(it.next().unwrap().val == 4);
         REQUIRE(it.next().is_none());
     }
+#endif
+
+#if defined(C_LIKE)
+    {
+        auto a1 = nel::heapless::Queue<int, 3>::empty();
+        auto it = a1.iter();
+        REQUIRE(!it);
+    }
+    {
+        auto a1 = nel::heapless::Queue<Stub, 3>::empty();
+        a1.push(Stub(1)).unwrap();
+        a1.push(Stub(2)).unwrap();
+        auto it = a1.iter();
+        REQUIRE(it);
+        REQUIRE((*it).val == 1);
+        ++it;
+        REQUIRE(it);
+        REQUIRE((*it).val == 2);
+        ++it;
+        REQUIRE(!it);
+    }
+    {
+        // iter over split range (i.e. current rp is not at beginning
+        // and num items in queue wraps.
+        auto a1 = nel::heapless::Queue<Stub, 3>::empty();
+        a1.push(Stub(1)).unwrap();
+        a1.push(Stub(2)).unwrap();
+        a1.pop().unwrap();
+        a1.push(Stub(3)).unwrap();
+        a1.push(Stub(4)).unwrap();
+        auto it = a1.iter();
+        REQUIRE(it);
+        REQUIRE((*it).val == 2);
+        ++it;
+        REQUIRE(it);
+        REQUIRE((*it).val == 3);
+        ++it;
+        REQUIRE(it);
+        REQUIRE((*it).val == 4);
+        ++it;
+        REQUIRE(!it);
+    }
+#endif
 }
 
 }; // namespace queue

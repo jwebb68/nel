@@ -416,6 +416,7 @@ TEST_CASE("heaped::Vector::slice(b,e)", "[heaped][vector]")
 
 TEST_CASE("heaped::Vector::iter()", "[heaped][Vector]")
 {
+#if defined(RUST_LIKE)
     {
         // can create iter on empty vectors.
         auto a1 = nel::heaped::Vector<int>::empty();
@@ -441,15 +442,16 @@ TEST_CASE("heaped::Vector::iter()", "[heaped][Vector]")
         REQUIRE(it2.next().unwrap() == 4);
         REQUIRE(it2.next().is_none());
 
-#if 0
+#    if 0
 // skipped until initialiser list handling fixed
         auto const c2 = nel::heaped::Vector<int>::try_from({5, 6}).unwrap();
         auto itc2 = c2.iter();
         REQUIRE(itc2.next().unwrap() == 5);
         REQUIRE(itc2.next().unwrap() == 6);
         REQUIRE(itc2.next().is_none());
-#endif
+#    endif
     }
+#endif
 }
 
 TEST_CASE("heaped::Vector::try_get", "[heaped][vector]")

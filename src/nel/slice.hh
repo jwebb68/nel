@@ -313,25 +313,26 @@ struct Slice
         friend Log &operator<<(Log &outs, Slice const &v)
         {
             outs << "Slice(" << v.len() << "){";
-#    if 0
+#    if defined(RUST_LIKE)
             auto it = v.iter();
             auto itv = it.next();
-            if (itv.is_none()) { goto exit; }
-            outs << itv.unwrap();
-            it.for_each([&outs](T const & e) { outs << ' ' << e;})
-exit:
-#    elif 0
+            if (itv.is_some()) {
+                outs << itv.unwrap();
+                it.for_each([&outs](T const &e) { outs << ' ' << e; });
+            }
+#    elif 0 && defined(C_LIKE)
             if (v.len() > 0) {
                 outs << v.content_[0];
                 for (Index i = 1; i < v.len(); ++i) {
                     outs << ' ' << v.content_[i];
                 }
             }
-#    else
+#    elif defined(C_LIKE)
             auto it = v.iter();
-            if (!it.is_done()) {
-                outs << it.deref();
-                it.for_each2([&outs](T const &e) { outs << ' ' << e; });
+            if (it) {
+                outs << *it;
+                ++it;
+                it.for_each([&outs](T const &e) { outs << ' ' << e; });
             }
 #    endif
             outs << '}';
@@ -400,6 +401,7 @@ class SliceIterator: public Iterator<SliceIterator<T>, T &, T &>
         {
         }
 
+#    if defined(RUST_LIKE)
         /**
          * Return next item in iterator or None is no more.
          *
@@ -418,8 +420,10 @@ class SliceIterator: public Iterator<SliceIterator<T>, T &, T &>
             if (b_ == e_) { return None; }
             return Some(*b_++);
         }
+#    endif
 
     public:
+#    if defined(C_LIKE)
         constexpr bool is_done(void) const
         {
             return (b_ == e_);
@@ -434,6 +438,7 @@ class SliceIterator: public Iterator<SliceIterator<T>, T &, T &>
         {
             return *b_;
         }
+#    endif
 };
 
 }; // namespace nel
