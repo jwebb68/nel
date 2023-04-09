@@ -1,6 +1,6 @@
 // -*- mode: c++; indent-tabs-mode: nil; tab-width: 4 -*-
-#ifndef NEL_HEAPED_ARRAY_HH
-#define NEL_HEAPED_ARRAY_HH
+#if !defined(NEL_HEAPED_ARRAY_HH)
+#    define NEL_HEAPED_ARRAY_HH
 
 namespace nel
 {
@@ -13,12 +13,12 @@ struct Array;
 } // namespace heaped
 } // namespace nel
 
-#include <nel/heaped/node.hh>
-#include <nel/iterator.hh>
-#include <nel/slice.hh>
-#include <nel/optional.hh>
-#include <nel/log.hh>
-#include <nel/defs.hh>
+#    include <nel/heaped/node.hh>
+#    include <nel/iterator.hh>
+#    include <nel/slice.hh>
+#    include <nel/optional.hh>
+#    include <nel/log.hh>
+#    include <nel/defs.hh>
 
 namespace nel
 {
@@ -113,7 +113,7 @@ struct Array
             return Array();
         }
 
-#if 1
+#    if 1
         /**
          * Create an array, of size n, initial value f in all entries.
          *
@@ -129,9 +129,9 @@ struct Array
             new (a.item_) ArrayNode(f);
             return a;
         }
-#endif
+#    endif
 
-#if 0
+#    if 0
         /**
          * Attempt to create an array from initialiser list
          *
@@ -151,7 +151,7 @@ struct Array
                 return Array(p);
             });
         }
-#endif
+#    endif
 
     public:
         /**
@@ -174,7 +174,7 @@ struct Array
             return (item_ == nullptr) ? 0 : item_->len();
         }
 
-#if 0
+#    if 0
         /**
          * Item access in array.
          *
@@ -196,7 +196,7 @@ struct Array
             // return (*item_)[idx];
             return slice()[idx];
         }
-#endif //
+#    endif //
 
         /**
          * Return a reference to the value at idx or None.
@@ -301,4 +301,4 @@ struct Array
 } // namespace heaped
 } // namespace nel
 
-#endif // NEL_HEAPED_ARRAY_HH
+#endif // !defined(NEL_HEAPED_ARRAY_HH)

@@ -1,10 +1,10 @@
 // -*- mode: c++; indent-tabs-mode: nil; tab-width: 4 -*-
-#ifndef LARGESTRUCT1_HH
-#define LARGESTRUCT1_HH
+#if !defined(LARGESTRUCT1_HH)
+#    define LARGESTRUCT1_HH
 
-#include <nel/log.hh>
-#include <nel/memory.hh>
-#include <nel/defs.hh>
+#    include <nel/log.hh>
+#    include <nel/memory.hh>
+#    include <nel/defs.hh>
 
 typedef long unsigned int Length;
 typedef long unsigned int Index;
@@ -74,4 +74,4 @@ struct U8Buf
         }
 };
 
-#endif // LARGESTRUCT1_HH
+#endif // !defined(LARGESTRUCT1_HH)

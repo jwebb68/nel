@@ -1,6 +1,6 @@
 // -*- mode: c++; indent-tabs-mode: nil; tab-width: 4 -*-
-#ifndef NEL_HEAPED_VECTOR_HH
-#define NEL_HEAPED_VECTOR_HH
+#if !defined(NEL_HEAPED_VECTOR_HH)
+#    define NEL_HEAPED_VECTOR_HH
 
 namespace nel
 {
@@ -13,14 +13,14 @@ struct Vector;
 } // namespace heaped
 } // namespace nel
 
-#include <nel/heaped/node.hh>
-#include <nel/iterator.hh>
-#include <nel/slice.hh>
-#include <nel/optional.hh>
-#include <nel/result.hh>
-#include <nel/log.hh>
-#include <nel/memory.hh>
-#include <nel/defs.hh>
+#    include <nel/heaped/node.hh>
+#    include <nel/iterator.hh>
+#    include <nel/slice.hh>
+#    include <nel/optional.hh>
+#    include <nel/result.hh>
+#    include <nel/log.hh>
+#    include <nel/memory.hh> // new, move
+#    include <nel/defs.hh>
 
 namespace nel
 {
@@ -114,7 +114,7 @@ struct Vector
             return a;
         }
 
-#if 0
+#    if 0
         /**
          * Attempt to create vector from initialiser list
          *
@@ -127,7 +127,7 @@ struct Vector
             Vector a = Vector::empty();
             return a.push_back(l).ok().template map<Vector>([&a]() { return move(a); });
         }
-#endif
+#    endif
 
     public:
         /**
@@ -170,7 +170,7 @@ struct Vector
             if (item_ != nullptr) { item_->clear(); }
         }
 
-#if 0
+#    if 0
         /**
          * Item access in vector.
          *
@@ -191,7 +191,7 @@ struct Vector
             // return *item_[idx];
             return slice()[idx];
         }
-#endif
+#    endif
 
         /**
          * Return a reference to the value at idx or None.
@@ -340,7 +340,7 @@ struct Vector
             return item_->push_back(val);
         }
 
-#if 0
+#    if 0
         // TODO: poss not consistent, as not returning Result<void, T>
         Result<void, std::initializer_list<T>> push_back(std::initializer_list<T> l)
         {
@@ -351,7 +351,7 @@ struct Vector
             if (item_ == nullptr) { return Result<void, U>::Err(l); }
             return item_->push_back(l);
         }
-#endif
+#    endif
 
         template<typename... Args>
         Result<void, T> NEL_WARN_UNUSED_RESULT push(Args &&...args)
@@ -421,12 +421,12 @@ struct Vector
         friend Log &operator<<(Log &outs, Vector const &v)
         {
             outs << "Vector(" << v.len() << "){";
-#if 1
+#    if 1
             outs << '\n';
             if (v.item_ != nullptr) { outs << *v.item_; }
-#else
+#    else
             if (v.item_ != nullptr) { outs << *v.item_; }
-#endif
+#    endif
             outs << '}';
             return outs;
         }
@@ -435,4 +435,4 @@ struct Vector
 } // namespace heaped
 } // namespace nel
 
-#endif // NEL_HEAPED_VECTOR_HH
+#endif // !defined(NEL_HEAPED_VECTOR_HH)

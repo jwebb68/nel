@@ -1,9 +1,9 @@
 // -*- mode: c++; indent-tabs-mode: nil; tab-width: 4 -*-
-#ifndef ERROR_HH
-#define ERROR_HH
+#if !defined(ERROR_HH)
+#    define ERROR_HH
 
-#include <nel/log.hh>
-#include <nel/panic.hh>
+#    include <nel/log.hh>
+#    include <nel/panic.hh>
 
 enum class ErrorCode {
     Failed = 1,
@@ -56,4 +56,4 @@ struct Error
         }
 };
 
-#endif // ERROR_HH
+#endif // !defined(ERROR_HH)

@@ -1,6 +1,6 @@
 // -*- mode: c++; indent-tabs-mode: nil; tab-width: 4 -*-
-#ifndef NEL_HEAPED_RC_HH
-#define NEL_HEAPED_RC_HH
+#if !defined(NEL_HEAPED_RC_HH)
+#    define NEL_HEAPED_RC_HH
 
 namespace nel
 {
@@ -13,9 +13,9 @@ struct RC;
 } // namespace heaped
 } // namespace nel
 
-#include <nel/element.hh>
-#include <nel/panic.hh>
-#include <nel/defs.hh>
+#    include <nel/element.hh>
+#    include <nel/panic.hh>
+#    include <nel/defs.hh>
 
 namespace nel
 {
@@ -272,4 +272,4 @@ struct RC
 } // namespace heaped
 } // namespace nel
 
-#endif // NEL_HEAPED_RC_HH
+#endif // !defined(NEL_HEAPED_RC_HH)

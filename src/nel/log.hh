@@ -1,6 +1,6 @@
 // -*- mode: c++; indent-tabs-mode: nil; tab-width: 4 -*-
-#ifndef NEL_LOG_HH
-#define NEL_LOG_HH
+#if !defined(NEL_LOG_HH)
+#    define NEL_LOG_HH
 
 namespace nel
 {
@@ -9,7 +9,7 @@ class Log;
 
 } // namespace nel
 
-#include <inttypes.h>
+#    include <inttypes.h>
 
 namespace nel
 {
@@ -28,4 +28,4 @@ extern Log log;
 
 } // namespace nel
 
-#endif // NEL_LOG_HH
+#endif // !defined(NEL_LOG_HH)
