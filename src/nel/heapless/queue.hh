@@ -15,6 +15,7 @@ struct Queue;
 } // namespace heapless
 } // namespace nel
 
+#    include <nel/manual.hh>
 #    include <nel/iterator.hh>
 #    include <nel/slice.hh>
 #    include <nel/optional.hh>
@@ -51,12 +52,35 @@ struct Queue
 {
     public:
     private:
-        // cannot use Array<T,N> as Array wants all elems initialised.
-        // and this class does not want that.
-        T store_[N];
         Length len_;
         Index wp_;
         Index rp_;
+
+        // Must create with N uninitialised.
+        // So really want only the memory allocated.
+        // TODO: adjust for alignment
+        // for now assume all types are in same alignment
+        Manual<T[N]> elems_;
+
+        constexpr T *ptr()
+        {
+            return elems_.ptr()[0];
+        }
+
+        constexpr T const *ptr() const
+        {
+            return elems_.ptr()[0];
+        }
+
+        constexpr T *ptr(ptrdiff_t d)
+        {
+            return &ptr()[d];
+        }
+
+        constexpr T const *ptr(ptrdiff_t d) const
+        {
+            return &ptr()[d];
+        }
 
     public:
         ~Queue(void)
@@ -92,19 +116,22 @@ struct Queue
             // but cannot destroy o.store_ as this now owns them.
             if (len_ == 0) {
             } else if (rp_ < wp_) {
-                T *s = &o.store_[rp_];
-                for (T *d = &store_[rp_]; d != &store_[wp_]; ++d) {
+                T *s = o.ptr(rp_);
+                T *d = ptr(rp_);
+                for (; d != ptr(wp_); ++d) {
                     new (d) T(move(*s));
                     ++s;
                 }
             } else {
-                T *s = &o.store_[rp_];
-                for (T *d = &store_[rp_]; d != &store_[N]; ++d) {
+                T *s = o.ptr(rp_);
+                T *d = ptr(rp_);
+                for (; d != ptr(N); ++d) {
                     new (d) T(move(*s));
                     ++s;
                 }
-                s = &o.store_[0];
-                for (T *d = &store_[0]; d != &store_[wp_]; ++d) {
+                s = o.ptr();
+                d = ptr();
+                for (; d != ptr(wp_); ++d) {
                     new (d) T(move(*s));
                     ++s;
                 }
@@ -202,7 +229,7 @@ struct Queue
 // one for dropping oldest on full
             if (is_full()) { return Result<void, T>::Err(move(val)); }
             len_ += 1;
-            new (&store_[wp_]) T(move(val));
+            new (ptr(wp_)) T(move(val));
             wp_ += 1;
             if (wp_ == N) { wp_ = 0; }
             return Result<void, T>::Ok();
@@ -211,10 +238,10 @@ struct Queue
                 // here , rp_ == wp_.
                 rp_ += 1;
                 if (rp_ >= capacity()) { rp_ = 0; }
-                store_[wp_] = move(val);
+                *ptr(wp_) = move(val);
             } else {
                 len_ += 1;
-                new (&store_[wp_]) T(val);
+                new (ptr(wp_)) T(move(val));
             }
             wp_ += 1;
             if (wp_ >= capacity()) { wp_ = 0; }
@@ -236,7 +263,7 @@ struct Queue
             auto rp = rp_;
             rp_ += 1;
             if (rp_ == N) { rp_ = 0; }
-            return Some(move(store_[rp]));
+            return Some(move(*ptr(rp)));
         }
 
         void drain(Length n)
@@ -245,15 +272,15 @@ struct Queue
             } else if (n >= len()) {
                 clear();
             } else if ((rp_ + n) < N) {
-                auto s1 = Slice<T>::from(&store_[rp_], &store_[rp_ + n]);
+                auto s1 = Slice<T>::from(ptr(rp_), ptr(rp_ + n));
                 auto s2 = Slice<T>::empty();
                 auto it = QueueIteratorMut(s1.iter(), s2.iter());
                 it.for_each([&](T &v) -> void { v.~T(); });
                 rp_ += n;
                 len_ -= n;
             } else {
-                auto s1 = Slice<T>::from(&store_[rp_], &store_[N]);
-                auto s2 = Slice<T>::from(&store_[0], &store_[n - N]);
+                auto s1 = Slice<T>::from(ptr(rp_), ptr(N));
+                auto s2 = Slice<T>::from(ptr(), ptr(n - N));
                 auto it = QueueIteratorMut(s1.iter(), s2.iter());
                 it.for_each([&](T &v) -> void { v.~T(); });
                 rp_ = n - N;
@@ -271,12 +298,12 @@ struct Queue
                 auto s2 = s1;
                 return QueueIteratorMut(s1.iter(), s2.iter());
             } else if (rp_ < wp_) {
-                auto s1 = Slice<T>::from(&store_[rp_], &store_[wp_]);
+                auto s1 = Slice<T>::from(ptr(rp_), ptr(wp_));
                 auto s2 = Slice<T>::empty();
                 return QueueIteratorMut(s1.iter(), s2.iter());
             } else {
-                auto s1 = Slice<T>::from(&store_[rp_], &store_[N]);
-                auto s2 = Slice<T>::from(&store_[0], &store_[wp_]);
+                auto s1 = Slice<T>::from(ptr(rp_), ptr(N));
+                auto s2 = Slice<T>::from(ptr(), ptr(wp_));
                 return QueueIteratorMut(s1.iter(), s2.iter());
             }
         }
@@ -290,12 +317,12 @@ struct Queue
                 auto s2 = s1;
                 return QueueIterator(s1.iter(), s2.iter());
             } else if (rp_ < wp_) {
-                auto s1 = Slice<T const>::from(&store_[rp_], &store_[wp_]);
+                auto s1 = Slice<T const>::from(ptr(rp_), ptr(wp_));
                 auto s2 = Slice<T const>::empty();
                 return QueueIterator(s1.iter(), s2.iter());
             } else {
-                auto s1 = Slice<T const>::from(&store_[rp_], &store_[N]);
-                auto s2 = Slice<T const>::from(&store_[0], &store_[wp_]);
+                auto s1 = Slice<T const>::from(ptr(rp_), ptr(N));
+                auto s2 = Slice<T const>::from(ptr(), ptr(wp_));
                 return QueueIterator(s1.iter(), s2.iter());
             }
         }
