@@ -5,6 +5,15 @@
 #include <nel/memory.hh> // nel::move()
 #include <nel/defs.hh>
 
+namespace nel
+{
+namespace test
+{
+namespace heapless
+{
+namespace queue
+{
+
 TEST_CASE("heapless:Queue::create", "[heapless][queue]")
 {
     // must be able to create an empty queue..
@@ -158,3 +167,8 @@ TEST_CASE("heapless::Queue::pop()", "[heapless][queue]")
     REQUIRE(g1.is_some());
     REQUIRE(g1.unwrap() == 1);
 }
+
+}; // namespace queue
+}; // namespace heapless
+}; // namespace test
+}; // namespace nel

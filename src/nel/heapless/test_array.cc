@@ -5,6 +5,15 @@
 
 #include <catch2/catch.hpp>
 
+namespace nel
+{
+namespace test
+{
+namespace heapless
+{
+namespace array
+{
+
 #if 0
 // cannot have empty in heapless, all array entries must be initialised
 // and presumably the same should be true for heaped.
@@ -259,3 +268,8 @@ TEST_CASE("heapless::Array::try_get", "[heapless][array]")
         REQUIRE(rc2.is_none());
     }
 }
+
+}; // namespace array
+}; // namespace heapless
+}; // namespace test
+}; // namespace nel

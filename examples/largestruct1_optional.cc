@@ -30,7 +30,7 @@ void ex3()
 void ex4()
 {
     nel::Optional<char const *> a = nel::Some(T("ex3"));
-    nel::log << a.map<bool>([](char const *&) -> bool { return true; }) << '\n';
+    nel::log << a.map<bool>([](auto &&) -> bool { return true; }) << '\n';
 }
 
 int main()

@@ -4,6 +4,13 @@
 #include <nel/result.hh> //nel::ResultT
 #include <nel/defs.hh> // NEL_UNUSED
 
+namespace nel
+{
+namespace test
+{
+namespace result
+{
+
 typedef enum _Error {
     NOERROR = 0,
     FAIL,
@@ -1475,3 +1482,7 @@ TEST_CASE("Result::neq for inval with inval must not alter src", "[result]")
     REQUIRE(!res1.is_err());
 }
 #endif // 0
+
+}; // namespace result
+}; // namespace test
+}; // namespace nel

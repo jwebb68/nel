@@ -5,6 +5,15 @@
 
 #include <catch2/catch.hpp>
 
+namespace nel
+{
+namespace test
+{
+namespace heaped
+{
+namespace rc
+{
+
 TEST_CASE("heaped::RC::ctor", "[heaped][rc]")
 {
     auto a1 = nel::heaped::RC<int>(1);
@@ -73,3 +82,8 @@ TEST_CASE("heaped::RC::unwrap", "[heaped][rc]")
 }
 
 // TODO: check that dtor of T is called only when last reference is destroyed..
+
+}; // namespace rc
+}; // namespace heaped
+}; // namespace test
+}; // namespace nel

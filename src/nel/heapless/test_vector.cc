@@ -6,6 +6,14 @@
 #include <catch2/catch.hpp>
 
 // TODO: what of size/cap == 0, i//e Vector<T, 0> ?
+namespace nel
+{
+namespace test
+{
+namespace heapless
+{
+namespace vector
+{
 
 TEST_CASE("heapless::Vector::empty", "[heapless][vector]")
 {
@@ -353,3 +361,8 @@ TEST_CASE("heapless::Vector::try_get()", "[heapless][Vector]")
         REQUIRE(sca2.is_none());
     }
 }
+
+}; // namespace vector
+}; // namespace heapless
+}; // namespace test
+}; // namespace nel

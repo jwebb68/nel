@@ -5,6 +5,13 @@
 
 #include <catch2/catch.hpp>
 
+namespace nel
+{
+namespace test
+{
+namespace iterator
+{
+
 TEST_CASE("iterator::for_each", "[iterator]")
 {
     {
@@ -69,3 +76,7 @@ TEST_CASE("iterator::map", "[iterator]")
         REQUIRE(it1.next().is_none());
     }
 }
+
+}; // namespace iterator
+}; // namespace test
+}; // namespace nel

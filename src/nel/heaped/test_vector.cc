@@ -4,6 +4,15 @@
 
 #include <catch2/catch.hpp>
 
+namespace nel
+{
+namespace test
+{
+namespace heaped
+{
+namespace vector
+{
+
 TEST_CASE("heaped::Vector::empty", "[heaped][vector]")
 {
     // must be able to create an empty vector..
@@ -495,3 +504,8 @@ TEST_CASE("heaped::Vector::try_get", "[heaped][vector]")
 #endif
     }
 }
+
+}; // namespace vector
+}; // namespace heaped
+}; // namespace test
+}; // namespace nel

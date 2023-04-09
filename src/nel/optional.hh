@@ -15,6 +15,7 @@ class NoneT;
 #    include <nel/element.hh>
 #    include <nel/log.hh>
 #    include <nel/panic.hh>
+#    include <nel/memory.hh> // move,forward
 
 #    include <new> // new (*) T(...)
 
@@ -429,16 +430,15 @@ class Optional
 
     public:
         // template<typename U>
-        // Optional<U> map(std::function<U(T &)> fn)
+        // Optional<U> map(std::function<U(T &&)> fn)
         template<typename U, typename Fn>
         Optional<U> map(Fn &&fn)
         {
-            return consume<Optional<U>>(
-                [this, &fn](void) -> Optional<U> {
-                    auto v = some_.unwrap();
-                    return Optional<U>::Some(fn(v));
-                },
-                [](void) -> Optional<U> { return None; });
+            return consume<Optional<
+                U>>([this, &fn](void)
+                        -> Optional<
+                            U> { return Optional<U>::Some(forward<U>(fn(some_.unwrap()))); },
+                    [](void) -> Optional<U> { return None; });
         }
 
         Optional or_(Optional &&o)

@@ -3,6 +3,13 @@
 
 #include <catch2/catch.hpp>
 
+namespace nel
+{
+namespace test
+{
+namespace slice
+{
+
 TEST_CASE("Slice::empty()", "[slice]")
 {
     auto s1 = nel::Slice<int>::empty();
@@ -210,3 +217,7 @@ TEST_CASE("Slice::try_get()", "[slice]")
         REQUIRE(scs1.is_none());
     }
 }
+
+}; // namespace slice
+}; // namespace test
+}; // namespace nel

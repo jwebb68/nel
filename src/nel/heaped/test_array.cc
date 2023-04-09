@@ -5,6 +5,15 @@
 
 #include <catch2/catch.hpp>
 
+namespace nel
+{
+namespace test
+{
+namespace heaped
+{
+namespace array
+{
+
 TEST_CASE("heaped::Array::empty", "[heaped][array]")
 {
     // must be able to create an empty array..
@@ -342,3 +351,8 @@ TEST_CASE("heaped::Array::try_get", "[heaped][array]")
         REQUIRE(sc2.is_none());
     }
 }
+
+}; // namespace array
+}; // namespace heaped
+}; // namespace test
+}; // namespace nel
