@@ -4,6 +4,7 @@
 #include <nel/heaped/vector.hh>
 #include <nel/log.hh>
 #include <nel/defs.hh>
+#include "libnosys_stubs.cx"
 
 typedef nel::heaped::Vector<U8Buf<256>> Vec1;
 

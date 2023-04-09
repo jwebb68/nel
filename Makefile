@@ -61,7 +61,11 @@ else ifeq ($(TOOLCHAIN),arm)
 CC=arm-none-eabi-gcc
 CXX=arm-none-eabi-g++
 OBJDUMP=arm-none-eabi-objdump
+CFLAGS+=-nostdlib
+CXXFLAGS+=-nostdlib
+LDLIBS+=-lnosys
 LDFLAGS+=--specs=nosys.specs
+#LDFLAGS+=--specs=nano.specs
 AR=arm-none-eabi-ar
 AS=arm-none-eabi-as
 LINK=$(CC)

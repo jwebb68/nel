@@ -5,6 +5,7 @@
 #include <nel/panic.hh>
 #include <nel/log.hh>
 #include <nel/defs.hh>
+#include "libnosys_stubs.cx"
 
 typedef nel::heapless::Array<U8Buf<256>, 8> Array1;
 

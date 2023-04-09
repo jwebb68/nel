@@ -4,6 +4,7 @@
 #include <nel/optional.hh>
 #include <nel/log.hh>
 #include <nel/defs.hh>
+#include "libnosys_stubs.cx"
 
 char const *T(char const *v)
 {

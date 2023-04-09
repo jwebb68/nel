@@ -4,6 +4,7 @@
 #include <nel/heaped/box.hh>
 #include <nel/log.hh>
 #include <nel/defs.hh>
+#include "libnosys_stubs.cx"
 
 typedef nel::heaped::Box<U8Buf<256>> Box1;
 

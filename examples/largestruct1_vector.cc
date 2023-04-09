@@ -5,6 +5,7 @@
 #include <nel/log.hh>
 #include <nel/memory.hh> // move()
 #include <nel/defs.hh>
+#include "libnosys_stubs.cx"
 
 typedef nel::heaped::Vector<U8Buf<256>> Vec1;
 

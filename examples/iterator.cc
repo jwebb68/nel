@@ -6,6 +6,7 @@
 
 #include <nel/log.hh>
 #include <nel/defs.hh>
+#include "libnosys_stubs.cx"
 
 void do1(nel::Slice<int>::Iterator &&it)
 {
