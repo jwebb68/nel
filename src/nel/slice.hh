@@ -53,6 +53,12 @@ struct Slice
         {
         }
 
+        constexpr Slice(std::nullptr_t, Length l)
+            : content_(nullptr)
+            , len_(l)
+        {
+        }
+
     public:
         // annoyingly, the type deducing form only works on ctors, not statics
         // so Slice( int ptr, len) gets a Slice<int>(int ptr, len)
@@ -105,6 +111,21 @@ struct Slice
         static constexpr Slice empty(void)
         {
             return Slice();
+        }
+
+        /**
+         * Create a slice over the carray and len given.
+         *
+         * Slice is invalidated if p goes out of scope or is deleted/destroyed.
+         */
+        static constexpr Slice from(Type p[], Length len)
+        {
+            return Slice(p, len);
+        }
+
+        static constexpr Slice from(Type *const b, Type *const e)
+        {
+            return Slice(b, e);
         }
 
     public:
@@ -177,6 +198,7 @@ struct Slice
          * @returns reference to the item
          * @warning Will panic if idx is out-of-range for slice
          */
+        // TODO: use try_get as index access can fail.
         constexpr Type &operator[](Index idx) const
         {
             return checked_get(idx);
@@ -241,6 +263,14 @@ struct Slice
         {
             elem::set(ptr(), f, len());
         }
+#    if 0
+        // warn: T::try_copy_from() must leave dest element in valid state.
+        // TODO: use proper Error type. The error type is just a stand-in.
+        auto WARN_UNUSED_RESULT try_fill(Type const &f)
+        {
+            return elem::try_set(ptr(), f, len());
+        }
+#    endif //
 
         /**
          * Move contents of one slice to another of same length.
@@ -273,6 +303,8 @@ struct Slice
          * @warning UB if src refers to non-readable memory.
          */
         // TODO: use try_copy_from as operation can fail.
+        // copy contents of other slice to this.
+        // panic if lengths are different
         void copy_from(Slice const &o)
         {
             nel::panic_if_not(len() == o.len(), "nel::Slice:copy_from: Different lengths");
