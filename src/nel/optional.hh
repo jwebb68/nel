@@ -16,8 +16,7 @@ class NoneT;
 #    include <nel/log.hh>
 #    include <nel/panic.hh>
 #    include <nel/memory.hh> // move,forward
-
-#    include <new> // new (*) T(...)
+#    include <nel/new.hh> // new (p) T()
 
 namespace nel
 {

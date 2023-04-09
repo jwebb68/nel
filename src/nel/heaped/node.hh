@@ -20,8 +20,8 @@ struct Node;
 #include <nel/log.hh>
 #include <nel/panic.hh>
 #include <nel/defs.hh>
+#include <nel/new.hh> // Inplace new
 
-#include <new> // Inplace new
 #include <cstdlib> // std::free, std::malloc, std::realloc
 
 namespace nel

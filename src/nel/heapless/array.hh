@@ -20,8 +20,7 @@ struct Array;
 #    include <nel/memory.hh> // move
 // #    include <printio.hh>
 #    include <nel/log.hh>
-
-#    include <new>
+#    include <nel/new.hh> //new (p) T()
 
 namespace nel
 {

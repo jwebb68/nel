@@ -22,8 +22,7 @@ struct Vector;
 // #    include <printio.hh>
 // #include <nel/log.hh>
 #    include <nel/memory.hh> // move
-
-#    include <new> //  placement new
+#    include <nel/new.hh> //  placement new
 
 namespace nel
 {

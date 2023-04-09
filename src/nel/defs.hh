@@ -12,6 +12,9 @@ typedef long unsigned int Length;
 typedef long unsigned int Index;
 typedef long unsigned int Count;
 
+typedef long unsigned int USize;
+typedef long signed int Size;
+
 } // namespace nel
 
 #endif // NEL_DEFS_HH

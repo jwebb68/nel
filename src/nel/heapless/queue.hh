@@ -19,10 +19,9 @@ struct Queue;
 #    include <nel/slice.hh>
 #    include <nel/optional.hh>
 #    include <nel/result.hh>
-#    include <nel/memory.hh>
+#    include <nel/memory.hh> // move
 #    include <nel/log.hh>
-
-#    include <new> // placement new
+#    include <nel/new.hh> // placement new
 
 namespace nel
 {

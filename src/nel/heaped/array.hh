@@ -18,6 +18,7 @@ struct Array;
 #    include <nel/slice.hh>
 #    include <nel/optional.hh>
 #    include <nel/log.hh>
+#    include <nel/new.hh> // new
 #    include <nel/defs.hh>
 
 namespace nel

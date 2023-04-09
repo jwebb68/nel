@@ -19,6 +19,8 @@ struct SliceIterator;
 #    include <nel/panic.hh>
 #    include <nel/defs.hh>
 
+#    include <cstddef> // std::nullptr_t
+
 namespace nel
 {
 
