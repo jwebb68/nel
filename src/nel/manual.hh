@@ -24,12 +24,15 @@ namespace nel
 template<typename T>
 struct Manual
 {
+    public:
+        typedef T Type;
+
     private:
         // Use union so inspecting in a debugger is easier..
         // Don't use it for type punning.
         union {
-                uint8_t buf_[sizeof(T)];
-                T elem_;
+                uint8_t buf_[sizeof(Type)];
+                Type elem_;
         };
 
     public:
@@ -41,12 +44,12 @@ struct Manual
         constexpr Manual() {};
 
         // move value into container
-        constexpr Manual(T &&v)
+        constexpr Manual(Type &&v)
         {
-            new (ptr()) T(move(v));
+            new (ptr()) Type(move(v));
         }
 
-        constexpr Manual &operator=(T &&v)
+        constexpr Manual &operator=(Type &&v)
         {
             // cannot use assign as that implies there is a value on
             // the lhs, which there may not be.
@@ -59,7 +62,7 @@ struct Manual
         template<typename... Args>
         constexpr Manual(Args &&...args)
         {
-            new (ptr()) T(forward<Args>(args)...);
+            new (ptr()) Type(forward<Args>(args)...);
         }
 
     public:
@@ -79,44 +82,44 @@ struct Manual
 
     public:
         // only if you know there's a value there..
-        constexpr T *ptr()
+        constexpr Type *ptr()
         {
             // return &elem_;
-            return static_cast<T *>(static_cast<void *>(buf_));
+            return static_cast<Type *>(static_cast<void *>(buf_));
         }
 
-        constexpr T const *ptr() const
+        constexpr Type const *ptr() const
         {
             // return &elem_;
-            return static_cast<T const *>(static_cast<void const *>(buf_));
+            return static_cast<Type const *>(static_cast<void const *>(buf_));
         }
 
-        constexpr T *operator->()
+        constexpr Type *operator->()
         {
             return ptr();
         }
 
-        constexpr T const *operator->() const
+        constexpr Type const *operator->() const
         {
             return ptr();
         }
 
-        constexpr T &ref()
+        constexpr Type &ref()
         {
             return *ptr();
         }
 
-        constexpr T const &ref() const
+        constexpr Type const &ref() const
         {
             return *ptr();
         }
 
-        constexpr T &operator*()
+        constexpr Type &operator*()
         {
             return ref();
         }
 
-        constexpr T const &operator*() const
+        constexpr Type const &operator*() const
         {
             return ref();
         }
@@ -124,14 +127,14 @@ struct Manual
     public:
         constexpr void destroy()
         {
-            ref().~T();
+            ref().~Type();
         }
 
-        // constexpr void move_in(T &&v)
+        // constexpr void move_in(Type &&v)
         // {
         //     ref() = move(v);
         // }
-        // constexpr T move_out(T &&v)
+        // constexpr Type move_out(Type &&v)
         // {
         //     return move(ref());
         // }
