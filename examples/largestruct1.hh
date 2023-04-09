@@ -24,29 +24,29 @@ struct U8Buf
 
         constexpr ~U8Buf(void)
         {
-            nel::memset(data_, 0xa5, N);
+            nel::elem::set(data_, 0xa5, N);
         }
 
         constexpr U8Buf(U8Buf const &o)
         {
-            nel::memcpy(data_, o.data_, N);
+            nel::elem::copy(data_, o.data_, N);
         }
 
         constexpr U8Buf(U8Buf &&o)
         {
-            nel::memmove(data_, o.data_, N);
+            nel::elem::move(data_, o.data_, N);
         }
 
         constexpr U8Buf &operator=(U8Buf &&o)
         {
-            nel::memmove(data_, o.data_, N);
+            nel::elem::move(data_, o.data_, N);
             return *this;
         }
 
         // constexpr explicit U8Buf(uint8_t const f) {
         constexpr U8Buf(uint8_t const f)
         {
-            nel::memset(data_, f, N);
+            nel::elem::set(data_, f, N);
         }
 
     public:
@@ -57,7 +57,7 @@ struct U8Buf
 
         void fill(uint8_t f)
         {
-            nel::memset(data_, f, N);
+            nel::elem::set(data_, f, N);
         }
 
         friend nel::Log &operator<<(nel::Log &outs, U8Buf const &val)

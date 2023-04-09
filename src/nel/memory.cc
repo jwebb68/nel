@@ -3,14 +3,15 @@
 #include <nel/panic.hh> // nel_*
 
 #include <cstdlib> //std::free, std::malloc, std::realloc
-#include <cstring> // std::memcpy, std::memset
-#include <cstring> // std::memmove
-#include <memory> // std::align
+#include <cstring> // std::memcpy, std::memset, std::memmove
+
+// #include <memory> // std::align
 
 namespace nel
 {
-
-void memcpy(uint8_t *const d, uint8_t const *const s, Length const n)
+namespace elem
+{
+void copy(uint8_t *const d, uint8_t const *const s, Length const n)
 {
     // for (Index i=0; i < n; ++i) {
     //     d[i] = s[i];
@@ -22,7 +23,7 @@ void memcpy(uint8_t *const d, uint8_t const *const s, Length const n)
     std::memcpy(d, s, n);
 }
 
-void memset(uint8_t *const d, uint8_t const s, Length const n)
+void set(uint8_t *const d, uint8_t const s, Length const n)
 {
     // for (Index i=0; i < n; ++i) {
     //     d[i] = s;
@@ -33,7 +34,7 @@ void memset(uint8_t *const d, uint8_t const s, Length const n)
     std::memset(d, s, n);
 }
 
-void memmove(uint8_t *const d, uint8_t *const s, Length const n)
+void move(uint8_t *const d, uint8_t *const s, Length const n)
 {
     // for (Index i=0; i < n; ++i) {
     //     d[i] = s[i];
@@ -66,26 +67,40 @@ void memmove(uint8_t *const d, uint8_t *const s, Length const n)
     // for (uint8_t *id = d, *is = s, *const e = (d + n); id != e; ++is, ++id) {
     //     *is = 0xa5;
     // }
-    memcpy(d, s, n);
-    memset(s, 0xa5, n);
+    copy(d, s, n);
+    wipe(s, n);
 }
 
-void memswap(uint8_t *const d, uint8_t *const s, Length const n)
+void wipe(uint8_t *const d, Length const n)
 {
-    // for (Index i=0; i < n; ++i) {
-    //     uint8_t t = d[i];
-    //     d[i] = s[i];
-    //     s[i] = t;
+    set(d, 0xa5, n);
+}
+
+bool eq(uint8_t const *a, uint8_t const *b, Length n)
+{
+    // uint8_t const *e = a + n;
+    // for (; a != e; ++a) {
+    //     if (*a != *b) { return false; }
+    //     ++b;
     // }
-    for (uint8_t *id = d, *is = s, *const e = (d + n); id != e; ++is, ++id) {
-        uint8_t t = *id;
-        *id = *is;
-        *is = t;
-    }
+    // return true;
+    return std::memcmp(a, b, n) == 0;
 }
 
-struct Alloc
+bool ne(uint8_t const *a, uint8_t const *b, Length n)
 {
+    // uint8_t const *e = a + n;
+    // for (; a != e; ++a) {
+    //     if (*a == *b) { return false; }
+    //     ++b;
+    // }
+    // return true;
+    return std::memcmp(a, b, n) != 0;
+}
+}; // namespace elem
+
+#if 0
+struct Alloc {
         Length align_;
         uint8_t payload[1];
 
@@ -158,5 +173,6 @@ void *malloc_aligned(Length align, Length size)
 {
     return realloc_aligned(nullptr, align, size);
 }
+#endif
 
 } // namespace nel

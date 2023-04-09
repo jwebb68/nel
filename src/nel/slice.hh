@@ -221,7 +221,7 @@ struct Slice
          */
         void fill(T const &f)
         {
-            nel::memset(content_, f, len());
+            elem::set(ptr(), f, len());
         }
 
         // try_fill as creational

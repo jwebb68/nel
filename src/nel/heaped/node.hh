@@ -99,7 +99,7 @@ struct Node
             if (new_sz > old_sz) {
                 // clear new memory,
                 // assumes realloc adds to end
-                memset((uint8_t *)new_n + old_sz, 0xa5, new_sz - old_sz);
+                elem::wipe(reinterpret_cast<uint8_t *>(new_n) + old_sz, new_sz - old_sz);
             }
             new_n->alloc_ = new_cap;
             return new_n;
