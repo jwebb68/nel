@@ -162,7 +162,7 @@ struct Vector
                         d->~T();
                     }
                 }
-                len_ = nel::move(o.len_);
+                len_ = move(o.len_);
                 o.len_ = 0;
             }
             return *this;

@@ -87,7 +87,7 @@ class Result
     public:
         ~Result(void)
         {
-            switch (tag_) {
+            switch (tag_) { // result::dtor
                 case Tag::OK:
                     ok_.~Element<T>();
                     break;
@@ -97,16 +97,22 @@ class Result
                     break;
 
                 case Tag::INVAL:
+                    // dtor + move:
+                    // if invalid, don't panic.. just means value was consumed earlier.
                     break;
 
-                // I want compile to fail if an enum case handler isn't present.
                 default:
-                    // But, want to abort/panic if a unhandled case is encountered
-                    // at runtime, much how a default hander would work if it was
-                    // present.
-                    // std::cerr << "invalid Result: tag=" << tag_ << std::endl;
-                    // std::abort();
+                    // for dtor + moves (but not usage) at runtime:
+                    // does it matter it's not one of the 'special' values?
+                    // yes, since it may have contained one or the others..
+                    // if memory hardware is assumed to be incorruptable then can ignore ? (buffer
+                    // overruns?) but might not want to for buffer overrun issues. if there is a
+                    // memory corruption, then should have been detected by memory hardware (Ecc
+                    // mem) if not using eec/ecc mem then that's the prob. But, want to abort/panic
+                    // if a unhandled case is encountered at runtime, much how a default hander
+                    // would work if it was present.
                     nel_panic("invalid Result");
+                    break;
             }
         }
 
@@ -114,31 +120,41 @@ class Result
         {
             tag_ = o.tag_;
             o.tag_ = Tag::INVAL;
-            switch (tag_) {
+
+            switch (tag_) { // result::move-ctor
                 case Tag::OK:
-                    new (&ok_) Element<T>(move(o.ok_));
+                    new (&ok_) Element<T>(forward<Element<T>>(o.ok_));
                     break;
 
                 case Tag::ERR:
-                    new (&err_) Element<E>(move(o.err_));
+                    new (&err_) Element<E>(forward<Element<E>>(o.err_));
                     break;
 
                 case Tag::INVAL:
+                    // dtor + move:
+                    // if invalid, don't panic.. just means value was consumed earlier.
                     break;
 
                 default:
-                    // std::cerr << "invalid Result: tag=" << this->tag_ << std::endl;
-                    // std::abort();
+                    // for dtor + moves (but not usage) at runtime:
+                    // does it matter it's not one of the 'special' values?
+                    // yes, since it may have contained one or the others..
+                    // if memory hardware is assumed to be incorruptable then can ignore ? (buffer
+                    // overruns?) but might not want to for buffer overrun issues. if there is a
+                    // memory corruption, then should have been detected by memory hardware (Ecc
+                    // mem) if not using eec/ecc mem then that's the prob.
                     nel_panic("invalid Result");
+                    break;
             }
         }
 
-        Result &operator=(Result &&o)
+        constexpr Result &operator=(Result &&o)
         {
             if (this != &o) {
                 tag_ = o.tag_;
                 o.tag_ = Tag::INVAL;
-                switch (tag_) {
+
+                switch (tag_) { // result-move-ass
                     case Tag::OK:
                         ok_ = move(o.ok_);
                         break;
@@ -148,12 +164,20 @@ class Result
                         break;
 
                     case Tag::INVAL:
+                        // dtor + move:
+                        // if invalid, don't panic.. just means value was consumed earlier.
                         break;
 
                     default:
-                        // std::cerr << "invalid Result: tag=" << this->tag_ << std::endl;
-                        // std::abort();
+                        // for dtor + moves (but not usage) at runtime:
+                        // does it matter it's not one of the 'special' values?
+                        // yes, since it may have contained one or the others..
+                        // if memory hardware is assumed to be incorruptable then can ignore ?
+                        // (buffer overruns?) but might not want to for buffer overrun issues. if
+                        // there is a memory corruption, then should have been detected by memory
+                        // hardware (Ecc mem) if not using eec/ecc mem then that's the prob.
                         nel_panic("invalid Result");
+                        break;
                 }
             }
             return *this;
@@ -179,6 +203,9 @@ class Result
         {
         }
 
+        // seems that the T&& variant is used and gets optimised to inplace create.
+        // removing this prevents moving const objects (or implicit coping).
+        // but if large >512bytes then does not get optimised out)
         template<typename... Args>
         constexpr Result(Phantom<Tag::OK> const, Args &&...args)
             : tag_(Tag::OK)
@@ -192,6 +219,8 @@ class Result
         {
         }
 
+        // seems that the T&& variant is used and gets optimised to inplace create.
+        // removing this prevents moving const objects (or implicit coping).
         template<typename... Args>
         constexpr Result(Phantom<Tag::ERR> const, Args &&...args)
             : tag_(Tag::ERR)
@@ -256,20 +285,23 @@ class Result
         // constexpr V match(Tag tag, std::function<V(void)> &&on_ok, std::function<V(void)>
         // &&on_err) const  {
         template<typename V, typename Fn1, typename Fn2>
-        constexpr V match(Tag tag, Fn1 &&on_ok, Fn2 &&on_err) const
+        constexpr V match(Fn1 &&on_ok, Fn2 &&on_err) const
         {
-            switch (tag) {
+            // this match is non-consuming, for internal use only.
+            switch (tag_) { // result-match
                 case Tag::OK:
-                    return on_ok();
+                    return on_ok(*ok_);
                 case Tag::ERR:
-                    return on_err();
+                    return on_err(*err_);
                 case Tag::INVAL:
-                // invalids are not values that should occur
-                // if they do it's a use-after-move-from op so must panic.
-                // or a use-before-initialised so again must panic.
+                    // invalids are not values that should occur
+                    // if they do it's a use-after-move-from op so must panic.
+                    // or a use-before-initialised so again must panic.
+                    nel_panic("invalid Result");
+                    break;
                 default:
                     nel_panic("invalid Result");
-                    // std::abort();
+                    break;
             }
         }
 
@@ -291,10 +323,8 @@ class Result
         {
             if (this == &o) { return true; }
             if (tag_ == o.tag_) {
-                return match<bool>(
-                    tag_,
-                    [this, &o](void) -> bool { return ok_ == o.ok_; },
-                    [this, &o](void) -> bool { return err_ == o.err_; });
+                return match<bool>([&o](T const &ok) -> bool { return ok == *o.ok_; },
+                                   [&o](E const &err) -> bool { return err == *o.err_; });
             }
             return false;
         }
@@ -312,10 +342,8 @@ class Result
         {
             if (this == &o) { return false; }
             if (tag_ == o.tag_) {
-                return match<bool>(
-                    tag_,
-                    [this, &o](void) -> bool { return ok_ != o.ok_; },
-                    [this, &o](void) -> bool { return err_ != o.err_; });
+                return match<bool>([&o](T const &ok) -> bool { return ok != *o.ok_; },
+                                   [&o](E const &err) -> bool { return err != *o.err_; });
             }
             return true;
         }
@@ -330,10 +358,10 @@ class Result
          */
         constexpr bool is_ok(void) const
         {
-            return match<bool>(
-                tag_,
-                [this](void) -> bool { return true; },
-                [this](void) -> bool { return false; });
+            // min-size: gets optimised + inlined at call site.
+            // release: gets optimised away..
+            return match<bool>([](T const &) -> bool { return true; },
+                               [](E const &) -> bool { return false; });
         }
 
         /**
@@ -345,21 +373,58 @@ class Result
          */
         constexpr bool is_err(void) const
         {
-            return match<bool>(
-                tag_,
-                [this](void) -> bool { return false; },
-                [this](void) -> bool { return true; });
+            return match<bool>([](T const &) -> bool { return false; },
+                               [](E const &) -> bool { return true; });
         }
 
-    private:
-        // template<typename V>
-        // V consume(std::function<V(void)> &&on_ok, std::function<V(void)> &&on_err) {
+    public:
         template<typename V, typename Fn1, typename Fn2>
-        V consume(Fn1 &&on_ok, Fn2 &&on_err)
+        constexpr V consume(Fn1 &&on_ok, Fn2 &&on_err)
+        {
+            // a consuming matcher..
+            // that moves the value to the closures..
+            auto tag = tag_;
+            tag_ = Tag::INVAL;
+            switch (tag) { // result-consume
+                case Tag::OK:
+                    return on_ok(forward<T>(*ok_));
+                case Tag::ERR:
+                    return on_err(forward<E>(*err_));
+                case Tag::INVAL:
+                    // invalids are not values that should occur
+                    // if they do it's a use-after-move-from op so must panic.
+                    // or a use-before-initialised so again must panic.
+                    nel_panic("invalid Result");
+                    break;
+                default:
+                    nel_panic("invalid Result");
+                    break;
+            }
+        }
+
+        template<typename Fn1, typename Fn2>
+        constexpr void consumev(Fn1 &&on_ok, Fn2 &&on_err)
         {
             auto tag = tag_;
             tag_ = Tag::INVAL;
-            return match<V>(tag, forward<Fn1>(on_ok), forward<Fn2>(on_err));
+            switch (tag) { // result-consumev
+                case Tag::OK:
+                    on_ok(forward<T>(*ok_));
+                    break;
+                case Tag::ERR:
+                    on_err(forward<E>(*err_));
+                    break;
+                case Tag::INVAL:
+                    // invalids are not values that should occur
+                    // if they do it's a use-after-move-from op so must panic.
+                    // or a use-before-initialised so again must panic.
+                    // fall through to default handler
+                    nel_panic("invalid Result");
+                    break;
+                default:
+                    nel_panic("invalid Result");
+                    break;
+            }
         }
 
     public:
@@ -373,11 +438,10 @@ class Result
          *
          * `this` is consumed and invalidated after.
          */
-        Optional<T> ok(void)
+        constexpr Optional<T> ok(void)
         {
-            return consume<Optional<T>>([this](
-                                            void) -> Optional<T> { return Some(forward<T>(*ok_)); },
-                                        [](void) -> Optional<T> { return None; });
+            return consume<Optional<T>>([](T &&ok) -> Optional<T> { return Some(forward<T>(ok)); },
+                                        [](E &&) -> Optional<T> { return None; });
         }
 
         /**
@@ -388,11 +452,11 @@ class Result
          *
          * `this` is consumed and invalidated after.
          */
-        Optional<E> err(void)
+        constexpr Optional<E> err(void)
         {
-            return consume<Optional<E>>([](void) -> Optional<E> { return None; },
-                                        [this](void) -> Optional<E> {
-                                            return Some(forward<E>(*err_));
+            return consume<Optional<E>>([](T &&) -> Optional<E> { return None; },
+                                        [](E &&err) -> Optional<E> {
+                                            return Some(forward<E>(err));
                                         });
         }
 
@@ -404,10 +468,10 @@ class Result
          *
          * `this` is consumed by the operation.
          */
-        T unwrap(void)
+        constexpr T unwrap(void)
         {
-            return consume<T>([this](void) -> T { return forward<T>(*ok_); },
-                              [](void) -> T { nel_panic("not an OK"); });
+            return consume<T>([](T &&ok) -> T { return T(forward<T>(ok)); },
+                              [](E &&) -> T { nel_panic("not an OK"); });
         }
 
         /**
@@ -418,10 +482,10 @@ class Result
          *
          * this is consumed by the operation.
          */
-        E unwrap_err(void)
+        constexpr E unwrap_err(void)
         {
-            return consume<E>([](void) -> E { nel_panic("not an err"); },
-                              [this](void) -> E { return forward<E>(*err_); });
+            return consume<E>([](T &&) -> E { nel_panic("not an err"); },
+                              [](E &&err) -> E { return err; });
         }
 
         /**
@@ -435,10 +499,10 @@ class Result
          * `this` is consumed by the operation.
          * `v` is consumed by the operation.
          */
-        T unwrap_or(T &&v)
+        constexpr T unwrap_or(T &&v)
         {
-            return consume<T>([this](void) -> T { return forward<T>(*ok_); },
-                              [&v](void) -> T { return forward<T>(v); });
+            return consume<T>([](T &&ok) -> T { return ok; },
+                              [&v](E &&) -> T { return forward<T>(v); });
         }
 
         /**
@@ -453,10 +517,10 @@ class Result
          * `args` are consumed by the operation.
          */
         template<typename... Args>
-        T unwrap_or(Args &&...args)
+        constexpr T unwrap_or(Args &&...args)
         {
-            return consume<T>([this](void) -> T { return forward<T>(*ok_); },
-                              [&args...](void) -> T { return T(forward<Args>(args)...); });
+            return consume<T>([](T &&ok) -> T { return ok; },
+                              [&args...](E &&) -> T { return T(forward<Args>(args)...); });
         }
 
         /**
@@ -470,10 +534,10 @@ class Result
          * `this` is consumed by the operation.
          * `v` is consumed by the operation.
          */
-        E unwrap_err_or(E &&v)
+        constexpr E unwrap_err_or(E &&v)
         {
-            return consume<E>([&v](void) -> E { return forward<E>(v); },
-                              [this](void) -> E { return forward<E>(*err_); });
+            return consume<E>([&v](T &&) -> E { return forward<E>(v); },
+                              [](E &&err) -> E { return err; });
         }
 
         /**
@@ -488,10 +552,10 @@ class Result
          * `args` are consumed by the operation.
          */
         template<typename... Args>
-        E unwrap_err_or(Args &&...args)
+        constexpr E unwrap_err_or(Args &&...args)
         {
-            return consume<E>([&args...](void) -> E { return E(forward<Args>(args)...); },
-                              [this](void) -> E { return forward<E>(*err_); });
+            return consume<E>([&args...](T &&) -> E { return E(forward<Args>(args)...); },
+                              [](E &&err) -> E { return err; });
         }
 
         /**
@@ -507,14 +571,14 @@ class Result
         // template<class U>
         // Result<U, E> map(std::function<U(T &&)> fn)
         template<class U, typename Fn>
-        Result<U, E> map(Fn &&fn)
+        constexpr Result<U, E> map(Fn &&fn)
         {
             return consume<Result<
                 U,
-                E>>([this, &fn](void)
+                E>>([&fn](T &&ok)
                         -> Result<U,
-                                  E> { return Result<U, E>::Ok(forward<U>(fn(forward<T>(*ok_)))); },
-                    [this](void) -> Result<U, E> { return Result<U, E>::Err(forward<E>(*err_)); });
+                                  E> { return Result<U, E>::Ok(forward<U>(fn(forward<T>(ok)))); },
+                    [](E &&err) -> Result<U, E> { return Result<U, E>::Err(forward<E>(err)); });
         }
 
         /**
@@ -530,22 +594,22 @@ class Result
         // template<class F>
         // Result<T, F> map_err(std::function<F(E &&)> fn)
         template<class F, typename Fn>
-        Result<T, F> map_err(Fn &&fn)
+        constexpr Result<T, F> map_err(Fn &&fn)
         {
             // TODO: remove need to explicitly cast to result in each of the
             //       branches.. i.e. the Result<U,E>() bit, should be Ok(..) or Err(..)
             return consume<
-                Result<T, F>>([this](void)
-                                  -> Result<T, F> { return Result<T, F>::Ok(forward<T>(*ok_)); },
-                              [this, &fn](void) -> Result<T, F> {
-                                  return Result<T, F>::Err(forward<F>(fn(forward<E>(*err_))));
+                Result<T, F>>([](T &&ok)
+                                  -> Result<T, F> { return Result<T, F>::Ok(forward<T>(ok)); },
+                              [&fn](E &&err) -> Result<T, F> {
+                                  return Result<T, F>::Err(forward<F>(fn(forward<E>(err))));
                               });
         }
 
     public:
         friend Log &operator<<(Log &outs, Result const &val)
         {
-            switch (val.tag_) {
+            switch (val.tag_) { // result-dbgfmt
                 case Tag::OK:
                     outs << "Result(Ok(" << *val.ok_ << "))";
                     return outs;
@@ -591,7 +655,7 @@ class Result<void, E>
     public:
         ~Result(void)
         {
-            switch (tag_) {
+            switch (tag_) { // result<void>-dtor
                 case Tag::OK:
                     break;
 
@@ -602,14 +666,25 @@ class Result<void, E>
                 case Tag::INVAL:
                     break;
 
-                // No default as I want compile to fail if an enum case handler
-                // isn't present.
+                    // No default as I want compile to fail if an enum case handler
+                    // isn't present.
+
                 default:
                     // But, want to abort/panic if a unhandled case is encountered
                     // at runtime, much how a default hander would work if it was
                     // present.
-                    nel::abort();
-                    // nel_panic("invalid Result");
+
+                    // for dtor + moves (but not usage) at runtime:
+                    // does it matter it's not one of the 'special' values?
+                    // yes, since it may have contained one or the others..
+                    // if memory hardware is assumed to be incorruptable then can ignore ? (buffer
+                    // overruns?) but might not want to for buffer overrun issues. if there is a
+                    // memory corruption, then should have been detected by memory hardware (Ecc
+                    // mem) if not using eec/ecc mem then that's the prob. But, want to abort/panic
+                    // if a unhandled case is encountered at runtime, much how a default hander
+                    // would work if it was present.
+                    nel_panic("invalid Result");
+                    break;
             }
         }
 
@@ -617,7 +692,7 @@ class Result<void, E>
         {
             tag_ = o.tag_;
             o.tag_ = Tag::INVAL;
-            switch (tag_) {
+            switch (tag_) { // result<void>-move-ctor
                 case Tag::OK:
                     break;
                 case Tag::ERR:
@@ -625,8 +700,24 @@ class Result<void, E>
                     break;
                 case Tag::INVAL:
                     break;
+
+                    // No default as I want compile to fail if an enum case handler
+                    // isn't present.
+
                 default:
+                    // But, want to abort/panic if a unhandled case is encountered
+                    // at runtime, much how a default hander would work if it was
+                    // present.
+
+                    // for dtor + moves (but not usage) at runtime:
+                    // does it matter it's not one of the 'special' values?
+                    // yes, since it may have contained one or the others..
+                    // if memory hardware is assumed to be incorruptable then can ignore ? (buffer
+                    // overruns?) but might not want to for buffer overrun issues. if there is a
+                    // memory corruption, then should have been detected by memory hardware (Ecc
+                    // mem) if not using eec/ecc mem then that's the prob.
                     nel_panic("invalid Result");
+                    break;
             }
         }
 
@@ -635,7 +726,7 @@ class Result<void, E>
             if (this != &o) {
                 tag_ = o.tag_;
                 o.tag_ = Tag::INVAL;
-                switch (tag_) {
+                switch (tag_) { // result<void>-move-assn
                     case Tag::OK:
                         break;
                     case Tag::ERR:
@@ -643,8 +734,24 @@ class Result<void, E>
                         break;
                     case Tag::INVAL:
                         break;
+
+                        // No default as I want compile to fail if an enum case handler
+                        // isn't present.
+
                     default:
+                        // But, want to abort/panic if a unhandled case is encountered
+                        // at runtime, much how a default hander would work if it was
+                        // present.
+
+                        // for dtor + moves (but not usage) at runtime:
+                        // does it matter it's not one of the 'special' values?
+                        // yes, since it may have contained one or the others..
+                        // if memory hardware is assumed to be incorruptable then can ignore ?
+                        // (buffer overruns?) but might not want to for buffer overrun issues. if
+                        // there is a memory corruption, then should have been detected by memory
+                        // hardware (Ecc mem) if not using eec/ecc mem then that's the prob.
                         nel_panic("invalid Result");
+                        break;
                 }
             }
             return *this;
@@ -717,20 +824,22 @@ class Result<void, E>
         // match(Tag tag, std::function<V(void)> on_ok, std::function<V(void)> on_err) const
         //
         template<typename V, typename Fn1, typename Fn2>
-        constexpr V match(Tag tag, Fn1 &&on_ok, Fn2 &&on_err) const
+        constexpr V match(Fn1 &&on_ok, Fn2 &&on_err) const
         {
-            switch (tag) {
+            switch (tag_) { // result<void>-match
                 case Tag::OK:
                     return on_ok();
                 case Tag::ERR:
-                    return on_err();
+                    return on_err(*err_);
                 case Tag::INVAL:
-                // invalids are not values that should occur
-                // if they do it's a use-after-move-from op so must panic.
-                // or a use-before-initialised so again must panic.
+                    // invalids are not values that should occur
+                    // if they do it's a use-after-move-from op so must panic.
+                    // or a use-before-initialised so again must panic.
+                    nel_panic("invalid Result");
+                    break;
                 default:
                     nel_panic("invalid Result");
-                    // std::abort();
+                    break;
             }
         }
 
@@ -752,10 +861,8 @@ class Result<void, E>
         {
             if (this == &o) { return true; }
             if (tag_ == o.tag_) {
-                return match<bool>(
-                    tag_,
-                    [](void) -> bool { return true; },
-                    [this, &o](void) -> bool { return err_ == o.err_; });
+                return match<bool>([](void) -> bool { return true; },
+                                   [&o](E const &err) -> bool { return err == *o.err_; });
             }
             return false;
         }
@@ -773,10 +880,8 @@ class Result<void, E>
         {
             if (this == &o) { return false; }
             if (tag_ == o.tag_) {
-                return match<bool>(
-                    tag_,
-                    [](void) -> bool { return false; },
-                    [this, &o](void) -> bool { return err_ != o.err_; });
+                return match<bool>([](void) -> bool { return false; },
+                                   [&o](E const &err) -> bool { return err != *o.err_; });
             }
             return true;
         }
@@ -791,10 +896,8 @@ class Result<void, E>
          */
         constexpr bool is_ok(void) const
         {
-            return match<bool>(
-                tag_,
-                [](void) -> bool { return true; },
-                [](void) -> bool { return false; });
+            return match<bool>([](void) -> bool { return true; },
+                               [](E const &) -> bool { return false; });
         }
 
         /**
@@ -806,21 +909,55 @@ class Result<void, E>
          */
         constexpr bool is_err(void) const
         {
-            return match<bool>(
-                tag_,
-                [](void) -> bool { return false; },
-                [](void) -> bool { return true; });
+            return match<bool>([](void) -> bool { return false; },
+                               [](E const &) -> bool { return true; });
         }
 
-    private:
-        // template<typename V>
-        // V consume(std::function<V(void)> on_ok, std::function<V(void)> on_err)
+    public:
         template<typename V, typename Fn1, typename Fn2>
-        V consume(Fn1 &&on_ok, Fn2 &&on_err)
+        constexpr V consume(Fn1 &&on_ok, Fn2 &&on_err)
         {
             auto tag = tag_;
             tag_ = Tag::INVAL;
-            return match<V>(tag, forward<Fn1>(on_ok), forward<Fn2>(on_err));
+            switch (tag) { // result<void>-consume
+                case Tag::OK:
+                    return on_ok();
+                case Tag::ERR:
+                    return on_err(nel::forward<E>(*err_));
+                case Tag::INVAL:
+                    // invalids are not values that should occur
+                    // if they do it's a use-after-move-from op so must panic.
+                    // or a use-before-initialised so again must panic.
+                    nel_panic("invalid Result");
+                    break;
+                default:
+                    nel_panic("invalid Result");
+                    break;
+            }
+        }
+
+        template<typename Fn1, typename Fn2>
+        constexpr void consumev(Fn1 &&on_ok, Fn2 &&on_err)
+        {
+            auto tag = tag_;
+            tag_ = Tag::INVAL;
+            switch (tag) { // result<void>-consume
+                case Tag::OK:
+                    on_ok();
+                    break;
+                case Tag::ERR:
+                    on_err(nel::forward<E>(*err_));
+                    break;
+                case Tag::INVAL:
+                    // invalids are not values that should occur
+                    // if they do it's a use-after-move-from op so must panic.
+                    // or a use-before-initialised so again must panic.
+                    nel_panic("invalid Result");
+                    break;
+                default:
+                    nel_panic("invalid Result");
+                    break;
+            }
         }
 
     public:
@@ -832,10 +969,10 @@ class Result<void, E>
          *
          * `this` is consumed and invalidated after.
          */
-        Optional<void> ok(void)
+        constexpr Optional<void> ok(void)
         {
             return consume<Optional<void>>([](void) -> Optional<void> { return Some(); },
-                                           [](void) -> Optional<void> { return None; });
+                                           [](E &&) -> Optional<void> { return None; });
         }
 
         /**
@@ -846,11 +983,11 @@ class Result<void, E>
          *
          * `this` is consumed and invalidated after.
          */
-        Optional<E> err(void)
+        constexpr Optional<E> err(void)
         {
             return consume<Optional<E>>([](void) -> Optional<E> { return None; },
-                                        [this](void) -> Optional<E> {
-                                            return Some(forward<E>(*err_));
+                                        [](E &&err) -> Optional<E> {
+                                            return Some(nel::forward<E>(err));
                                         });
         }
 
@@ -862,9 +999,9 @@ class Result<void, E>
          *
          * `this` is consumed by the operation.
          */
-        void unwrap(void)
+        constexpr void unwrap(void)
         {
-            return consume<void>([](void) {}, [](void) { nel_panic("not an ok"); });
+            return consumev([](void) {}, [](E &&) { nel_panic("not an ok"); });
         }
 
         /**
@@ -875,10 +1012,10 @@ class Result<void, E>
          *
          * `this` is consumed by the operation.
          */
-        E unwrap_err(void)
+        constexpr E unwrap_err(void)
         {
             return consume<E>([](void) -> E { nel_panic("not an err"); },
-                              [this](void) -> E { return forward<E>(*err_); });
+                              [](E &&err) -> E { return err; });
         }
 
         /**
@@ -892,15 +1029,14 @@ class Result<void, E>
          * `this` is consumed by the operation.
          * `o` is consumed by the operation.
          */
-        void unwrap_or(void)
+        constexpr void unwrap_or(void)
         {
-            return consume<void>([](void) {}, [](void) {});
+            return consumev([](void) {}, [](E &&) {});
         }
 
-        E unwrap_err_or(E &&v)
+        constexpr E unwrap_err_or(E &&v)
         {
-            return consume<E>([&v](void) -> E { return forward<E>(v); },
-                              [this](void) -> E { return forward<E>(*err_); });
+            return consume<E>([&v](void) -> E { forward<E>(v); }, [](E &&err) -> E { return err; });
         }
 
         /**
@@ -915,10 +1051,10 @@ class Result<void, E>
          * `args` are consumed by the operation.
          */
         template<typename... Args>
-        E unwrap_err_or(Args &&...args)
+        constexpr E unwrap_err_or(Args &&...args)
         {
             return consume<E>([&args...](void) -> E { return E(forward<Args>(args)...); },
-                              [this](void) -> E { return forward<E>(*err_); });
+                              [](E &&err) -> E { return err; });
         }
 
         /**
@@ -934,15 +1070,15 @@ class Result<void, E>
         // template<class U>
         // Result<U, E> map(std::function<U(void)> fn)
         template<typename U, typename Fn>
-        Result<U, E> map(Fn &&fn)
+        constexpr Result<U, E> map(Fn &&fn)
         {
             // TODO: remove need to explicitly cast to result in each of the
             //       branches.. i.e. the Result<U,E>() bit, should be Ok(..) or Err(..)
             return consume<
                 Result<U, E>>([&fn](void)
                                   -> Result<U, E> { return Result<U, E>::Ok(forward<U>(fn())); },
-                              [this](void) -> Result<U, E> {
-                                  return Result<U, E>::Err(forward<E>(*err_));
+                              [](E &&err) -> Result<U, E> {
+                                  return Result<U, E>::Err(forward<E>(err));
                               });
         }
 
@@ -959,14 +1095,15 @@ class Result<void, E>
         // template<class F>
         // Result<void, F> map_err(std::function<F(E &&)> fn)
         template<typename F, typename Fn>
-        Result<void, F> map_err(Fn &&fn)
+        constexpr Result<void, F> map_err(Fn &&fn)
         {
             // TODO: remove need to explicitly cast to result in each of the
             //       branches.. i.e. the Result<U,E>() bit, should be Ok(..), Err(..)
-            return consume<Result<void, F>>([](void) -> E { return Result<void, F>::Ok(); },
-                                            [this, &fn](void) -> E {
+            return consume<Result<void, F>>([](void) -> Result<void,
+                                                               F> { return Result<void, F>::Ok(); },
+                                            [&fn](E &&err) -> Result<void, F> {
                                                 return Result<void, F>::Err(
-                                                    forward<F>(fn(forward<E>(*err_))));
+                                                    forward<F>(fn(forward<E>(err))));
                                             });
         }
 

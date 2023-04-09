@@ -253,9 +253,10 @@ TEST_CASE("heapless::Vector::move", "[heapless][vector]")
 
         REQUIRE(a2.len() == 2);
         // moved dst must contain src values..
+        REQUIRE(a2.len() == 2);
         auto r = a2.iter().fold(true, [](bool &acc, int const &v) { acc = acc && (v == 1); });
         REQUIRE(r);
-        // moved src must be invalidated .. cannot check with pods.
+        // TODO: moved src must be invalidated .. cannot check with pods.
     }
 }
 
