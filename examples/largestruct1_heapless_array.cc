@@ -123,7 +123,7 @@ void ex61()
     Array1 arr1 = Array1::filled_with(U8Buf<256>(0xff));
 
     auto it = arr1.iter().first_n(2);
-    Index i = 0;
+    nel::Index i = 0;
     while (true) {
         auto e = it.next();
         // checking for none and unwrapping/ from opt
@@ -148,7 +148,7 @@ void ex62()
     Array1 arr1 = Array1::filled_with(U8Buf<256>(0xff));
 
     auto it = arr1.iter().first_n(2);
-    Index i = 0;
+    nel::Index i = 0;
     it.for_each([&](U8Buf<256> &e) -> void {
         nel::log << '[' << i << ']' << ':' << e << '\n';
         ++i;
@@ -161,7 +161,7 @@ void ex71()
     Array1 arr1 = Array1::filled_with(U8Buf<256>(0xff));
 
     auto it = arr1.iter().first_n(2);
-    Index i = 0;
+    nel::Index i = 0;
     for (; !it.is_done(); it.inc()) {
         // user can miss out the &, so forcing a copy/move of items being enumerated.
         auto &e = it.deref();
@@ -175,7 +175,7 @@ void ex72()
     Array1 arr1 = Array1::filled_with(U8Buf<256>(0xff));
 
     auto it = arr1.iter().first_n(2);
-    Index i = 0;
+    nel::Index i = 0;
 #    if defined(RUST_LIKE)
     it.for_each2([&](U8Buf<256> &e) -> void {
         nel::log << '[' << i << ']' << ':' << e << '\n';

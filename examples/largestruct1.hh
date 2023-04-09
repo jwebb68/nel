@@ -6,10 +6,7 @@
 #    include <nel/memory.hh>
 #    include <nel/defs.hh>
 
-typedef long unsigned int Length;
-typedef long unsigned int Index;
-
-template<Length const N>
+template<nel::Length const N>
 struct U8Buf
 {
     private:
@@ -24,7 +21,7 @@ struct U8Buf
 
         constexpr ~U8Buf(void)
         {
-            nel::elem::set(data_, 0xa5, N);
+            nel::elem::wipe(data_, N);
         }
 
         constexpr U8Buf(U8Buf const &o)
@@ -39,7 +36,7 @@ struct U8Buf
 
         constexpr U8Buf &operator=(U8Buf &&o)
         {
-            nel::elem::move(data_, o.data_, N);
+            if (this != &o) { nel::elem::move(data_, o.data_, N); }
             return *this;
         }
 
@@ -50,12 +47,12 @@ struct U8Buf
         }
 
     public:
-        constexpr Length len(void) const
+        constexpr nel::Length len(void) const
         {
             return N;
         }
 
-        void fill(uint8_t f)
+        constexpr void fill(uint8_t f)
         {
             nel::elem::set(data_, f, N);
         }
@@ -65,7 +62,7 @@ struct U8Buf
             outs << "U8Buf<" << val.len() << ">{";
             if (val.len() > 0) {
                 outs << val.data_[0];
-                for (Index i = 1; i < val.len(); ++i) {
+                for (nel::Index i = 1; i < val.len(); ++i) {
                     outs << ' ' << val.data_[i];
                 }
             }
