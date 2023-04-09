@@ -38,8 +38,11 @@ namespace nel
 template<typename T>
 struct Slice
 {
+    public:
+        typedef T Type;
+
     private:
-        T *const content_;
+        Type *const content_;
         // Implicit start at 0.
         Length len_;
 
@@ -60,13 +63,13 @@ struct Slice
         {
         }
 
-        constexpr Slice(T p[], Length len)
+        constexpr Slice(Type p[], Length len)
             : content_(p)
             , len_(len)
         {
         }
 
-        constexpr Slice(T *const b, T *const e)
+        constexpr Slice(Type *const b, Type *const e)
             : content_(b)
             , len_(e - b)
         {
@@ -95,12 +98,12 @@ struct Slice
          *
          * Slice is invalidated if p goes out of scope or is deleted/destroyed.
          */
-        static constexpr Slice from(T p[], Length len)
+        static constexpr Slice from(Type p[], Length len)
         {
             return Slice(p, len);
         }
 
-        static constexpr Slice from(T *const b, T *const e)
+        static constexpr Slice from(Type *const b, Type *const e)
         {
             return Slice(b, e);
         }
@@ -126,7 +129,7 @@ struct Slice
          *
          * @returns number of elements in the slice.
          */
-        constexpr T *ptr(void) const
+        constexpr Type *ptr(void) const
         {
             return content_;
         }
@@ -141,25 +144,14 @@ struct Slice
             return len_;
         }
 
-        constexpr T &unchecked_get(Index idx)
+        constexpr Type &unchecked_get(Index idx) const
         {
             return content_[idx];
         }
 
-        constexpr T const &unchecked_get(Index idx) const
+        constexpr Type &checked_get(Index idx) const
         {
-            return content_[idx];
-        }
-
-        constexpr T &checked_get(Index idx)
-        {
-            nel_panic_if_not(idx < len(), "index out of range");
-            return unchecked_get(idx);
-        }
-
-        constexpr T const &checked_get(Index idx) const
-        {
-            nel_panic_if_not(idx < len(), "index out of range");
+            nel_panic_if_not(idx < len(), "nel::Slice<T>: index out of range");
             return unchecked_get(idx);
         }
 
@@ -172,12 +164,7 @@ struct Slice
          * @warning Will panic if idx is out-of-range for slice
          */
         // TODO: use try_get as index access can fail.
-        constexpr T &operator[](Index idx)
-        {
-            return checked_get(idx);
-        }
-
-        constexpr T const &operator[](Index idx) const
+        constexpr Type &operator[](Index idx) const
         {
             return checked_get(idx);
         }
@@ -191,25 +178,20 @@ struct Slice
          * @returns If idx is out-of range, return None.
          * @returns else return ref to item at index..
          */
-        constexpr Optional<T &> try_get(Index idx)
+        constexpr Optional<Type &> try_get(Index idx) const
         {
-            return (idx >= len_) ? None : Optional<T &>::Some(content_[idx]);
-        }
-
-        constexpr Optional<T const &> try_get(Index idx) const
-        {
-            return (idx >= len_) ? None : Optional<T const &>::Some(content_[idx]);
+            return (idx >= len_) ? None : Optional<Type &>::Some(content_[idx]);
         }
 
     public:
         constexpr bool operator==(Slice const &o) const
         {
-            return content_ == o.content_ && len_ == o.len_;
+            return len() == o.len() && (ptr() == o.ptr() || elem::eq(ptr(), o.ptr(), len()));
         }
 
         constexpr bool operator!=(Slice const &o) const
         {
-            return content_ != o.content_ || len_ != o.len_;
+            return !(*this == o);
         }
 
     public:
@@ -219,7 +201,7 @@ struct Slice
          * T must be bit-copyable (i.e. not need special copy semantics).
          * value at each location is not destroyed.
          */
-        void fill(T const &f)
+        void fill(Type const &f)
         {
             elem::set(ptr(), f, len());
         }
@@ -241,40 +223,13 @@ struct Slice
          * @returns if e > array len, clamp to last elem.
          * @returns else return slice over region b..e of slice.
          */
-        Slice<T> slice(Index b, Index e)
+        Slice slice(Index b, Index e) const
         {
-            if (b >= e) { return Slice<T>::empty(); }
-            if (b >= len_) { return Slice<T>::empty(); }
+            if (b >= e) { return Slice::empty(); }
+            if (b >= len_) { return Slice::empty(); }
             if (e > len_) { e = len_; }
-            return Slice(&content_[b], e - b);
+            return Slice::from(&content_[b], e - b);
         }
-
-        Slice<T const> slice(Index b, Index e) const
-        {
-            if (b >= e) { return Slice<T const>::empty(); }
-            if (b >= len_) { return Slice<T const>::empty(); }
-            if (e > len_) { e = len_; }
-            return Slice(&content_[b], e - b);
-        }
-
-    public:
-        // TODO: use try_copy_from as operation can fail.
-        // Result<void, ??> try_copy_from(Slice const &o)  ?
-        // Optional<void> try_copy_from(Slice const &o)  ?
-        // void copy_from(Slice const &o)
-        // {
-        //     nel_panic_if(len() != o.len(), "not same size");
-        //     memcpy(content_, o.content_, len());
-        // }
-
-        // TODO: use try_move_from as operation can fail.
-        // Result<void, ??> try_move_from(Slice &o)  ?
-        // Optional<void> try_move_from(Slice &o)  ?
-        // void move_from(Slice &o)
-        // {
-        //     nel_panic_if(len() != o.len(), "not same size");
-        //     memmove(content_, o.content_, len());
-        // }
 
     public:
         /**
@@ -282,18 +237,11 @@ struct Slice
          *
          * The iterator is invalidated if the slice goes out of scope/destroyed.
          */
-        typedef SliceIterator<T> IteratorMut;
+        typedef SliceIterator<Type> Iterator;
 
-        constexpr SliceIterator<T> iter(void)
+        constexpr Iterator iter(void) const
         {
-            return SliceIterator<T>(content_, len());
-        }
-
-        typedef SliceIterator<T const> Iterator;
-
-        constexpr SliceIterator<T const> const iter(void) const
-        {
-            return SliceIterator<T const>(content_, len());
+            return Iterator(ptr(), len());
         }
 
     public:

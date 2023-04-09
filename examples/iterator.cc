@@ -7,19 +7,19 @@
 #include <nel/log.hh>
 #include <nel/defs.hh>
 
-void do1(nel::Slice<int>::IteratorMut &&it)
+void do1(nel::Slice<int>::Iterator &&it)
 {
     it.for_each([&](int const &e) { nel::log << e << ','; });
 }
 
 #if defined(RUST_LIKE)
-void do2(nel::Slice<int>::IteratorMut &&it)
+void do2(nel::Slice<int>::Iterator &&it)
 {
     it.for_each2([&](int const &e) { nel::log << e << ','; });
 }
 #endif
 
-void do3(nel::Slice<int>::IteratorMut &&it)
+void do3(nel::Slice<int>::Iterator &&it)
 {
     it.template map<int>([](int const &e) -> int { return e * 100; })
         .first_n(4)
@@ -27,7 +27,7 @@ void do3(nel::Slice<int>::IteratorMut &&it)
 }
 
 #if defined(RUST_LIKE)
-void do4(nel::Slice<int>::IteratorMut &&it)
+void do4(nel::Slice<int>::Iterator &&it)
 {
     it.template map<int>([](int const &e) -> int { return e * 100; })
         .first_n(4)
@@ -35,7 +35,7 @@ void do4(nel::Slice<int>::IteratorMut &&it)
 }
 #endif
 
-void do5(nel::Slice<int>::IteratorMut &&it)
+void do5(nel::Slice<int>::Iterator &&it)
 {
     // loopy,  simpe to read, slow..
     int v = it.template map<int>([](int const &e) -> int { return e * 100; })
@@ -45,7 +45,7 @@ void do5(nel::Slice<int>::IteratorMut &&it)
 }
 
 #if defined(RUST_LIKE)
-void do6(nel::Slice<int>::IteratorMut &&it)
+void do6(nel::Slice<int>::Iterator &&it)
 {
     // compact, unrolled,  optimised.
     int v = it.template map<int>([](int const &e) -> int { return e * 100; })
