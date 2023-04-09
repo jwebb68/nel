@@ -15,6 +15,7 @@ struct Vector;
 } // namespace heapless
 } // namespace nel
 
+#    include <nel/manual.hh>
 #    include <nel/iterator.hh>
 #    include <nel/slice.hh>
 #    include <nel/optional.hh>
@@ -53,11 +54,42 @@ struct Vector
     private:
         // Number initialised.
         Length len_;
+
         // Must create with N uninitialised.
         // So really want only the memory allocated.
-        // Will manually initialise on push_back, de-initialise on pop_back/destruct
-        // C++: default array ctor does not call default on each, but allocs uninit?
-        T values_[N];
+        // TODO: adjust for alignment
+        // for now assume all types are in same alignment
+        Manual<T[N]> elems_;
+
+        constexpr T *ptr()
+        {
+            return elems_.ptr()[0];
+        }
+
+        constexpr T const *ptr() const
+        {
+            return elems_.ptr()[0];
+        }
+
+        constexpr T *ptr(ptrdiff_t d)
+        {
+            return &ptr()[d];
+        }
+
+        constexpr T const *ptr(ptrdiff_t d) const
+        {
+            return &ptr()[d];
+        }
+
+        constexpr T *end()
+        {
+            return ptr(len_);
+        }
+
+        constexpr T const *end() const
+        {
+            return ptr(len_);
+        }
 
     public:
         /**
@@ -84,50 +116,54 @@ struct Vector
 
     public:
         // Moving ok
-        Vector(Vector &&o)
+        constexpr Vector(Vector &&o)
             : len_(move(o.len_))
         {
+            T *d = ptr();
+            o.iter().for_each([&d](auto &e) {
+                new (d) T(move(e));
+                ++d;
+            });
             o.len_ = 0;
             // moved contents to this, o is now empty/invalid.
             // but cannot destroy o.values_ as this now owns them.
-            T *s = &o.values_[0];
-            for (T *d = &values_[0]; d != &values_[len_]; ++d) {
-                new (d) T(move(*s));
-                ++s;
-            }
         }
 
+        // can't be constexpr until dtors are.
         Vector &operator=(Vector &&o)
         {
             if (this != &o) {
                 if (len_ == o.len_) {
-                    T *s = &o.values_[0];
-                    for (T *d = &values_[0]; d != &values_[len_]; ++d) {
+                    T *s = o.ptr();
+                    T *d = ptr();
+                    for (; d != end(); ++d) {
                         *d = move(*s);
                         ++s;
                     }
                 } else if (len_ < o.len_) {
-                    T *s = &o.values_[0];
-                    T *d = &values_[0];
-                    for (; d != &values_[len_]; ++d) {
+                    T *s = o.ptr();
+                    T *d = ptr();
+                    for (; d != end(); ++d) {
                         *d = move(*s);
                         ++s;
                     }
-                    for (; s != &o.values_[o.len_]; ++s) {
+                    for (; s != o.end(); ++s) {
                         new (d) T(move(*s));
                         ++d;
                     }
                 } else if (len_ > o.len_) {
-                    T *s = &o.values_[0];
-                    T *d = &values_[0];
-                    for (; d != &values_[o.len_]; ++d) {
+                    T *s = o.ptr();
+                    T *d = ptr();
+                    for (; s != o.end(); ++d) {
                         *d = move(*s);
                         ++s;
                     }
-                    for (; d != &values_[len_]; ++d) {
+                    for (; d != end(); ++d) {
                         d->~T();
                     }
                 }
+                len_ = nel::move(o.len_);
+                o.len_ = 0;
             }
             return *this;
         }
@@ -203,6 +239,25 @@ struct Vector
         constexpr bool is_full(void) const
         {
             return len_ == N;
+        }
+
+    public:
+        constexpr bool operator==(Vector const &o) const
+        {
+            if (len_ != o.len_) { return false; }
+            for (T const *it = ptr(), *ito = o.ptr(); it != end(); ++ito, ++it) {
+                if (*it != *ito) { return false; }
+            }
+            return true;
+        }
+
+        constexpr bool operator!=(Vector const &o) const
+        {
+            if (len_ != o.len_) { return true; }
+            for (T const *it = ptr(), *ito = o.ptr(); it != end(); ++ito, ++it) {
+                if (*it == *ito) { return false; }
+            }
+            return true;
         }
 
     public:
@@ -299,12 +354,12 @@ struct Vector
          */
         constexpr Slice<T> slice(void)
         {
-            return Slice<T>::from(values_, len());
+            return Slice<T>::from(ptr(), len());
         }
 
         constexpr Slice<T const> const slice(void) const
         {
-            return Slice<T const>::from(values_, len());
+            return Slice<T const>::from(ptr(), len());
         }
 
         /**
@@ -368,7 +423,7 @@ struct Vector
             }
             // Remember, values at len and beyond are uninitialised.
             // So need to use new to construct them.
-            new (&values_[len()]) T(move(val));
+            new (end()) T(move(val));
             len_ += 1;
             return Result<void, T>::Ok();
         }
@@ -383,7 +438,7 @@ struct Vector
             }
             // Remember, values at len and beyond are uninitialised.
             // So need to use new to construct them.
-            new (&values_[len()]) T(forward<Args>(args)...);
+            new (end()) T(forward<Args>(args)...);
             len_ += 1;
             return Result<void, T>::Ok();
         }
@@ -424,7 +479,7 @@ struct Vector
         {
             if (len() == 0) { return None; }
             len_ -= 1;
-            return Some(move(values_[len()]));
+            return Some(move(*end()));
         }
 
         // insert_at(idx, T &&) ?
