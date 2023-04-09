@@ -43,10 +43,12 @@ template<typename T, Length const N>
 struct Array
 {
     public:
+        typedef T Type;
+
     private:
         // default ctor does not init this array.
         // does this class follow suite? nope, expects these to be initialised.
-        T values_[N];
+        Type values_[N];
 
     public:
         /**
@@ -86,12 +88,12 @@ struct Array
             return try_copy_from(src.values_);
         }
 
-        bool NEL_WARN_UNUSED_RESULT try_copy_from(T const src[N])
+        bool NEL_WARN_UNUSED_RESULT try_copy_from(Type const src[N])
         {
-            T const *s = src;
+            Type const *s = src;
             // don't want to use a for_each here as when the copy fails will need to clean up.
             // and cannot do that with a for_each.
-            for (T *d = values_; d != values_ + N; ++d) {
+            for (Type *d = values_; d != values_ + N; ++d) {
                 // maybe assign oper is not the best..
                 // how to indicate fail if so?
                 // bool ok = d.try_copy_from(*s); ?
@@ -124,7 +126,7 @@ struct Array
             Index i = 0;
             for (auto it = l.begin(); i < N && it != l.end(); ++it, ++i) {
                 // TODO: init list elements want to be copied, not moved..
-                new (&values_[i]) T(move(*it));
+                new (&values_[i]) Type(move(*it));
             }
         }
 #    endif
@@ -133,9 +135,9 @@ struct Array
 
         // fill constructor
         // TODO:  what if copy of T fails..? try_fill? how?
-        constexpr Array(T const &v)
+        constexpr Array(Type const &v)
         {
-            iter().for_each([&](T &e) { new (&e) T(v); });
+            iter().for_each([&](auto &e) { new (&e) Type(v); });
         }
 
     public:
@@ -148,7 +150,7 @@ struct Array
          */
         // not very good as failure to copy v will panic.
         // and don't want panics from lib code.
-        constexpr static Array filled_with(T const &v)
+        constexpr static Array filled_with(Type const &v)
         {
             return Array(v);
         }
@@ -160,7 +162,7 @@ struct Array
          * @return on fail: None
          */
         // TODO: should fail return an error i.e. Result<Array, Err>?
-        static constexpr Optional<Array> try_filled_with(T const &v)
+        static constexpr Optional<Array> try_filled_with(Type const &v)
         {
             // cannot use ctor here as ctor cannot return on fail
             // so will need to create array uninitialsed
@@ -210,12 +212,12 @@ struct Array
          *
          * @returns ptr to start of array elements
          */
-        constexpr T *ptr(void)
+        constexpr Type *ptr(void)
         {
             return &values_[0];
         }
 
-        constexpr T const *ptr(void) const
+        constexpr Type const *ptr(void) const
         {
             return &values_[0];
         }
@@ -242,12 +244,12 @@ struct Array
          * @returns reference to the item.
          * @warning Will panic if idx is out-of-range.
          */
-        constexpr T &checked_get(Index idx)
+        constexpr Type &checked_get(Index idx)
         {
             return slice().checked_get(idx);
         }
 
-        constexpr T const &checked_get(Index idx) const
+        constexpr Type const &checked_get(Index idx) const
         {
             return slice().checked_get(idx);
         }
@@ -260,12 +262,12 @@ struct Array
          * @returns reference to the item.
          * @warning UB if index is out of range.
          */
-        constexpr T &unchecked_get(Index idx)
+        constexpr Type &unchecked_get(Index idx)
         {
             return slice().unchecked_get(idx);
         }
 
-        constexpr T const &unchecked_get(Index idx) const
+        constexpr Type const &unchecked_get(Index idx) const
         {
             return slice().unchecked_get(idx);
         }
@@ -279,12 +281,12 @@ struct Array
          * @warning Will panic if idx is out-of-range.
          */
         // as access can fail, redo to try_get() and return v or error
-        constexpr T &operator[](Index idx)
+        constexpr Type &operator[](Index idx)
         {
             return slice()[idx];
         }
 
-        constexpr T const &operator[](Index idx) const
+        constexpr Type const &operator[](Index idx) const
         {
             return slice()[idx];
         }
@@ -297,12 +299,12 @@ struct Array
          * @returns If idx is out-of range, return None.
          * @returns else return ref to item at index..
          */
-        constexpr Optional<T &> try_get(Index idx)
+        constexpr Optional<Type &> try_get(Index idx)
         {
             return slice().try_get(idx);
         }
 
-        constexpr Optional<T const &> try_get(Index idx) const
+        constexpr Optional<Type const &> try_get(Index idx) const
         {
             return slice().try_get(idx);
         }
@@ -318,14 +320,14 @@ struct Array
          */
         // This could be a into_slice()?, or a as_slice()? or a deref_as_slice()?
         // or a conversion func: operator Slice<T>(void)? (but I don't want it implicit/automatic
-        constexpr Slice<T> slice(void)
+        constexpr Slice<Type> slice(void)
         {
-            return Slice<T>::from(values_, len());
+            return Slice<Type>::from(values_, len());
         }
 
-        constexpr Slice<T const> slice(void) const
+        constexpr Slice<Type const> slice(void) const
         {
-            return Slice<T const>::from(values_, len());
+            return Slice<Type const>::from(values_, len());
         }
 
         /**
@@ -340,12 +342,12 @@ struct Array
          * @returns if e > array len, clamp to last elem.
          * @returns else return slice over region b..e of array.
          */
-        constexpr Slice<T> slice(Index b, Index e)
+        constexpr Slice<Type> slice(Index b, Index e)
         {
             return slice().slice(b, e);
         }
 
-        constexpr Slice<T const> slice(Index b, Index e) const
+        constexpr Slice<Type const> slice(Index b, Index e) const
         {
             return slice().slice(b, e);
         }
