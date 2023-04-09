@@ -20,6 +20,8 @@ class Log
         friend Log &operator<<(Log &outs, char v);
         friend Log &operator<<(Log &outs, char const *v);
         friend Log &operator<<(Log &outs, uint8_t const v);
+        friend Log &operator<<(Log &outs, uint16_t const v);
+        friend Log &operator<<(Log &outs, uint32_t const v);
         friend Log &operator<<(Log &outs, int const v);
         friend Log &operator<<(Log &outs, long unsigned int const v);
 };
