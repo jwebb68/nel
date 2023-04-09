@@ -106,6 +106,7 @@ struct Array
         // but needed internally..
         constexpr Array(void) = default;
 
+        // init list initialiser.
         template<typename... Args>
         constexpr Array(Args &&...args)
             : values_(forward<Args>(args)...)
