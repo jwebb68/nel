@@ -495,10 +495,11 @@ class Optional
             // if contained is ptr, then move ptr.
             // if contained is value, then move value.
             // so, fn must always be T (*)(auto &&)
+            typedef Optional<U> ReturnType;
             return consume<
-                Optional<U>>([&fn](T &&some)
-                                 -> Optional<U> { return Optional<U>::Some(fn(forward<T>(some))); },
-                             [](void) -> Optional<U> { return None; });
+                ReturnType>([&fn](T &&some)
+                                -> ReturnType { return ReturnType::Some(fn(forward<T>(some))); },
+                            [](void) -> ReturnType { return None; });
         }
 
         Optional or_(Optional &&o)
@@ -728,9 +729,9 @@ class Optional<void>
         // constexpr V match(Tag tag, std::function<V(void)> on_some, std::function<V(void)>
         // on_none) const  {
         template<typename V, typename Fn1, typename Fn2>
-        V match(Tag tag, Fn1 &&on_some, Fn2 &&on_none) const
+        constexpr V match(Fn1 &&on_some, Fn2 &&on_none) const
         {
-            switch (tag) {
+            switch (tag_) {
                 case Tag::SOME:
                     return on_some();
                 case Tag::NONE:
@@ -772,10 +773,8 @@ class Optional<void>
         {
             if (this == &o) { return true; }
             if (tag_ == o.tag_) {
-                return match<bool>(
-                    tag_,
-                    [this](void) -> bool { return true; },
-                    [this](void) -> bool { return true; });
+                return match<bool>([this](void) -> bool { return true; },
+                                   [this](void) -> bool { return true; });
             }
             return false;
         }
@@ -793,10 +792,8 @@ class Optional<void>
         {
             if (this == &o) { return false; }
             if (tag_ == o.tag_) {
-                return match<bool>(
-                    tag_,
-                    [this](void) -> bool { return false; },
-                    [this](void) -> bool { return false; });
+                return match<bool>([this](void) -> bool { return false; },
+                                   [this](void) -> bool { return false; });
             }
             return true;
         }
@@ -812,10 +809,8 @@ class Optional<void>
         bool is_some(void) const
 
         {
-            return match<bool>(
-                tag_,
-                [](void) -> bool { return true; },
-                [](void) -> bool { return false; });
+            return match<bool>([](void) -> bool { return true; },
+                               [](void) -> bool { return false; });
         }
 
         /**
@@ -827,10 +822,8 @@ class Optional<void>
          */
         bool is_none(void) const
         {
-            return match<bool>(
-                tag_,
-                [](void) -> bool { return false; },
-                [](void) -> bool { return true; });
+            return match<bool>([](void) -> bool { return false; },
+                               [](void) -> bool { return true; });
         }
 
     public:
@@ -927,10 +920,9 @@ class Optional<void>
         template<typename U, typename Fn>
         Optional<U> map(Fn &&fn)
         {
-            return consume<
-                Optional<U>>([&fn](void)
-                                 -> Optional<U> { return Optional<U>::Some(forward<U>(fn())); },
-                             [](void) -> Optional<U> { return None; });
+            typedef Optional<U> ReturnType;
+            return consume<ReturnType>([&fn](void) -> ReturnType { return ReturnType::Some(fn()); },
+                                       [](void) -> ReturnType { return None; });
         }
 
     public:
