@@ -135,6 +135,23 @@ enter:
 #    endif
 
         /**
+         * Iterate over self, call fn on each item, stop if fn returns false.
+         *
+         * @param: fn: fn to call on ieach item in order, returns true to continue, false to stop.
+         * @return: true if iteration completed successfully
+         * @return: false if iteration was interrupted.
+         */
+        template<typename F>
+        bool try_for_each(F &&fn)
+        {
+            bool ok = true;
+            for (; ok && self(); ++self()) {
+                ok = fn(*self());
+            }
+            return ok;
+        }
+
+        /**
          * fold/reduce each item to a single value
          *
          * @param fn func to apply to each item in iterator
@@ -427,6 +444,12 @@ struct ChainIterator: public Iterator<ChainIterator<It>, typename It::InT, typen
             it2_.for_each2(fn);
         }
 #    endif // defined(C_LIKE)
+
+        template<typename F>
+        bool try_for_each(F &&fn)
+        {
+            return it1_.try_for_each(fn) && it2_.try_for_each(fn);
+        }
 };
 
 } // namespace nel
