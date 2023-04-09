@@ -573,12 +573,12 @@ class Result
         template<class U, typename Fn>
         constexpr Result<U, E> map(Fn &&fn)
         {
-            return consume<Result<
-                U,
-                E>>([&fn](T &&ok)
-                        -> Result<U,
-                                  E> { return Result<U, E>::Ok(forward<U>(fn(forward<T>(ok)))); },
-                    [](E &&err) -> Result<U, E> { return Result<U, E>::Err(forward<E>(err)); });
+            typedef Result<U, E> ReturnType;
+            return consume<ReturnType>(
+                [&fn](T &&ok) -> ReturnType {
+                    return ReturnType::Ok(forward<U>(fn(forward<T>(ok))));
+                },
+                [](E &&err) -> ReturnType { return ReturnType::Err(forward<E>(err)); });
         }
 
         /**
@@ -598,12 +598,38 @@ class Result
         {
             // TODO: remove need to explicitly cast to result in each of the
             //       branches.. i.e. the Result<U,E>() bit, should be Ok(..) or Err(..)
-            return consume<
-                Result<T, F>>([](T &&ok)
-                                  -> Result<T, F> { return Result<T, F>::Ok(forward<T>(ok)); },
-                              [&fn](E &&err) -> Result<T, F> {
-                                  return Result<T, F>::Err(forward<F>(fn(forward<E>(err))));
-                              });
+            typedef Result<T, F> ReturnType;
+            return consume<ReturnType>([](T &&ok)
+                                           -> ReturnType { return ReturnType::Ok(forward<T>(ok)); },
+                                       [&fn](E &&err) -> ReturnType {
+                                           return ReturnType::Err(forward<F>(fn(forward<E>(err))));
+                                       });
+        }
+
+        /**
+         * Map the result::ok to a different result::ok.
+         *
+         * If self is ok, calls fn and returns that instead.
+         * If self is err, returns self.
+         *
+         * @param fn A fn that takes a T and returns a Result<U,E>
+         * @returns if ok, result with ok value after applying fn to ok value.
+         * @returns if err, result with err of same value.
+         *
+         * `this` is consumed by the operation.
+         */
+        template<typename U, typename Fn>
+        // Fn: Result<U,E> fn(T&&)
+        constexpr Result<U, E> and_then(Fn &&fn)
+        {
+            // TODO: remove need to explicitly cast to result in each of the
+            //       branches.. i.e. the Result<U,E>() bit, should be Ok(..) or Err(..)
+            typedef Result<U, E> ReturnType;
+            return consume<ReturnType>([&fn](T &&ok) -> ReturnType { return fn(forward<T>(ok)); },
+                                       // TODO: check that this is a nop..
+                                       [](E &&err) -> ReturnType {
+                                           return ReturnType::Err(forward<E>(err));
+                                       });
         }
 
     public:
@@ -1074,12 +1100,10 @@ class Result<void, E>
         {
             // TODO: remove need to explicitly cast to result in each of the
             //       branches.. i.e. the Result<U,E>() bit, should be Ok(..) or Err(..)
+            typedef Result<U, E> ReturnType;
             return consume<
-                Result<U, E>>([&fn](void)
-                                  -> Result<U, E> { return Result<U, E>::Ok(forward<U>(fn())); },
-                              [](E &&err) -> Result<U, E> {
-                                  return Result<U, E>::Err(forward<E>(err));
-                              });
+                ReturnType>([&fn](void) -> ReturnType { return ReturnType::Ok(forward<U>(fn())); },
+                            [](E &&err) -> ReturnType { return ReturnType::Err(forward<E>(err)); });
         }
 
         /**
@@ -1099,12 +1123,25 @@ class Result<void, E>
         {
             // TODO: remove need to explicitly cast to result in each of the
             //       branches.. i.e. the Result<U,E>() bit, should be Ok(..), Err(..)
-            return consume<Result<void, F>>([](void) -> Result<void,
-                                                               F> { return Result<void, F>::Ok(); },
-                                            [&fn](E &&err) -> Result<void, F> {
-                                                return Result<void, F>::Err(
-                                                    forward<F>(fn(forward<E>(err))));
-                                            });
+            typedef Result<void, F> ReturnType;
+            return consume<ReturnType>([](void) -> ReturnType { return ReturnType::Ok(); },
+                                       [&fn](E &&err) -> ReturnType {
+                                           return ReturnType::Err(forward<F>(fn(forward<E>(err))));
+                                       });
+        }
+
+        template<typename U, typename Fn>
+        // Fn: Result<U,E> op(T&&)
+        constexpr Result<U, E> and_then(Fn &&fn)
+        {
+            // TODO: remove need to explicitly cast to result in each of the
+            //       branches.. i.e. the Result<U,E>() bit, should be Ok(..) or Err(..)
+            typedef Result<U, E> ReturnType;
+            return consume<ReturnType>([&fn](void) -> ReturnType { return fn(); },
+                                       // TODO: check that this is a nop..
+                                       [](E &&err) -> ReturnType {
+                                           return ReturnType::Err(forward<E>(err));
+                                       });
         }
 
     public:
