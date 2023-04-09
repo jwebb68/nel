@@ -391,6 +391,73 @@ TEST_CASE("heapless::Vector::clear", "[heapless][Vector]")
     }
 }
 
+TEST_CASE("heapless::Vector::resize", "[heapless][Vector]")
+{
+    {
+        // resize empty to 0 does not change len
+        auto a1 = nel::heapless::Vector<int, 3>::empty();
+        a1.resize(0, 4);
+        REQUIRE(a1.len() == 0);
+    }
+
+    {
+        // resize empty to less than capacity adjusts len, fills in elements.
+        auto a1 = nel::heapless::Vector<int, 3>::empty();
+        a1.resize(2, 4);
+        REQUIRE(a1.len() == 2);
+        REQUIRE(a1[0] == 4);
+        REQUIRE(a1[1] == 4);
+    }
+
+    {
+        // resize non-empty to less than capacity adjusts len, fills in elements.
+        auto a1 = nel::heapless::Vector<int, 3>::empty();
+        a1.push(1).unwrap();
+        REQUIRE(a1[0] == 1);
+
+        a1.resize(2, 4);
+
+        REQUIRE(a1.len() == 2);
+        REQUIRE(a1[0] == 1);
+        REQUIRE(a1[1] == 4);
+    }
+
+    {
+        // resize empty to capacity adjusts len, fills in elements.
+        auto a1 = nel::heapless::Vector<int, 3>::empty();
+        a1.resize(3, 4);
+        REQUIRE(a1.len() == 3);
+        REQUIRE(a1[0] == 4);
+        REQUIRE(a1[1] == 4);
+        REQUIRE(a1[2] == 4);
+    }
+
+    {
+        // resize empty to over-capacity maxes out at capacity,
+        // adjusts len, fills in elements.
+        auto a1 = nel::heapless::Vector<int, 3>::empty();
+        a1.resize(4, 4);
+        REQUIRE(a1.len() == 3);
+        REQUIRE(a1[0] == 4);
+        REQUIRE(a1[1] == 4);
+        REQUIRE(a1[2] == 4);
+    }
+
+    {
+        // resize non-empty to smaller adjusts len, drops elements.
+        auto a1 = nel::heapless::Vector<int, 3>::empty();
+        a1.push(1).unwrap();
+        a1.push(2).unwrap();
+        REQUIRE(a1[0] == 1);
+        REQUIRE(a1[1] == 2);
+
+        a1.resize(1, 4);
+
+        REQUIRE(a1.len() == 1);
+        REQUIRE(a1[0] == 1);
+    }
+}
+
 #if 0
 TEST_CASE("heapless::Vector::reserve", "[heapless][Vector]")
 {

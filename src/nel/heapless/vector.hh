@@ -110,6 +110,18 @@ struct Vector
         {
         }
 
+        constexpr Vector(Length len, Type const &fill)
+        {
+            nel_panic_if(len > capacity(), "heapless::vector: invalid len");
+            len_ = len;
+            iter().for_each([&fill](auto &e) { new (&e) Type(fill); });
+        }
+
+        constexpr static Vector filled_with(Length len, Type const &fill)
+        {
+            return Vector(len, fill);
+        }
+
     private:
         // No (implicit) copying..
         // Copying means potential alloc of resource that may fail to alloc.
@@ -266,6 +278,39 @@ struct Vector
         {
             iter().for_each([&](auto &v) -> void { v.~Type(); });
             len_ = 0;
+        }
+
+        /**
+         * Resize the vector to be of length newlen.
+         *
+         * If vector is longer, then drop the excessive elements.
+         * If vector is shorter, then create new elements from filler.
+         * If newlen is greater than capacity then go up to capacity.
+         *
+         * Filler must be copyable.
+         * If filler fails to copy, then panics.
+         *
+         * note: may be replaced with a try_resize.
+         */
+        void resize(Length newlen, Type const &filler)
+        {
+            if (newlen > capacity()) { newlen = capacity(); }
+
+            if (newlen < len()) {
+                // shrinking, just drop excess.
+                for (Type *it = ptr(newlen); it != end(); ++it) {
+                    it->~Type();
+                }
+                len_ = newlen;
+            } else if (newlen > len_) {
+                // growing, add new
+                for (Type *it = ptr(len()); it != ptr(newlen); ++it) {
+                    new (it) Type(filler);
+                }
+                len_ = newlen;
+            } else {
+                // same, do nothing
+            }
         }
 
         /**
