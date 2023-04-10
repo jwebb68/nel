@@ -119,7 +119,7 @@ struct Queue
                 // dest has them in diff places..
                 // simpler to delete all of dest and then move from src.
                 // would be better to handle all cases and use move-assign per elem
-                ~Queue();
+                this->~Queue();
                 new (this) Queue(move(o));
             }
             return *this;
