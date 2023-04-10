@@ -264,7 +264,7 @@ struct Slice
         // void copy_from(Slice const &o)
         // {
         //     nel_panic_if(len() != o.len(), "not same size");
-        //     nel::memcpy(content_, o.content_, len());
+        //     memcpy(content_, o.content_, len());
         // }
 
         // TODO: use try_move_from as operation can fail.
@@ -273,7 +273,7 @@ struct Slice
         // void move_from(Slice &o)
         // {
         //     nel_panic_if(len() != o.len(), "not same size");
-        //     nel::memmove(content_, o.content_, len());
+        //     memmove(content_, o.content_, len());
         // }
 
     public:
@@ -369,8 +369,8 @@ class SliceIterator: public Iterator<SliceIterator<T>, T &, T &>
     public:
         // move ok
         SliceIterator(SliceIterator &&o)
-            : b_(nel::move(o.b_))
-            , e_(nel::move(o.e_))
+            : b_(move(o.b_))
+            , e_(move(o.e_))
         {
             o.b_ = nullptr;
             o.e_ = nullptr;
@@ -379,8 +379,8 @@ class SliceIterator: public Iterator<SliceIterator<T>, T &, T &>
         SliceIterator &operator=(SliceIterator &&o)
         {
             if (this != &o) {
-                b_ = nel::move(o.b_);
-                e_ = nel::move(o.e_);
+                b_ = move(o.b_);
+                e_ = move(o.e_);
                 o.b_ = nullptr;
                 o.e_ = nullptr;
             }

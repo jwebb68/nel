@@ -21,6 +21,7 @@ struct Array;
 // #    include <printio.hh>
 #    include <nel/log.hh>
 #    include <nel/new.hh> //new (p) T()
+#    include <nel/defs.hh> // Length
 
 namespace nel
 {

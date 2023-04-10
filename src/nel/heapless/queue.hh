@@ -22,6 +22,7 @@ struct Queue;
 #    include <nel/memory.hh> // move
 #    include <nel/log.hh>
 #    include <nel/new.hh> // placement new
+#    include <nel/defs.hh> // Length
 
 namespace nel
 {
