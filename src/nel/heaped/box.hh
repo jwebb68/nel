@@ -33,9 +33,10 @@ struct Box
     public:
         // heh, blatant rust-ism
         typedef Box Self;
+        typedef T Type;
 
     private:
-        typedef Element<T> ElementT;
+        typedef Element<Type> ElementT;
         ElementT *value_;
 
     private:
@@ -77,15 +78,15 @@ struct Box
             return *this;
         }
 
-        constexpr Box(T &&v)
-            : value_(new Element<T>(forward<T>(v)))
+        constexpr Box(Type &&v)
+            : value_(new ElementT(forward<Type>(v)))
         {
         }
 
         // works for moving-into as well.
         template<typename... Args>
         constexpr Box(Args &&...args)
-            : value_(new Element<T>(forward<Args>(args)...))
+            : value_(new ElementT(forward<Args>(args)...))
         {
         }
 
@@ -97,12 +98,12 @@ struct Box
          * @returns on success, Optional::Some
          * @returns of fail, Optional::None
          */
-        constexpr static Result<Box, T> try_from(T &&val)
+        constexpr static Result<Box, Type> try_from(Type &&val)
         {
             // for new: on fail, val not moved
             ElementT *const p = new ElementT(move(val));
-            if (p == nullptr) { return Result<Box, T>::Err(move(val)); }
-            return Result<Box, T>::Ok(move(Box(p)));
+            if (p == nullptr) { return Result<Box, Type>::Err(move(val)); }
+            return Result<Box, Type>::Ok(move(Box(p)));
         }
 
     public:
@@ -112,12 +113,12 @@ struct Box
          * @returns reference to the boxed value.
          * @warning Panics if no value to return (e.g. use after move).
          */
-        constexpr T &operator*(void)
+        constexpr Type &operator*(void)
         {
             return deref();
         }
 
-        constexpr T &deref(void)
+        constexpr Type &deref(void)
         {
             nel_panic_if_not(has_value(), "not a value");
             return *(*value_);
@@ -129,12 +130,12 @@ struct Box
          * @returns reference to the boxed value.
          * @warning Panics if no value to return (e.g. use after move).
          */
-        constexpr T const &operator*(void) const
+        constexpr Type const &operator*(void) const
         {
             return deref();
         }
 
-        constexpr T const &deref(void) const
+        constexpr Type const &deref(void) const
         {
             nel_panic_if_not(has_value(), "not a value");
             return *(*value_);
@@ -163,10 +164,10 @@ struct Box
          * @returns the value in the box.
          * @warning Panics if no value to return (e.g. use after move).
          */
-        constexpr T unwrap(void)
+        constexpr Type unwrap(void)
         {
             nel_panic_if_not(has_value(), "not a value");
-            T t = move(*(*value_));
+            Type t = move(*(*value_));
             delete value_;
             value_ = nullptr;
             return t;
