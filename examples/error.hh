@@ -1,9 +1,9 @@
 // -*- mode: c++; indent-tabs-mode: nil; tab-width: 4 -*-
-#ifndef ERROR_HH
-#define ERROR_HH
+#if !defined(ERROR_HH)
+#    define ERROR_HH
 
-#include <nel/log.hh>
-#include <nel/panic.hh>
+#    include <nel/log.hh>
+#    include <nel/panic.hh>
 
 enum class ErrorCode {
     Failed = 1,
@@ -30,7 +30,8 @@ nel::Log &operator<<(nel::Log &outs, ErrorCode const &val)
 // typedef uint16_t Lineno;
 typedef long unsigned int Lineno;
 
-struct Error {
+struct Error
+{
         // tot=16
     private:
         ErrorCode code; // offset:0, size:4 fsize:4
@@ -38,7 +39,7 @@ struct Error {
         const char *filename; // offset:8, size:8 fsize:8
 
     public:
-        Error(ErrorCode const &code, char const *filename, Lineno const line)
+        constexpr Error(ErrorCode const &code, char const *filename, Lineno const line)
             : code(code)
             , lineno(line)
             , filename(filename)
@@ -55,4 +56,4 @@ struct Error {
         }
 };
 
-#endif // ERROR_HH
+#endif // !defined(ERROR_HH)

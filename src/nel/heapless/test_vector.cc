@@ -6,6 +6,262 @@
 #include <catch2/catch.hpp>
 
 // TODO: what of size/cap == 0, i//e Vector<T, 0> ?
+namespace nel
+{
+namespace test
+{
+namespace heapless
+{
+namespace vector
+{
+
+struct Stub
+{
+        static int instances;
+        static int move_ctor;
+        static int move_assn;
+
+        static void reset()
+        {
+            instances = 0;
+            move_ctor = 0;
+            move_assn = 0;
+        }
+
+        int val;
+        bool valid;
+
+        ~Stub()
+        {
+            if (valid) { instances -= 1; }
+        }
+
+        Stub(int v)
+            : val(v)
+            , valid(true)
+        {
+            instances += 1;
+        }
+
+        Stub(Stub &&o)
+            : val(nel::move(o.val))
+            , valid(nel::move(o.valid))
+        {
+            // move: moves a value, so does not create a new value.
+            // move: moves a value, so does create a value in a new location.
+            // remember, the dtor of o will be called..
+            o.valid = false;
+            move_ctor += 1;
+        }
+
+        Stub &operator=(Stub &&o)
+        {
+            // move: moves a value, so does not create a new value.
+            // move: moves a value, so does create a value in a new location.
+            val = nel::move(o.val);
+            valid = nel::move(o.valid);
+            o.valid = false;
+            move_assn += 1;
+            return *this;
+        }
+
+        Stub(Stub const &o) = delete;
+        Stub &operator=(Stub const &o) = delete;
+
+        Stub() = delete;
+};
+
+int Stub::instances = 0;
+int Stub::move_ctor = 0;
+int Stub::move_assn = 0;
+
+TEST_CASE("heapless::Vector: dtor deletes contained", "[heapless][vector]")
+{
+    Stub::reset();
+    {
+        nel::heapless::Vector<Stub, 5> vec;
+        vec.push(nel::move(Stub(1))).unwrap();
+        vec.push(nel::move(Stub(2))).unwrap();
+
+        // vec: all pushed elements are initialised.
+        REQUIRE(Stub::instances == 2);
+    }
+    // vec: should be dtructed when going out of scope.
+    // vec must delete all instances contained.
+    REQUIRE(Stub::instances == 0);
+}
+
+TEST_CASE("heapless::Vector: move-ctor invalidates src", "[heapless][vector]")
+{
+    {
+        // move empty/initial vector
+        auto vec1 = nel::heapless::Vector<Stub, 5>();
+
+        Stub::reset();
+        auto vec2 = nel::move(vec1);
+
+        REQUIRE(vec2.len() == 0);
+        REQUIRE(vec1.len() == 0);
+    }
+
+    {
+        // move partially filled vector
+        auto vec1 = nel::heapless::Vector<Stub, 5>();
+        vec1.push(nel::move(Stub(1))).unwrap();
+        vec1.push(nel::move(Stub(2))).unwrap();
+
+        Stub::reset();
+        auto vec2 = nel::move(vec1);
+
+        // T's was moved using it's move ops.
+        // i.e. not using bitcopying.
+        // note: will be moved as part of pushing + moved into push
+        REQUIRE(Stub::move_ctor == 2);
+        REQUIRE(Stub::move_assn == 0);
+
+        // src len must now be 0, so contents are not dtucted.
+        REQUIRE(vec1.len() == 0);
+
+        REQUIRE(vec2.len() == 2);
+        REQUIRE(vec2.unchecked_get(0).val == 1);
+        REQUIRE(vec2.unchecked_get(1).val == 2);
+    }
+}
+
+TEST_CASE("heapless::Vector: move-assn invalidates src", "[heapless][vector]")
+{
+    {
+        // move empty/initial vector onto empty
+        auto vec1 = nel::heapless::Vector<Stub, 5>();
+        auto vec2 = nel::heapless::Vector<Stub, 5>();
+
+        Stub::reset();
+        vec2 = nel::move(vec1);
+
+        REQUIRE(vec2.len() == 0);
+        REQUIRE(vec1.len() == 0);
+    }
+
+    {
+        // move partially filled vector onto empty
+        auto vec1 = nel::heapless::Vector<Stub, 5>();
+        vec1.push(Stub(1)).unwrap();
+        vec1.push(Stub(2)).unwrap();
+
+        auto vec2 = nel::heapless::Vector<Stub, 5>();
+
+        Stub::reset();
+
+        vec2 = nel::move(vec1);
+
+        // T's was moved using it's move ops.
+        // i.e. not using bitcopying.
+        REQUIRE(Stub::move_ctor == 2);
+        // vec move will not call move ssgn
+        REQUIRE(Stub::move_assn == 0);
+
+        // src len must now be 0, so contents are not dtucted.
+        REQUIRE(vec1.len() == 0);
+
+        REQUIRE(vec2.len() == 2);
+        REQUIRE(vec2.unchecked_get(0).val == 1);
+        REQUIRE(vec2.unchecked_get(1).val == 2);
+    }
+
+    {
+        // move empty onto partially filled
+        auto vec1 = nel::heapless::Vector<Stub, 5>();
+
+        auto vec2 = nel::heapless::Vector<Stub, 5>();
+        vec2.push(Stub(1)).unwrap();
+        vec2.push(Stub(2)).unwrap();
+
+        Stub::reset();
+
+        vec2 = nel::move(vec1);
+
+        // T's was moved using it's move ops.
+        // i.e. not using bitcopying.
+        REQUIRE(Stub::move_ctor == 0);
+        // vec move will not call move assgn
+        REQUIRE(Stub::move_assn == 0);
+        // move must have destroyed the contained instances.
+        // note: reset will reset count to 0 when 2 are in play.
+        REQUIRE(Stub::instances == -2);
+
+        // src len must now be 0, so contents are not dtucted.
+        REQUIRE(vec1.len() == 0);
+
+        REQUIRE(vec2.len() == 0);
+    }
+}
+
+TEST_CASE("heapless::Vector::move", "[heapless][vector]")
+{
+    {
+        // empty Vector can be moved
+        auto a1 = nel::heapless::Vector<int, 3>::empty();
+        auto a2 = nel::move(a1);
+        REQUIRE(a1.is_empty());
+        REQUIRE(a2.is_empty());
+    }
+
+    {
+        // not empty vector can be moved
+        auto a3 = nel::heapless::Vector<int, 3>::empty();
+        a3.push(2).is_ok();
+
+        auto a2 = nel::move(a3);
+        REQUIRE(!a2.is_empty());
+        REQUIRE(a3.is_empty());
+    }
+
+    {
+        // testing const Vector moving, but should fail at compile time.
+        // auto const c1 = nel::heapless::Vector<int, 3>::empty();
+        // auto const c2 = nel::heapless::Vector<int, 3>::fill(2,1);
+        // c2 = nel::move(c1);
+    }
+
+    {
+        // array of pods can be move-ctord
+        auto a1 = nel::heapless::Vector<int, 3>::empty();
+        a1.push(3).unwrap();
+        a1.push(3).unwrap();
+        a1.push(3).unwrap();
+
+        auto a2 = nel::move(a1);
+
+        // moved dst must contain src values..
+        auto r = a2.iter().fold(true, [](bool &acc, int const &v) { acc = acc && (v == 3); });
+        REQUIRE(r);
+        // moved src must be invalidated .. cannot check with pods.
+    }
+
+    {
+        // array of pods can be move-assgnd
+        auto a2 = nel::heapless::Vector<int, 3>::empty();
+        a2.push(3).unwrap();
+        a2.push(3).unwrap();
+        a2.push(3).unwrap();
+
+        auto a1 = nel::heapless::Vector<int, 3>::empty();
+        a1.push(1).unwrap();
+        a1.push(1).unwrap();
+
+        a2 = nel::move(a1);
+
+        REQUIRE(a2.len() == 2);
+        // moved dst must contain src values..
+        REQUIRE(a2.len() == 2);
+        auto r = a2.iter().fold(true, [](bool &acc, int const &v) { acc = acc && (v == 1); });
+        REQUIRE(r);
+        // TODO: moved src must be invalidated .. cannot check with pods.
+    }
+}
+
+// how to test that Vector cannot be copied?
+// it will fail at compile time.
 
 TEST_CASE("heapless::Vector::empty", "[heapless][vector]")
 {
@@ -40,37 +296,6 @@ TEST_CASE("heapless::Vector::with_capacity", "[heapless][vector]")
     // REQUIRE(a1.len() == 0);
 }
 #endif
-
-// how to test that Vector cannot be copied?
-// it will fail at compile time.
-
-TEST_CASE("heapless::Vector::move", "[heapless][vector]")
-{
-    {
-        // empty Vector can be moved
-        auto a1 = nel::heapless::Vector<int, 3>::empty();
-        auto a2 = nel::move(a1);
-        REQUIRE(a1.is_empty());
-        REQUIRE(a2.is_empty());
-    }
-
-    {
-        // not empty vector can be moved
-        auto a3 = nel::heapless::Vector<int, 3>::empty();
-        a3.push(2).is_ok();
-
-        auto a2 = nel::move(a3);
-        REQUIRE(!a2.is_empty());
-        REQUIRE(a3.is_empty());
-    }
-
-    {
-        // testing const Vector moving, but should fail at compile time.
-        // auto const c1 = nel::heapless::Vector<int, 3>::empty();
-        // auto const c2 = nel::heapless::Vector<int, 3>::fill(2,1);
-        // c2 = nel::move(c1);
-    }
-}
 
 TEST_CASE("heapless::Vector::is_empty", "[heapless][vector]")
 {
@@ -163,6 +388,73 @@ TEST_CASE("heapless::Vector::clear", "[heapless][Vector]")
         // REQUIRE(c3.capacity() == cap);
 
         // must also test that clearing calls destructor on any elements in vector.
+    }
+}
+
+TEST_CASE("heapless::Vector::resize", "[heapless][Vector]")
+{
+    {
+        // resize empty to 0 does not change len
+        auto a1 = nel::heapless::Vector<int, 3>::empty();
+        a1.resize(0, 4);
+        REQUIRE(a1.len() == 0);
+    }
+
+    {
+        // resize empty to less than capacity adjusts len, fills in elements.
+        auto a1 = nel::heapless::Vector<int, 3>::empty();
+        a1.resize(2, 4);
+        REQUIRE(a1.len() == 2);
+        REQUIRE(a1[0] == 4);
+        REQUIRE(a1[1] == 4);
+    }
+
+    {
+        // resize non-empty to less than capacity adjusts len, fills in elements.
+        auto a1 = nel::heapless::Vector<int, 3>::empty();
+        a1.push(1).unwrap();
+        REQUIRE(a1[0] == 1);
+
+        a1.resize(2, 4);
+
+        REQUIRE(a1.len() == 2);
+        REQUIRE(a1[0] == 1);
+        REQUIRE(a1[1] == 4);
+    }
+
+    {
+        // resize empty to capacity adjusts len, fills in elements.
+        auto a1 = nel::heapless::Vector<int, 3>::empty();
+        a1.resize(3, 4);
+        REQUIRE(a1.len() == 3);
+        REQUIRE(a1[0] == 4);
+        REQUIRE(a1[1] == 4);
+        REQUIRE(a1[2] == 4);
+    }
+
+    {
+        // resize empty to over-capacity maxes out at capacity,
+        // adjusts len, fills in elements.
+        auto a1 = nel::heapless::Vector<int, 3>::empty();
+        a1.resize(4, 4);
+        REQUIRE(a1.len() == 3);
+        REQUIRE(a1[0] == 4);
+        REQUIRE(a1[1] == 4);
+        REQUIRE(a1[2] == 4);
+    }
+
+    {
+        // resize non-empty to smaller adjusts len, drops elements.
+        auto a1 = nel::heapless::Vector<int, 3>::empty();
+        a1.push(1).unwrap();
+        a1.push(2).unwrap();
+        REQUIRE(a1[0] == 1);
+        REQUIRE(a1[1] == 2);
+
+        a1.resize(1, 4);
+
+        REQUIRE(a1.len() == 1);
+        REQUIRE(a1[0] == 1);
     }
 }
 
@@ -275,6 +567,7 @@ TEST_CASE("heapless::Vector::slice(b,e)", "[heapless][vector]")
 
 TEST_CASE("heapless::Vector::iter()", "[heapless][Vector]")
 {
+#if defined(RUST_LIKE)
     {
         // can create iter on empty vectors.
         auto a1 = nel::heapless::Vector<int, 3>::empty();
@@ -312,6 +605,58 @@ TEST_CASE("heapless::Vector::iter()", "[heapless][Vector]")
         // REQUIRE(it23.next().unwrap() == 2);
         // REQUIRE(it23.next().is_none());
     }
+#endif
+#if defined(C_LIKE)
+    {
+        // can create iter on empty vectors.
+        auto a1 = nel::heapless::Vector<int, 3>::empty();
+        auto it1 = a1.iter();
+        // and the iter is empty.
+        REQUIRE(!it1);
+
+        auto const c1 = nel::heapless::Vector<int, 3>::empty();
+        auto itc1 = c1.iter();
+        // and the iter is empty.
+        REQUIRE(!itc1);
+    }
+
+    {
+        // can create iter on non empty vectors.
+        auto a2 = nel::heapless::Vector<int, 3>::empty();
+        a2.push(2).unwrap();
+        a2.push(3).unwrap();
+
+        auto it21 = a2.iter();
+
+        REQUIRE(it21);
+        REQUIRE(*it21 == 2);
+
+        ++it21;
+        REQUIRE(it21);
+        REQUIRE(*it21 == 3);
+
+        ++it21;
+        REQUIRE(!it21);
+
+        // iter does not consume vec
+        auto it22 = a2.iter();
+        REQUIRE(it22);
+        REQUIRE(*it22 == 2);
+        ++it22;
+        REQUIRE(it22);
+        REQUIRE(*it22 == 3);
+        ++it22;
+        REQUIRE(!it22);
+
+        // how to get a non-mut iter (returning const refs) on a mut vec...?
+        // // can get mut iter (returns mur refs)
+        // auto it23 = a2.iter_mut();
+        // REQUIRE(it23.next().unwrap() == 2);
+        // REQUIRE(it23.next().unwrap() == 2);
+        // REQUIRE(it23.next().is_none());
+    }
+
+#endif
 }
 
 TEST_CASE("heapless::Vector::try_get()", "[heapless][Vector]")
@@ -353,3 +698,8 @@ TEST_CASE("heapless::Vector::try_get()", "[heapless][Vector]")
         REQUIRE(sca2.is_none());
     }
 }
+
+}; // namespace vector
+}; // namespace heapless
+}; // namespace test
+}; // namespace nel

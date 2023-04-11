@@ -3,5 +3,6 @@
 
 #include <nel/log.hh>
 #include <nel/defs.hh>
+#include "libnosys_stubs.cx"
 
 int main() {}

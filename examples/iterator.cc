@@ -6,32 +6,37 @@
 
 #include <nel/log.hh>
 #include <nel/defs.hh>
+#include "libnosys_stubs.cx"
 
-void do1(nel::Slice<int>::IteratorMut &&it)
+void do1(nel::Slice<int>::Iterator &&it)
 {
     it.for_each([&](int const &e) { nel::log << e << ','; });
 }
 
-void do2(nel::Slice<int>::IteratorMut &&it)
+#if defined(RUST_LIKE)
+void do2(nel::Slice<int>::Iterator &&it)
 {
     it.for_each2([&](int const &e) { nel::log << e << ','; });
 }
+#endif
 
-void do3(nel::Slice<int>::IteratorMut &&it)
+void do3(nel::Slice<int>::Iterator &&it)
 {
     it.template map<int>([](int const &e) -> int { return e * 100; })
         .first_n(4)
         .for_each([&](int const &e) { nel::log << e << ','; });
 }
 
-void do4(nel::Slice<int>::IteratorMut &&it)
+#if defined(RUST_LIKE)
+void do4(nel::Slice<int>::Iterator &&it)
 {
     it.template map<int>([](int const &e) -> int { return e * 100; })
         .first_n(4)
         .for_each2([&](int const &e) { nel::log << e << ','; });
 }
+#endif
 
-void do5(nel::Slice<int>::IteratorMut &&it)
+void do5(nel::Slice<int>::Iterator &&it)
 {
     // loopy,  simpe to read, slow..
     int v = it.template map<int>([](int const &e) -> int { return e * 100; })
@@ -40,7 +45,8 @@ void do5(nel::Slice<int>::IteratorMut &&it)
     nel::log << v;
 }
 
-void do6(nel::Slice<int>::IteratorMut &&it)
+#if defined(RUST_LIKE)
+void do6(nel::Slice<int>::Iterator &&it)
 {
     // compact, unrolled,  optimised.
     int v = it.template map<int>([](int const &e) -> int { return e * 100; })
@@ -48,6 +54,7 @@ void do6(nel::Slice<int>::IteratorMut &&it)
                 .fold2(10, [&](int &acc, int const &e) { acc += e; });
     nel::log << v;
 }
+#endif
 
 void ex1()
 {
@@ -58,13 +65,18 @@ void ex1()
         v += 34;
     });
     do1(a1.iter());
+#if defined(RUST_LIKE)
     do2(a1.iter());
+#endif
 
     do3(a1.iter());
+#if defined(RUST_LIKE)
     do4(a1.iter());
-
+#endif
     do5(a1.iter());
+#if defined(RUST_LIKE)
     do6(a1.iter());
+#endif
 }
 
 int main()

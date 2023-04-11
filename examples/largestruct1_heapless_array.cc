@@ -5,6 +5,7 @@
 #include <nel/panic.hh>
 #include <nel/log.hh>
 #include <nel/defs.hh>
+#include "libnosys_stubs.cx"
 
 typedef nel::heapless::Array<U8Buf<256>, 8> Array1;
 
@@ -61,6 +62,7 @@ void ex3()
     arr1.try_get(6).unwrap() = U8Buf<256>(0x33);
 }
 
+#if defined(RUST_LIKE)
 void ex41()
 {
     Array1 arr1 = Array1::filled_with(U8Buf<256>(0xff));
@@ -82,6 +84,7 @@ void ex41()
         nel::log << e.unwrap() << '\n';
     }
 }
+#endif
 
 void ex42()
 {
@@ -90,6 +93,7 @@ void ex42()
     arr1.iter().for_each([&](U8Buf<256> &v) -> void { nel::log << v << '\n'; });
 }
 
+#if defined(C_LIKE)
 void ex51()
 {
     Array1 arr1 = Array1::filled_with(U8Buf<256>(0xff));
@@ -105,9 +109,15 @@ void ex52()
 {
     Array1 arr1 = Array1::filled_with(U8Buf<256>(0xff));
 
+#    if defined(RUST_LIKE)
     arr1.iter().for_each2([&](U8Buf<256> &v) -> void { nel::log << v << '\n'; });
+#    elif defined(C_LIKE)
+    arr1.iter().for_each([&](U8Buf<256> &v) -> void { nel::log << v << '\n'; });
+#    endif
 }
+#endif
 
+#if defined(RUST_LIKE)
 void ex61()
 {
     Array1 arr1 = Array1::filled_with(U8Buf<256>(0xff));
@@ -131,6 +141,7 @@ void ex61()
         ++i;
     }
 }
+#endif
 
 void ex62()
 {
@@ -144,6 +155,7 @@ void ex62()
     });
 }
 
+#if defined(C_LIKE)
 void ex71()
 {
     Array1 arr1 = Array1::filled_with(U8Buf<256>(0xff));
@@ -164,11 +176,19 @@ void ex72()
 
     auto it = arr1.iter().first_n(2);
     Index i = 0;
+#    if defined(RUST_LIKE)
     it.for_each2([&](U8Buf<256> &e) -> void {
         nel::log << '[' << i << ']' << ':' << e << '\n';
         ++i;
     });
+#    elif defined(C_LIKE)
+    it.for_each([&](U8Buf<256> &e) -> void {
+        nel::log << '[' << i << ']' << ':' << e << '\n';
+        ++i;
+    });
+#    endif
 }
+#endif
 
 int main()
 {
@@ -181,28 +201,38 @@ int main()
     nel::log << "ex3:b" << '\n';
     ex3();
     nel::log << "ex3:e" << '\n';
+#if defined(RUST_LIKE)
     nel::log << "ex41:b" << '\n';
     ex41();
     nel::log << "ex41:e" << '\n';
+#endif
     nel::log << "ex42:b" << '\n';
     ex42();
     nel::log << "ex42:e" << '\n';
+#if defined(C_LIKE)
     nel::log << "ex51:b" << '\n';
     ex51();
     nel::log << "ex51:e" << '\n';
     nel::log << "ex52:b" << '\n';
     ex52();
     nel::log << "ex52:e" << '\n';
+#endif
+#if defined(RUST_LIKE)
     nel::log << "ex61:b" << '\n';
     ex61();
     nel::log << "ex61:e" << '\n';
+#endif
     nel::log << "ex62:b" << '\n';
     ex62();
     nel::log << "ex62:e" << '\n';
+
+#if defined(C_LIKE)
     nel::log << "ex71:b" << '\n';
     ex71();
     nel::log << "ex71:e" << '\n';
+
     nel::log << "ex72:b" << '\n';
     ex72();
     nel::log << "ex72:e" << '\n';
+#endif
 }

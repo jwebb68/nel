@@ -23,7 +23,7 @@ struct FirstNIterator;
 #    include <nel/log.hh>
 #    include <nel/defs.hh>
 
-//#include <functional> //std::function
+// #include <functional> //std::function
 
 /**
  * A fluent-style/iterator 'trait'
@@ -32,11 +32,15 @@ struct FirstNIterator;
  * Can be iterated over using next(),
  * Maybe iterated using (is_done/incr/deref),
  */
+#    define C_LIKE
+
+// #define RUST_LIKE
 
 namespace nel
 {
 template<typename ItT, typename IT, typename OT>
-struct Iterator {
+struct Iterator
+{
     public:
         typedef OT OutT;
         typedef IT InT;
@@ -54,10 +58,13 @@ struct Iterator {
             return it;
         }
 
+#    if defined(RUST_LIKE)
     public:
         Optional<OutT> next(void);
+#    endif // defined(RUST_LIKE)
 
     public:
+#    if defined(C_LIKE)
         constexpr bool is_done(void) const;
         void inc(void);
         constexpr OutT deref(void);
@@ -77,6 +84,7 @@ struct Iterator {
         {
             return self().deref();
         }
+#    endif // defined(C_LIKE)
 
     public:
         /**
@@ -85,8 +93,11 @@ struct Iterator {
          * @param fn func to apply to each item in iterator
          */
         // void for_each(std::function<void(OutT)> fn)
+#    if defined(C_LIKE) || defined(RUST_LIKE)
         template<typename F>
         void for_each(F &&fn)
+#    endif
+#    if defined(RUST_LIKE)
         {
             while (true) {
                 Optional<OutT> r = self().next();
@@ -96,17 +107,48 @@ struct Iterator {
                 fn(r.unwrap());
             }
         }
+#    endif
 
+#    if defined(C_LIKE)
+#        if defined(RUST_LIKE)
         // void for_each2(std::function<void(OutT)> fn)
         template<typename F>
         void for_each2(F &&fn)
+#        endif
         {
+#        if 1
             for (; !self().is_done(); self().inc()) {
                 fn(self().deref());
                 // Iter will be fn(self.deref()); // self.deref()->T const &
                 // IterMut will be fn(self.deref()); // self.deref()->T &
                 // IterOwn will be fn(self.deref()); self.deref()->T &&
             }
+#        else
+            goto enter;
+loop:
+            fn(self().deref());
+            self().inc();
+enter:
+            if (!self().is_done()) { goto loop; }
+#        endif
+        }
+#    endif
+
+        /**
+         * Iterate over self, call fn on each item, stop if fn returns false.
+         *
+         * @param: fn: fn to call on ieach item in order, returns true to continue, false to stop.
+         * @return: true if iteration completed successfully
+         * @return: false if iteration was interrupted.
+         */
+        template<typename F>
+        bool try_for_each(F &&fn)
+        {
+            bool ok = true;
+            for (; ok && self(); ++self()) {
+                ok = fn(*self());
+            }
+            return ok;
         }
 
         /**
@@ -125,6 +167,7 @@ struct Iterator {
             return acc;
         }
 
+#    if defined(C_LIKE) && defined(RUST_LIKE)
         template<typename U, typename F>
         U fold2(U &&initial, F &&fn)
         {
@@ -132,6 +175,7 @@ struct Iterator {
             self().for_each2([&acc, &fn](OutT v) { fn(acc, v); });
             return acc;
         }
+#    endif
 
     public:
         friend Log &operator<<(Log &outs, ItT const &it)
@@ -139,20 +183,18 @@ struct Iterator {
             outs << '[';
             // copy/clone since want to mutate..
             ItT it2 = it;
-#    if 0
+#    if defined(RUST_LIKE)
             OutT v = it2.next();
             if (v.is_some()) {
                 outs << v.unwrap();
-                //Index i = 0;
-                //it2.for_each([&outs, &i](OutT const &e) {
-                //outs << '[' << i << "]:" << e << '\n';
+                // Index i = 0;
+                // it2.for_each([&outs, &i](OutT const &e) {
+                // outs << '[' << i << "]:" << e << '\n';
                 //++i;
-                //});
-                it2.for_each([&outs](OutT const & e) {
-                    outs << ',' << e;
-                });
+                // });
+                it2.for_each([&outs](OutT const &e) { outs << ',' << e; });
             }
-#    elif 1
+#    elif defined(C_LIKE)
             if (!it2.is_done()) {
                 outs << it2.deref();
                 it2.inc();
@@ -161,7 +203,11 @@ struct Iterator {
                 //     outs << '[' << i << "]:" << e << '\n';
                 //     ++i;
                 // });
+#        if defined(RUST_LIKE)
                 it2.for_each2([&outs](OutT const &e) { outs << ',' << e; });
+#        elif defined(C_LIKE)
+                it2.for_each([&outs](OutT const &e) { outs << ',' << e; });
+#        endif
             }
 #    endif
             outs << ']';
@@ -195,7 +241,8 @@ struct Iterator {
 // x.enum().for_each([&](??)->void {..});
 
 template<typename It, typename V, typename Fn>
-struct MappingIterator: public Iterator<MappingIterator<It, V, Fn>, typename It::InT, V> {
+struct MappingIterator: public Iterator<MappingIterator<It, V, Fn>, typename It::InT, V>
+{
         // turns an InT into an OutT via a It::OutT
 
         // e.g. vec<int>.iter()
@@ -225,6 +272,7 @@ struct MappingIterator: public Iterator<MappingIterator<It, V, Fn>, typename It:
         }
 
     public:
+#    if defined(RUST_LIKE)
         /**
          * Return next item in iterator or None is no more.
          *
@@ -233,13 +281,15 @@ struct MappingIterator: public Iterator<MappingIterator<It, V, Fn>, typename It:
          */
         Optional<OutT> next(void)
         {
-            // c++ butt ugly language, giving butt ugly constrcts..
+            // c++ butt ugly language, giving butt ugly constructs..
             // WTF should I need 'template' here..?
             return inner_.next().template map<OutT>(
                 [this](typename It::OutT &e) -> V { return fn_(e); });
         }
+#    endif // defined(RUST_LIKE)
 
     public:
+#    if defined(C_LIKE)
         constexpr bool is_done(void) const
         {
             return inner_.is_done();
@@ -254,13 +304,15 @@ struct MappingIterator: public Iterator<MappingIterator<It, V, Fn>, typename It:
         {
             return fn_(inner_.deref());
         }
+#    endif
 };
 
 /**
  * Return first n items in iterator, stop iteration if more.
  */
 template<typename It>
-struct FirstNIterator: public Iterator<FirstNIterator<It>, typename It::InT, typename It::OutT> {
+struct FirstNIterator: public Iterator<FirstNIterator<It>, typename It::InT, typename It::OutT>
+{
     public:
         typedef typename It::OutT OutT;
 
@@ -278,6 +330,7 @@ struct FirstNIterator: public Iterator<FirstNIterator<It>, typename It::InT, typ
         }
 
     public:
+#    if defined(RUST_LIKE)
         /**
          * Return next item in iterator or None is no more.
          *
@@ -288,8 +341,10 @@ struct FirstNIterator: public Iterator<FirstNIterator<It>, typename It::InT, typ
         {
             return (current_ < limit_) ? ++current_, inner_.next() : None;
         }
+#    endif // defined(RUST_LIKE)
 
     public:
+#    if defined(C_LIKE)
         constexpr bool is_done(void) const
         {
             return (current_ >= limit_);
@@ -305,10 +360,12 @@ struct FirstNIterator: public Iterator<FirstNIterator<It>, typename It::InT, typ
         {
             return inner_.deref();
         }
+#    endif
 };
 
 template<typename It>
-struct ChainIterator: public Iterator<ChainIterator<It>, typename It::InT, typename It::OutT> {
+struct ChainIterator: public Iterator<ChainIterator<It>, typename It::InT, typename It::OutT>
+{
     public:
         typedef typename It::OutT OutT;
 
@@ -328,6 +385,7 @@ struct ChainIterator: public Iterator<ChainIterator<It>, typename It::InT, typen
         }
 
     public:
+#    if defined(RUST_LIKE)
         /**
          * Return next item in iterator or None is no more.
          *
@@ -338,8 +396,10 @@ struct ChainIterator: public Iterator<ChainIterator<It>, typename It::InT, typen
         {
             return it1_.next().or_else([&](void) -> Optional<OutT> { return it2_.next(); });
         }
+#    endif // defined(RUST_LIKE)
 
     public:
+#    if defined(C_LIKE)
         constexpr bool is_done(void) const
         {
             return it1_.is_done() && it2_.is_done();
@@ -358,6 +418,7 @@ struct ChainIterator: public Iterator<ChainIterator<It>, typename It::InT, typen
         {
             return (!it1_.is_done()) ? it1_.deref() : it2_.deref();
         }
+#    endif
 
     public:
         /**
@@ -374,12 +435,20 @@ struct ChainIterator: public Iterator<ChainIterator<It>, typename It::InT, typen
             it2_.for_each(fn);
         }
 
+#    if defined(C_LIKE) && defined(RUST_LIKE)
         // void for_each2(std::function<void(OutT)> fn)
         template<typename F>
         void for_each2(F &&fn)
         {
             it1_.for_each2(fn);
             it2_.for_each2(fn);
+        }
+#    endif // defined(C_LIKE)
+
+        template<typename F>
+        bool try_for_each(F &&fn)
+        {
+            return it1_.try_for_each(fn) && it2_.try_for_each(fn);
         }
 };
 

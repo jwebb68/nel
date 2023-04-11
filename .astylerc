@@ -1,6 +1,6 @@
 style=1tbs
-attach-namespaces
-attach-classes
+#attach-namespaces
+#attach-classes
 #attach-inlines
 attach-extern-c
 attach-closing-while

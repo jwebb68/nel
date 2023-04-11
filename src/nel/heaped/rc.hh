@@ -1,6 +1,6 @@
 // -*- mode: c++; indent-tabs-mode: nil; tab-width: 4 -*-
-#ifndef NEL_HEAPED_RC_HH
-#define NEL_HEAPED_RC_HH
+#if !defined(NEL_HEAPED_RC_HH)
+#    define NEL_HEAPED_RC_HH
 
 namespace nel
 {
@@ -13,9 +13,9 @@ struct RC;
 } // namespace heaped
 } // namespace nel
 
-#include <nel/element.hh>
-#include <nel/panic.hh>
-#include <nel/defs.hh>
+#    include <nel/element.hh>
+#    include <nel/panic.hh>
+#    include <nel/defs.hh>
 
 namespace nel
 {
@@ -23,15 +23,20 @@ namespace heaped
 {
 
 template<typename T>
-struct RC {
+struct RC
+{
         // Contained value on the heap.
         // Single threaded reference counted sharing.
+    public:
+        typedef T Type;
+
     private:
-        struct Node {
+        struct Node
+        {
             private:
                 Count n_refs_;
                 bool has_value_;
-                Element<T> value_;
+                Element<Type> value_;
 
             public:
                 // No copying.. use refcounting.
@@ -68,29 +73,29 @@ struct RC {
                     }
                 }
 
-                static T unwrap(Node *const v)
+                static Type unwrap(Node *const v)
                 {
                     // Value moved out from value_ on unwrap().
                     // Value_ is eff. destroyed by unwrap().
                     // So release the internal bit as no longer valid.
                     nel_panic_if_not(v->has_value_, "invalid rc node");
-                    auto o = v->value_.unwrap();
+                    auto o = move(*(v->value_));
                     v->has_value_ = false;
                     release(v);
                     return o;
                 }
 
             public:
-                T &ref(void)
+                Type &ref(void)
                 {
                     nel_panic_if_not(has_value(), "invalid rc node");
-                    return value_.get();
+                    return *value_;
                 }
 
-                T const &ref(void) const
+                Type const &ref(void) const
                 {
                     nel_panic_if_not(has_value(), "invalid rc node");
-                    return value_.get();
+                    return *value_;
                 }
 
                 bool has_value(void) const
@@ -176,7 +181,7 @@ struct RC {
         }
 
     public:
-        constexpr RC(T &&v)
+        constexpr RC(Type &&v)
             : node_(new Node(move(v)))
         {
             // Node created pre-grabbed.
@@ -196,7 +201,7 @@ struct RC {
          * @returns reference to the boxed value
          * @warning Panics if no value to return (e.g. use after move).
          */
-        constexpr T &operator*(void)
+        constexpr Type &operator*(void)
         {
             nel_panic_if_not(has_value(), "not a value");
             return node_->ref();
@@ -208,7 +213,7 @@ struct RC {
          * @returns reference to the boxed value
          * @warning Panics if no value to return (e.g. use after move).
          */
-        constexpr T const &operator*(void) const
+        constexpr Type const &operator*(void) const
         {
             nel_panic_if_not(has_value(), "not a value");
             return node_->ref();
@@ -233,7 +238,7 @@ struct RC {
          * @returns the value in the box.
          * @warning Panics if no value to return (e.g. use after move).
          */
-        constexpr T unwrap(void)
+        constexpr Type unwrap(void)
         {
             nel_panic_if_not(has_value(), "not a value");
             auto o = Node::unwrap(node_);
@@ -270,4 +275,4 @@ struct RC {
 } // namespace heaped
 } // namespace nel
 
-#endif // NEL_HEAPED_RC_HH
+#endif // !defined(NEL_HEAPED_RC_HH)

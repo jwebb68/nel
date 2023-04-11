@@ -1,16 +1,17 @@
 // -*- mode: c++; indent-tabs-mode: nil; tab-width: 4 -*-
-#ifndef LARGESTRUCT1_HH
-#define LARGESTRUCT1_HH
+#if !defined(LARGESTRUCT1_HH)
+#    define LARGESTRUCT1_HH
 
-#include <nel/log.hh>
-#include <nel/memory.hh>
-#include <nel/defs.hh>
+#    include <nel/log.hh>
+#    include <nel/memory.hh>
+#    include <nel/defs.hh>
 
 typedef long unsigned int Length;
 typedef long unsigned int Index;
 
 template<Length const N>
-struct U8Buf {
+struct U8Buf
+{
     private:
         uint8_t data_[N];
 
@@ -23,29 +24,29 @@ struct U8Buf {
 
         constexpr ~U8Buf(void)
         {
-            nel::memset(data_, 0xa5, N);
+            nel::elem::set(data_, 0xa5, N);
         }
 
         constexpr U8Buf(U8Buf const &o)
         {
-            nel::memcpy(data_, o.data_, N);
+            nel::elem::copy(data_, o.data_, N);
         }
 
         constexpr U8Buf(U8Buf &&o)
         {
-            nel::memmove(data_, o.data_, N);
+            nel::elem::move(data_, o.data_, N);
         }
 
         constexpr U8Buf &operator=(U8Buf &&o)
         {
-            nel::memmove(data_, o.data_, N);
+            nel::elem::move(data_, o.data_, N);
             return *this;
         }
 
         // constexpr explicit U8Buf(uint8_t const f) {
         constexpr U8Buf(uint8_t const f)
         {
-            nel::memset(data_, f, N);
+            nel::elem::set(data_, f, N);
         }
 
     public:
@@ -56,7 +57,7 @@ struct U8Buf {
 
         void fill(uint8_t f)
         {
-            nel::memset(data_, f, N);
+            nel::elem::set(data_, f, N);
         }
 
         friend nel::Log &operator<<(nel::Log &outs, U8Buf const &val)
@@ -73,4 +74,4 @@ struct U8Buf {
         }
 };
 
-#endif // LARGESTRUCT1_HH
+#endif // !defined(LARGESTRUCT1_HH)

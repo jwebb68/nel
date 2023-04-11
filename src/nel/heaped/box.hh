@@ -1,6 +1,6 @@
 // -*- mode: c++; indent-tabs-mode: nil; tab-width: 4 -*-
-#ifndef NEL_HEAPED_BOX_HH
-#define NEL_HEAPED_BOX_HH
+#if !defined(NEL_HEAPED_BOX_HH)
+#    define NEL_HEAPED_BOX_HH
 
 namespace nel
 {
@@ -13,10 +13,11 @@ struct Box;
 } // namespace heaped
 } // namespace nel
 
-#include <nel/result.hh>
-#include <nel/element.hh>
-#include <nel/panic.hh>
-#include <nel/defs.hh>
+#    include <nel/result.hh>
+#    include <nel/element.hh>
+#    include <nel/panic.hh>
+#    include <nel/defs.hh>
+#    include <nel/memory.hh> // move,forward
 
 namespace nel
 {
@@ -27,13 +28,15 @@ namespace heaped
  * A T on the heap, owned (a bit like std::unique_ptr)
  */
 template<typename T>
-struct Box {
+struct Box
+{
     public:
         // heh, blatant rust-ism
         typedef Box Self;
+        typedef T Type;
 
     private:
-        typedef Element<T> ElementT;
+        typedef Element<Type> ElementT;
         ElementT *value_;
 
     private:
@@ -75,15 +78,15 @@ struct Box {
             return *this;
         }
 
-        constexpr Box(T &&v)
-            : value_(new Element<T>(forward<T>(v)))
+        constexpr Box(Type &&v)
+            : value_(new ElementT(forward<Type>(v)))
         {
         }
 
         // works for moving-into as well.
         template<typename... Args>
         constexpr Box(Args &&...args)
-            : value_(new Element<T>(forward<Args>(args)...))
+            : value_(new ElementT(forward<Args>(args)...))
         {
         }
 
@@ -95,12 +98,12 @@ struct Box {
          * @returns on success, Optional::Some
          * @returns of fail, Optional::None
          */
-        constexpr static Result<Box, T> try_from(T &&val)
+        constexpr static Result<Box, Type> try_from(Type &&val)
         {
             // for new: on fail, val not moved
             ElementT *const p = new ElementT(move(val));
-            if (p == nullptr) { return Result<Box, T>::Err(val); }
-            return Result<Box, T>::Ok(Box(p));
+            if (p == nullptr) { return Result<Box, Type>::Err(move(val)); }
+            return Result<Box, Type>::Ok(move(Box(p)));
         }
 
     public:
@@ -110,15 +113,15 @@ struct Box {
          * @returns reference to the boxed value.
          * @warning Panics if no value to return (e.g. use after move).
          */
-        constexpr T &operator*(void)
+        constexpr Type &operator*(void)
         {
             return deref();
         }
 
-        constexpr T &deref(void)
+        constexpr Type &deref(void)
         {
             nel_panic_if_not(has_value(), "not a value");
-            return value_->get();
+            return *(*value_);
         }
 
         /**
@@ -127,15 +130,15 @@ struct Box {
          * @returns reference to the boxed value.
          * @warning Panics if no value to return (e.g. use after move).
          */
-        constexpr T const &operator*(void) const
+        constexpr Type const &operator*(void) const
         {
             return deref();
         }
 
-        constexpr T const &deref(void) const
+        constexpr Type const &deref(void) const
         {
             nel_panic_if_not(has_value(), "not a value");
-            return value_->get();
+            return *(*value_);
         }
 
         /**
@@ -161,10 +164,10 @@ struct Box {
          * @returns the value in the box.
          * @warning Panics if no value to return (e.g. use after move).
          */
-        constexpr T unwrap(void)
+        constexpr Type unwrap(void)
         {
             nel_panic_if_not(has_value(), "not a value");
-            T t = value_->unwrap();
+            Type t = move(*(*value_));
             delete value_;
             value_ = nullptr;
             return t;
@@ -177,4 +180,4 @@ struct Box {
 } // namespace heaped
 } // namespace nel
 
-#endif // NEL_HEAPED_BOX_HH
+#endif // !defined(NEL_HEAPED_BOX_HH)

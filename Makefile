@@ -61,7 +61,11 @@ else ifeq ($(TOOLCHAIN),arm)
 CC=arm-none-eabi-gcc
 CXX=arm-none-eabi-g++
 OBJDUMP=arm-none-eabi-objdump
+CFLAGS+=-nostdlib
+CXXFLAGS+=-nostdlib
+LDLIBS+=-lnosys
 LDFLAGS+=--specs=nosys.specs
+#LDFLAGS+=--specs=nano.specs
 AR=arm-none-eabi-ar
 AS=arm-none-eabi-as
 LINK=$(CC)
@@ -407,7 +411,7 @@ clean += target/$(2)/examples/$(1)
 
 target/$(2)/examples/$(1).s: | target/$(2)/examples
 target/$(2)/examples/$(1).s: target/$(2)/examples/$(1)
-	$(OBJDUMP) -Sr $$< > $$@
+	$(OBJDUMP) -Sr --demangle $$< > $$@
 examples: target/$(2)/examples/$(1).s
 clean += target/$(2)/examples/$(1).s
 
@@ -455,7 +459,7 @@ target/$(2)/dep/tests/$(1): | target/$(2)/dep/tests ; mkdir $$@
 $$(filter-out target/$(2)/dep/tests/$(1),$$(patsubst %/,%,$$(sort $$(dir $$($(1)_$(2)_testd_c))))): | target/$(2)/dep/tests/$(1)
 	mkdir $$@
 $$(foreach f,$$($(1)_$(2)_testd_c),$$(eval $$(f): | $$(patsubst %/,%,$$(dir $$(f)))))
-$$($(1)_$(2)_testd_c): CPPFLAGS += $$($(1)_CPPFLAGS) $$($(2)_CPPFLAGS) $$($(1)_$(2)_CPPFLAGS) $(shell pkg-config --cflags catch2) -Isrc
+$$($(1)_$(2)_testd_c): CPPFLAGS += $$($(1)_CPPFLAGS) $$($(2)_CPPFLAGS) $$($(1)_$(2)_CPPFLAGS) $(shell pkg-config --cflags catch2) -Isrc -DTEST
 $$($(1)_$(2)_testd_c): target/$(2)/dep/tests/$(1)/%.d: src/$(1)/%.c
 	$$(COMPILE.cdep) -MT $$(patsubst src/$(1)/%.c,target/$(2)/obj/tests/$(1)/%.o,$$<) -MF $$@ $$<
 dep+=$$($(1)_$(2)_testd_c)
@@ -464,7 +468,7 @@ clean+=$$($(1)_$(2)_testd_c)
 $$(filter-out target/$(2)/obj/tests/$(1),$$(patsubst %/,%,$$(sort $$(dir $$($(1)_$(2)_testo_c))))): | target/$(2)/obj/tests/$(1)
 	mkdir $$@
 $$(foreach f,$$($(1)_$(2)_testo_c),$$(eval $$(f): | $$(patsubst %/,%,$$(dir $$(f)))))
-$$($(1)_$(2)_testo_c): CPPFLAGS += $$($(1)_CPPFLAGS) $$($(2)_CPPFLAGS) $$($(1)_$(2)_CPPFLAGS) $(shell pkg-config --cflags check) -Isrc
+$$($(1)_$(2)_testo_c): CPPFLAGS += $$($(1)_CPPFLAGS) $$($(2)_CPPFLAGS) $$($(1)_$(2)_CPPFLAGS) $(shell pkg-config --cflags check) -Isrc -DTEST
 $$($(1)_$(2)_testo_c): CFLAGS+=$$($(1)_CFLAGS) $$($(2)_CFLAGS) $$($(1)_$(2)_CFLAGS)
 $$($(1)_$(2)_testo_c): target/$(2)/obj/tests/$(1)/%.o: src/$(1)/%.c
 	$$(COMPILE.c) -o $$@  $$<
@@ -474,7 +478,7 @@ clean+=$$($(1)_$(2)_testo_c)
 $$(filter-out target/$(2)/dep/tests/$(1),$$(patsubst %/,%,$$(sort $$(dir $$($(1)_$(2)_testd_cc))))): | target/$(2)/dep/tests/$(1)
 	mkdir $$@
 $$(foreach f,$$($(1)_$(2)_testd_cc),$$(eval $$(f): | $$(patsubst %/,%,$$(dir $$(f)))))
-$$($(1)_$(2)_testd_cc): CPPFLAGS += $$($(1)_CPPFLAGS) $$($(2)_CPPFLAGS) $$($(1)_$(2)_CPPFLAGS) $(shell pkg-config --cflags catch2) -Isrc
+$$($(1)_$(2)_testd_cc): CPPFLAGS += $$($(1)_CPPFLAGS) $$($(2)_CPPFLAGS) $$($(1)_$(2)_CPPFLAGS) $(shell pkg-config --cflags catch2) -Isrc -DTEST
 $$($(1)_$(2)_testd_cc): target/$(2)/dep/tests/$(1)/%.d: src/$(1)/%.cc
 	$$(COMPILE.ccdep) -MT $$(patsubst src/$(1)/%.cc,target/$(2)/obj/tests/$(1)/%.o,$$<) -MF $$@ $$<
 dep+=$$($(1)_$(2)_testd_cc)
@@ -483,7 +487,7 @@ clean+=$$($(1)_$(2)_testd_cc)
 $$(filter-out target/$(2)/obj/tests/$(1),$$(patsubst %/,%,$$(sort $$(dir $$($(1)_$(2)_testo_cc))))): | target/$(2)/obj/tests/$(1)
 	mkdir -p $$@
 $$(foreach f,$$($(1)_$(2)_testo_cc),$$(eval $$(f): | $$(patsubst %/,%,$$(dir $$(f)))))
-$$($(1)_$(2)_testo_cc): CPPFLAGS += $$($(1)_CPPFLAGS) $$($(2)_CPPFLAGS) $$($(1)_$(2)_CPPFLAGS) $(shell pkg-config --cflags catch2) -Isrc
+$$($(1)_$(2)_testo_cc): CPPFLAGS += $$($(1)_CPPFLAGS) $$($(2)_CPPFLAGS) $$($(1)_$(2)_CPPFLAGS) $(shell pkg-config --cflags catch2) -Isrc -DTEST
 $$($(1)_$(2)_testo_cc): CXXFLAGS+=$$($(1)_CXXFLAGS) $$($(2)_CXXFLAGS) $$($(1)_$(2)_CXXFLAGS)
 $$($(1)_$(2)_testo_cc): target/$(2)/obj/tests/$(1)/%.o: src/$(1)/%.cc
 	$$(COMPILE.cc) -o $$@  $$<

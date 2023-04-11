@@ -1,0 +1,36 @@
+#! /usr/bin/env nix-shell
+#! nix-shell --pure -E "import (builtins.getEnv \"PWD\" + \"/\" + \"shell.nix\")"
+#! nix-shell -i sh
+# shellcheck shell=sh
+# -*- mode: sh; indent-tabs-mode: nil; tab-width: 4 -*-
+exe=$(basename "$0")
+if [ "${exe}" = "nixsh" ]; then
+    while [ "$#" -gt 0 ]; do
+        case "$1" in
+            --) shift; break;;
+            --*) echo "F: $0: unknown opt"; exit;;
+            -*) echo "F: $0: unknown opt"; exit;;
+            *) break;
+        esac
+        shift
+    done
+    exe=$(basename "$1")
+    shift
+fi
+>&2 echo "exec \"${exe}\" \"$@\""
+exec "$exe" "$@"
+
+# Usage: nixsh [--]
+# Creates an interactive bash session, using shell.nix from current folder
+# session remains until exited.
+#
+# Usage: nixsh [--] cmd [args.. ]
+# Runs command in environment set up by nix-shell using shell.nix from current folder.
+# returns exit status from cmd
+# beats trying to shell-escape cmd+args for nix-shell --run '' usage.
+#
+# Usage: can create a symlink pointing to this to call that command in a nix-shell
+# warn: you WILL need a shell.nix in the current folder.
+# e.g. ln -s nixsh cargo
+# ./cargo
+# now runs cargo in the nix env defined by shell.nix in the current folder.

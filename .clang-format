@@ -34,7 +34,27 @@ BinPackArguments: false
 BinPackParameters: false
 #BitFieldColonSpacingStyle: After
 #BinaryOperatorStyle: All
-BreakBeforeBraces: Linux
+#BreakBeforeBraces: Linux
+BreakBeforeBraces: Custom
+BraceWrapping:
+  AfterCaseLabel:  false
+  AfterClass:      true
+  AfterControlStatement: Never
+  AfterEnum:       false
+  AfterFunction:   true
+  AfterNamespace:  true
+  AfterObjCDeclaration: false
+  AfterStruct:     true
+  AfterUnion:      false
+  AfterExternBlock: false
+  BeforeCatch:     false
+  BeforeElse:      false
+  BeforeLambdaBody: false
+  BeforeWhile:     false
+  IndentBraces:    false
+  SplitEmptyFunction: true
+  SplitEmptyRecord: true
+  SplitEmptyNamespace: true
 BreakBeforeBinaryOperators: All
 BreakBeforeTernaryOperators: true
 BreakConstructorInitializers: BeforeComma
@@ -55,6 +75,7 @@ IndentCaseLabels: true
 IndentGotoLabels: false
 IndentPPDirectives: AfterHash
 IndentWrappedFunctionNames: false
+IndentRequires: true
 #InsertBraces: true
 #TrailingCommaStyle: true
 KeepEmptyLinesAtTheStartOfBlocks: false

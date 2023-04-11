@@ -4,6 +4,7 @@
 #include <nel/optional.hh>
 #include <nel/log.hh>
 #include <nel/defs.hh>
+#include "libnosys_stubs.cx"
 
 char const *T(char const *v)
 {
@@ -30,7 +31,7 @@ void ex3()
 void ex4()
 {
     nel::Optional<char const *> a = nel::Some(T("ex3"));
-    nel::log << a.map<bool>([](char const *&) -> bool { return true; }) << '\n';
+    nel::log << a.map<bool>([](auto &&) -> bool { return true; }) << '\n';
 }
 
 int main()

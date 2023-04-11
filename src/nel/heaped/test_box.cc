@@ -3,6 +3,15 @@
 
 #include <catch2/catch.hpp>
 
+namespace nel
+{
+namespace test
+{
+namespace heaped
+{
+namespace box
+{
+
 TEST_CASE("heaped::Box", "[heaped][box]")
 {
     // must be able to create a boxed value
@@ -110,3 +119,8 @@ TEST_CASE("heaped::Box::eq", "[heaped][box]")
     REQUIRE(i < a2);
 }
 #endif
+
+}; // namespace box
+}; // namespace heaped
+}; // namespace test
+}; // namespace nel

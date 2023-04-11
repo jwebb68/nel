@@ -5,6 +5,7 @@
 #include <nel/panic.hh>
 #include <nel/log.hh>
 #include <nel/defs.hh>
+#include "libnosys_stubs.cx"
 
 typedef nel::heapless::Vector<U8Buf<256>, 10> Vec1;
 
@@ -34,6 +35,7 @@ void ex3()
     nel::log << vec1 << '\n';
 }
 
+#if defined(RUST_LIKE)
 void ex41()
 {
     Vec1 vec1 = Vec1::empty();
@@ -61,6 +63,7 @@ void ex41()
         nel::log << e.unwrap() << '\n';
     }
 }
+#endif
 
 void ex42()
 {
@@ -79,6 +82,7 @@ void ex42()
     }
 }
 
+#if defined(RUST_LIKE)
 void ex51()
 {
     Vec1 vec1 = Vec1::empty();
@@ -104,6 +108,7 @@ void ex51()
         nel::log << e.unwrap() << '\n';
     }
 }
+#endif
 
 void ex52()
 {
@@ -131,15 +136,19 @@ int main()
     nel::log << "ex3:b" << '\n';
     ex3();
     nel::log << "ex3:e" << '\n';
+#if defined(RUST_LIKE)
     nel::log << "ex41:b" << '\n';
     ex41();
     nel::log << "ex41:e" << '\n';
+#endif
     nel::log << "ex42:b" << '\n';
     ex42();
     nel::log << "ex42:e" << '\n';
+#if defined(RUST_LIKE)
     nel::log << "ex51:b" << '\n';
     ex51();
     nel::log << "ex51:e" << '\n';
+#endif
     nel::log << "ex52:b" << '\n';
     ex52();
     nel::log << "ex52:e" << '\n';

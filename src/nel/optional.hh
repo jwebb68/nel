@@ -15,13 +15,14 @@ class NoneT;
 #    include <nel/element.hh>
 #    include <nel/log.hh>
 #    include <nel/panic.hh>
-
-#    include <new> // new (*) T(...)
+#    include <nel/memory.hh> // move,forward
+#    include <nel/new.hh> // new (p) T()
 
 namespace nel
 {
 
-struct NoneT {
+struct NoneT
+{
 };
 
 static constexpr NoneT None = NoneT {};
@@ -84,7 +85,8 @@ class Optional
         } tag_;
 
         template<enum Tag>
-        struct Phantom {
+        struct Phantom
+        {
         };
 
         // Use union to disable certain default methods on T
@@ -95,9 +97,9 @@ class Optional
         };
 
     public:
-        ~Optional(void)
+        constexpr ~Optional(void)
         {
-            switch (tag_) {
+            switch (tag_) { // optional::dtor
                 case Tag::SOME:
                     some_.~Element<T>();
                     break;
@@ -108,10 +110,11 @@ class Optional
                 case Tag::INVAL:
                     break;
 
-                // I want compile to fail if an explicit enum case handler isn't present.
-                // But, want to abort/panic if a unhandled case is encountered
-                // at runtime, much how a default hander would work if it was
-                // present.
+                    // I want compile to fail if an explicit enum case handler isn't present.
+                    // But, want to abort/panic if a unhandled case is encountered
+                    // at runtime, much how a default hander would work if it was
+                    // present.
+
                 default:
                     // For gcc/clang minsize: if this not nell:abort,
                     // then iteration may not collapse into a tight loop.
@@ -121,7 +124,16 @@ class Optional
                     // But would still like a message..
                     // For arm:minsize: if panic, then does not collapse (func with arg issue)
                     // nel_panic("invalid optional");
-                    nel::abort();
+
+                    // for dtor + moves (but not usage) at runtime:
+                    // does it matter it's not one of the 'special' values?
+                    // yes, since it may have contained one or the others..
+                    // if memory hardware is assumed to be incorruptable then can ignore ? (buffer
+                    // overruns?) but might not want to for buffer overrun issues. if there is a
+                    // memory corruption, then should have been detected by memory hardware (Ecc
+                    // mem) if not using eec/ecc mem then that's the prob.
+                    nel_panic("invalid Optional");
+                    break;
             }
         }
 
@@ -135,7 +147,7 @@ class Optional
         {
             tag_ = o.tag_;
             o.tag_ = Tag::INVAL;
-            switch (tag_) {
+            switch (tag_) { // optional::move-ctor
                 case Tag::SOME:
                     new (&some_) Element<T>(move(o.some_));
                     break;
@@ -143,6 +155,7 @@ class Optional
                     break;
                 case Tag::INVAL:
                     break;
+
                 default:
                     // For gcc/clang minsize: if this not nell:abort,
                     // then iteration may not collapse into a tight loop.
@@ -152,7 +165,16 @@ class Optional
                     // But would still like a message..
                     // For arm:minsize: if panic, then does not collapse (func with arg issue)
                     // nel_panic("invalid optional");
-                    nel::abort();
+
+                    // for dtor + moves (but not usage) at runtime:
+                    // does it matter it's not one of the 'special' values?
+                    // yes, since it may have contained one or the others..
+                    // if memory hardware is assumed to be incorruptable then can ignore ? (buffer
+                    // overruns?) but might not want to for buffer overrun issues. if there is a
+                    // memory corruption, then should have been detected by memory hardware (Ecc
+                    // mem) if not using eec/ecc mem then that's the prob.
+                    nel_panic("invalid Optional");
+                    break;
             }
         }
 
@@ -161,7 +183,7 @@ class Optional
             if (this != &o) {
                 tag_ = o.tag_;
                 o.tag_ = Tag::INVAL;
-                switch (tag_) {
+                switch (tag_) { // optional::move-ass
                     case Tag::SOME:
                         some_ = move(o.some_);
                         break;
@@ -169,6 +191,7 @@ class Optional
                         break;
                     case Tag::INVAL:
                         break;
+
                     default:
                         // For gcc/clang minsize: if this not nell:abort,
                         // then iteration may not collapse into a tight loop.
@@ -178,7 +201,16 @@ class Optional
                         // But would still like a message..
                         // For arm:minsize: if panic, then does not collapse (func with arg issue)
                         // nel_panic("invalid optional");
-                        nel::abort();
+
+                        // for dtor + moves (but not usage) at runtime:
+                        // does it matter it's not one of the 'special' values?
+                        // yes, since it may have contained one or the others..
+                        // if memory hardware is assumed to be incorruptable then can ignore ?
+                        // (buffer overruns?) but might not want to for buffer overrun issues. if
+                        // there is a memory corruption, then should have been detected by memory
+                        // hardware (Ecc mem) if not using eec/ecc mem then that's the prob.
+                        nel_panic("invalid Optional");
+                        break;
                 }
             }
             return *this;
@@ -248,17 +280,20 @@ class Optional
         // constexpr V match(Tag tag, std::function<V(void)> on_some, std::function<V(void)>
         // on_none) const  {
         template<typename V, typename Fn1, typename Fn2>
-        constexpr V match(Tag tag, Fn1 &&on_some, Fn2 &&on_none) const
+        constexpr V match(Fn1 &&on_some, Fn2 &&on_none) const
         {
-            switch (tag) {
+            switch (tag_) { // optional::match
                 case Tag::SOME:
-                    return on_some();
+                    return on_some(*some_);
                 case Tag::NONE:
                     return on_none();
                 case Tag::INVAL:
-                // invalids are not values that should occur
-                // if they do it's a use-after-move-from op so must panic.
-                // or a use-before-initialised so again must panic.
+                    // invalids are not values that should occur
+                    // if they do it's a use-after-move-from op so must panic.
+                    // or a use-before-initialised so again must panic.
+                    // fall through to default handler
+                    nel_panic("invalid Optional");
+                    break;
                 default:
                     // For gcc/clang minsize: if this not nell:abort,
                     // then iteration may not collapse into a tight loop.
@@ -267,10 +302,8 @@ class Optional
                     // TODO: look into stack trace dumper on fail.
                     // But would still like a message..
                     // For arm:minsize: if panic, then does not collapse (func with arg issue)
-                    // nel_panic("invalid optional");
-                    nel::abort();
-                    // nel_panic("invalid Option");
-                    //  std::abort();
+                    nel_panic("invalid Optional");
+                    break;
             }
         }
 
@@ -292,10 +325,8 @@ class Optional
         {
             if (this == &o) { return true; }
             if (tag_ == o.tag_) {
-                return match<bool>(
-                    tag_,
-                    [this, &o](void) -> bool { return some_ == o.some_; },
-                    [this](void) -> bool { return true; });
+                return match<bool>([&o](T const &some) -> bool { return some == *o.some_; },
+                                   [](void) -> bool { return true; });
             }
             return false;
         }
@@ -313,10 +344,8 @@ class Optional
         {
             if (this == &o) { return false; }
             if (tag_ == o.tag_) {
-                return match<bool>(
-                    tag_,
-                    [this, &o](void) -> bool { return some_ != o.some_; },
-                    [this](void) -> bool { return false; });
+                return match<bool>([&o](T const &some) -> bool { return some != *o.some_; },
+                                   [](void) -> bool { return false; });
             }
             return true;
         }
@@ -331,10 +360,8 @@ class Optional
          */
         constexpr bool is_some(void) const
         {
-            return match<bool>(
-                tag_,
-                [](void) -> bool { return true; },
-                [](void) -> bool { return false; });
+            return match<bool>([](T const &) -> bool { return true; },
+                               [](void) -> bool { return false; });
         }
 
         /**
@@ -346,22 +373,62 @@ class Optional
          */
         constexpr bool is_none(void) const
         {
-            return match<bool>(
-                tag_,
-                [](void) -> bool { return false; },
-                [](void) -> bool { return true; });
+            return match<bool>([](T const &) -> bool { return false; },
+                               [](void) -> bool { return true; });
         }
 
-    private:
+    public:
         // don't use std::function.. it's bloatware..
         // template<typename V>
         // V consume(std::function<V(void)> on_some, std::function<V(void)> on_none)
         template<typename V, typename Fn1, typename Fn2>
-        V consume(Fn1 &&on_some, Fn2 &&on_none)
+        constexpr V consume(Fn1 &&on_some, Fn2 &&on_none)
         {
+            // a consuming matcher..
+            // that moves the value to the closures..
             auto tag = tag_;
             tag_ = Tag::INVAL;
-            return match<V>(tag, forward<Fn1>(on_some), forward<Fn2>(on_none));
+            switch (tag) { // optional::consume
+                case Tag::SOME:
+                    return on_some(forward<T>(*some_));
+                case Tag::NONE:
+                    return on_none();
+                case Tag::INVAL:
+                    // invalids are not values that should occur
+                    // if they do it's a use-after-move-from op so must panic.
+                    // or a use-before-initialised so again must panic.
+                    nel_panic("invalid Optional");
+                    break;
+                default:
+                    nel_panic("invalid Optional");
+                    break;
+            }
+        }
+
+        template<typename Fn1, typename Fn2>
+        constexpr void consumev(Fn1 &&on_some, Fn2 &&on_none)
+        {
+            // a consuming matcher..
+            // that moves the value to the closures..
+            auto tag = tag_;
+            tag_ = Tag::INVAL;
+            switch (tag) { // optional::consumev
+                case Tag::SOME:
+                    on_some(forward<T>(*some_));
+                    break;
+                case Tag::NONE:
+                    on_none();
+                    break;
+                case Tag::INVAL:
+                    // invalids are not values that should occur
+                    // if they do it's a use-after-move-from op so must panic.
+                    // or a use-before-initialised so again must panic.
+                    nel_panic("invalid Optional");
+                    break;
+                default:
+                    nel_panic("invalid Optional");
+                    break;
+            }
         }
 
     public:
@@ -379,7 +446,7 @@ class Optional
          */
         T unwrap(void)
         {
-            return consume<T>([this](void) -> T { return some_.unwrap(); },
+            return consume<T>([](T &&some) -> T { return some; },
                               [](void) -> T { nel_panic("not a Some"); });
         }
 
@@ -387,7 +454,7 @@ class Optional
          * Return wrapped or supplied value.
          *
          * If a some, then return the wrapped value.
-         * If a none, return the suplied value.
+         * If a none, return the supplied value.
          * The optional is consumed regardless.
          *
          * @returns value contained by the Optional if it's a 'Some'.
@@ -395,13 +462,8 @@ class Optional
          */
         T unwrap_or(T &&v)
         {
-            return consume<T>([this](void) -> T { return some_.unwrap(); },
+            return consume<T>([](T &&some) -> T { return some; },
                               [&v](void) -> T { return forward<T>(v); });
-            // move into temp, will need to be moved or it'll be destroyed.
-            // auto t = forward<T>(v);
-            // bool const is_some = this->is_some();
-            // tag_ = Tag::INVAL;
-            // return is_some ? some_.unwrap() : forward<T>(t);
         }
 
         /**
@@ -413,13 +475,9 @@ class Optional
         template<typename... Args>
         T unwrap(Args &&...args)
         {
-            return consume<T>([this](void) -> T { return some_.unwrap(); },
-                              [&args...](void) -> bool { return T(forward<Args>(args)...); });
-
+            return consume<T>([](T &&some) -> T { return some; },
+                              [&args...](void) -> T { return T(forward<Args>(args)...); });
             // // TODO: are args destroyed if a some?
-            // bool const is_some = this->is_some();
-            // tag_ = Tag::INVAL;
-            // return is_some ? some_.unwrap() : T(forward<Args>(args)...);
         }
 
         // Why no access via references?
@@ -431,26 +489,31 @@ class Optional
         template<typename U, typename Fn>
         Optional<U> map(Fn &&fn)
         {
-            return consume<Optional<U>>(
-                [this, &fn](void) -> Optional<U> {
-                    auto v = some_.unwrap();
-                    return Optional<U>::Some(fn(v));
-                },
-                [](void) -> Optional<U> { return None; });
+            // optional must be consumed.
+            // contained type must be moved.
+            // if contained is reference, then moving reference.
+            // if contained is ptr, then move ptr.
+            // if contained is value, then move value.
+            // so, fn must always be T (*)(auto &&)
+            typedef Optional<U> ReturnType;
+            return consume<
+                ReturnType>([&fn](T &&some)
+                                -> ReturnType { return ReturnType::Some(fn(forward<T>(some))); },
+                            [](void) -> ReturnType { return None; });
         }
 
         Optional or_(Optional &&o)
         {
-            return consume<Optional>([this](void)
-                                         -> Optional { return Optional::Some(some_.unwrap()); },
-                                     [&o](void) -> Optional { return move(o); });
+            return consume<Optional>([](T &&some)
+                                         -> Optional { return Optional::Some(forward<T>(some)); },
+                                     [&o](void) -> Optional { return o; });
         }
 
         template<typename Fn>
         Optional or_else(Fn &&fn)
         {
-            return consume<Optional>([this](void)
-                                         -> Optional { return Optional::Some(some_.unwrap()); },
+            return consume<Optional>([](T &&some)
+                                         -> Optional { return Optional::Some(forward<T>(some)); },
                                      [&fn](void) -> Optional { return fn(); });
         }
 
@@ -496,14 +559,15 @@ class Optional<void>
         // Tagged enum thing.
         // Similar to std::variant but without the exception throwing behaviour.
         // Maybe make into a nel::Variant ?
-        enum Tag {
+        enum class Tag {
             INVAL = 0,
             NONE,
             SOME
         } tag_;
 
         template<enum Tag>
-        struct Phantom {
+        struct Phantom
+        {
         };
 
     public:
@@ -516,6 +580,7 @@ class Optional<void>
                     break;
                 case Tag::INVAL:
                     break;
+
                 default:
                     // For gcc/clang minsize: if this not nell:abort,
                     // then iteration may not collapse into a tight loop.
@@ -525,7 +590,16 @@ class Optional<void>
                     // But would still like a message..
                     // For arm:minsize: if panic, then does not collapse (func with arg issue)
                     // nel_panic("invalid optional");
-                    nel::abort();
+
+                    // for dtor + moves (but not usage) at runtime:
+                    // does it matter it's not one of the 'special' values?
+                    // yes, since it may have contained one or the others..
+                    // if memory hardware is assumed to be incorruptable then can ignore ? (buffer
+                    // overruns?) but might not want to for buffer overrun issues. if there is a
+                    // memory corruption, then should have been detected by memory hardware (Ecc
+                    // mem) if not using eec/ecc mem then that's the prob.
+                    nel_panic("invalid Optional");
+                    break;
             }
         }
 
@@ -546,6 +620,7 @@ class Optional<void>
                     break;
                 case Tag::INVAL:
                     break;
+
                 default:
                     // For gcc/clang minsize: if this not nell:abort,
                     // then iteration may not collapse into a tight loop.
@@ -555,7 +630,16 @@ class Optional<void>
                     // But would still like a message..
                     // For arm:minsize: if panic, then does not collapse (func with arg issue)
                     // nel_panic("invalid optional");
-                    nel::abort();
+
+                    // for dtor + moves (but not usage) at runtime:
+                    // does it matter it's not one of the 'special' values?
+                    // yes, since it may have contained one or the others..
+                    // if memory hardware is assumed to be incorruptable then can ignore ? (buffer
+                    // overruns?) but might not want to for buffer overrun issues. if there is a
+                    // memory corruption, then should have been detected by memory hardware (Ecc
+                    // mem) if not using eec/ecc mem then that's the prob.
+                    nel_panic("invalid Optional");
+                    break;
             }
         }
 
@@ -571,6 +655,7 @@ class Optional<void>
                         break;
                     case Tag::INVAL:
                         break;
+
                     default:
                         // For gcc/clang minsize: if this not nell:abort,
                         // then iteration may not collapse into a tight loop.
@@ -580,7 +665,16 @@ class Optional<void>
                         // But would still like a message..
                         // For arm:minsize: if panic, then does not collapse (func with arg issue)
                         // nel_panic("invalid optional");
-                        nel::abort();
+
+                        // for dtor + moves (but not usage) at runtime:
+                        // does it matter it's not one of the 'special' values?
+                        // yes, since it may have contained one or the others..
+                        // if memory hardware is assumed to be incorruptable then can ignore ?
+                        // (buffer overruns?) but might not want to for buffer overrun issues. if
+                        // there is a memory corruption, then should have been detected by memory
+                        // hardware (Ecc mem) if not using eec/ecc mem then that's the prob.
+                        nel_panic("invalid Optional");
+                        break;
                 }
             }
             return *this;
@@ -635,17 +729,19 @@ class Optional<void>
         // constexpr V match(Tag tag, std::function<V(void)> on_some, std::function<V(void)>
         // on_none) const  {
         template<typename V, typename Fn1, typename Fn2>
-        V match(Tag tag, Fn1 &&on_some, Fn2 &&on_none) const
+        constexpr V match(Fn1 &&on_some, Fn2 &&on_none) const
         {
-            switch (tag) {
+            switch (tag_) {
                 case Tag::SOME:
                     return on_some();
                 case Tag::NONE:
                     return on_none();
                 case Tag::INVAL:
-                // invalids are not values that should occur
-                // if they do it's a use-after-move-from op so must panic.
-                // or a use-before-initialised so again must panic.
+                    // invalids are not values that should occur
+                    // if they do it's a use-after-move-from op so must panic.
+                    // or a use-before-initialised so again must panic.
+                    nel_panic("invalid Optional");
+                    break;
                 default:
                     // For gcc/clang minsize: if this not nell:abort,
                     // then iteration may not collapse into a tight loop.
@@ -654,18 +750,16 @@ class Optional<void>
                     // TODO: look into stack trace dumper on fail.
                     // But would still like a message..
                     // For arm:minsize: if panic, then does not collapse (func with arg issue)
-                    // nel_panic("invalid optional");
-                    nel::abort();
-                    // nel_panic("invalid Option");
-                    //  std::abort();
+                    nel_panic("invalid Optional");
+                    break;
             }
         }
 
     public:
         // Comparision operators
         // Implemented in terms of the operator on the type,
-        // as some types may have more optimal implementations of thatoperationthan the
-        // negation of it's opposite.
+        // as some types may have more optimal implementations of that operation
+        // than the negation of it's opposite.
         /**
          * Is this equal by value to the optional given?
          *
@@ -679,10 +773,8 @@ class Optional<void>
         {
             if (this == &o) { return true; }
             if (tag_ == o.tag_) {
-                return match<bool>(
-                    tag_,
-                    [this](void) -> bool { return true; },
-                    [this](void) -> bool { return true; });
+                return match<bool>([this](void) -> bool { return true; },
+                                   [this](void) -> bool { return true; });
             }
             return false;
         }
@@ -700,10 +792,8 @@ class Optional<void>
         {
             if (this == &o) { return false; }
             if (tag_ == o.tag_) {
-                return match<bool>(
-                    tag_,
-                    [this](void) -> bool { return false; },
-                    [this](void) -> bool { return false; });
+                return match<bool>([this](void) -> bool { return false; },
+                                   [this](void) -> bool { return false; });
             }
             return true;
         }
@@ -719,10 +809,8 @@ class Optional<void>
         bool is_some(void) const
 
         {
-            return match<bool>(
-                tag_,
-                [](void) -> bool { return true; },
-                [](void) -> bool { return false; });
+            return match<bool>([](void) -> bool { return true; },
+                               [](void) -> bool { return false; });
         }
 
         /**
@@ -734,22 +822,62 @@ class Optional<void>
          */
         bool is_none(void) const
         {
-            return match<bool>(
-                tag_,
-                [](void) -> bool { return false; },
-                [](void) -> bool { return true; });
+            return match<bool>([](void) -> bool { return false; },
+                               [](void) -> bool { return true; });
         }
 
-    private:
+    public:
         // don't use std::function.. it's bloatware..
         // template<typename V>
         // V consume(std::function<V(void)> on_some, std::function<V(void)> on_none)
         template<typename V, typename Fn1, typename Fn2>
-        V consume(Fn1 &&on_some, Fn2 &&on_none)
+        constexpr V consume(Fn1 &&on_some, Fn2 &&on_none)
         {
+            // a consuming matcher..
+            // that moves the value to the closures..
             auto tag = tag_;
             tag_ = Tag::INVAL;
-            return match<V>(tag, forward<Fn1>(on_some), forward<Fn2>(on_none));
+            switch (tag) {
+                case Tag::SOME:
+                    return on_some();
+                case Tag::NONE:
+                    return on_none();
+                case Tag::INVAL:
+                    // invalids are not values that should occur
+                    // if they do it's a use-after-move-from op so must panic.
+                    // or a use-before-initialised so again must panic.
+                    nel_panic("invalid Optional");
+                    break;
+                default:
+                    nel_panic("invalid Optional");
+                    break;
+            }
+        }
+
+        template<typename Fn1, typename Fn2>
+        constexpr void consumev(Fn1 &&on_some, Fn2 &&on_none)
+        {
+            // a consuming matcher..
+            // that moves the value to the closures..
+            auto tag = tag_;
+            tag_ = Tag::INVAL;
+            switch (tag) {
+                case Tag::SOME:
+                    on_some();
+                    break;
+                case Tag::NONE:
+                    on_none();
+                    break;
+                case Tag::INVAL:
+                    // invalids are not values that should occur
+                    // if they do it's a use-after-move-from op so must panic.
+                    // or a use-before-initialised so again must panic.
+                    nel_panic("invalid Optional");
+                    break;
+                default:
+                    nel_panic("invalid Optional");
+                    break;
+            }
         }
 
     public:
@@ -767,7 +895,7 @@ class Optional<void>
          */
         void unwrap(void)
         {
-            return consume<void>([](void) {}, [](void) { nel_panic("not a Some"); });
+            return consumev([](void) {}, [](void) { nel_panic("not a Some"); });
         }
 
         /**
@@ -780,7 +908,7 @@ class Optional<void>
          */
         void unwrap_or(void)
         {
-            return consume<void>([](void) {}, [](void) {});
+            return consumev([](void) {}, [](void) {});
         }
 
         // Why no access via references?
@@ -792,9 +920,9 @@ class Optional<void>
         template<typename U, typename Fn>
         Optional<U> map(Fn &&fn)
         {
-            return consume<Optional<U>>([&fn](void)
-                                            -> Optional<U> { return Optional<U>::Some(fn()); },
-                                        [](void) -> Optional<U> { return None; });
+            typedef Optional<U> ReturnType;
+            return consume<ReturnType>([&fn](void) -> ReturnType { return ReturnType::Some(fn()); },
+                                       [](void) -> ReturnType { return None; });
         }
 
     public:

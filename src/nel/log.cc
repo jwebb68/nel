@@ -25,6 +25,18 @@ Log &operator<<(Log &outs, uint8_t const v)
     return outs;
 }
 
+Log &operator<<(Log &outs, uint16_t const v)
+{
+    fprintf(stderr, "%" PRIu16, v);
+    return outs;
+}
+
+Log &operator<<(Log &outs, uint32_t const v)
+{
+    fprintf(stderr, "%" PRIu32, v);
+    return outs;
+}
+
 Log &operator<<(Log &outs, int const v)
 {
     fprintf(stderr, "%u", v);

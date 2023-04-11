@@ -5,45 +5,304 @@
 
 #include <catch2/catch.hpp>
 
-#if 0
-// cannot have empty in heapless, all array entries must be initialised
-// and presumably the same should be true for heaped.
-TEST_CASE("heapless::Array::empty", "[heapless][array]")
+namespace nel
 {
-    // must be able to create an empty array..
-    auto a1 = nel::heapless::Array<int, 3>::empty();
-    auto const c1 = nel::heapless::Array<int, 3>::empty();
+namespace test
+{
+namespace heapless
+{
+namespace array
+{
 
-    // // empty array must be empty
-    // REQUIRE(a1.is_empty());
-    // // empty array must have len of 0
-    // REQUIRE(a1.len() == 0);
+struct Stub
+{
+        static int instances;
+        static int move_ctor;
+        static int move_assn;
 
+        static void reset()
+        {
+            instances = 0;
+            move_ctor = 0;
+            move_assn = 0;
+        }
+
+        bool valid;
+        int val;
+
+        ~Stub()
+        {
+            if (valid) { instances -= 1; }
+        }
+
+        // array needs default ctor..
+        Stub()
+            : Stub(10)
+        {
+        }
+
+        Stub(int v)
+            : valid(true)
+            , val(v)
+        {
+            instances += 1;
+        }
+
+        Stub(Stub &&o)
+            : valid(nel::move(o.valid))
+            , val(nel::move(o.val))
+        {
+            // move: moves a value, so does not create a new value.
+            // move: moves a value, so does create a value in a new location.
+            // remember, the dtor of o will be called..
+            o.valid = false;
+            move_ctor += 1;
+        }
+
+        Stub &operator=(Stub &&o)
+        {
+            // move: moves a value, so does not create a new value.
+            // move: moves a value, so does create a value in a new location.
+            val = nel::move(o.val);
+            valid = nel::move(o.valid);
+            o.valid = false;
+            move_assn += 1;
+            return *this;
+        }
+
+        // array filling needs to copy
+        Stub(Stub const &o) = default;
+        Stub &operator=(Stub const &o) = default;
+};
+
+int Stub::instances = 0;
+int Stub::move_ctor = 0;
+int Stub::move_assn = 0;
+
+TEST_CASE("heapless::Array: dtor deletes contained", "[heapless][array]")
+{
+    Stub::reset();
+    {
+        nel::heapless::Array<Stub, 5> arr;
+        // array, all elements are initialised.
+        REQUIRE(Stub::instances == 5);
+    }
+    // array: should be dtructed when going out of scope.
+    // array must delete all instances contained.
+    REQUIRE(Stub::instances == 0);
 }
-#endif
 
-// how to test that array cannot be copied?
-// it will fail at compile time.
-#if 0
-TEST_CASE("heapless::Array::filled", "[heapless][array]")
+TEST_CASE("heapless::Array: move-ctor invalidates src", "[heapless][array]")
+{
+    Stub::reset();
+    auto arr1 = nel::heapless::Array<Stub, 5>();
+    auto arr2 = nel::move(arr1);
+
+    // all elements of src must be invalidated by move.
+    auto arr1_all_invalid
+        = !arr1.iter().fold(false, [](bool &acc, auto const &e) { acc = acc || e.valid; });
+    REQUIRE(arr1_all_invalid);
+
+    // all elements of dst must be valid.
+    auto arr2_all_valid
+        = arr2.iter().fold(true, [](bool &acc, auto const &e) { acc = acc && e.valid; });
+    REQUIRE(arr2_all_valid);
+
+    // move ctor was used not move assn
+    REQUIRE(Stub::move_ctor == 5);
+    REQUIRE(Stub::move_assn == 0);
+}
+
+TEST_CASE("heapless::Array: move-assn invalidates src", "[heapless][array]")
+{
+    Stub::reset();
+    auto arr1 = nel::heapless::Array<Stub, 5>();
+    auto arr2 = nel::heapless::Array<Stub, 5>();
+    arr2 = nel::move(arr1);
+
+    // all elements of src must be invalidated by move.
+    // must call move-assgn oper
+    auto arr1_all_invalid
+        = !arr1.iter().fold(false, [](bool &acc, auto const &e) { acc = acc || e.valid; });
+    REQUIRE(arr1_all_invalid);
+
+    // all elements of dst must be valid.
+    auto arr2_all_valid
+        = arr2.iter().fold(true, [](bool &acc, auto const &e) { acc = acc && e.valid; });
+    REQUIRE(arr2_all_valid);
+
+    // move assgn was used not move ctor
+    REQUIRE(Stub::move_ctor == 0);
+    REQUIRE(Stub::move_assn == 5);
+}
+
+TEST_CASE("heapless::Array::move", "[heapless][array]")
 {
     {
-        // must fill array with same value
-        auto a1 = nel::heapless::Array<int, 3>::try_from({3, 3, 3}).unwrap();
-        REQUIRE(a1.try_get(0).unwrap() == 4);
-        REQUIRE(a1.try_get(1).unwrap() == 4);
-        REQUIRE(a1.try_get(2).unwrap() == 4);
+        // array of pods can be move-ctord
+        auto a1 = nel::heapless::Array<int, 3>::filled_with(3);
+        auto a2 = nel::move(a1);
+
+        // moved dst must contain src values..
+        auto r = a2.iter().fold(true, [](bool &acc, int const &v) { acc = acc && (v == 3); });
+        REQUIRE(r);
+        // moved src must be invalidated .. cannot check with pods.
     }
 
     {
-        auto const c1 = nel::heapless::Array<int, 3>::try_from({5, 5, 5}).unwrap();
-        REQUIRE(c1.len() == 3);
+        // array of pods can be move-assgnd
+        auto a2 = nel::heapless::Array<int, 3>::filled_with(3);
+        auto a1 = nel::heapless::Array<int, 3>::filled_with(1);
+        a2 = nel::move(a1);
+
+        // moved dst must contain src values..
+        auto r = a2.iter().fold(true, [](bool &acc, int const &v) { acc = acc && (v == 1); });
+        REQUIRE(r);
+        // moved src must be invalidated .. cannot check with pods.
+    }
+}
+
+// how to test that array cannot be copied?
+// it will fail at compile time.
+
+TEST_CASE("heapless::Array::filled_with", "[heapless][array]")
+{
+    {
+        // must fill array with same value
+        auto a1 = nel::heapless::Array<int, 3>::filled_with(5);
+        REQUIRE(a1.try_get(0).unwrap() == 5);
+        REQUIRE(a1.try_get(1).unwrap() == 5);
+        REQUIRE(a1.try_get(2).unwrap() == 5);
+    }
+
+    {
+        auto const c1 = nel::heapless::Array<int, 3>::filled_with(5);
         REQUIRE(c1.try_get(0).unwrap() == 5);
         REQUIRE(c1.try_get(1).unwrap() == 5);
         REQUIRE(c1.try_get(2).unwrap() == 5);
     }
+
+    // and if using udt
+    // must fill with copies of udt.
+    // maybe should be try_filled_with (as copy can fail).
+    // should filled_with auto convert to T? or be explicit.
+    {
+        auto a2 = nel::heapless::Array<Stub, 3>::filled_with(Stub(1000));
+        REQUIRE(a2.try_get(0).unwrap().val == 1000);
+        REQUIRE(a2.try_get(1).unwrap().val == 1000);
+        REQUIRE(a2.try_get(2).unwrap().val == 1000);
+    }
+
+    {
+        auto c2 = nel::heapless::Array<Stub, 3>::filled_with(Stub(1000));
+        REQUIRE(c2.try_get(0).unwrap().val == 1000);
+        REQUIRE(c2.try_get(1).unwrap().val == 1000);
+        REQUIRE(c2.try_get(2).unwrap().val == 1000);
+    }
 }
-#endif
+
+// test that init list works..
+// test with pod (int/bool etc)
+// test with pod narrowing (give int, narrow to int8)
+// test with widening (give int8, store int)
+// test compile fail with unsigned->signed conversion (give int, store uint; give uint, store int)
+// test udt default.
+// test udt
+TEST_CASE("heapless::Array::initlist-ctor", "[heapless][array]")
+{
+    // these tests are compile tests, if compiles then is good.
+
+    {
+        // pod: can create using empty list
+        auto a1 = nel::heapless::Array<int, 3> {};
+        // wants copy ctor..
+        // auto a2 = nel::heapless::Array<int, 3>({});
+        nel::heapless::Array<int, 3> a3 = {};
+        nel::heapless::Array<int, 3> a4 {};
+
+        auto const c1 = nel::heapless::Array<int, 3> {};
+        // wants copy ctor..
+        // auto a2 = nel::heapless::Array<int, 3>({});
+        nel::heapless::Array<int, 3> const c3 = {};
+        nel::heapless::Array<int, 3> const c4 {};
+    }
+
+    {
+        // pod: can create using full list
+        auto a1 = nel::heapless::Array<int, 3> {1, 2, 3};
+        // wants copy ctor..
+        // auto a2 = nel::heapless::Array<int, 3>({});
+        nel::heapless::Array<int, 3> a3 = {5, 6, 7};
+        nel::heapless::Array<int, 3> a4 {8, 9, 10};
+
+        auto const c1 = nel::heapless::Array<int, 3> {2, 3, 4};
+        // wants copy ctor..
+        // auto a2 = nel::heapless::Array<int, 3>({});
+        nel::heapless::Array<int, 3> const c3 = {5, 6, 7};
+        nel::heapless::Array<int, 3> const c4 {8, 9, 10};
+    }
+
+    {
+        // pod: can create using partial list
+        auto a1 = nel::heapless::Array<int, 3> {1, 2};
+        // wants copy ctor..
+        // auto a2 = nel::heapless::Array<int, 3>({});
+        nel::heapless::Array<int, 3> a3 = {5, 6};
+        nel::heapless::Array<int, 3> a4 {8, 9};
+
+        auto const c1 = nel::heapless::Array<int, 3> {2, 3};
+        // wants copy ctor..
+        // auto a2 = nel::heapless::Array<int, 3>({});
+        nel::heapless::Array<int, 3> const c3 = {5, 6};
+        nel::heapless::Array<int, 3> const c4 {8, 9};
+    }
+
+    {
+        // pod: can create using full list, narrowing
+        auto a1 = nel::heapless::Array<int8_t, 3> {1, 2, 3};
+        // wants copy ctor..
+        // auto a2 = nel::heapless::Array<int, 3>({});
+        nel::heapless::Array<int8_t, 3> a3 = {5, 6, 7};
+        nel::heapless::Array<int8_t, 3> a4 {8, 9, 10};
+
+        auto const c1 = nel::heapless::Array<int8_t, 3> {2, 3, 4};
+        // wants copy ctor..
+        // auto a2 = nel::heapless::Array<int8_t, 3>({});
+        nel::heapless::Array<int8_t, 3> const c3 = {5, 6, 7};
+        nel::heapless::Array<int8_t, 3> const c4 {8, 9, 10};
+    }
+
+    {
+        // pod: can create using full list, expanding
+        auto a1 = nel::heapless::Array<long int, 3> {1, 2, 3};
+        // wants copy ctor..
+        // auto a2 = nel::heapless::Array<int, 3>({});
+        nel::heapless::Array<long int, 3> a3 = {5, 6, 7};
+        nel::heapless::Array<long int, 3> a4 {8, 9, 10};
+
+        auto const c1 = nel::heapless::Array<long int, 3> {2, 3, 4};
+        // wants copy ctor..
+        // auto a2 = nel::heapless::Array<long int, 3>({});
+        nel::heapless::Array<long int, 3> const c3 = {5, 6, 7};
+        nel::heapless::Array<long int, 3> const c4 {8, 9, 10};
+    }
+
+    //---------------------------------------------------------------
+    {
+        // udt: can create using full list, implicit ctor
+        auto a1 = nel::heapless::Array<Stub, 3> {1, 2, 3};
+        // wants copy ctor..
+        // auto a2 = nel::heapless::Array<int, 3>({});
+        nel::heapless::Array<Stub, 3> a3 = {5, 6, 7};
+        nel::heapless::Array<Stub, 3> a4 {8, 9, 10};
+
+        auto const c1 = nel::heapless::Array<Stub, 3> {2, 3, 4};
+        // wants copy ctor..
+        // auto a2 = nel::heapless::Array<long int, 3>({});
+        nel::heapless::Array<Stub, 3> const c3 = {5, 6, 7};
+        nel::heapless::Array<Stub, 3> const c4 {8, 9, 10};
+    }
+}
 
 #if 0
 TEST_CASE("heapless::Array::try_from(initlist)", "[heapless][array]")
@@ -72,45 +331,12 @@ TEST_CASE("heapless::Array::try_from(initlist)", "[heapless][array]")
 }
 #endif
 
-TEST_CASE("heapless::heapless::Array::move", "[heapless][array]")
-{
-    {
-        // empty array can be moved
-        // auto a2 = nel::heapless::Array<int, 3>::try_from({3, 3, 3}).unwrap();
-        // auto a1 = nel::heapless::Array<int, 3>::try_from({1, 1, 1}).unwrap();
-        auto a2 = nel::heapless::Array<int, 3>::filled_with(3);
-        auto a1 = nel::heapless::Array<int, 3>::filled_with(1);
-        a2 = nel::move(a1);
-        // heapless arrays can never be empty..
-        // how to test array elems are moved then..?
-        // all entries in a2 must now be 1
-        // TODO: how to drop fold<bool>(..0 to fold(..)
-        auto r = a2.iter().fold(true, [](bool &acc, int const &v) { acc = acc && (v == 1); });
-        REQUIRE(r == true);
-    }
-
-    {
-        // not empty array can be moved
-        // auto a2 = nel::heapless::Array<int, 3>::try_from({4, 4, 4}).unwrap();
-        // auto a3 = nel::heapless::Array<int, 3>::try_from({2, 2, 2}).unwrap();
-        auto a2 = nel::heapless::Array<int, 3>::filled_with(4);
-        auto a3 = nel::heapless::Array<int, 3>::filled_with(2);
-        a2 = nel::move(a3);
-        auto r2 = a2.iter().fold(true, [](bool &acc, int const &v) { acc = acc && (v == 2); });
-        REQUIRE(r2 == true);
-        // REQUIRE(!a2.is_empty());
-        // REQUIRE(a3.is_empty());
-        // testing const array moving, but should fail at compile time.
-        // auto const c1 = nel::heapless::Array<int, 3>::empty();
-        // auto const c2 = nel::heapless::Array<int, 3>::try_from(2,1).unwrap();
-        // c2 = nel::move(c1);
-    }
-}
-
 TEST_CASE("heapless::Array::is_empty", "[heapless][array]")
 {
     // Arrays cannot be empty..
     // cannot have 0 sized array in C++, compiler will refuse to compile.
+    // auto a0 = nel::heapless::Array<int, 0>::filled_with(0);
+    // REQUIRE(a0.is_empty());
 
     // auto a1 = nel::heapless::Array<int, 3>::try_from({0, 0, 0}).unwrap();
     auto a1 = nel::heapless::Array<int, 3>::filled_with(0);
@@ -212,6 +438,7 @@ TEST_CASE("heapless::Array::slice(b,e)", "[heapless][array]")
 
 TEST_CASE("heapless::Array::iter()", "[heapless][array]")
 {
+#if defined(RUST_LIKE)
     // can create iter on non empty arrays.
     // auto a2 = nel::heapless::Array<int, 3>::try_from({2, 2, 2}).unwrap();
     auto a2 = nel::heapless::Array<int, 3>::filled_with(2);
@@ -228,6 +455,24 @@ TEST_CASE("heapless::Array::iter()", "[heapless][array]")
     REQUIRE(itc2.next().unwrap() == 3);
     REQUIRE(itc2.next().unwrap() == 3);
     REQUIRE(itc2.next().is_none());
+#endif
+
+#if defined(C_LIKE)
+    // can create iter on non empty arrays.
+    // auto a2 = nel::heapless::Array<int, 3>::try_from({2, 2, 2}).unwrap();
+    auto a3 = nel::heapless::Array<int, 3>::filled_with(2);
+    auto it3 = a3.iter();
+    REQUIRE(it3);
+    REQUIRE(*it3 == 2);
+    ++it3;
+    REQUIRE(it3);
+    REQUIRE(*it3 == 2);
+    ++it3;
+    REQUIRE(it3);
+    REQUIRE(*it3 == 2);
+    ++it3;
+    REQUIRE(!it3);
+#endif
 }
 
 TEST_CASE("heapless::Array::try_get", "[heapless][array]")
@@ -259,3 +504,8 @@ TEST_CASE("heapless::Array::try_get", "[heapless][array]")
         REQUIRE(rc2.is_none());
     }
 }
+
+}; // namespace array
+}; // namespace heapless
+}; // namespace test
+}; // namespace nel

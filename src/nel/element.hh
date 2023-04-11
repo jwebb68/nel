@@ -4,76 +4,78 @@
 
 namespace nel
 {
+
 template<typename T>
 struct Element;
+
 } // namespace nel
 
 #    include <nel/memory.hh> // move, forward
 
 namespace nel
 {
+
 template<typename T>
-struct Element {
+struct Element
+{
+    public:
+        typedef T Type;
+
     private:
-        T value_;
+        Type value_;
 
     public:
         ~Element(void) = default;
 
         // Element(void) = delete;
-        Element(void) = default;
+        constexpr Element(void) = default;
 
-        Element(Element const &) = delete;
-        Element &operator=(Element const &) const = delete;
+        constexpr Element(Element const &) = delete;
+        constexpr Element &operator=(Element const &) const = delete;
 
         constexpr Element(Element &&o) = default;
         constexpr Element &operator=(Element &&o) = default;
 
-        Element(T &&val)
-            : value_(forward<T>(val))
+        constexpr Element(Type &&val)
+            : value_(forward<Type>(val))
         {
         }
 
         template<typename... Args>
-        Element(Args &&...args)
+        constexpr Element(Args &&...args)
             : value_(forward<Args>(args)...)
         {
         }
 
     public:
-        T &&unwrap(void)
-        {
-            return forward<T>(value_);
-        }
-
-        T const &get(void) const
+        constexpr Type const &ref(void) const
         {
             return value_;
         }
 
-        T &get(void)
+        constexpr Type &ref(void)
         {
             return value_;
         }
 
-        T const &operator*(void) const
+        constexpr Type const &operator*(void) const
         {
-            return value_;
+            return ref();
         }
 
-        T &operator*(void)
+        constexpr Type &operator*(void)
         {
-            return value_;
+            return ref();
         }
 
         constexpr bool operator==(Element const &o) const
         {
-            return value_ == o.value_;
+            return ref() == o.ref();
         }
 
         constexpr bool operator!=(Element const &o) const
         {
-            return value_ != o.value_;
+            return ref() != o.ref();
         }
 };
 

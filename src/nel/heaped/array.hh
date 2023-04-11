@@ -1,6 +1,6 @@
 // -*- mode: c++; indent-tabs-mode: nil; tab-width: 4 -*-
-#ifndef NEL_HEAPED_ARRAY_HH
-#define NEL_HEAPED_ARRAY_HH
+#if !defined(NEL_HEAPED_ARRAY_HH)
+#    define NEL_HEAPED_ARRAY_HH
 
 namespace nel
 {
@@ -13,12 +13,13 @@ struct Array;
 } // namespace heaped
 } // namespace nel
 
-#include <nel/heaped/node.hh>
-#include <nel/iterator.hh>
-#include <nel/slice.hh>
-#include <nel/optional.hh>
-#include <nel/log.hh>
-#include <nel/defs.hh>
+#    include <nel/heaped/node.hh>
+#    include <nel/iterator.hh>
+#    include <nel/slice.hh>
+#    include <nel/optional.hh>
+#    include <nel/log.hh>
+#    include <nel/new.hh> // new
+#    include <nel/defs.hh>
 
 namespace nel
 {
@@ -40,10 +41,13 @@ namespace heaped
 // would mean types checked at compile time
 // cannot move to array of diff size.. checked at compile time
 template<typename T>
-struct Array {
+struct Array
+{
     public:
+        typedef T Type;
+
     private:
-        typedef Node<T> ArrayNode;
+        typedef Node<Type> ArrayNode;
         // Cannot use new/delete as created using malloc/realloc.
         // and cannot use unique_ptr as using malloc/realloc.
         // or: how can i use realloc in c++ with new/delete?
@@ -112,7 +116,7 @@ struct Array {
             return Array();
         }
 
-#if 1
+#    if 1
         /**
          * Create an array, of size n, initial value f in all entries.
          *
@@ -121,16 +125,16 @@ struct Array {
          *
          * @returns the created array
          */
-        static constexpr Array filled(T const &f, Count n)
+        static constexpr Array filled(Type const &f, Count n)
         {
             if (n == 0) { return Array::empty(); }
             Array a(ArrayNode::malloc(n));
             new (a.item_) ArrayNode(f);
             return a;
         }
-#endif
+#    endif
 
-#if 0
+#    if 0
         /**
          * Attempt to create an array from initialiser list
          *
@@ -144,13 +148,13 @@ struct Array {
         // want copying but not via ctor (may not be possible), so it becomes a try_ returning an
         // err.
         // TODO: determine how efficient this implementation is..
-        static constexpr Optional<Array> try_from(std::initializer_list<T> &&l)
+        static constexpr Optional<Array> try_from(std::initializer_list<Type> &&l)
         {
             return ArrayNode::try_from(move(l)).template map<Array>([](ArrayNode * p) -> Array {
                 return Array(p);
             });
         }
-#endif
+#    endif
 
     public:
         /**
@@ -173,7 +177,7 @@ struct Array {
             return (item_ == nullptr) ? 0 : item_->len();
         }
 
-#if 0
+#    if 0
         /**
          * Item access in array.
          *
@@ -183,19 +187,19 @@ struct Array {
          * @warning Will panic if idx is out-of-range for array.
          */
         // as array access can fail, redo to try_get() and return v or error
-        constexpr T &operator[](Index idx)
+        constexpr Type &operator[](Index idx)
         {
             // nel_panic_if_not(item_ != nullptr, "invalid array");
             // return (*item_)[idx];
             return slice()[idx];
         }
-        constexpr T const &operator[](Index idx) const
+        constexpr Type const &operator[](Index idx) const
         {
             // nel_panic_if_not(item_ != nullptr, "invalid array");
             // return (*item_)[idx];
             return slice()[idx];
         }
-#endif //
+#    endif //
 
         /**
          * Return a reference to the value at idx or None.
@@ -206,12 +210,12 @@ struct Array {
          * @returns If idx is out-of range, return None.
          * @returns else return ref to item at index..
          */
-        constexpr Optional<T &> try_get(Index idx)
+        constexpr Optional<Type &> try_get(Index idx)
         {
             return slice().try_get(idx);
         }
 
-        constexpr Optional<T const &> try_get(Index idx) const
+        constexpr Optional<Type const &> try_get(Index idx) const
         {
             return slice().try_get(idx);
         }
@@ -227,12 +231,12 @@ struct Array {
          */
         // This could be a into_slice()?, or a as_slice()? or a deref_as_slice()?
         // or a conversion func: operator Slice<T>(void)? (but I don't want it implicit/automatic
-        constexpr Slice<T> slice(void)
+        constexpr Slice<Type> slice(void)
         {
             return (item_ == nullptr) ? Slice<T>::empty() : item_->slice();
         }
 
-        constexpr Slice<T const> slice(void) const
+        constexpr Slice<Type const> slice(void) const
         {
             return (item_ == nullptr) ? Slice<T const>::empty()
                                       : reinterpret_cast<ArrayNode const *>(item_)->slice();
@@ -250,12 +254,12 @@ struct Array {
          * @returns if e > array len, clamp to last elem.
          * @returns else return slice over region b..e of array.
          */
-        constexpr Slice<T> slice(Index b, Index e)
+        constexpr Slice<Type> slice(Index b, Index e)
         {
             return slice().slice(b, e);
         }
 
-        constexpr Slice<T const> slice(Index b, Index e) const
+        constexpr Slice<Type const> slice(Index b, Index e) const
         {
             return slice().slice(b, e);
         }
@@ -300,4 +304,4 @@ struct Array {
 } // namespace heaped
 } // namespace nel
 
-#endif // NEL_HEAPED_ARRAY_HH
+#endif // !defined(NEL_HEAPED_ARRAY_HH)

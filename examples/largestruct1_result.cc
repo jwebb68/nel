@@ -5,6 +5,7 @@
 #include <nel/result.hh>
 #include <nel/log.hh>
 #include <nel/defs.hh> // NEL_WARN_UNUSED_RESULT
+#include "libnosys_stubs.cx"
 
 typedef nel::Result<U8Buf<256>, Error> Result_t;
 

@@ -5,6 +5,7 @@
 #include <nel/log.hh>
 #include <nel/memory.hh>
 #include <nel/defs.hh>
+#include "libnosys_stubs.cx"
 
 typedef nel::heapless::Queue<U8Buf<256>, 5> Queue1;
 
