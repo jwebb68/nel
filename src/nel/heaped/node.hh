@@ -34,6 +34,8 @@ template<typename T>
 struct Node
 {
     public:
+        typedef T Type;
+
     private:
         // Number allocated.
         Length alloc_;
@@ -41,7 +43,7 @@ struct Node
         Length len_;
         // Treat as a C struct and use malloc/free to manage..
         // Meh, C++ does not like flexible arrays.
-        T values_[1];
+        Type values_[1];
 
     public:
         // Manually do a delete.
@@ -114,7 +116,7 @@ struct Node
         ~Node(void)
         {
             for (Index i = 0; i < len(); ++i) {
-                values_[i].~T();
+                values_[i].~Type();
             }
         }
 
@@ -129,13 +131,13 @@ struct Node
 #    if 0
         // use placement new to init.
         // want this as a static func so ca return errors..
-        constexpr Node(std::initializer_list<T> &&l)
+        constexpr Node(std::initializer_list<Type> &&l)
         {
             // How to fail if not big enough.
             nel_panic_if_not(l.size() <= capacity(), "not big enough");
             Index i = 0;
             for (auto it = l.begin(); i < capacity() && it != l.end(); ++it, ++i) {
-                new (&values_[i]) T(forward<T>(*it));
+                new (&values_[i]) Type(forward<T>(*it));
             }
             len_ = i;
         }
@@ -143,7 +145,7 @@ struct Node
 
     public:
 #    if 0
-        static constexpr Optional<Node *> try_from(std::initializer_list<T> &&l)
+        static constexpr Optional<Node *> try_from(std::initializer_list<Type> &&l)
         {
             // cannot use Optional<Node> as size is not known at compile time.
             // TODO: maybe should be try_malloc?
@@ -154,40 +156,23 @@ struct Node
 #    endif
 
         // use placement new to init.
-        constexpr Node(T const &f)
+        constexpr Node(Type const &f)
         {
-            // auto it = Slice<T>::from(values_, capacity()).iter();
-            // while (true) {
-            //     Optional<T &> v = it.next();
-            //     if (v.is_none()) { break; }
-            //     T &x= v.unwrap();
-            //     new (&x) T(f);
-            // }
-            // // cannot use slice.fill as that expects init'ed values.
-            // // and this function is
-            // for (Index i=0;i < capacity(); ++i) {
-            //     // cannot use assign as values uninitialised.
-            //     new (&values_[i]) T(f);
-            // }
-            Slice<T>::from(values_, capacity())
+            Slice<Type>::from(values_, capacity())
                 .iter()
                 .for_each(
                     // cannot use assign as values uninitialised.
-                    [&f](T &e) { new (&e) T(f); });
-            // for (T *it = values_, *e = (values_ + capacity()); it != e; ++it) {
-            //     // cannot use assign as values uninitialised.
-            //     new (it) T(f);
-            // }
+                    [&f](auto &e) { new (&e) Type(f); });
             len_ = capacity();
         }
 
     public:
-        constexpr T *ptr(void)
+        constexpr Type *ptr(void)
         {
             return values_;
         }
 
-        constexpr T const *ptr(void) const
+        constexpr Type const *ptr(void) const
         {
             return values_;
         }
@@ -209,14 +194,14 @@ struct Node
         }
 
     public:
-        constexpr Slice<T> slice(void)
+        constexpr Slice<Type> slice(void)
         {
-            return Slice<T>::from(values_, len());
+            return Slice<Type>::from(values_, len());
         }
 
-        constexpr Slice<T const> slice(void) const
+        constexpr Slice<Type const> slice(void) const
         {
-            return Slice<T const>::from(values_, len());
+            return Slice<Type const>::from(values_, len());
         }
 
     public:
@@ -224,11 +209,11 @@ struct Node
         // vector empty/clear..
         void clear(void)
         {
-            iter().for_each([](T &e) { e.~T(); });
+            iter().for_each([](Type &e) { e.~Type(); });
             len_ = 0;
         }
 
-        static Node *resize(Node *old, size_t newsize, T const &fill)
+        static Node *resize(Node *old, size_t newsize, Type const &fill)
         {
             if (old != nullptr && newsize == old->len()) {
                 return old;
@@ -244,14 +229,14 @@ struct Node
                     }
                 }
                 for (Index i = (old == nullptr) ? 0 : old->len(); i < newsize; ++i) {
-                    new (&p->values_[i]) T(fill);
+                    new (&p->values_[i]) Type(fill);
                 }
                 p->len_ = newsize;
                 return p;
             } else if (newsize < old->len()) {
                 // shrinking, drop excess.
                 for (Index i = newsize; i < old->len(); ++i) {
-                    old->values_[i].~T();
+                    old->values_[i].~Type();
                 }
                 old->len_ = newsize;
                 return old;
@@ -266,18 +251,18 @@ struct Node
                 // TODO: don't want to create a T on error though..
                 // but if one is already created then return it.
                 // must the arg be moved on error?
-                return Result<void, T>::Err(forward<Args>(args)...);
+                return Result<void, Type>::Err(forward<Args>(args)...);
             }
 
-            new (&values_[len()]) T(forward<Args>(args)...);
+            new (&values_[len()]) Type(forward<Args>(args)...);
             len_ += 1;
-            return Result<void, T>::Ok();
+            return Result<void, Type>::Ok();
         }
 
 #    if 0
-        Result<void, std::initializer_list<T>> push_back(std::initializer_list<T> l)
+        Result<void, std::initializer_list<Type>> push_back(std::initializer_list<Type> l)
         {
-            typedef std::initializer_list<T> U;
+            typedef std::initializer_list<Type> U;
             if (len() + l.size() > capacity()) {
                 // TODO: don't want to create a T on error though..
                 // but if one is already created then return it.
@@ -295,15 +280,15 @@ struct Node
 #    endif
 
         // rename to try_pop_back?
-        Optional<T> pop_back(void)
+        Optional<Type> pop_back(void)
         {
-            if (len() == 0) { return Optional<T>::None(); }
+            if (len() == 0) { return Optional<Type>::None(); }
 
             len_ -= 1;
-            T &e = values_[len()];
+            auto &e = values_[len()];
             auto o = Some(move(e));
             // should be safe to  destroy, value has been moved out.
-            e.~T();
+            e.~Type();
             return o;
         }
 
