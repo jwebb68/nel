@@ -27,13 +27,16 @@ struct RC
 {
         // Contained value on the heap.
         // Single threaded reference counted sharing.
+    public:
+        typedef T Type;
+
     private:
         struct Node
         {
             private:
                 Count n_refs_;
                 bool has_value_;
-                Element<T> value_;
+                Element<Type> value_;
 
             public:
                 // No copying.. use refcounting.
@@ -70,7 +73,7 @@ struct RC
                     }
                 }
 
-                static T unwrap(Node *const v)
+                static Type unwrap(Node *const v)
                 {
                     // Value moved out from value_ on unwrap().
                     // Value_ is eff. destroyed by unwrap().
@@ -83,13 +86,13 @@ struct RC
                 }
 
             public:
-                T &ref(void)
+                Type &ref(void)
                 {
                     nel_panic_if_not(has_value(), "invalid rc node");
                     return *value_;
                 }
 
-                T const &ref(void) const
+                Type const &ref(void) const
                 {
                     nel_panic_if_not(has_value(), "invalid rc node");
                     return *value_;
@@ -178,7 +181,7 @@ struct RC
         }
 
     public:
-        constexpr RC(T &&v)
+        constexpr RC(Type &&v)
             : node_(new Node(move(v)))
         {
             // Node created pre-grabbed.
@@ -198,7 +201,7 @@ struct RC
          * @returns reference to the boxed value
          * @warning Panics if no value to return (e.g. use after move).
          */
-        constexpr T &operator*(void)
+        constexpr Type &operator*(void)
         {
             nel_panic_if_not(has_value(), "not a value");
             return node_->ref();
@@ -210,7 +213,7 @@ struct RC
          * @returns reference to the boxed value
          * @warning Panics if no value to return (e.g. use after move).
          */
-        constexpr T const &operator*(void) const
+        constexpr Type const &operator*(void) const
         {
             nel_panic_if_not(has_value(), "not a value");
             return node_->ref();
@@ -235,7 +238,7 @@ struct RC
          * @returns the value in the box.
          * @warning Panics if no value to return (e.g. use after move).
          */
-        constexpr T unwrap(void)
+        constexpr Type unwrap(void)
         {
             nel_panic_if_not(has_value(), "not a value");
             auto o = Node::unwrap(node_);
