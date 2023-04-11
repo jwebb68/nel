@@ -4,19 +4,25 @@
 
 namespace nel
 {
+
 template<typename T>
 struct Element;
+
 } // namespace nel
 
 #    include <nel/memory.hh> // move, forward
 
 namespace nel
 {
+
 template<typename T>
 struct Element
 {
+    public:
+        typedef T Type;
+
     private:
-        T value_;
+        Type value_;
 
     public:
         ~Element(void) = default;
@@ -30,8 +36,8 @@ struct Element
         constexpr Element(Element &&o) = default;
         constexpr Element &operator=(Element &&o) = default;
 
-        constexpr Element(T &&val)
-            : value_(forward<T>(val))
+        constexpr Element(Type &&val)
+            : value_(forward<Type>(val))
         {
         }
 
@@ -42,22 +48,22 @@ struct Element
         }
 
     public:
-        constexpr T const &ref(void) const
+        constexpr Type const &ref(void) const
         {
             return value_;
         }
 
-        constexpr T &ref(void)
+        constexpr Type &ref(void)
         {
             return value_;
         }
 
-        constexpr T const &operator*(void) const
+        constexpr Type const &operator*(void) const
         {
             return ref();
         }
 
-        constexpr T &operator*(void)
+        constexpr Type &operator*(void)
         {
             return ref();
         }
