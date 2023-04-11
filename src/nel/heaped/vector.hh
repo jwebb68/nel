@@ -39,12 +39,14 @@ template<typename T>
 struct Vector
 {
     public:
+        typedef T Type;
+
     private:
         // not using unique_ptr as didn't use new to alloc it.
         // TODO: create malloc/free unique_ptr or see if unique_ptr can be used
         // to call free directly.. (it seems to have capability to do so).
         // maybe use of allocator?
-        typedef Node<T> VectorNode;
+        typedef Node<Type> VectorNode;
         VectorNode *item_;
 
     private:
@@ -122,7 +124,7 @@ struct Vector
          * @return on success, an Optional::Some holding the created vector.
          * @return on fail: Optional::None
          */
-        static constexpr Optional<Vector> try_from(std::initializer_list<T> &&l)
+        static constexpr Optional<Vector> try_from(std::initializer_list<Type> &&l)
         {
             Vector a = Vector::empty();
             return a.push_back(l).ok().template map<Vector>([&a]() { return move(a); });
@@ -179,13 +181,13 @@ struct Vector
          * @returns reference to the item
          * @warning Will panic if idx is out-of-range for vector
          */
-        constexpr T &operator[](Index idx)
+        constexpr Type &operator[](Index idx)
         {
             // nel_panic_if(item_ == nullptr, "invalid vector");
             // return *item_[idx];
             return slice()[idx];
         }
-        constexpr T const &operator[](Index idx) const
+        constexpr Type const &operator[](Index idx) const
         {
             // nel_panic_if(item_ == nullptr, "invalid vector");
             // return *item_[idx];
@@ -202,12 +204,12 @@ struct Vector
          * @returns If idx is out-of range, return None.
          * @returns else return ref to item at index..
          */
-        constexpr Optional<T &> try_get(Index idx)
+        constexpr Optional<Type &> try_get(Index idx)
         {
             return slice().try_get(idx);
         }
 
-        constexpr Optional<T const &> try_get(Index idx) const
+        constexpr Optional<Type const &> try_get(Index idx) const
         {
             return slice().try_get(idx);
         }
@@ -221,14 +223,14 @@ struct Vector
          *
          * @returns a slice over the the vector.
          */
-        constexpr Slice<T> slice(void)
+        constexpr Slice<Type> slice(void)
         {
-            return (item_ == nullptr) ? Slice<T>::empty() : item_->slice();
+            return (item_ == nullptr) ? Slice<Type>::empty() : item_->slice();
         }
 
-        constexpr Slice<T const> slice(void) const
+        constexpr Slice<Type const> slice(void) const
         {
-            return (item_ == nullptr) ? Slice<T const>::empty()
+            return (item_ == nullptr) ? Slice<Type const>::empty()
                                       : reinterpret_cast<VectorNode const *>(item_)->slice();
         }
 
@@ -244,12 +246,12 @@ struct Vector
          * @returns if e > vec len, clamp to last elem.
          * @returns else return slice over region b..e of vec.
          */
-        constexpr Slice<T> slice(Index b, Index e)
+        constexpr Slice<Type> slice(Index b, Index e)
         {
             return slice().slice(b, e);
         }
 
-        constexpr Slice<T const> slice(Index b, Index e) const
+        constexpr Slice<Type const> slice(Index b, Index e) const
         {
             return slice().slice(b, e);
         }
@@ -268,7 +270,7 @@ struct Vector
          * T must be bitcopyable
          * T must be clone-able.
          */
-        void resize(Count n, T const &f)
+        void resize(Count n, Type const &f)
         {
             item_ = VectorNode::resize(item_, n, f);
         }
@@ -331,20 +333,20 @@ struct Vector
          * @returns if successful, Result<void, T>::Ok()
          * @returns if unsuccessful, Result<void, T>::Err() holding val
          */
-        Result<void, T> NEL_WARN_UNUSED_RESULT push(T &&val)
+        Result<void, Type> NEL_WARN_UNUSED_RESULT push(Type &&val)
         {
             bool ok;
             ok = try_reserve(len() + 1);
-            if (!ok) { return Result<void, T>::Err(val); }
-            if (item_ == nullptr) { return Result<void, T>::Err(val); }
+            if (!ok) { return Result<void, Type>::Err(val); }
+            if (item_ == nullptr) { return Result<void, Type>::Err(val); }
             return item_->push_back(val);
         }
 
 #    if 0
         // TODO: poss not consistent, as not returning Result<void, T>
-        Result<void, std::initializer_list<T>> push_back(std::initializer_list<T> l)
+        Result<void, std::initializer_list<Type>> push_back(std::initializer_list<Type> l)
         {
-            typedef std::initializer_list<T> U;
+            typedef std::initializer_list<Type> U;
             bool ok;
             ok = try_reserve(len() + l.size());
             if (!ok) { return Result<void, U>::Err(l); }
@@ -354,12 +356,12 @@ struct Vector
 #    endif
 
         template<typename... Args>
-        Result<void, T> NEL_WARN_UNUSED_RESULT push(Args &&...args)
+        Result<void, Type> NEL_WARN_UNUSED_RESULT push(Args &&...args)
         {
             bool ok;
             ok = try_reserve(len() + 1);
-            if (!ok) { return Result<void, T>::Err(forward<Args>(args)...); }
-            if (item_ == nullptr) { return Result<void, T>::Err(forward<Args>(args)...); }
+            if (!ok) { return Result<void, Type>::Err(forward<Args>(args)...); }
+            if (item_ == nullptr) { return Result<void, Type>::Err(forward<Args>(args)...); }
             return item_->push_back(forward<Args>(args)...);
         }
 
@@ -376,9 +378,9 @@ struct Vector
          * @returns on success: Optional::Some holding the value
          * @returns on fail: Optional::None
          */
-        Optional<T> pop(void)
+        Optional<Type> pop(void)
         {
-            return (item_ == nullptr) ? Optional<T>::None() : item_->pop_back();
+            return (item_ == nullptr) ? Optional<Type>::None() : item_->pop_back();
         }
 
         // insert_at(idx, T &&) ?
