@@ -322,12 +322,12 @@ struct Array
         // or a conversion func: operator Slice<T>(void)? (but I don't want it implicit/automatic
         constexpr Slice<Type> slice(void)
         {
-            return Slice<Type>::from(values_, len());
+            return Slice(values_, len());
         }
 
         constexpr Slice<Type const> slice(void) const
         {
-            return Slice<Type const>::from(values_, len());
+            return Slice(values_, len());
         }
 
         /**

@@ -25,7 +25,7 @@ struct Element
         Type value_;
 
     public:
-        ~Element(void) = default;
+        constexpr ~Element(void) = default;
 
         // Element(void) = delete;
         constexpr Element(void) = default;

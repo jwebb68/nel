@@ -31,7 +31,7 @@ namespace nel
  * can be created from ptr+len or 2 ptrs (begin/end).
  * When slice is destroyed, the block if ram is not destroyed.
  * Items can be iterated over.
- * Items can be accessed via [] oper (TODO).
+ * Items can be accessed via [] oper.
  * slice is empty if len is 0, regardless of ptr value.
  */
 
@@ -42,13 +42,9 @@ struct Slice
         typedef T Type;
 
     private:
-        Type *const content_;
+        Type *content_;
         // Implicit start at 0.
         Length len_;
-
-    public:
-        // slices can be copied and assigned to as they don't own the
-        // values they reference.
 
     private:
         constexpr Slice(void)
@@ -57,12 +53,10 @@ struct Slice
         {
         }
 
-        constexpr Slice(std::nullptr_t, Length l)
-            : content_(nullptr)
-            , len_(l)
-        {
-        }
-
+    public:
+        // annoyingly, the type deducing form only works on ctors, not statics
+        // so Slice( int ptr, len) gets a Slice<int>(int ptr, len)
+        // but a Slice::from(int ptr, len) does not work..
         constexpr Slice(Type p[], Length len)
             : content_(p)
             , len_(len)
@@ -80,32 +74,36 @@ struct Slice
         constexpr Slice(Slice const &) = default;
         constexpr Slice &operator=(Slice const &) = default;
 
+    public:
         // moving a slice is ok.
-        constexpr Slice(Slice &&o) = default;
-        constexpr Slice &operator=(Slice &&o) = default;
+        constexpr Slice(Slice &&o)
+            : content_(move(o.content_))
+            , len_(move(o.len_))
+        {
+            o.content_ = nullptr;
+            o.len_ = 0;
+        }
+
+        constexpr Slice &operator=(Slice &&o)
+        {
+            if (this != &o) {
+                content_ = move(o.content_);
+                o.content_ = nullptr;
+                len_ = move(o.len_);
+                o.len_ = 0;
+            }
+            return *this;
+        }
 
     public:
         /**
          * Create an empty slice.
+         *
+         * @return fresh empty slice
          */
         static constexpr Slice empty(void)
         {
             return Slice();
-        }
-
-        /**
-         * Create a slice over the carray and len given.
-         *
-         * Slice is invalidated if p goes out of scope or is deleted/destroyed.
-         */
-        static constexpr Slice from(Type p[], Length len)
-        {
-            return Slice(p, len);
-        }
-
-        static constexpr Slice from(Type *const b, Type *const e)
-        {
-            return Slice(b, e);
         }
 
     public:
@@ -144,11 +142,26 @@ struct Slice
             return len_;
         }
 
+        /**
+         * Return a ref to the value at index idx
+         *
+         * @param idx The index to access.
+         *
+         * index access is not checked for bounds overflow.
+         * @warning UB if index is out-of-bounds.
+         */
         constexpr Type &unchecked_get(Index idx) const
         {
             return content_[idx];
         }
 
+        /**
+         * Return a ref to the value at index idx
+         *
+         * @param idx The index to access.
+         *
+         * @warning Panic if index out-of-bounds.
+         */
         constexpr Type &checked_get(Index idx) const
         {
             nel_panic_if_not(idx < len(), "nel::Slice<T>: index out of range");
@@ -163,14 +176,13 @@ struct Slice
          * @returns reference to the item
          * @warning Will panic if idx is out-of-range for slice
          */
-        // TODO: use try_get as index access can fail.
         constexpr Type &operator[](Index idx) const
         {
             return checked_get(idx);
         }
 
         /**
-         * Return a reference to the value at idx or None.
+         * Return a mut reference to the value at idx or None.
          *
          * @param idx index of element to get
          *
@@ -184,11 +196,33 @@ struct Slice
         }
 
     public:
+        /**
+         * Compare two slices for equality.
+         *
+         * @param o the other slice to compare to.
+         *
+         * @return true if o is same ptr/len as this.
+         * @return true if o is same len as this, points to diff location, and elems are the same
+         * value.
+         *
+         * @warning UB if values cannot be read.
+         */
         constexpr bool operator==(Slice const &o) const
         {
             return len() == o.len() && (ptr() == o.ptr() || elem::eq(ptr(), o.ptr(), len()));
         }
 
+        /**
+         * Compare two slices for inequality.
+         *
+         * @param o the other slice to compare to.
+         *
+         * @return true if o is same ptr/len as this.
+         * @return true if o is same len as this, points to diff location, and elems are the same
+         * value.
+         *
+         * @warning UB if values cannot be read.
+         */
         constexpr bool operator!=(Slice const &o) const
         {
             return !(*this == o);
@@ -196,28 +230,48 @@ struct Slice
 
     public:
         /**
-         * fill the slice with the value given.
+         * Fill the slice with the value given.
          *
-         * T must be bit-copyable (i.e. not need special copy semantics).
-         * value at each location is not destroyed.
+         * @param f value to use as a template.
+         *
+         * @warning panics if copying of f panics.
          */
         void fill(Type const &f)
         {
             elem::set(ptr(), f, len());
         }
 
+        /**
+         * Move contents of one slice to another of same length.
+         *
+         * @param src Slice to move values from.
+         *
+         * @note no effect if src is same as dest.
+         * @warning panics if slices are of different lengths
+         * @warning UB if dst refers to non-readable memory.
+         * @warning UB if dst refers to non-writable memory.
+         * @warning UB if src refers to non-readable memory.
+         * @warning UB if src refers to non-writable memory.
+         */
         // TODO: use try_move_from as operation can fail.
-        // move contents of other slice to this.
-        // panic if lengths are different
-        void move_from(Slice &o)
+        void move_from(Slice &src)
         {
-            nel_panic_if_not(len() == o.len(), "nel::Slice:move_from: Different lengths");
-            elem::move(ptr(), o.ptr(), len());
+            nel_panic_if_not(len() == src.len(), "nel::Slice:move_from: Different lengths");
+            elem::move(ptr(), src.ptr(), len());
         }
 
+        /**
+         * Copy contents of one slice to another of same length.
+         *
+         * @param src Slice to copy values from.
+         *
+         * @note no effect if src is same as dest.
+         * @warning panics if slices are of different lengths
+         * @warning UB if dst refers to non-readable memory.
+         * @warning UB if dst refers to non-writable memory.
+         * @warning UB if src refers to non-readable memory.
+         */
         // TODO: use try_copy_from as operation can fail.
-        // copy contents of other slice to this.
-        // panic if lengths are different
         void copy_from(Slice const &o)
         {
             nel_panic_if_not(len() == o.len(), "nel::Slice:copy_from: Different lengths");
@@ -241,7 +295,7 @@ struct Slice
             if (b >= e) { return Slice::empty(); }
             if (b >= len_) { return Slice::empty(); }
             if (e > len_) { e = len_; }
-            return Slice::from(&content_[b], e - b);
+            return Slice(&content_[b], e - b);
         }
 
     public:

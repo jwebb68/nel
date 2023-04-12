@@ -112,11 +112,12 @@ inline void wipe(void *const d, Length n)
 template<typename T>
 void move(T *d, T *s, Length const n)
 {
+    // don't move if dest is same as src.
+    if (d == s) { return; }
     T *const e = d + n;
-    T *s1 = s;
     for (; d != e; ++d) {
-        *d = move(*s1);
-        ++s1;
+        *d = nel::move(*s);
+        ++s;
     }
 }
 
@@ -130,7 +131,7 @@ void move(uint8_t *const d, uint8_t *const s, Length const n);
 template<typename T>
 bool eq(T const *a, T const *b, Length const n)
 {
-    T *const e = a + n;
+    T const *const e = a + n;
     for (; a != e; ++a) {
         if (*a != *b) { return false; }
         ++b;

@@ -85,14 +85,14 @@ struct Queue
         }
 
     public:
-        ~Queue(void)
+        constexpr ~Queue(void)
         {
             // TODO: delete in reverse as allocated forward..?
             iter().for_each([&](auto &v) -> void { v.~Type(); });
         }
 
     public:
-        Queue(void)
+        constexpr Queue(void)
             : len_(0)
             , wp_(0)
             , rp_(0)
@@ -274,15 +274,15 @@ struct Queue
             } else if (n >= len()) {
                 clear();
             } else if ((rp_ + n) < N) {
-                auto s1 = Slice<Type>::from(ptr(rp_), ptr(rp_ + n));
+                auto s1 = Slice(ptr(rp_), ptr(rp_ + n));
                 auto s2 = Slice<Type>::empty();
                 auto it = QueueIteratorMut(s1.iter(), s2.iter());
                 it.for_each([&](auto &v) -> void { v.~Type(); });
                 rp_ += n;
                 len_ -= n;
             } else {
-                auto s1 = Slice<Type>::from(ptr(rp_), ptr(N));
-                auto s2 = Slice<Type>::from(ptr(), ptr(n - N));
+                auto s1 = Slice(ptr(rp_), ptr(N));
+                auto s2 = Slice(ptr(), ptr(n - N));
                 auto it = QueueIteratorMut(s1.iter(), s2.iter());
                 it.for_each([&](auto &v) -> void { v.~Type(); });
                 rp_ = n - N;
@@ -300,12 +300,12 @@ struct Queue
                 auto s2 = s1;
                 return QueueIteratorMut(s1.iter(), s2.iter());
             } else if (rp_ < wp_) {
-                auto s1 = Slice<Type>::from(ptr(rp_), ptr(wp_));
+                auto s1 = Slice(ptr(rp_), ptr(wp_));
                 auto s2 = Slice<Type>::empty();
                 return QueueIteratorMut(s1.iter(), s2.iter());
             } else {
-                auto s1 = Slice<Type>::from(ptr(rp_), ptr(N));
-                auto s2 = Slice<Type>::from(ptr(), ptr(wp_));
+                auto s1 = Slice(ptr(rp_), ptr(N));
+                auto s2 = Slice(ptr(), ptr(wp_));
                 return QueueIteratorMut(s1.iter(), s2.iter());
             }
         }
@@ -319,12 +319,12 @@ struct Queue
                 auto s2 = s1;
                 return QueueIterator(s1.iter(), s2.iter());
             } else if (rp_ < wp_) {
-                auto s1 = Slice<Type const>::from(ptr(rp_), ptr(wp_));
+                auto s1 = Slice(ptr(rp_), ptr(wp_));
                 auto s2 = Slice<Type const>::empty();
                 return QueueIterator(s1.iter(), s2.iter());
             } else {
-                auto s1 = Slice<Type const>::from(ptr(rp_), ptr(N));
-                auto s2 = Slice<Type const>::from(ptr(), ptr(wp_));
+                auto s1 = Slice(ptr(rp_), ptr(N));
+                auto s2 = Slice(ptr(), ptr(wp_));
                 return QueueIterator(s1.iter(), s2.iter());
             }
         }

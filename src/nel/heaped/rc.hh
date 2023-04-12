@@ -111,7 +111,7 @@ struct RC
         Node *node_;
 
     public:
-        ~RC(void)
+        constexpr ~RC(void)
         {
             Node::release(node_);
         }

@@ -97,7 +97,7 @@ struct Vector
         /**
          * destroy the vector, deleting all elements owned by it.
          */
-        ~Vector(void)
+        constexpr ~Vector(void)
         {
             iter().for_each([&](auto &v) -> void { v.~Type(); });
         }
@@ -397,12 +397,12 @@ struct Vector
          */
         constexpr Slice<Type> slice(void)
         {
-            return Slice<Type>::from(ptr(), len());
+            return Slice(ptr(), len());
         }
 
         constexpr Slice<Type const> const slice(void) const
         {
-            return Slice<Type const>::from(ptr(), len());
+            return Slice(ptr(), len());
         }
 
         /**
