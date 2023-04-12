@@ -71,7 +71,7 @@ struct Array
         /**
          * destroy the array and all items contained.
          */
-        ~Array(void)
+        constexpr ~Array(void)
         {
             ArrayNode::free(item_);
             item_ = nullptr;

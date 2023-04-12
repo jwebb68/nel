@@ -97,7 +97,7 @@ struct Vector
         /**
          * destroy the vector, deleting all elements owned by it.
          */
-        ~Vector(void)
+        constexpr ~Vector(void)
         {
             iter().for_each([&](auto &v) -> void { v.~Type(); });
         }

@@ -46,7 +46,7 @@ struct Box
         }
 
     public:
-        ~Box(void)
+        constexpr ~Box(void)
         {
             if (value_ != nullptr) { delete value_; }
         }

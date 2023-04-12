@@ -571,7 +571,7 @@ class Optional<void>
         };
 
     public:
-        ~Optional(void)
+        constexpr ~Optional(void)
         {
             switch (tag_) {
                 case Tag::SOME:

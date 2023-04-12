@@ -85,7 +85,7 @@ class Result
         };
 
     public:
-        ~Result(void)
+        constexpr ~Result(void)
         {
             switch (tag_) { // result::dtor
                 case Tag::OK:
@@ -687,7 +687,7 @@ class Result<void, E>
         };
 
     public:
-        ~Result(void)
+        constexpr ~Result(void)
         {
             switch (tag_) { // result<void>-dtor
                 case Tag::OK:

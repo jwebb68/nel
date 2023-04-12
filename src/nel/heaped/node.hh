@@ -113,7 +113,7 @@ struct Node
 #    endif
 
     public:
-        ~Node(void)
+        constexpr ~Node(void)
         {
             for (Index i = 0; i < len(); ++i) {
                 values_[i].~Type();

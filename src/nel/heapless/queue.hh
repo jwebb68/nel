@@ -85,14 +85,14 @@ struct Queue
         }
 
     public:
-        ~Queue(void)
+        constexpr ~Queue(void)
         {
             // TODO: delete in reverse as allocated forward..?
             iter().for_each([&](auto &v) -> void { v.~Type(); });
         }
 
     public:
-        Queue(void)
+        constexpr Queue(void)
             : len_(0)
             , wp_(0)
             , rp_(0)
