@@ -63,6 +63,10 @@ struct Slice
         {
         }
 
+    public:
+        // annoyingly, the type deducing form only works on ctors, not statics
+        // so Slice( int ptr, len) gets a Slice<int>(int ptr, len)
+        // but a Slice::from(int ptr, len) does not work..
         constexpr Slice(Type p[], Length len)
             : content_(p)
             , len_(len)
@@ -91,21 +95,6 @@ struct Slice
         static constexpr Slice empty(void)
         {
             return Slice();
-        }
-
-        /**
-         * Create a slice over the carray and len given.
-         *
-         * Slice is invalidated if p goes out of scope or is deleted/destroyed.
-         */
-        static constexpr Slice from(Type p[], Length len)
-        {
-            return Slice(p, len);
-        }
-
-        static constexpr Slice from(Type *const b, Type *const e)
-        {
-            return Slice(b, e);
         }
 
     public:
@@ -241,7 +230,7 @@ struct Slice
             if (b >= e) { return Slice::empty(); }
             if (b >= len_) { return Slice::empty(); }
             if (e > len_) { e = len_; }
-            return Slice::from(&content_[b], e - b);
+            return Slice(&content_[b], e - b);
         }
 
     public:

@@ -158,7 +158,7 @@ struct Node
         // use placement new to init.
         constexpr Node(Type const &f)
         {
-            Slice<Type>::from(values_, capacity())
+            Slice(values_, capacity())
                 .iter()
                 .for_each(
                     // cannot use assign as values uninitialised.
@@ -196,12 +196,12 @@ struct Node
     public:
         constexpr Slice<Type> slice(void)
         {
-            return Slice<Type>::from(values_, len());
+            return Slice(values_, len());
         }
 
         constexpr Slice<Type const> slice(void) const
         {
-            return Slice<Type const>::from(values_, len());
+            return Slice(values_, len());
         }
 
     public:

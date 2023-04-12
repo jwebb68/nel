@@ -22,10 +22,10 @@ TEST_CASE("Slice::empty()", "[slice]")
 TEST_CASE("Slice::from(ptr,len)", "[slice]")
 {
     int a1[] = {3, 1, 2, 4};
-    auto s1 = nel::Slice<int>::from(a1, sizeof(a1) / sizeof(a1[0]));
+    auto s1 = nel::Slice(a1, sizeof(a1) / sizeof(a1[0]));
     REQUIRE(s1.len() == 4);
 
-    auto const c1 = nel::Slice<int>::from(a1, sizeof(a1) / sizeof(a1[0]));
+    auto const c1 = nel::Slice(a1, sizeof(a1) / sizeof(a1[0]));
     REQUIRE(c1.len() == 4);
 }
 
@@ -38,10 +38,10 @@ TEST_CASE("Slice::is_empty()", "[slice]")
     REQUIRE(c1.is_empty());
 
     int a1[] = {3, 1, 2, 4};
-    auto s2 = nel::Slice<int>::from(a1, sizeof(a1) / sizeof(a1[0]));
+    auto s2 = nel::Slice(a1, sizeof(a1) / sizeof(a1[0]));
     REQUIRE(!s2.is_empty());
 
-    auto const c2 = nel::Slice<int>::from(a1, sizeof(a1) / sizeof(a1[0]));
+    auto const c2 = nel::Slice(a1, sizeof(a1) / sizeof(a1[0]));
     REQUIRE(!c2.is_empty());
 }
 
@@ -54,10 +54,10 @@ TEST_CASE("Slice::len()", "[slice]")
     REQUIRE(c1.len() == 0);
 
     int a1[] = {3, 1, 2, 4};
-    auto s2 = nel::Slice<int>::from(a1, sizeof(a1) / sizeof(a1[0]));
+    auto s2 = nel::Slice(a1, sizeof(a1) / sizeof(a1[0]));
     REQUIRE(s2.len() == 4);
 
-    auto const c2 = nel::Slice<int>::from(a1, sizeof(a1) / sizeof(a1[0]));
+    auto const c2 = nel::Slice(a1, sizeof(a1) / sizeof(a1[0]));
     REQUIRE(c2.len() == 4);
 }
 
@@ -71,7 +71,7 @@ TEST_CASE("Slice::fill()", "[slice]")
     // c1.fill(2);
 
     int a1[] = {3, 1, 2, 4};
-    auto s2 = nel::Slice<int>::from(a1, sizeof(a1) / sizeof(a1[0]));
+    auto s2 = nel::Slice(a1, sizeof(a1) / sizeof(a1[0]));
     s2.fill(2);
     REQUIRE(a1[0] == 2);
     REQUIRE(a1[1] == 2);
@@ -96,7 +96,7 @@ TEST_CASE("Slice::slice(b,e)", "[heapless][vector]")
     {
         // in-range slice is not empty
         int a1[] = {3, 1};
-        auto s1 = nel::Slice<int>::from(a1, sizeof(a1) / sizeof(a1[0]));
+        auto s1 = nel::Slice(a1, sizeof(a1) / sizeof(a1[0]));
 
         auto sa12 = s1.slice(0, 1);
         REQUIRE(!sa12.is_empty());
@@ -120,7 +120,7 @@ TEST_CASE("Slice::slice(b,e)", "[heapless][vector]")
     {
         // in-range slice is not empty
         int const a1[] = {3, 1};
-        auto s1 = nel::Slice<int const>::from(a1, sizeof(a1) / sizeof(a1[0]));
+        auto s1 = nel::Slice(a1, sizeof(a1) / sizeof(a1[0]));
 
         auto sc1 = s1.slice(0, 0);
         REQUIRE(sc1.is_empty());
@@ -155,7 +155,7 @@ TEST_CASE("Slice::iter()", "[slice]")
     REQUIRE(ic1.next().is_none());
 
     int a1[] = {3, 1, 2, 4};
-    auto s2 = nel::Slice<int>::from(a1, sizeof(a1) / sizeof(a1[0]));
+    auto s2 = nel::Slice(a1, sizeof(a1) / sizeof(a1[0]));
     auto is2 = s2.iter();
 
     REQUIRE(is2.next().unwrap() == 3);
@@ -164,7 +164,7 @@ TEST_CASE("Slice::iter()", "[slice]")
     REQUIRE(is2.next().unwrap() == 4);
     REQUIRE(is2.next().is_none());
 
-    auto const c2 = nel::Slice<int>::from(a1, sizeof(a1) / sizeof(a1[0]));
+    auto const c2 = nel::Slice(a1, sizeof(a1) / sizeof(a1[0]));
     auto ic2 = c2.iter();
 
     REQUIRE(ic2.next().unwrap() == 3);
@@ -189,7 +189,7 @@ TEST_CASE("Slice::iter()", "[slice]")
     REQUIRE(!ic1);
 
     int a1[] = {3, 1, 2, 4};
-    auto s2 = nel::Slice<int>::from(a1, sizeof(a1) / sizeof(a1[0]));
+    auto s2 = nel::Slice(a1, sizeof(a1) / sizeof(a1[0]));
     auto is2 = s2.iter();
 
     REQUIRE(is2);
@@ -206,7 +206,7 @@ TEST_CASE("Slice::iter()", "[slice]")
     ++is2;
     REQUIRE(!is2);
 
-    auto const c2 = nel::Slice<int>::from(a1, sizeof(a1) / sizeof(a1[0]));
+    auto const c2 = nel::Slice(a1, sizeof(a1) / sizeof(a1[0]));
     auto ic2 = c2.iter();
 
     REQUIRE(ic2);
@@ -250,7 +250,7 @@ TEST_CASE("Slice::try_get()", "[slice]")
     {
         // in-range try_get of non-empty slice is ref to value.
         int a1[] = {3, 1, 2, 4};
-        auto s1 = nel::Slice<int>::from(a1, sizeof(a1) / sizeof(a1[0]));
+        auto s1 = nel::Slice(a1, sizeof(a1) / sizeof(a1[0]));
         auto sa2 = s1.try_get(0);
         REQUIRE(sa2.is_some());
         REQUIRE(sa2.unwrap() == 3);
@@ -264,7 +264,7 @@ TEST_CASE("Slice::try_get()", "[slice]")
     {
         // out-of-range try_get of non-empty slice is none.
         int a1[] = {3, 1, 2, 4};
-        auto s1 = nel::Slice<int>::from(a1, sizeof(a1) / sizeof(a1[0]));
+        auto s1 = nel::Slice(a1, sizeof(a1) / sizeof(a1[0]));
         auto sa2 = s1.try_get(5);
         REQUIRE(sa2.is_none());
 

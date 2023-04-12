@@ -397,12 +397,12 @@ struct Vector
          */
         constexpr Slice<Type> slice(void)
         {
-            return Slice<Type>::from(ptr(), len());
+            return Slice(ptr(), len());
         }
 
         constexpr Slice<Type const> const slice(void) const
         {
-            return Slice<Type const>::from(ptr(), len());
+            return Slice(ptr(), len());
         }
 
         /**

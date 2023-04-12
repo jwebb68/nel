@@ -149,7 +149,7 @@ class Optional
             o.tag_ = Tag::INVAL;
             switch (tag_) { // optional::move-ctor
                 case Tag::SOME:
-                    new (&some_) Element<T>(move(o.some_));
+                    new (&some_) Element(move(o.some_));
                     break;
                 case Tag::NONE:
                     break;

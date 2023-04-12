@@ -123,11 +123,11 @@ class Result
 
             switch (tag_) { // result::move-ctor
                 case Tag::OK:
-                    new (&ok_) Element<T>(forward<Element<T>>(o.ok_));
+                    new (&ok_) Element(forward<Element<T>>(o.ok_));
                     break;
 
                 case Tag::ERR:
-                    new (&err_) Element<E>(forward<Element<E>>(o.err_));
+                    new (&err_) Element(forward<Element<E>>(o.err_));
                     break;
 
                 case Tag::INVAL:
@@ -478,7 +478,7 @@ class Result
          */
         constexpr T unwrap(void)
         {
-            return consume<T>([](T &&ok) -> T { return T(forward<T>(ok)); },
+            return consume<T>([](T &&ok) -> T { return forward<T>(ok); },
                               [](E &&) -> T { nel_panic("not an OK"); });
         }
 
@@ -730,7 +730,7 @@ class Result<void, E>
                 case Tag::OK:
                     break;
                 case Tag::ERR:
-                    new (&err_) Element<E>(move(o.err_));
+                    new (&err_) Element(move(o.err_));
                     break;
                 case Tag::INVAL:
                     break;
