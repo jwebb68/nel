@@ -49,4 +49,16 @@ Log &operator<<(Log &outs, long unsigned int const v)
     return outs;
 }
 
+Log &operator<<(Log &outs, float const v)
+{
+    fprintf(stderr, "%#f", (double)v);
+    return outs;
+}
+
+Log &operator<<(Log &outs, double const v)
+{
+    fprintf(stderr, "%#f", v);
+    return outs;
+}
+
 } // namespace nel

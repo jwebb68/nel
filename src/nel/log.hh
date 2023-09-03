@@ -24,6 +24,8 @@ class Log
         friend Log &operator<<(Log &outs, uint32_t const v);
         friend Log &operator<<(Log &outs, int const v);
         friend Log &operator<<(Log &outs, long unsigned int const v);
+        friend Log &operator<<(Log &outs, float const v);
+        friend Log &operator<<(Log &outs, double const v);
 };
 
 extern Log log;
