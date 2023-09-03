@@ -54,12 +54,12 @@ constexpr T &&move(T &&v)
  * mirrors c++ std definition.
  * probably not as complete as though.
  *
- * having own implementation as nel is to not need std.
+ * having own implementation as nel so to not need std.
  */
-template<typename T>
-constexpr T &&forward(T &v)
+template<typename U, typename T>
+constexpr U &&forward(T &t)
 {
-    return static_cast<T &&>(v);
+    return static_cast<U &&>(t);
 }
 
 /**
@@ -71,12 +71,12 @@ constexpr T &&forward(T &v)
  * mirrors c++ std definition.
  * probably not as complete as though.
  *
- * Having own implementation as nel is to not need std.
+ * Having own implementation as nel so to not need std.
  */
-template<typename T>
-constexpr T &&forward(T &&v)
+template<typename U, typename T>
+constexpr U &&forward(T &&t)
 {
-    return static_cast<T &&>(v);
+    return static_cast<U &&>(t);
 }
 
 namespace elem
@@ -195,7 +195,6 @@ Result<void, Error> WARN_UNUSED_RESULT try_copy(T *d, T const *s, Length const n
     return Result<void, Error>::Ok();
 }
 #    endif
-
 
 /**
  * Move elements [s,s+n) to [d,d+n).
