@@ -448,8 +448,9 @@ class Result
          */
         constexpr Optional<T> ok(void)
         {
-            return consume<Optional<T>>([](T &&ok) -> Optional<T> { return Some(forward<T>(ok)); },
-                                        [](E &&) -> Optional<T> { return None; });
+            typedef Optional<T> ReturnType;
+            return consume<ReturnType>([](T &&ok) -> ReturnType { return Some(forward<T>(ok)); },
+                                       [](E &&) -> ReturnType { return ReturnType::None(); });
         }
 
         /**
@@ -462,10 +463,9 @@ class Result
          */
         constexpr Optional<E> err(void)
         {
-            return consume<Optional<E>>([](T &&) -> Optional<E> { return None; },
-                                        [](E &&err) -> Optional<E> {
-                                            return Some(forward<E>(err));
-                                        });
+            typedef Optional<E> ReturnType;
+            return consume<ReturnType>([](T &&) -> ReturnType { return ReturnType::None(); },
+                                       [](E &&err) -> ReturnType { return Some(forward<E>(err)); });
         }
 
         /**
@@ -1005,8 +1005,9 @@ class Result<void, E>
          */
         constexpr Optional<void> ok(void)
         {
-            return consume<Optional<void>>([](void) -> Optional<void> { return Some(); },
-                                           [](E &&) -> Optional<void> { return None; });
+            typedef Optional<void> ReturnType;
+            return consume<ReturnType>([](void) -> ReturnType { return Some(); },
+                                       [](E &&) -> ReturnType { return ReturnType::None(); });
         }
 
         /**
@@ -1019,10 +1020,11 @@ class Result<void, E>
          */
         constexpr Optional<E> err(void)
         {
-            return consume<Optional<E>>([](void) -> Optional<E> { return None; },
-                                        [](E &&err) -> Optional<E> {
-                                            return Some(nel::forward<E>(err));
-                                        });
+            typedef Optional<void> ReturnType;
+            return consume<ReturnType>([](void) -> ReturnType { return ReturnType::None(); },
+                                       [](E &&err) -> ReturnType {
+                                           return Some(nel::forward<E>(err));
+                                       });
         }
 
         /**

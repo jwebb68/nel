@@ -8,8 +8,6 @@ namespace nel
 template<typename T>
 class Optional;
 
-class NoneT;
-
 } // namespace nel
 
 #    include <nel/element.hh>
@@ -20,12 +18,6 @@ class NoneT;
 
 namespace nel
 {
-
-struct NoneT
-{
-};
-
-static constexpr NoneT None = NoneT {};
 
 /**
  * Optional<T>
@@ -90,7 +82,8 @@ class Optional
         };
 
         // Use union to disable certain default methods on T
-        // Need to use class/struct as references cannot be used in unions,
+        // Need to use class/struct as a reference wrapper as
+        // references cannot be used in unions,
         // so this is possible: Optional<Foo &>
         union {
                 Element<T> some_;
@@ -227,6 +220,11 @@ class Optional
         // constexpr Optional(Phantom<SOME> const, Args &&...args)
         //     : tag_(SOME), some_(forward<Args>(args)...) {}
 
+        constexpr Optional(Phantom<Tag::NONE> const)
+            : tag_(Tag::NONE)
+        {
+        }
+
     public:
         // Default constructor.
         // Don't want this as there is no default for an optional.
@@ -242,15 +240,15 @@ class Optional
         // Optional<T> t = None;
         // Optional<T> t{None};
         // Optional<T> t(None);
-        /**
-         * Create an optional set to none.
-         *
-         * @returns an Optional 'wrapping' a None
-         */
-        constexpr Optional(NoneT const &)
-            : tag_(Tag::NONE)
-        {
-        }
+        // /**
+        //  * Create an optional set to none.
+        //  *
+        //  * @returns an Optional 'wrapping' a None
+        //  */
+        // constexpr Optional(NoneT const &)
+        //     : tag_(Tag::NONE)
+        // {
+        // }
 
         /**
          * Create an optional set to Some, moving existing value to hold.
@@ -274,11 +272,13 @@ class Optional
         //     return Optional(Phantom<Tag::SOME>(), forward<Args>(args)...);
         // }
 
+        constexpr static Optional None(void)
+        {
+            return Optional(Phantom<Tag::NONE>());
+        }
+
     private:
         // don't use std::function.. it's bloatware..
-        // template<typename V>
-        // constexpr V match(Tag tag, std::function<V(void)> on_some, std::function<V(void)>
-        // on_none) const  {
         template<typename V, typename Fn1, typename Fn2>
         constexpr V match(Fn1 &&on_some, Fn2 &&on_none) const
         {
@@ -318,8 +318,8 @@ class Optional
          * @param o The other optional to compare to.
          * @returns true if equal by value, false otherwise.
          *
-         * `this` is not consumed by the operation.
-         * `o` is not consumed by the operation.
+         * @note `this` is not consumed by the operation.
+         * @note `o` is not consumed by the operation.
          */
         constexpr bool operator==(Optional const &o) const
         {
@@ -337,8 +337,8 @@ class Optional
          * @param o The other result to compare to.
          * @returns true if not equal by value, false otherwise.
          *
-         * `this` is not consumed by the operation.
-         * `o` is not consumed by the operation.
+         * @note `this` is not consumed by the operation.
+         * @note `o` is not consumed by the operation.
          */
         constexpr bool operator!=(Optional const &o) const
         {
@@ -377,10 +377,23 @@ class Optional
                                [](void) -> bool { return true; });
         }
 
+#    if defined(TEST)
+        constexpr bool is_inval(void) const
+        {
+            switch (tag_) {
+                case Tag::SOME:
+                case Tag::NONE:
+                    return false;
+                case Tag::INVAL:
+                    return true;
+                default:
+                    nel_panic("Invalid Optional");
+            }
+        }
+#    endif
+
     public:
         // don't use std::function.. it's bloatware..
-        // template<typename V>
-        // V consume(std::function<V(void)> on_some, std::function<V(void)> on_none)
         template<typename V, typename Fn1, typename Fn2>
         constexpr V consume(Fn1 &&on_some, Fn2 &&on_none)
         {
@@ -484,8 +497,6 @@ class Optional
         // Because this allows copying of value out which I want to prevent.
 
     public:
-        // template<typename U>
-        // Optional<U> map(std::function<U(T &)> fn)
         template<typename U, typename Fn>
         Optional<U> map(Fn &&fn)
         {
@@ -499,7 +510,7 @@ class Optional
             return consume<
                 ReturnType>([&fn](T &&some)
                                 -> ReturnType { return ReturnType::Some(fn(forward<T>(some))); },
-                            [](void) -> ReturnType { return None; });
+                            [](void) -> ReturnType { return ReturnType::None(); });
         }
 
         Optional or_(Optional &&o)
@@ -686,31 +697,35 @@ class Optional<void>
         {
         }
 
+        constexpr Optional(Phantom<Tag::NONE> const)
+            : tag_(Tag::NONE)
+        {
+        }
+
     public:
         // Default constructor.
         // Don't want this as there is no default for an optional.
         // i.e. require a value, even if it's a None (i.e. being explicit).
         // really? Default to None/Inval?
         // But use of move-ctor mandates an inval state, so can have a default.
-        // Optional(void) = delete;
         constexpr Optional(void)
             : tag_(Tag::INVAL)
         {
         }
 
-        // assign/create from None
-        // Optional<T> t = None;
-        // Optional<T> t{None};
-        // Optional<T> t(None);
-        /**
-         * Create an optional set to none.
-         *
-         * @returns an Optional 'wrapping' a None
-         */
-        constexpr Optional(NoneT const &)
-            : tag_(Tag::NONE)
-        {
-        }
+        // // assign/create from None
+        // // Optional<T> t = None;
+        // // Optional<T> t{None};
+        // // Optional<T> t(None);
+        // /**
+        //  * Create an optional set to none.
+        //  *
+        //  * @returns an Optional 'wrapping' a None
+        //  */
+        // constexpr Optional(NoneT const &)
+        //     : tag_(Tag::NONE)
+        // {
+        // }
 
         /**
          * Create an optional set to Some, creating the value to use used inplace.
@@ -723,11 +738,13 @@ class Optional<void>
             return Optional(Phantom<Tag::SOME>());
         }
 
+        static Optional None(void)
+        {
+            return Optional(Phantom<Tag::NONE>());
+        }
+
     private:
         // don't use std::function.. it's bloatware..
-        // template<typename V>
-        // constexpr V match(Tag tag, std::function<V(void)> on_some, std::function<V(void)>
-        // on_none) const  {
         template<typename V, typename Fn1, typename Fn2>
         constexpr V match(Fn1 &&on_some, Fn2 &&on_none) const
         {
@@ -826,10 +843,23 @@ class Optional<void>
                                [](void) -> bool { return true; });
         }
 
+#    if defined(TEST)
+        constexpr bool is_inval(void) const
+        {
+            switch (tag_) {
+                case Tag::SOME:
+                case Tag::NONE:
+                    return false;
+                case Tag::INVAL:
+                    return true;
+                default:
+                    nel_panic("Invalid Optional");
+            }
+        }
+#    endif
+
     public:
         // don't use std::function.. it's bloatware..
-        // template<typename V>
-        // V consume(std::function<V(void)> on_some, std::function<V(void)> on_none)
         template<typename V, typename Fn1, typename Fn2>
         constexpr V consume(Fn1 &&on_some, Fn2 &&on_none)
         {
@@ -891,7 +921,7 @@ class Optional<void>
          *
          * @returns value contained by the Optional if it's a 'Some'.
          *
-         * If the optional does not contain a Some, then abort/panic.
+         * @warning If the optional does not contain a Some, then abort/panic.
          */
         void unwrap(void)
         {
@@ -915,14 +945,13 @@ class Optional<void>
         // This infers copying of value which I want to prevent.
 
     public:
-        // template<typename U>
-        // Optional<U> map(std::function<U(void)> fn)
         template<typename U, typename Fn>
         Optional<U> map(Fn &&fn)
         {
             typedef Optional<U> ReturnType;
-            return consume<ReturnType>([&fn](void) -> ReturnType { return ReturnType::Some(fn()); },
-                                       [](void) -> ReturnType { return None; });
+            return consume<ReturnType>([&fn](void)
+                                           -> ReturnType { return ReturnType::Some(move(fn())); },
+                                       [](void) -> ReturnType { return ReturnType::None(); });
         }
 
     public:
@@ -952,7 +981,6 @@ class Optional<void>
         }
 };
 
-// Optional<void> Some(void)
 inline Optional<void> Some(void)
 {
     return Optional<void>::Some();

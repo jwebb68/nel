@@ -260,7 +260,8 @@ struct Queue
          */
         Optional<Type> pop(void)
         {
-            if (is_empty()) { return None; }
+            typedef Optional<Type> ReturnType;
+            if (is_empty()) { return ReturnType::None(); }
             len_ -= 1;
             auto rp = rp_;
             rp_ += 1;
