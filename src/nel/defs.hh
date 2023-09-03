@@ -41,6 +41,9 @@ typedef long unsigned int Length;
 typedef long unsigned int Index;
 typedef long unsigned int Count;
 
+#    define NEL_REQUIRES(Str, Tra) \
+        static_assert(__is_base_of(Tra, Str), #Tra " interface not supported for " #Str)
+
 } // namespace nel
 
 #endif // NEL_DEFS_HH
