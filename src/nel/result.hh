@@ -6,7 +6,7 @@ namespace nel
 {
 
 template<typename T, typename E>
-class Result;
+struct Result;
 
 } // namespace nel
 
@@ -61,7 +61,7 @@ namespace nel
 // T must implement operator==, operator!=
 // E must implement operator==, operator!=
 template<typename T, typename E>
-class Result
+struct Result
 {
     public:
     private:
@@ -677,7 +677,7 @@ class Result
 };
 
 template<typename E>
-class Result<void, E>
+struct Result<void, E>
 {
     public:
     private:

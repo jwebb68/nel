@@ -227,6 +227,11 @@ struct Optional
         // constexpr Optional(Phantom<SOME> const, Args &&...args)
         //     : tag_(SOME), some_(forward<Args>(args)...) {}
 
+        constexpr Optional(Phantom<Tag::NONE> const)
+            : tag_(Tag::NONE)
+        {
+        }
+
     public:
         // Default constructor.
         // Don't want this as there is no default for an optional.
@@ -242,15 +247,6 @@ struct Optional
         // Optional<T> t = None;
         // Optional<T> t{None};
         // Optional<T> t(None);
-        /**
-         * Create an optional set to none.
-         *
-         * @returns an Optional 'wrapping' a None
-         */
-        constexpr Optional(NoneT const &)
-            : tag_(Tag::NONE)
-        {
-        }
 
         /**
          * Create an optional set to Some, moving existing value to hold.
@@ -273,6 +269,11 @@ struct Optional
         // {
         //     return Optional(Phantom<Tag::SOME>(), forward<Args>(args)...);
         // }
+
+        constexpr static Optional None(void)
+        {
+            return Optional(Phantom<Tag::NONE>());
+        }
 
     private:
         // don't use std::function.. it's bloatware..
@@ -318,8 +319,8 @@ struct Optional
          * @param o The other optional to compare to.
          * @returns true if equal by value, false otherwise.
          *
-         * `this` is not consumed by the operation.
-         * `o` is not consumed by the operation.
+         * @note `this` is not consumed by the operation.
+         * @note `o` is not consumed by the operation.
          */
         constexpr bool operator==(Optional const &o) const
         {
@@ -337,8 +338,8 @@ struct Optional
          * @param o The other result to compare to.
          * @returns true if not equal by value, false otherwise.
          *
-         * `this` is not consumed by the operation.
-         * `o` is not consumed by the operation.
+         * @note `this` is not consumed by the operation.
+         * @note `o` is not consumed by the operation.
          */
         constexpr bool operator!=(Optional const &o) const
         {
@@ -376,6 +377,21 @@ struct Optional
             return match<bool>([](T const &) -> bool { return false; },
                                [](void) -> bool { return true; });
         }
+
+#    if defined(TEST)
+        constexpr bool is_inval(void) const
+        {
+            switch (tag_) {
+                case Tag::SOME:
+                case Tag::NONE:
+                    return false;
+                case Tag::INVAL:
+                    return true;
+                default:
+                    nel_panic("Invalid Optional");
+            }
+        }
+#    endif
 
     public:
         // don't use std::function.. it's bloatware..
@@ -559,7 +575,7 @@ constexpr Optional<T> Some(T &&v)
 }
 
 template<>
-class Optional<void>
+struct Optional<void>
 {
     private:
         // Tagged enum thing.
@@ -692,6 +708,11 @@ class Optional<void>
         {
         }
 
+        constexpr Optional(Phantom<Tag::NONE> const)
+            : tag_(Tag::NONE)
+        {
+        }
+
     public:
         // Default constructor.
         // Don't want this as there is no default for an optional.
@@ -704,19 +725,19 @@ class Optional<void>
         {
         }
 
-        // assign/create from None
-        // Optional<T> t = None;
-        // Optional<T> t{None};
-        // Optional<T> t(None);
-        /**
-         * Create an optional set to none.
-         *
-         * @returns an Optional 'wrapping' a None
-         */
-        constexpr Optional(NoneT const &)
-            : tag_(Tag::NONE)
-        {
-        }
+        // // assign/create from None
+        // // Optional<T> t = None;
+        // // Optional<T> t{None};
+        // // Optional<T> t(None);
+        // /**
+        //  * Create an optional set to none.
+        //  *
+        //  * @returns an Optional 'wrapping' a None
+        //  */
+        // constexpr Optional(NoneT const &)
+        //     : tag_(Tag::NONE)
+        // {
+        // }
 
         /**
          * Create an optional set to Some, creating the value to use used inplace.
@@ -727,6 +748,11 @@ class Optional<void>
         static Optional Some(void)
         {
             return Optional(Phantom<Tag::SOME>());
+        }
+
+        static Optional None(void)
+        {
+            return Optional(Phantom<Tag::NONE>());
         }
 
     private:
@@ -832,7 +858,18 @@ class Optional<void>
             return match<bool>([](void) -> bool { return false; },
                                [](void) -> bool { return true; },
 
-                               ctx);
+#    if defined(TEST)
+        constexpr bool is_inval(void) const
+        {
+            switch (tag_) {
+                case Tag::SOME:
+                case Tag::NONE:
+                    return false;
+                case Tag::INVAL:
+                    return true;
+                default:
+                    nel_panic("Invalid Optional");
+            }
         }
 
     public:
@@ -900,7 +937,7 @@ class Optional<void>
          *
          * @returns value contained by the Optional if it's a 'Some'.
          *
-         * If the optional does not contain a Some, then abort/panic.
+         * @warning If the optional does not contain a Some, then abort/panic.
          */
         void unwrap(Context const &ctx = Context())
         {

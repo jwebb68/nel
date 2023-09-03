@@ -520,7 +520,8 @@ struct Vector
          */
         Optional<Type> pop(void)
         {
-            if (len() == 0) { return None; }
+            typedef Optional<Type> ReturnType;
+            if (len() == 0) { return ReturnType::None(); }
             len_ -= 1;
             return Some(move(*end()));
         }

@@ -193,7 +193,8 @@ struct Slice
          */
         constexpr Optional<Type &> try_get(Index idx) const
         {
-            return (idx >= len_) ? None : Optional<Type &>::Some(content_[idx]);
+            typedef Optional<Type &> ReturnType;
+            return (idx >= len_) ? ReturnType::None() : ReturnType::Some(content_[idx]);
         }
 
     public:
