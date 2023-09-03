@@ -27,11 +27,12 @@
 
       pkgs.gdb
 
-      # pkgs.gcc-arm-embedded-7
-      # pkgs.gcc-arm-embedded-8
-      # pkgs.gcc-arm-embedded-9
-      #pkgs.gcc-arm-embedded
-      pkgs.gcc-arm-embedded-7
+      # pkgs.gcc-arm-embedded-7 #ok
+      # pkgs.gcc-arm-embedded-8 #ok
+      # pkgs.gcc-arm-embedded-9 #ok
+      pkgs.gcc-arm-embedded-10 #ok
+      # pkgs.gcc-arm-embedded-11 #fails: libcrypt.so.1 missing
+      # pkgs.gcc-arm-embedded #fails: libcrypt.so.1 missing
 
       # multi is not multi version of compiler, but multilib
       #pkgs.clang_multi
