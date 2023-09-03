@@ -19,7 +19,8 @@ TEST_CASE("Stub::destroy ", "[stub]")
             Stub s(1);
             nel::unused(s);
         }
-        REQUIRE(Stub::instances == 0);
+        CHECK(Stub::dtor == 1);
+        CHECK(Stub::instances == 0);
     }
 }
 
@@ -32,12 +33,19 @@ TEST_CASE("Stub::move", "[stub]")
         Stub::reset();
         auto s1 = Stub(1);
         {
+            CHECK(Stub::instances == 1);
+
             auto s2 = move(s1);
-            // s2 deleted when scope ends
             nel::unused(s2);
-            REQUIRE(Stub::instances == 2);
+
+            // new instance IS created.
+            CHECK(Stub::instances == 2);
+            // no instances destroyed.
+            CHECK(Stub::dtor == 0);
+
+            CHECK(Stub::move_ctor == 1);
+            CHECK(Stub::move_assn == 0);
         }
-        REQUIRE(Stub::instances == 1);
     }
     {
         // stub move-assn does not change instance count
@@ -46,12 +54,19 @@ TEST_CASE("Stub::move", "[stub]")
         auto s1 = Stub(1);
         auto s2 = Stub(2);
         {
+            CHECK(Stub::instances == 2);
+
             s2 = move(s1);
-            // s2 deleted when scope ends
             nel::unused(s2);
-            REQUIRE(Stub::instances == 2);
+
+            // no new instances created.
+            CHECK(Stub::instances == 2);
+            // no instances destroyed.
+            CHECK(Stub::dtor == 0);
+
+            CHECK(Stub::move_ctor == 0);
+            CHECK(Stub::move_assn == 1);
         }
-        REQUIRE(Stub::instances == 2);
     }
 }
 
@@ -62,12 +77,19 @@ TEST_CASE("Stub::copy", "[stub]")
         Stub::reset();
         auto s1 = Stub(1);
         {
+            CHECK(Stub::instances == 1);
+
             auto s2 = s1;
-            // s2 deleted when scope ends
             nel::unused(s2);
-            REQUIRE(Stub::instances == 2);
+
+            // copy-ctor caused new instance to be created,
+            CHECK(Stub::instances == 2);
+            // copy-ctor did not cause a dtuct.
+            CHECK(Stub::dtor == 0);
+
+            CHECK(Stub::copy_ctor == 1);
+            CHECK(Stub::copy_assn == 0);
         }
-        REQUIRE(Stub::instances == 1);
     }
     {
         // stub copy-assn does not change instance count
@@ -75,12 +97,19 @@ TEST_CASE("Stub::copy", "[stub]")
         auto s1 = Stub(1);
         auto s2 = Stub(2);
         {
+            CHECK(Stub::instances == 2);
+
             s2 = s1;
-            // s2 deleted when scope ends
             nel::unused(s2);
-            REQUIRE(Stub::instances == 2);
+
+            // copy-assn did not cause a new instance to be created.
+            CHECK(Stub::instances == 2);
+            // copy-assn did not cause a dtuct.
+            CHECK(Stub::dtor == 0);
+
+            CHECK(Stub::copy_ctor == 0);
+            CHECK(Stub::copy_assn == 1);
         }
-        REQUIRE(Stub::instances == 2);
     }
 }
 
