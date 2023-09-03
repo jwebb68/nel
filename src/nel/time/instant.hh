@@ -6,88 +6,100 @@ namespace nel
 {
 namespace time
 {
-class Instant;
-};
-}; // namespace nel
+
+struct Instant;
+
+}
+} // namespace nel
 
 #    include <nel/time/duration.hh>
-#    include <inttypes.h> // uint64_t
 
 namespace nel
 {
 namespace time
 {
-class Instant
+
+struct Instant
 {
     private:
-        uint64_t usecs_;
-
-    public:
-        // Instant(Instant const &);
-        // Instant operator=(Instant const &);
+        // an instant is nothing more than a duration from a fixed point.
+        // usually time since boot.
+        Duration timepoint_;
 
     public:
         constexpr Instant()
-            : usecs_(0)
+            : timepoint_()
         {
         }
 
     private:
-        constexpr explicit Instant(uint64_t usecs)
-            : usecs_(usecs)
+        constexpr explicit Instant(Duration d)
+            : timepoint_(d)
         {
         }
 
     public:
-        static Instant now(void);
-
-        static constexpr Instant boot(void)
-        {
-            return Instant(0);
-        }
-
-    public:
-        constexpr Duration elapsed_since(Instant const &tp) const
-        {
-            return Duration::from_micros(usecs_ - tp.usecs_);
-        }
-
         constexpr bool operator==(Instant const &o) const
         {
-            return usecs_ == o.usecs_;
+            return timepoint_ == o.timepoint_;
         }
 
         constexpr bool operator!=(Instant const &o) const
         {
-            return usecs_ != o.usecs_;
+            return timepoint_ != o.timepoint_;
         }
 
+        constexpr bool operator<(Instant const &o) const
+        {
+            return timepoint_ < o.timepoint_;
+        }
+
+        constexpr bool operator<=(Instant const &o) const
+        {
+            return timepoint_ <= o.timepoint_;
+        }
+
+        constexpr bool operator>(Instant const &o) const
+        {
+            return timepoint_ > o.timepoint_;
+        }
+
+        constexpr bool operator>=(Instant const &o) const
+        {
+            return timepoint_ >= o.timepoint_;
+        }
+
+    public:
         constexpr Instant &operator+=(Duration const &d)
         {
-            usecs_ += d.as_micros();
+            timepoint_ += d;
             return *this;
+        }
+
+        constexpr Instant operator+(Duration const &d)
+        {
+            return Instant(timepoint_ + d);
         }
 
         constexpr Instant &operator-=(Duration const &d)
         {
-            usecs_ -= d.as_micros();
+            timepoint_ -= d;
             return *this;
         }
 
-    public:
-        // arduino micros/millis is a 32bit number so does not
-        // have the range wanted (wraps in about 70 mins or so).
-        // So, keep internal counter, and uptick based on last.
-        static bool init(uint32_t now);
-        static void tick(uint32_t now);
+        constexpr Instant operator-(Duration const &d)
+        {
+            return Instant(timepoint_ - d);
+        }
 
-#    if defined(ARDUINO_TEENSY41)
-        static bool init();
-        static void tick();
-#    endif
+    public:
+        constexpr Duration elapsed_since(Instant const &o) const
+        {
+            return timepoint_ - o.timepoint_;
+        }
 };
 
-}; // namespace time
-}; // namespace nel
+} // namespace time
+} // namespace nel
 
 #endif // defined(NEL_TIME_INSTANT_HH)
