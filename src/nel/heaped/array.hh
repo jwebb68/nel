@@ -131,7 +131,7 @@ struct Array
         {
             if (n == 0) { return Array::empty(); }
             ArrayNode *node = ArrayNode::malloc(n);
-            if (node == nullptr) { nel_panic(""); }
+            if (node == nullptr) { nel::panic0(); }
             new (node) ArrayNode(f);
             auto a = Array(node);
             return a;
@@ -193,13 +193,13 @@ struct Array
         // as array access can fail, redo to try_get() and return v or error
         constexpr Type &operator[](Index idx)
         {
-            // nel_panic_if_not(item_ != nullptr, "invalid array");
+            // nel::panic_if_not(item_ != nullptr, "invalid array");
             // return (*item_)[idx];
             return slice()[idx];
         }
         constexpr Type const &operator[](Index idx) const
         {
-            // nel_panic_if_not(item_ != nullptr, "invalid array");
+            // nel::panic_if_not(item_ != nullptr, "invalid array");
             // return (*item_)[idx];
             return slice()[idx];
         }

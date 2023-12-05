@@ -1,34 +1,80 @@
 // -*- mode: c++; indent-tabs-mode: nil; tab-width: 4 -*-
 #include <nel/panic.hh>
 
+#if defined(TEST)
+#include <sstream>
+#endif
+
 #include <cstdio> // printf
 #include <cstdlib> // abort
 
 namespace nel
 {
 
+#if defined(TEST)
+[[noreturn]] inline void _panic(Context ctx) {
+    std::stringstream ss;
+    ss << "panic in " << ctx.fn_name_ << ' ' << ctx.file_name_ << ':' << ctx.line_num_ << '\n';
+    throw nel::test::PanicError(ss.str());
+}
+[[noreturn]] inline void _panic(Context ctx, const char *prefix, std::string expr) {
+    std::stringstream ss;
+    ss << "panic in " << ctx.fn_name_ << ' ' << ctx.file_name_ << ':' << ctx.line_num_ << '\n';
+    ss << prefix << ": " << expr << '\n';
+    throw nel::test::PanicError(ss.str());
+}
+#endif
+
+#if !defined(TEST)
+[[noreturn]] void abort(void);
+
 [[noreturn]] void abort(void)
 {
     std::abort();
 }
+#endif
 
-[[noreturn]] void panic_(char const *file_name, int line_num, char const *const msg)
+
+[[noreturn]] void panic0(Context ctx)
 {
-    fprintf(stderr, "%s:%d: %s: %s", file_name, line_num, "PANIC", msg);
+#if defined(TEST)
+    _panic(ctx);
+#else
+    fprintf(stderr, "\n%s:%d:[%s]: %s\n", ctx.file_name_, ctx.line_num_, ctx.fn_name_, "PANIC");
     abort();
+#endif
 }
 
-void panic_if_(char const *file_name, int line_num, char const *const msg, bool pred)
+[[noreturn]] void panic(char const *const msg, Context ctx)
 {
-    if (pred) { panic_(file_name, line_num, msg); }
+#if defined(TEST)
+    _panic(ctx, "", msg);
+#else
+    fprintf(stderr,
+            "\n%s:%d:[%s]: %s: %s\n",
+            ctx.file_name_,
+            ctx.line_num_,
+            ctx.fn_name_,
+            "PANIC",
+            msg);
+    abort();
+#endif
 }
 
-void assert_(char const *file_name, int line_num, char const *const msg, bool pred)
+[[noreturn]] void assert_fail(char const *const msg, Context ctx)
 {
-    if (!pred) {
-        fprintf(stderr, "%s:%d: %s: %s", file_name, line_num, "ASSERT FAIL", msg);
-        abort();
-    }
+#if defined(TEST)
+    _panic(ctx, "ASSERT FAIL", msg);
+#else
+    fprintf(stderr,
+            "\n%s:%d:[%s]: %s: %s\n",
+            ctx.file_name_,
+            ctx.line_num_,
+            ctx.fn_name_,
+            "ASSERT FAIL",
+            msg);
+    abort();
+#endif
 }
 
 } // namespace nel

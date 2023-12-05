@@ -23,7 +23,7 @@ nel::Log &operator<<(nel::Log &outs, ErrorCode const &val)
         default:
             break;
     }
-    nel_panic("unknown ErrorCode");
+    nel::panic("unknown ErrorCode");
     return outs << '?';
 }
 

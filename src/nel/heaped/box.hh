@@ -120,7 +120,7 @@ struct Box
 
         constexpr Type &deref(void)
         {
-            nel_panic_if_not(has_value(), "not a value");
+            nel::panic_if_not(has_value(), "not a value");
             return *(*value_);
         }
 
@@ -137,7 +137,7 @@ struct Box
 
         constexpr Type const &deref(void) const
         {
-            nel_panic_if_not(has_value(), "not a value");
+            nel::panic_if_not(has_value(), "not a value");
             return *(*value_);
         }
 
@@ -166,7 +166,7 @@ struct Box
          */
         constexpr Type unwrap(void)
         {
-            nel_panic_if_not(has_value(), "not a value");
+            nel::panic_if_not(has_value(), "not a value");
             Type t = move(*(*value_));
             delete value_;
             value_ = nullptr;

@@ -2,40 +2,90 @@
 #if !defined(NEL_PANIC_HH)
 #    define NEL_PANIC_HH
 
-#    define NEL_NO_RETURN __attribute__((noreturn))
+#if defined(TEST)
+#include <stdexcept>
+#endif
 
 namespace nel
 {
 
-[[noreturn]] void panic_(char const *file_name, int line_num, char const *const msg);
+#if defined(TEST)
+namespace test {
 
-void panic_if_(char const *file_name, int line_num, char const *const msg, bool pred);
+struct PanicError
+    : public std::runtime_error
+{
+    PanicError(std::string const &s)
+        : std::runtime_error(s)
+    {}
+};
 
-[[noreturn]] void abort(void);
+}
+#endif
 
-void assert_(char const *file_name, int line_num, char const *const msg, bool pred);
+struct Context
+{
+    public:
+        char const *fn_name_;
+        char const *file_name_;
+        int line_num_;
+
+    public:
+        constexpr Context(char const *fn_name = __builtin_FUNCTION(),
+                          char const *file_name = __builtin_FILE(),
+                          int line_num = __builtin_LINE())
+            : fn_name_(fn_name)
+            , file_name_(file_name)
+            , line_num_(line_num)
+        {
+        }
+
+        // public:
+        //     friend nel::Log &operator<<(nel::Log &outs, Context const &v) {
+        //         return  outs << v.file_name_ << ':' << v.line_num_;
+        //     }
+};
+
+[[noreturn]] void panic0(Context ctx = Context());
+
+[[noreturn]] void panic(char const *const msg, Context ctx = Context());
+
+inline void panic_if(bool pred, char const *const msg, Context ctx = Context())
+{
+    if (pred) { panic(msg, ctx); }
+}
+
+inline void panic_if_not(bool pred, char const *const msg, Context ctx = Context())
+{
+    if (!pred) { panic(msg, ctx); }
+}
+
+[[noreturn]] void assert_fail(char const *const msg, Context ctx);
+
+#undef assert
+inline void assert(bool pred, char const *const msg, Context ctx = Context())
+{
+    if (!pred) { assert_fail(msg, ctx); }
+}
+
+
+#if defined(TEST)
+#if !defined(CATCH_CONFIG_DISABLE)
+
+#ifdef CATCH_CONFIG_PREFIX_ALL
+#define CATCH_REQUIRE_PANIC(expr) CATCH_REQUIRE_THROWS_AS(expr, nel::test::PanicError)
+#define CATCH_CHECK_PANIC(expr) CATCH_CHECK_THROWS_AS( expr, nel::test::PanicError)
+#else//!defined(CATCH_CONFIG_PREFIX_ALL)
+#define REQUIRE_PANIC(expr) REQUIRE_THROWS_AS(expr, nel::test::PanicError)
+#define CHECK_PANIC(expr) CHECK_THROWS_AS( expr, nel::test::PanicError)
+#endif//defined(CATCH_CONFIG_PREFIX_ALL)
+
+#else//defined(CATCH_CONFIG_DISABLE)
+#define REQUIRE_PANIC( expr) (void)(0)
+#define CHECK_PANIC( expr) (void)(0)
+#endif//defined(CATCH_CONFIG_DISABLE)
+#endif
 
 } // namespace nel
-
-#    if defined(NEL_DEBUG)
-#        define nel_panic(msg) nel::panic_(__FILE__, __LINE__, (msg))
-
-#        define nel_panic_if(expr, msg) nel::panic_if_(__FILE__, __LINE__, (msg), (expr))
-
-#        define nel_panic_if_not(expr, msg) nel::panic_if_(__FILE__, __LINE__, (msg), !(expr))
-
-#        define nel_assert(expr) nel::assert_(__FILE__, __LINE__, #expr, (expr))
-#    else
-#        define nel_panic(msg) nel::abort()
-
-#        define nel_panic_if(expr, msg) \
-            if (expr) { nel::abort(); }
-
-#        define nel_panic_if_not(expr, msg) \
-            if (!(expr)) { nel::abort(); }
-
-#        define nel_assert(expr) \
-            if (!(expr)) { nel::abort(); }
-#    endif
 
 #endif // !defined(NEL_PANIC_HH)

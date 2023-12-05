@@ -501,18 +501,15 @@ TEST_CASE("Result.unwrap for Ok must invalidate src", "[result]")
 }
 #endif
 
-#if 0
 // disabled until panic detection is available.
 TEST_CASE("Result.unwrap for err aborts", "[result]")
 {
     auto res = TestResult::Err(FAIL);
-    auto val = res.unwrap();
-
-    // don't know how to test aborts
-    REQUIRE(true ?);
+    REQUIRE_PANIC(res.unwrap());
 }
 
 
+#if 0
 // disabled until panic detection is available.
 TEST_CASE("Result.unwrap for inval aborts", "[result]")
 {
