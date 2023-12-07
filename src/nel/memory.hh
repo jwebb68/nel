@@ -260,7 +260,7 @@ bool eq(T const a[], T const b[], Length const n)
 }
 
 template<typename T>
-bool eq(nullptr_t, T const *, Length const n)
+bool eq(nullptr_t, T const[], Length const n)
 {
     // empty regions are always eq.
     return (n == 0);
@@ -279,7 +279,7 @@ bool eq(nullptr_t, nullptr_t, Length const n)
     return (n == 0);
 }
 
-bool eq(uint8_t const *a, uint8_t const *b, Length const n);
+bool eq(uint8_t const a[], uint8_t const b[], Length const n);
 
 /**
  * Compare for inequality [a,a+n) to [b,b+n) element-wise.
@@ -312,7 +312,7 @@ bool ne(T const a[], T const b[], Length const n)
 }
 
 template<typename T>
-bool ne(nullptr_t, T const *, Length const n)
+bool ne(nullptr_t, T const[], Length const n)
 {
     // empty regions are always eq.
     return (n != 0);
@@ -331,7 +331,7 @@ bool ne(nullptr_t, nullptr_t, Length const n)
     return (n != 0);
 }
 
-bool ne(uint8_t const *a, uint8_t const *b, Length const n);
+bool ne(uint8_t const a[], uint8_t const b[], Length const n);
 
 }; // namespace elem
 
