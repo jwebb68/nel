@@ -427,7 +427,7 @@ clean += target/$(2)/examples/$(1)
 
 target/$(2)/examples/$(1).s: | target/$(2)/examples
 target/$(2)/examples/$(1).s: target/$(2)/examples/$(1)
-	$(OBJDUMP) -Sr --demangle $$< > $$@
+	$(OBJDUMP) -Sr --demangle --visualize-jumps $$< > $$@
 examples: target/$(2)/examples/$(1).s
 clean += target/$(2)/examples/$(1).s
 
