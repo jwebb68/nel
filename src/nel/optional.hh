@@ -280,6 +280,8 @@ struct Optional
         // constexpr V match(Tag tag, std::function<V(void)> on_some, std::function<V(void)>
         // on_none) const  {
         template<typename V, typename Fn1, typename Fn2>
+        // Fn1: V (*)(T const &)
+        // Fn2: V (*)(void)
         constexpr V match(Fn1 &&on_some, Fn2 &&on_none, Context const &ctx = Context()) const
         {
             switch (tag_) { // optional::match
@@ -321,14 +323,59 @@ struct Optional
          * `this` is not consumed by the operation.
          * `o` is not consumed by the operation.
          */
+        constexpr bool is_eq(Optional const &o, Context const &ctx = Context()) const
+        {
+            return match<bool>(
+                [&o, &ctx, this](T const &t) -> bool {
+                    return o.match<bool>([&t](T const &ot) -> bool { return t == ot; },
+                                         [](void) -> bool { return false; },
+                                         ctx);
+                },
+                [&o, &ctx](void) -> bool {
+                    return o.match<bool>([](T const &) -> bool { return false; },
+                                         [](void) -> bool { return true; },
+                                         ctx);
+                },
+                ctx);
+        }
+
+        /**
+         * Is this equal by value to the optional given?
+         *
+         * @param o The other optional to compare to.
+         * @returns true if equal by value, false otherwise.
+         *
+         * `this` is not consumed by the operation.
+         * `o` is not consumed by the operation.
+         */
         constexpr bool operator==(Optional const &o) const
         {
-            if (this == &o) { return true; }
-            if (tag_ == o.tag_) {
-                return match<bool>([&o](T const &some) -> bool { return some == *o.some_; },
-                                   [](void) -> bool { return true; });
-            }
-            return false;
+            return is_eq(o);
+        }
+
+        /**
+         * Is this not equal by value to the result given?
+         *
+         * @param o The other result to compare to.
+         * @returns true if not equal by value, false otherwise.
+         *
+         * `this` is not consumed by the operation.
+         * `o` is not consumed by the operation.
+         */
+        constexpr bool is_ne(Optional const &o, Context const &ctx = Context()) const
+        {
+            return match<bool>(
+                [&o, &ctx, this](T const &t) -> bool {
+                    return o.match<bool>([&t](T const &ot) -> bool { return t != ot; },
+                                         [](void) -> bool { return true; },
+                                         ctx);
+                },
+                [&o, &ctx](void) -> bool {
+                    return o.match<bool>([](T const &) -> bool { return true; },
+                                         [](void) -> bool { return false; },
+                                         ctx);
+                },
+                ctx);
         }
 
         /**
@@ -342,12 +389,7 @@ struct Optional
          */
         constexpr bool operator!=(Optional const &o) const
         {
-            if (this == &o) { return false; }
-            if (tag_ == o.tag_) {
-                return match<bool>([&o](T const &some) -> bool { return some != *o.some_; },
-                                   [](void) -> bool { return false; });
-            }
-            return true;
+            return is_ne(o);
         }
 
     public:
@@ -358,10 +400,11 @@ struct Optional
          *
          * The optional is not consumed by the operation.
          */
-        constexpr bool is_some(void) const
+        constexpr bool is_some(Context const &ctx = Context()) const
         {
             return match<bool>([](T const &) -> bool { return true; },
-                               [](void) -> bool { return false; });
+                               [](void) -> bool { return false; },
+                               ctx);
         }
 
         /**
@@ -371,17 +414,28 @@ struct Optional
          *
          * The optional is not consumed by the operation.
          */
-        constexpr bool is_none(void) const
+        constexpr bool is_none(Context const &ctx = Context()) const
         {
             return match<bool>([](T const &) -> bool { return false; },
-                               [](void) -> bool { return true; });
+                               [](void) -> bool { return true; },
+                               ctx);
         }
+
+#    if defined(TEST)
+        // define a method to test optional is invalid for tests
+        constexpr bool is_inval(void) const
+        {
+            return tag_ == Tag::INVAL;
+        }
+#    endif // defined(TEST)
 
     public:
         // don't use std::function.. it's bloatware..
         // template<typename V>
         // V consume(std::function<V(void)> on_some, std::function<V(void)> on_none)
         template<typename V, typename Fn1, typename Fn2>
+        // Fn1: V (*)(T &&)
+        // Fn2: V (*)(void)
         constexpr V consume(Fn1 &&on_some, Fn2 &&on_none, Context const &ctx = Context())
         {
             // a consuming matcher..
@@ -406,6 +460,8 @@ struct Optional
         }
 
         template<typename Fn1, typename Fn2>
+        // Fn1: void (*)(T &&)
+        // Fn2: void (*)(void)
         constexpr void consumev(Fn1 &&on_some, Fn2 &&on_none, Context const &ctx = Context())
         {
             // a consuming matcher..
@@ -490,6 +546,7 @@ struct Optional
         // template<typename U>
         // Optional<U> map(std::function<U(T &)> fn)
         template<typename U, typename Fn>
+        // Fn: U (*)(T &&)
         Optional<U> map(Fn &&fn, Context const &ctx = Context())
         {
             // optional must be consumed.
@@ -515,6 +572,7 @@ struct Optional
         }
 
         template<typename Fn>
+        // Fn: T (*)(T &&)
         Optional or_else(Fn &&fn, Context const &ctx = Context())
         {
             return consume<Optional>([](T &&some)
@@ -559,7 +617,7 @@ constexpr Optional<T> Some(T &&v)
 }
 
 template<>
-class Optional<void>
+struct Optional<void>
 {
     private:
         // Tagged enum thing.
@@ -735,6 +793,8 @@ class Optional<void>
         // constexpr V match(Tag tag, std::function<V(void)> on_some, std::function<V(void)>
         // on_none) const  {
         template<typename V, typename Fn1, typename Fn2>
+        // Fn1: V (*)(void)
+        // Fn2: V (*)(void)
         constexpr V match(Fn1 &&on_some, Fn2 &&on_none, Context const &ctx = Context()) const
         {
             switch (tag_) {
@@ -775,14 +835,34 @@ class Optional<void>
          * `this` is not consumed by the operation.
          * `o` is not consumed by the operation.
          */
-        bool operator==(Optional const &o) const
+        constexpr bool is_eq(Optional const &o, Context const &ctx = Context()) const
         {
-            if (this == &o) { return true; }
-            if (tag_ == o.tag_) {
-                return match<bool>([](void) -> bool { return true; },
-                                   [](void) -> bool { return true; });
-            }
-            return false;
+            return match<bool>(
+                [&o, &ctx](void) -> bool {
+                    return o.match<bool>([](void) -> bool { return true; },
+                                         [](void) -> bool { return false; },
+                                         ctx);
+                },
+                [&o, &ctx](void) -> bool {
+                    return o.match<bool>([](void) -> bool { return false; },
+                                         [](void) -> bool { return true; },
+                                         ctx);
+                },
+                ctx);
+        }
+
+        /**
+         * Is this equal by value to the optional given?
+         *
+         * @param o The other optional to compare to.
+         * @returns true if equal by value, false otherwise.
+         *
+         * `this` is not consumed by the operation.
+         * `o` is not consumed by the operation.
+         */
+        constexpr bool operator==(Optional const &o) const
+        {
+            return is_eq(o);
         }
 
         /**
@@ -794,14 +874,34 @@ class Optional<void>
          * `this` is not consumed by the operation.
          * `o` is not consumed by the operation.
          */
-        bool operator!=(Optional const &o) const
+        constexpr bool is_ne(Optional const &o, Context const &ctx = Context()) const
         {
-            if (this == &o) { return false; }
-            if (tag_ == o.tag_) {
-                return match<bool>([](void) -> bool { return false; },
-                                   [](void) -> bool { return false; });
-            }
-            return true;
+            return match<bool>(
+                [&o, &ctx](void) -> bool {
+                    return o.match<bool>([](void) -> bool { return false; },
+                                         [](void) -> bool { return true; },
+                                         ctx);
+                },
+                [&o, &ctx](void) -> bool {
+                    return o.match<bool>([](void) -> bool { return true; },
+                                         [](void) -> bool { return false; },
+                                         ctx);
+                },
+                ctx);
+        }
+
+        /**
+         * Is this not equal by value to the result given?
+         *
+         * @param o The other result to compare to.
+         * @returns true if not equal by value, false otherwise.
+         *
+         * `this` is not consumed by the operation.
+         * `o` is not consumed by the operation.
+         */
+        constexpr bool operator!=(Optional const &o) const
+        {
+            return is_ne(o);
         }
 
     public:
@@ -835,11 +935,21 @@ class Optional<void>
                                ctx);
         }
 
+#    if defined(TEST)
+        // define a method to test optional is invalid for tests
+        constexpr bool is_inval(void) const
+        {
+            return tag_ == Tag::INVAL;
+        }
+#    endif // defined(TEST)
+
     public:
         // don't use std::function.. it's bloatware..
         // template<typename V>
         // V consume(std::function<V(void)> on_some, std::function<V(void)> on_none)
         template<typename V, typename Fn1, typename Fn2>
+        // Fn1: V (*)(void)
+        // Fn2: V (*)(void)
         constexpr V consume(Fn1 &&on_some, Fn2 &&on_none, Context const &ctx = Context())
         {
             // a consuming matcher..
@@ -864,6 +974,8 @@ class Optional<void>
         }
 
         template<typename Fn1, typename Fn2>
+        // Fn1: void (*)(void)
+        // Fn2: void (*)(void)
         constexpr void consumev(Fn1 &&on_some, Fn2 &&on_none, Context const &ctx = Context())
         {
             // a consuming matcher..
@@ -927,6 +1039,7 @@ class Optional<void>
         // template<typename U>
         // Optional<U> map(std::function<U(void)> fn)
         template<typename U, typename Fn>
+        // Fn: U (*)(void)
         Optional<U> map(Fn &&fn, Context const &ctx = Context())
         {
             typedef Optional<U> ReturnType;
