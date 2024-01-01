@@ -97,7 +97,8 @@ bool ne(uint8_t const *a, uint8_t const *b, Length n)
     // return true;
     return std::memcmp(a, b, n) != 0;
 }
-}; // namespace elem
+
+} // namespace elem
 
 #if 0
 struct Alloc {

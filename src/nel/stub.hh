@@ -9,8 +9,8 @@ namespace test
 
 struct Stub;
 
-};
-}; // namespace nel
+}
+} // namespace nel
 
 #    include <nel/memory.hh> // move
 
@@ -115,7 +115,7 @@ struct Stub
         }
 };
 
-}; // namespace test
-}; // namespace nel
+} // namespace test
+} // namespace nel
 
 #endif //! defined(NEL_STUB_HH)

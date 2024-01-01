@@ -699,7 +699,7 @@ TEST_CASE("heapless::Vector::try_get()", "[heapless][Vector]")
     }
 }
 
-}; // namespace vector
-}; // namespace heapless
-}; // namespace test
-}; // namespace nel
+} // namespace vector
+} // namespace heapless
+} // namespace test
+} // namespace nel

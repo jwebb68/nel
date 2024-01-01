@@ -21,8 +21,9 @@ int _write_r(struct _reent *, int, char *, int) {
 }
 int _getpid_r(struct _reent *) {
     return -1;
-};
+}
 int _isatty_r(struct _reent *, int) {
     return -1;
-};
-};
+}
+
+}

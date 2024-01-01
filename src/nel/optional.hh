@@ -6,9 +6,9 @@ namespace nel
 {
 
 template<typename T>
-class Optional;
+struct Optional;
 
-class NoneT;
+struct NoneT;
 
 } // namespace nel
 
@@ -71,7 +71,7 @@ static constexpr NoneT None = NoneT {};
  * ```
  */
 template<typename T>
-class Optional
+struct Optional
 {
     public:
     private:
@@ -779,8 +779,8 @@ class Optional<void>
         {
             if (this == &o) { return true; }
             if (tag_ == o.tag_) {
-                return match<bool>([this](void) -> bool { return true; },
-                                   [this](void) -> bool { return true; });
+                return match<bool>([](void) -> bool { return true; },
+                                   [](void) -> bool { return true; });
             }
             return false;
         }
@@ -798,8 +798,8 @@ class Optional<void>
         {
             if (this == &o) { return false; }
             if (tag_ == o.tag_) {
-                return match<bool>([this](void) -> bool { return false; },
-                                   [this](void) -> bool { return false; });
+                return match<bool>([](void) -> bool { return false; },
+                                   [](void) -> bool { return false; });
             }
             return true;
         }

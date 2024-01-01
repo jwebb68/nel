@@ -660,7 +660,7 @@ constexpr Frequency Duration::as_frequency() const
     return Frequency::from(*this);
 }
 
-}; // namespace time
-}; // namespace nel
+} // namespace time
+} // namespace nel
 
 #endif // defined(DURATION_HH)

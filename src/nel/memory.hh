@@ -6,7 +6,7 @@
 
 #    include <inttypes.h> // uint8_t
 
-#    include <cstddef> // nullptr_t
+#    include <cstddef> // std::nullptr_t
 
 namespace nel
 {
@@ -260,20 +260,20 @@ bool eq(T const a[], T const b[], Length const n)
 }
 
 template<typename T>
-bool eq(nullptr_t, T const[], Length const n)
+bool eq(std::nullptr_t, T const[], Length const n)
 {
     // empty regions are always eq.
     return (n == 0);
 }
 
 template<typename T>
-bool eq(T const a[], nullptr_t, Length const n)
+bool eq(T const a[], std::nullptr_t, Length const n)
 {
     return eq(nullptr, a, n);
 }
 
 template<typename T>
-bool eq(nullptr_t, nullptr_t, Length const n)
+bool eq(std::nullptr_t, std::nullptr_t, Length const n)
 {
     // empty regions are always eq.
     return (n == 0);
@@ -312,20 +312,20 @@ bool ne(T const a[], T const b[], Length const n)
 }
 
 template<typename T>
-bool ne(nullptr_t, T const[], Length const n)
+bool ne(std::nullptr_t, T const[], Length const n)
 {
     // empty regions are always eq.
     return (n != 0);
 }
 
 template<typename T>
-bool ne(T const a[], nullptr_t, Length const n)
+bool ne(T const a[], std::nullptr_t, Length const n)
 {
     return ne(nullptr, a, n);
 }
 
 template<typename T>
-bool ne(nullptr_t, nullptr_t, Length const n)
+bool ne(std::nullptr_t, std::nullptr_t, Length const n)
 {
     // empty regions are always eq.
     return (n != 0);
@@ -333,8 +333,8 @@ bool ne(nullptr_t, nullptr_t, Length const n)
 
 bool ne(uint8_t const a[], uint8_t const b[], Length const n);
 
-}; // namespace elem
+} // namespace elem
 
-}; // namespace nel
+} // namespace nel
 
 #endif // defined(NEL_MEMORY_HH)
