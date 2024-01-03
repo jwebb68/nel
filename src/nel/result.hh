@@ -293,6 +293,8 @@ class Result
         // constexpr V match(Tag tag, std::function<V(void)> &&on_ok, std::function<V(void)>
         // &&on_err) const  {
         template<typename V, typename Fn1, typename Fn2>
+        // Fn1: V (*)(T &&)
+        // Fn2: V (*)(E &&)
         constexpr V match(Fn1 &&on_ok, Fn2 &&on_err, Context const &ctx = Context()) const
         {
             // this match is non-consuming, for internal use only.
@@ -329,12 +331,20 @@ class Result
          */
         constexpr bool operator==(Result const &o) const
         {
-            if (this == &o) { return true; }
-            if (tag_ == o.tag_) {
-                return match<bool>([&o](T const &ok) -> bool { return ok == *o.ok_; },
-                                   [&o](E const &err) -> bool { return err == *o.err_; });
-            }
-            return false;
+            return match<bool>(
+                [&o](T const &ok) -> bool {
+                    return o.match<bool>(
+                        [&ok](T const &ook) -> bool { return ok == ook; },
+                        [](E const &) -> bool { return false; }
+                    );
+                },
+                [&o](E const &err) -> bool {
+                    return o.match<bool>(
+                        [](T const &) -> bool { return false; },
+                        [&err](E const &oerr) -> bool { return err == oerr; }
+                    );
+                }
+            );
         }
 
         /**
@@ -348,12 +358,20 @@ class Result
          */
         constexpr bool operator!=(Result const &o) const
         {
-            if (this == &o) { return false; }
-            if (tag_ == o.tag_) {
-                return match<bool>([&o](T const &ok) -> bool { return ok != *o.ok_; },
-                                   [&o](E const &err) -> bool { return err != *o.err_; });
-            }
-            return true;
+            return match<bool>(
+                [&o](T const &ok) -> bool {
+                    return o.match<bool>(
+                        [&ok](T const &ook) -> bool { return ok != ook; },
+                        [](E const &) -> bool { return true; }
+                    );
+                },
+                [&o](E const &err) -> bool {
+                    return o.match<bool>(
+                        [](T const &) -> bool { return true; },
+                        [&err](E const &oerr) -> bool { return err != oerr; }
+                    );
+                }
+            );
         }
 
     public:
@@ -387,8 +405,18 @@ class Result
                                ctx);
         }
 
+#    if defined(TEST)
+        // define a method to test result is invalid for tests
+        constexpr bool is_inval(void) const
+        {
+            return tag_ == Tag::INVAL;
+        }
+#    endif // defined(TEST)
+
     public:
         template<typename V, typename Fn1, typename Fn2>
+        // Fn1: V (*)(T &&)
+        // Fn2: V (*)(E &&)
         constexpr V consume(Fn1 &&on_ok, Fn2 &&on_err, Context const &ctx = Context())
         {
             // a consuming matcher..
@@ -413,6 +441,8 @@ class Result
         }
 
         template<typename Fn1, typename Fn2>
+        // Fn1: void (*)(T &&)
+        // Fn2: void (*)(E &&)
         constexpr void consumev(Fn1 &&on_ok, Fn2 &&on_err, Context const &ctx = Context())
         {
             auto tag = tag_;
@@ -577,7 +607,7 @@ class Result
         }
 
         /**
-         * Map the result::ok to a different result::ok.
+         * Maps a Result<T,E> to a Result<U,E>
          *
          * @param fn A fn that takes a T and returns a U
          * @returns if ok, result with ok value after applying fn to ok value.
@@ -589,6 +619,7 @@ class Result
         // template<class U>
         // Result<U, E> map(std::function<U(T &&)> fn)
         template<class U, typename Fn>
+        // Fn: U (*)(T &&)
         constexpr Result<U, E> map(Fn &&fn, Context const &ctx = Context())
         {
             typedef Result<U, E> ReturnType;
@@ -601,7 +632,7 @@ class Result
         }
 
         /**
-         * Map the result::err to a different result::err.
+         * Map a Result<T,E> to a Result<T, F>
          *
          * @param fn A fn that takes a E and returns a F
          * @returns if err, result with err value after applying fn to err value.
@@ -613,6 +644,7 @@ class Result
         // template<class F>
         // Result<T, F> map_err(std::function<F(E &&)> fn)
         template<class F, typename Fn>
+        // Fn: F (*)(E &&)
         constexpr Result<T, F> map_err(Fn &&fn, Context const &ctx = Context())
         {
             // TODO: remove need to explicitly cast to result in each of the
@@ -627,7 +659,7 @@ class Result
         }
 
         /**
-         * Map the result::ok to a different result::ok.
+         * Map Result<T,E> to a Result<U,E> via a function.
          *
          * If self is ok, calls fn and returns that instead.
          * If self is err, returns self.
@@ -871,6 +903,8 @@ class Result<void, E>
         // match(Tag tag, std::function<V(void)> on_ok, std::function<V(void)> on_err) const
         //
         template<typename V, typename Fn1, typename Fn2>
+        // Fn1: V (*)(void)
+        // Fn2: V (*)(E &&)
         constexpr V match(Fn1 &&on_ok, Fn2 &&on_err, Context const &ctx = Context()) const
         {
             switch (tag_) { // result<void>-match
@@ -962,8 +996,18 @@ class Result<void, E>
                                ctx);
         }
 
+#    if defined(TEST)
+        // define a method to test result is invalid for tests
+        constexpr bool is_inval(void) const
+        {
+            return tag_ == Tag::INVAL;
+        }
+#    endif // defined(TEST)
+
     public:
         template<typename V, typename Fn1, typename Fn2>
+        // Fn1: V (*)(void)
+        // Fn2: V (*)(E &&)
         constexpr V consume(Fn1 &&on_ok, Fn2 &&on_err, Context const &ctx = Context())
         {
             auto tag = tag_;
@@ -986,6 +1030,8 @@ class Result<void, E>
         }
 
         template<typename Fn1, typename Fn2>
+        // Fn1: void (*)(void)
+        // Fn2: void (*)(E &&)
         constexpr void consumev(Fn1 &&on_ok, Fn2 &&on_err, Context const &ctx = Context())
         {
             auto tag = tag_;
@@ -1125,6 +1171,7 @@ class Result<void, E>
         // template<class U>
         // Result<U, E> map(std::function<U(void)> fn)
         template<typename U, typename Fn>
+        // Fn: U (*)(void)
         constexpr Result<U, E> map(Fn &&fn, Context const &ctx = Context())
         {
             // TODO: remove need to explicitly cast to result in each of the
@@ -1149,6 +1196,7 @@ class Result<void, E>
         // template<class F>
         // Result<void, F> map_err(std::function<F(E &&)> fn)
         template<typename F, typename Fn>
+        // Fn: F (*)(E &&)
         constexpr Result<void, F> map_err(Fn &&fn, Context const &ctx = Context())
         {
             // TODO: remove need to explicitly cast to result in each of the
@@ -1162,7 +1210,7 @@ class Result<void, E>
         }
 
         template<typename U, typename Fn>
-        // Fn: Result<U,E> op(T&&)
+        // Fn: Result<U,E> (*)(T &&)
         constexpr Result<U, E> and_then(Fn &&fn, Context const &ctx = Context())
         {
             // TODO: remove need to explicitly cast to result in each of the
