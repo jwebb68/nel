@@ -61,11 +61,37 @@ else ifeq ($(TOOLCHAIN),arm)
 CC=arm-none-eabi-gcc
 CXX=arm-none-eabi-g++
 OBJDUMP=arm-none-eabi-objdump
-CFLAGS+=-nostdlib
-CXXFLAGS+=-nostdlib
-LDLIBS+=-lnosys
-LDFLAGS+=--specs=nosys.specs
+
+CFLAGS+=-mthumb
+CXXFLAGS+=-mthumb
+
+# # cortex-m4 -f64 +f32
+CXXFLAGS+=-mcpu=cortex-m4 -mfpu=fpv4-sp-d16 -mfloat-abi=hard
+LDFLAGS+=-mcpu=cortex-m4 -mfpu=fpv4-sp-d16 -mfloat-abi=hard
+# # cortex-m7 -f64 +f32
+# CXXFLAGS+=-mcpu=cortex-m7 -mfpu=fpv5-sp-d16 -mfloat-abi=hard
+# LDFLAGS+=-mcpu=cortex-m7 -mfpu=fpv5-sp-d16 -mfloat-abi=hard
+# cortex-m7 +f64 +f32
+#CXXFLAGS+=-mcpu=cortex-m7 -mfpu=fpv5-d16 -mfloat-abi=hard
+#LDFLAGS+=-mcpu=cortex-m7 -mfpu=fpv5-d16 -mfloat-abi=hard
+
+# CFLAGS+=-nodefaultlibs
+# CXXFLAGS+=-nodefaultlibs
+# LDFLAGS+=-nodefaultlibs
+
+# CFLAGS+=-nostdlib
+# CXXFLAGS+=-nostdlib
+# LDFLAGS+=-nostdlib
+
+CXXFLAGS+=--specs=nosys.specs
+LDFLAGS+=--specs=nosys.specs # includes -lnosys
+
+#CXXFLAGS+=--specs=nano.specs
 #LDFLAGS+=--specs=nano.specs
+
+CXXFLAGS+=-ffunction-sections -fdata-sections
+LDFLAGS+=-Wl,--gc-sections
+
 AR=arm-none-eabi-ar
 AS=arm-none-eabi-as
 LINK=$(CC)
