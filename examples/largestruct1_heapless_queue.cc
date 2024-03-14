@@ -13,7 +13,8 @@ void ex1()
 {
     auto queue1 = Queue1::empty();
 
-    nel::log << queue1 << '\n';
+    auto fmt = nel::Formatter(nel::log);
+    queue1.dbgfmt(fmt) << '\n';
 }
 
 void ex2()
@@ -23,7 +24,8 @@ void ex2()
     U8Buf<256> v = U8Buf<256>((uint8_t)0x66);
     queue1.push(nel::move(v)).is_ok();
 
-    nel::log << queue1 << '\n';
+    auto fmt = nel::Formatter(nel::log);
+    queue1.dbgfmt(fmt) << '\n';
 }
 
 void ex3()
@@ -32,21 +34,24 @@ void ex3()
 
     queue1.push((uint8_t)0x67).is_ok();
 
-    nel::log << queue1 << '\n';
+    auto fmt = nel::Formatter(nel::log);
+    queue1.dbgfmt(fmt) << '\n';
 
     auto e = queue1.pop();
-    nel::log << e << '\n';
+    e.dbgfmt(fmt) << '\n';
 }
 
 int main()
 {
-    nel::log << "ex1:b" << '\n';
+    auto fmt = nel::Formatter(nel::log);
+
+    fmt << "ex1:b" << '\n';
     ex1();
-    nel::log << "ex1:e" << '\n';
-    nel::log << "ex2:b" << '\n';
+    fmt << "ex1:e" << '\n';
+    fmt << "ex2:b" << '\n';
     ex2();
-    nel::log << "ex2:e" << '\n';
-    nel::log << "ex3:b" << '\n';
+    fmt << "ex2:e" << '\n';
+    fmt << "ex3:b" << '\n';
     ex3();
-    nel::log << "ex3:e" << '\n';
+    fmt << "ex3:e" << '\n';
 }

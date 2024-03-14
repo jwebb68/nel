@@ -317,42 +317,42 @@ struct Slice
          * Format/emit a representation of this object as a charstring
          * for debugging purposes.
          *
-         * @param val the value to format
-         * @param outs the stream to dump the representation into.
+         * @param fmt the Formatter to dump the representation into.
          */
-        // TODO: replace <<(Log ) with dbgfmt, so separate out from
-        // any other form of conversion to charstring.
-        // TODO: insert into formatter and not final dest type.
-        // instead of insert into log, can it format into ? which log implements?
-        // so it doesn't matter about the destination..
-        // and can format-insert into any char endpoint.
-        friend Log &operator<<(Log &outs, Slice const &v)
+        Formatter &dbgfmt(Formatter &fmt) const
         {
-            outs << "Slice(" << v.len() << "){";
+            fmt << "Slice(" << len() << "){";
 #    if defined(RUST_LIKE)
-            auto it = v.iter();
+            auto it = iter();
             auto itv = it.next();
             if (itv.is_some()) {
-                outs << itv.unwrap();
-                it.for_each([&outs](T const &e) { outs << ' ' << e; });
+                fmt << itv.unwrap();
+                it.for_each([&fmt](T const &e) {
+                    fmt << ' ';
+                    e.dbgfmt(fmt);
+                });
             }
 #    elif 0 && defined(C_LIKE)
-            if (v.len() > 0) {
-                outs << v.content_[0];
-                for (Index i = 1; i < v.len(); ++i) {
-                    outs << ' ' << v.content_[i];
+            if (len() > 0) {
+                fmt << content_[0];
+                for (Index i = 1; i < len(); ++i) {
+                    fmt << ' ';
+                    content_[i].dbgfmt(fmt);
                 }
             }
 #    elif defined(C_LIKE)
-            auto it = v.iter();
+            auto it = iter();
             if (it) {
-                outs << *it;
+                (*it).dbgfmt(fmt);
                 ++it;
-                it.for_each([&outs](T const &e) { outs << ' ' << e; });
+                it.for_each([&fmt](T const &e) {
+                    fmt << ' ';
+                    e.dbgfmt(fmt);
+                });
             }
 #    endif
-            outs << '}';
-            return outs;
+            fmt << '}';
+            return fmt;
         }
 };
 

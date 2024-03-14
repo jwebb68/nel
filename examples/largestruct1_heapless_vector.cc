@@ -13,7 +13,8 @@ void ex1()
 {
     Vec1 vec1 = Vec1::empty();
 
-    nel::log << vec1 << '\n';
+    auto fmt = nel::Formatter(nel::log);
+    vec1.dbgfmt(fmt) << '\n';
 }
 
 void ex2()
@@ -23,7 +24,8 @@ void ex2()
     U8Buf<256> v = U8Buf<256>((uint8_t)0x66);
     vec1.push(nel::move(v)).is_ok();
 
-    nel::log << vec1 << '\n';
+    auto fmt = nel::Formatter(nel::log);
+    vec1.dbgfmt(fmt) << '\n';
 }
 
 void ex3()
@@ -32,13 +34,15 @@ void ex3()
 
     vec1.push((uint8_t)0x67).is_ok();
 
-    nel::log << vec1 << '\n';
+    auto fmt = nel::Formatter(nel::log);
+    vec1.dbgfmt(fmt) << '\n';
 }
 
 #if defined(RUST_LIKE)
 void ex41()
 {
     Vec1 vec1 = Vec1::empty();
+    auto fmt = nel::Formatter(nel::log);
 
     vec1.push((uint8_t)0x67).is_ok();
     vec1.push((uint8_t)0x68).is_ok();
@@ -60,7 +64,7 @@ void ex41()
         if (e.is_none()) { break; }
         // calls is_some() but always is_some..
         // opt does optimise it out but is there a better way?
-        nel::log << e.unwrap() << '\n';
+        e.unwrap().dbgfmt(fmt) << '\n';
     }
 }
 #endif
@@ -68,6 +72,7 @@ void ex41()
 void ex42()
 {
     Vec1 vec1 = Vec1::empty();
+    auto fmt = nel::Formatter(nel::log);
 
     vec1.push((uint8_t)0x67).is_ok();
     vec1.push((uint8_t)0x68).is_ok();
@@ -78,7 +83,7 @@ void ex42()
     auto it = vec1.iter();
     for (; !it.is_done(); it.inc()) {
         auto &v = it.deref();
-        nel::log << v << '\n';
+        v.dbgfmt(fmt) << '\n';
     }
 }
 
@@ -105,7 +110,7 @@ void ex51()
         if (e.is_none()) { break; }
         // calls is_some() but always is_some..
         // opt does optimise it out but is there a better way?
-        nel::log << e.unwrap() << '\n';
+        e.unwrap().dbgfmt(fmt) << '\n';
     }
 }
 #endif
@@ -113,6 +118,7 @@ void ex51()
 void ex52()
 {
     Vec1 vec1 = Vec1::empty();
+    auto fmt = nel::Formatter(nel::log);
 
     for (uint8_t f = 1; f < 10; ++f) {
         vec1.push(f).is_ok();
@@ -121,35 +127,36 @@ void ex52()
     auto it = vec1.iter().first_n(3);
     for (; !it.is_done(); it.inc()) {
         auto &v = it.deref();
-        nel::log << v << '\n';
+        v.dbgfmt(fmt) << '\n';
     }
 }
 
 int main()
 {
-    nel::log << "ex1:b" << '\n';
+    auto fmt = nel::Formatter(nel::log);
+    fmt << "ex1:b" << '\n';
     ex1();
-    nel::log << "ex1:e" << '\n';
-    nel::log << "ex2:b" << '\n';
+    fmt << "ex1:e" << '\n';
+    fmt << "ex2:b" << '\n';
     ex2();
-    nel::log << "ex2:e" << '\n';
-    nel::log << "ex3:b" << '\n';
+    fmt << "ex2:e" << '\n';
+    fmt << "ex3:b" << '\n';
     ex3();
-    nel::log << "ex3:e" << '\n';
+    fmt << "ex3:e" << '\n';
 #if defined(RUST_LIKE)
-    nel::log << "ex41:b" << '\n';
+    fmt << "ex41:b" << '\n';
     ex41();
-    nel::log << "ex41:e" << '\n';
+    fmt << "ex41:e" << '\n';
 #endif
-    nel::log << "ex42:b" << '\n';
+    fmt << "ex42:b" << '\n';
     ex42();
-    nel::log << "ex42:e" << '\n';
+    fmt << "ex42:e" << '\n';
 #if defined(RUST_LIKE)
-    nel::log << "ex51:b" << '\n';
+    fmt << "ex51:b" << '\n';
     ex51();
-    nel::log << "ex51:e" << '\n';
+    fmt << "ex51:e" << '\n';
 #endif
-    nel::log << "ex52:b" << '\n';
+    fmt << "ex52:b" << '\n';
     ex52();
-    nel::log << "ex52:e" << '\n';
+    fmt << "ex52:e" << '\n';
 }

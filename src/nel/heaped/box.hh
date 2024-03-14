@@ -175,6 +175,18 @@ struct Box
 
         // No comparators by design.
         // (i.e. Keep it simple)
+    public:
+        Formatter &dbgfmt(Formatter &fmt) const
+        {
+            fmt << "Box(";
+            if (value_ == nullptr) {
+                fmt << "null";
+            } else {
+                value_->dbgfmt(fmt);
+            }
+            fmt << ')';
+            return fmt;
+        }
 };
 
 } // namespace heaped

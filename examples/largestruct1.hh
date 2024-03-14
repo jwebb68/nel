@@ -6,10 +6,7 @@
 #    include <nel/memory.hh>
 #    include <nel/defs.hh>
 
-typedef long unsigned int Length;
-typedef long unsigned int Index;
-
-template<Length const N>
+template<nel::Length const N>
 struct U8Buf
 {
     private:
@@ -50,7 +47,7 @@ struct U8Buf
         }
 
     public:
-        constexpr Length len(void) const
+        constexpr nel::Length len(void) const
         {
             return N;
         }
@@ -60,17 +57,17 @@ struct U8Buf
             nel::elem::set(data_, f, N);
         }
 
-        friend nel::Log &operator<<(nel::Log &outs, U8Buf const &val)
+        nel::Formatter &dbgfmt(nel::Formatter &fmt) const
         {
-            outs << "U8Buf<" << val.len() << ">{";
-            if (val.len() > 0) {
-                outs << val.data_[0];
-                for (Index i = 1; i < val.len(); ++i) {
-                    outs << ' ' << val.data_[i];
+            fmt << "U8Buf<" << len() << ">{";
+            if (len() > 0) {
+                fmt << data_[0];
+                for (nel::Index i = 1; i < len(); ++i) {
+                    fmt << ' ' << data_[i];
                 }
             }
-            outs << '}';
-            return outs;
+            fmt << '}';
+            return fmt;
         }
 };
 

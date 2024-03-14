@@ -1,52 +1,49 @@
 // -*- mode: c++; indent-tabs-mode: nil; tab-width: 4 -*-
 #include <nel/log.hh>
 
-#include <cstdio>
+#include <unistd.h>
 
 namespace nel
 {
-Log log;
 
-Log &operator<<(Log &outs, char v)
+int32_t NEL_WARN_UNUSED_RESULT FileH::write_(Char c)
 {
-    fprintf(stderr, "%c", v);
-    return outs;
+    ssize_t rc = ::write(fd_, &c, 1);
+    return rc;
 }
 
-Log &operator<<(Log &outs, char const *v)
+int32_t NEL_WARN_UNUSED_RESULT FileH::write_(Char c, uint32_t n)
 {
-    fprintf(stderr, "%s", v);
-    return outs;
+    uint32_t l = 0;
+    for (; l < n;) {
+        int32_t rc = write_(c);
+        l += 1;
+        if (rc <= 0) {
+            l = rc;
+            break;
+        }
+    }
+    return l;
 }
 
-Log &operator<<(Log &outs, uint8_t const v)
+int32_t NEL_WARN_UNUSED_RESULT FileH::write_(Char const a[], uint32_t n)
 {
-    fprintf(stderr, "%" PRIu8, v);
-    return outs;
+    return ::write(fd_, a, n);
 }
 
-Log &operator<<(Log &outs, uint16_t const v)
+int32_t NEL_WARN_UNUSED_RESULT FileH::write_(Char const *const s)
 {
-    fprintf(stderr, "%" PRIu16, v);
-    return outs;
+    Char const *i = s;
+    for (; *i != '\0'; i += 1)
+        ;
+    return write_(s, i - s);
 }
 
-Log &operator<<(Log &outs, uint32_t const v)
+LogDest::LogDest()
+    : FileH(STDERR_FILENO)
 {
-    fprintf(stderr, "%" PRIu32, v);
-    return outs;
 }
 
-Log &operator<<(Log &outs, int const v)
-{
-    fprintf(stderr, "%u", v);
-    return outs;
-}
-
-Log &operator<<(Log &outs, long unsigned int const v)
-{
-    fprintf(stderr, "%lu", v);
-    return outs;
-}
+LogDest log;
 
 } // namespace nel

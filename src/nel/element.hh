@@ -10,6 +10,7 @@ struct Element;
 
 } // namespace nel
 
+#    include <nel/formatter.hh>
 #    include <nel/memory.hh> // move, forward
 
 namespace nel
@@ -76,6 +77,12 @@ struct Element
         constexpr bool operator!=(Element const &o) const
         {
             return ref() != o.ref();
+        }
+
+    public:
+        Formatter &dbgfmt(Formatter &fmt) const
+        {
+            return value_.dbgfmt(fmt);
         }
 };
 

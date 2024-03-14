@@ -104,6 +104,12 @@ struct RC
                 {
                     return has_value_;
                 }
+
+            public:
+                Formatter &dbgfmt(Formatter &fmt) const
+                {
+                    return value_.dbgfmt(fmt);
+                }
         };
 
     private:
@@ -265,6 +271,19 @@ struct RC
         // {
         //     return *(this) >= *o;
         // }
+
+    public:
+        Formatter &dbgfmt(Formatter &fmt) const
+        {
+            fmt << "RC(";
+            if (node_ == nullptr) {
+                fmt << "null";
+            } else {
+                node_->dbgfmt(fmt);
+            }
+            fmt << ')';
+            return fmt;
+        }
 };
 
 } // namespace heaped

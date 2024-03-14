@@ -331,20 +331,20 @@ class Result
          */
         constexpr bool operator==(Result const &o) const
         {
+#    if defined(__arm__)
+            NEL_UNUSED(o);
+            return false;
+#    else
             return match<bool>(
                 [&o](T const &ok) -> bool {
-                    return o.match<bool>(
-                        [&ok](T const &ook) -> bool { return ok == ook; },
-                        [](E const &) -> bool { return false; }
-                    );
+                    return o.match<bool>([&ok](T const &ook) -> bool { return ok == ook; },
+                                         [](E const &) -> bool { return false; });
                 },
                 [&o](E const &err) -> bool {
-                    return o.match<bool>(
-                        [](T const &) -> bool { return false; },
-                        [&err](E const &oerr) -> bool { return err == oerr; }
-                    );
-                }
-            );
+                    return o.match<bool>([](T const &) -> bool { return false; },
+                                         [&err](E const &oerr) -> bool { return err == oerr; });
+                });
+#    endif
         }
 
         /**
@@ -358,20 +358,20 @@ class Result
          */
         constexpr bool operator!=(Result const &o) const
         {
+#    if defined(__arm__)
+            NEL_UNUSED(o);
+            return false;
+#    else
             return match<bool>(
                 [&o](T const &ok) -> bool {
-                    return o.match<bool>(
-                        [&ok](T const &ook) -> bool { return ok != ook; },
-                        [](E const &) -> bool { return true; }
-                    );
+                    return o.match<bool>([&ok](T const &ook) -> bool { return ok != ook; },
+                                         [](E const &) -> bool { return true; });
                 },
                 [&o](E const &err) -> bool {
-                    return o.match<bool>(
-                        [](T const &) -> bool { return true; },
-                        [&err](E const &oerr) -> bool { return err != oerr; }
-                    );
-                }
-            );
+                    return o.match<bool>([](T const &) -> bool { return true; },
+                                         [&err](E const &oerr) -> bool { return err != oerr; });
+                });
+#    endif
         }
 
     public:
@@ -686,25 +686,25 @@ class Result
         }
 
     public:
-        friend Log &operator<<(Log &outs, Result const &val)
+        Formatter &dbgfmt(Formatter &fmt) const
         {
-            switch (val.tag_) { // result-dbgfmt
+            switch (tag_) { // result-dbgfmt
                 case Tag::OK:
-                    outs << "Result(Ok(" << *val.ok_ << "))";
-                    return outs;
+                    fmt << "Result(Ok(";
+                    (*ok_).dbgfmt(fmt) << "))";
                     break;
                 case Tag::ERR:
-                    outs << "Result(Err(" << *val.err_ << "))";
-                    return outs;
+                    fmt << "Result(Err(";
+                    (*err_).dbgfmt(fmt) << "))";
                     break;
                 case Tag::INVAL:
-                    outs << "Result(Inval)";
-                    return outs;
+                    fmt << "Result(Inval)";
+                    return fmt;
                     break;
                 default:
-                    outs << "Result(Unknown)";
+                    fmt << "Result(Unknown)";
             }
-            return outs;
+            return fmt;
         }
 };
 
@@ -1225,26 +1225,24 @@ class Result<void, E>
         }
 
     public:
-        friend Log &operator<<(Log &outs, Result const &val)
+        Formatter &dbgfmt(Formatter &fmt) const
         {
-            switch (val.tag_) {
+            switch (tag_) { // result-dbgfmt
                 case Tag::OK:
-                    outs << "Result(Ok())";
-                    return outs;
+                    fmt << "Result(Ok())";
                     break;
                 case Tag::ERR:
-                    outs << "Result(Err(" << *val.err_ << "))";
-                    return outs;
+                    fmt << "Result(Err(";
+                    (*err_).dbgfmt(fmt) << "))";
                     break;
                 case Tag::INVAL:
-                    outs << "Result(Inval)";
-                    return outs;
+                    fmt << "Result(Inval)";
+                    return fmt;
                     break;
                 default:
-                    outs << "Result(Unknown)";
+                    fmt << "Result(Unknown)";
             }
-
-            return outs;
+            return fmt;
         }
 };
 

@@ -27,8 +27,8 @@ nel::Log &operator<<(nel::Log &outs, ErrorCode const &val)
     return outs << '?';
 }
 
-// typedef uint16_t Lineno;
-typedef long unsigned int Lineno;
+// using Lineno = uint16_t;
+using Lineno = uint32_t;
 
 struct Error
 {
@@ -48,11 +48,18 @@ struct Error
 
     public:
         // friend std::ostream &operator<<(std::ostream &outs, Error const &val) {
-        friend nel::Log &operator<<(nel::Log &outs, Error const &val)
+        // {
+        //     outs << "Error(" << static_cast<int>(val.code) << "=" << val.code << ")";
+        //     outs << "@" << val.filename << ":" << val.lineno;
+        //     return outs;
+        // }
+        nel::Formatter &dbgfmt(nel::Formatter &fmt) const
         {
-            outs << "Error(" << static_cast<int>(val.code) << "=" << val.code << ")";
-            outs << "@" << val.filename << ":" << val.lineno;
-            return outs;
+            fmt << "Error(";
+            //fmt << static_cast<int32_t>(code) << "=";
+            ::fmt(fmt, code) << ")";
+            fmt << "@" << filename << ":" << lineno;
+            return fmt;
         }
 };
 

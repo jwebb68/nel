@@ -414,23 +414,18 @@ struct Vector
          * Format/emit a representation of this object as a charstring
          * for debugging purposes.
          *
-         * @param val the value to format
-         * @param outs the stream to dump the representation into.
+         * @param fmt the formatter to dump the representation into.
          */
-        // TODO: replace <<(Log ) with dbgfmt, so separate out from
-        // any other form of conversion to charstring.
-        // TODO: insert into formatter and not final dest type.
-        friend Log &operator<<(Log &outs, Vector const &v)
+        Formatter &dbgfmt(Formatter &fmt) const
         {
-            outs << "Vector(" << v.len() << "){";
+            fmt << "Vector(" << len() << "){";
 #    if 1
-            outs << '\n';
-            if (v.item_ != nullptr) { outs << *v.item_; }
+            fmt << '\n';
+            if (item_ != nullptr) { item_->dbgfmt(fmt); }
 #    else
-            if (v.item_ != nullptr) { outs << *v.item_; }
+            if (item_ != nullptr) { item_->dbgfmt(fmt); }
 #    endif
-            outs << '}';
-            return outs;
+            return fmt << '}';
         }
 };
 

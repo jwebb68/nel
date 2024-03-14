@@ -11,18 +11,22 @@ typedef nel::heaped::Vector<U8Buf<256>> Vec1;
 void ex1(void)
 {
     Vec1 vec1 = Vec1::with_capacity(5);
+    auto fmt = nel::Formatter(nel::log);
 
     vec1.push((uint8_t)0x67).is_ok();
     vec1.push((uint8_t)0x68).is_ok();
     vec1.push((uint8_t)0x69).is_ok();
 
     auto s1 = vec1.slice();
-    nel::log << s1.len() << '\n' << s1;
+    fmt << s1.len() << '\n';
+    s1.dbgfmt(fmt);
 }
 
 int main()
 {
-    nel::log << "ex1:b" << '\n';
+    auto fmt = nel::Formatter(nel::log);
+
+    fmt << "ex1:b" << '\n';
     ex1();
-    nel::log << "ex1:e" << '\n';
+    fmt << "ex1:e" << '\n';
 }

@@ -2,6 +2,8 @@
 #if !defined(NEL_DEFS_HH)
 #    define NEL_DEFS_HH
 
+#    include <stdint.h>
+
 namespace nel
 {
 
@@ -37,9 +39,9 @@ constexpr void unused(T &&, Ts &&...)
 typedef __SIZE_TYPE__ USize;
 typedef __PTRDIFF_TYPE__ ISize; // rust: same size as void*
 
-typedef long unsigned int Length;
-typedef long unsigned int Index;
-typedef long unsigned int Count;
+typedef uint32_t Length;
+typedef uint32_t Index;
+typedef uint32_t Count;
 
 #    define NEL_REQUIRES(Str, Tra) \
         static_assert(__is_base_of(Tra, Str), #Tra " interface not supported for " #Str)

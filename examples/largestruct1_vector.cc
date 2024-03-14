@@ -13,7 +13,8 @@ void ex1()
 {
     Vec1 vec1 = Vec1::with_capacity(5);
 
-    nel::log << vec1 << '\n';
+    auto fmt = nel::Formatter(nel::log);
+    vec1.dbgfmt(fmt) << '\n';
 }
 
 void ex2()
@@ -23,7 +24,8 @@ void ex2()
     U8Buf<256> v = U8Buf<256>((uint8_t)0x66);
     vec1.push(nel::move(v)).is_ok();
 
-    nel::log << vec1 << '\n';
+    auto fmt = nel::Formatter(nel::log);
+    vec1.dbgfmt(fmt) << '\n';
 }
 
 void ex3()
@@ -32,12 +34,15 @@ void ex3()
 
     vec1.push((uint8_t)0x67).is_ok();
 
-    nel::log << vec1 << '\n';
+    auto fmt = nel::Formatter(nel::log);
+    vec1.dbgfmt(fmt) << '\n';
 }
 
 #if defined(RUST_LIKE)
 void ex41()
 {
+    auto fmt = nel::Formatter(nel::log);
+
     Vec1 vec1 = Vec1::with_capacity(5);
 
     vec1.push((uint8_t)0x67).is_ok();
@@ -58,13 +63,15 @@ void ex41()
         if (e.is_none()) { break; }
         // calls is_some() but always is_some..
         // opt does optimise it out but is there a better way?
-        nel::log << e.unwrap() << '\n';
+        e.unwrap().dbgfmt(fmt) << '\n';
     }
 }
 #endif
 
 void ex42()
 {
+    auto fmt = nel::Formatter(nel::log);
+
     Vec1 vec1 = Vec1::with_capacity(5);
 
     vec1.push((uint8_t)0x67).is_ok();
@@ -72,11 +79,13 @@ void ex42()
     vec1.push((uint8_t)0x69).is_ok();
 
     auto it = vec1.iter();
-    it.for_each([&](U8Buf<256> &e) -> void { nel::log << e << '\n'; });
+    it.for_each([&](U8Buf<256> &e) -> void { e.dbgfmt(fmt) << '\n'; });
 }
 
 void ex43()
 {
+    auto fmt = nel::Formatter(nel::log);
+
     Vec1 vec1 = Vec1::with_capacity(5);
 
     vec1.push((uint8_t)0x67).is_ok();
@@ -86,13 +95,15 @@ void ex43()
     auto it = vec1.iter();
     for (; !it.is_done(); it.inc()) {
         auto &e = it.deref();
-        nel::log << e << '\n';
+        e.dbgfmt(fmt) << '\n';
     }
 }
 
 #if defined(RUST_LIKE)
 void ex44()
 {
+    auto fmt = nel::Formatter(nel::log);
+
     Vec1 vec1 = Vec1::with_capacity(5);
 
     vec1.push((uint8_t)0x67).is_ok();
@@ -100,35 +111,37 @@ void ex44()
     vec1.push((uint8_t)0x69).is_ok();
 
     auto it = vec1.iter();
-    it.for_each2([&](U8Buf<256> &e) -> void { nel::log << e << '\n'; });
+    it.for_each2([&fmt](U8Buf<256> &e) -> void { e.dbgfmt(fmt) << '\n'; });
 }
 #endif
 
 int main()
 {
-    nel::log << "ex1:b" << '\n';
+    auto fmt = nel::Formatter(nel::log);
+
+    fmt << "ex1:b" << '\n';
     ex1();
-    nel::log << "ex1:e" << '\n';
-    nel::log << "ex2:b" << '\n';
+    fmt << "ex1:e" << '\n';
+    fmt << "ex2:b" << '\n';
     ex2();
-    nel::log << "ex2:e" << '\n';
-    nel::log << "ex3:b" << '\n';
+    fmt << "ex2:e" << '\n';
+    fmt << "ex3:b" << '\n';
     ex3();
-    nel::log << "ex3:e" << '\n';
+    fmt << "ex3:e" << '\n';
 #if defined(RUST_LIKE)
-    nel::log << "ex41:b" << '\n';
+    fmt << "ex41:b" << '\n';
     ex41();
-    nel::log << "ex41:e" << '\n';
+    fmt << "ex41:e" << '\n';
 #endif
-    nel::log << "ex42:b" << '\n';
+    fmt << "ex42:b" << '\n';
     ex42();
-    nel::log << "ex42:e" << '\n';
-    nel::log << "ex43:b" << '\n';
+    fmt << "ex42:e" << '\n';
+    fmt << "ex43:b" << '\n';
     ex43();
-    nel::log << "ex43:e" << '\n';
+    fmt << "ex43:e" << '\n';
 #if defined(RUST_LIKE)
-    nel::log << "ex44:b" << '\n';
+    fmt << "ex44:b" << '\n';
     ex44();
-    nel::log << "ex44:e" << '\n';
+    fmt << "ex44:e" << '\n';
 #endif
 }

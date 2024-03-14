@@ -335,18 +335,14 @@ struct Queue
          * Format/emit a representation of this object as a charstring
          * for debugging purposes.
          *
-         * @param val the value to format
-         * @param outs the stream to dump the representation into.
+         * @param fmt the formatter to dump the representation into.
          */
-        // TODO: replace <<(Log ) with dbgfmt, so separate out from
-        // any other form of conversion to charstring.
-        // TODO: insert into formatter and not final dest type.
-        friend Log &operator<<(Log &outs, Queue const &v)
+        Formatter &dbgfmt(Formatter &fmt) const
         {
-            outs << "Queue<" << N << ">(" << v.len() << "){";
-            outs << v.iter();
-            outs << '}';
-            return outs;
+            fmt << "Queue<" << N << ">(" << len() << "){";
+            fmt << iter();
+            fmt << '}';
+            return fmt;
         }
 };
 

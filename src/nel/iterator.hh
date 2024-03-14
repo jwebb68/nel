@@ -178,25 +178,28 @@ enter:
 #    endif
 
     public:
-        friend Log &operator<<(Log &outs, ItT const &it)
+        Formatter &dbgfmt(Formatter &fmt) const
         {
-            outs << '[';
+            fmt << '[';
             // copy/clone since want to mutate..
-            ItT it2 = it;
+            ItT it2 = self();
 #    if defined(RUST_LIKE)
             OutT v = it2.next();
             if (v.is_some()) {
-                outs << v.unwrap();
+                v.unwrap().dbgfmt(fmt);
                 // Index i = 0;
                 // it2.for_each([&outs, &i](OutT const &e) {
                 // outs << '[' << i << "]:" << e << '\n';
                 //++i;
                 // });
-                it2.for_each([&outs](OutT const &e) { outs << ',' << e; });
+                it2.for_each([&fmt](OutT const &e) {
+                    fmt << ',';
+                    e.dbgfmt(fmt);
+                });
             }
 #    elif defined(C_LIKE)
             if (!it2.is_done()) {
-                outs << it2.deref();
+                it2.deref().dbgfmt(fmt);
                 it2.inc();
                 // Index i = 0;
                 // it2.for_each2([&outs, &i](OutT const &e) {
@@ -204,15 +207,21 @@ enter:
                 //     ++i;
                 // });
 #        if defined(RUST_LIKE)
-                it2.for_each2([&outs](OutT const &e) { outs << ',' << e; });
+                it2.for_each2([&fmt](OutT const &e) {
+                    fmt << ',';
+                    e.dbgfmt(fmt);
+                });
 #        elif defined(C_LIKE)
-                it2.for_each([&outs](OutT const &e) { outs << ',' << e; });
+                it2.for_each([&fmt](OutT const &e) {
+                    fmt << ',';
+                    e.dbgfmt(fmt);
+                });
 #        endif
             }
 #    endif
-            outs << ']';
+            fmt << ']';
 
-            return outs;
+            return fmt;
         }
 
     public:

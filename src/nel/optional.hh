@@ -13,7 +13,7 @@ struct NoneT;
 } // namespace nel
 
 #    include <nel/element.hh>
-#    include <nel/log.hh>
+#    include <nel/formatter.hh>
 #    include <nel/panic.hh>
 #    include <nel/memory.hh> // move,forward
 #    include <nel/new.hh> // new (p) T()
@@ -325,8 +325,13 @@ struct Optional
          */
         constexpr bool is_eq(Optional const &o, Context const &ctx = Context()) const
         {
+#    if defined(__arm__)
+            NEL_UNUSED(o);
+            NEL_UNUSED(ctx);
+            return false;
+#    else
             return match<bool>(
-                [&o, &ctx, this](T const &t) -> bool {
+                [&o, &ctx](T const &t) -> bool {
                     return o.match<bool>([&t](T const &ot) -> bool { return t == ot; },
                                          [](void) -> bool { return false; },
                                          ctx);
@@ -337,6 +342,7 @@ struct Optional
                                          ctx);
                 },
                 ctx);
+#    endif
         }
 
         /**
@@ -364,8 +370,13 @@ struct Optional
          */
         constexpr bool is_ne(Optional const &o, Context const &ctx = Context()) const
         {
+#    if defined(__arm__)
+            NEL_UNUSED(o);
+            NEL_UNUSED(ctx);
+            return false;
+#    else
             return match<bool>(
-                [&o, &ctx, this](T const &t) -> bool {
+                [&o, &ctx](T const &t) -> bool {
                     return o.match<bool>([&t](T const &ot) -> bool { return t != ot; },
                                          [](void) -> bool { return true; },
                                          ctx);
@@ -376,6 +387,7 @@ struct Optional
                                          ctx);
                 },
                 ctx);
+#    endif
         }
 
         /**
@@ -582,31 +594,28 @@ struct Optional
         }
 
     public:
-        friend Log &operator<<(Log &outs, Optional const &val)
+        Formatter &dbgfmt(Formatter &fmt) const
         {
-            switch (val.tag_) {
+            switch (tag_) {
                 case Tag::NONE:
-                    outs << "Optional("
-                         << "None)";
-                    return outs;
+                    fmt << "Optional("
+                        << "None)";
                     break;
                 case Tag::SOME:
-                    outs << "Optional("
-                         << "Some(";
-                    outs << *val.some_;
-                    outs << "))";
-                    return outs;
+                    fmt << "Optional("
+                        << "Some(";
+                    some_.dbgfmt(fmt);
+                    fmt << "))";
                     break;
                 case Tag::INVAL:
-                    outs << "Optional("
-                         << "Inval)";
-                    return outs;
+                    fmt << "Optional("
+                        << "Inval)";
                     break;
                 default:
-                    outs << "Optional("
-                         << "Unknown)";
+                    fmt << "Optional("
+                        << "Unknown)";
             }
-            return outs;
+            return fmt;
         }
 };
 
@@ -1049,29 +1058,26 @@ struct Optional<void>
         }
 
     public:
-        friend Log &operator<<(Log &outs, Optional const &val)
+        Formatter &dbgfmt(Formatter &fmt) const
         {
-            switch (val.tag_) {
+            switch (tag_) {
                 case Tag::NONE:
-                    outs << "Optional("
-                         << "None" << ')';
-                    return outs;
+                    fmt << "Optional("
+                        << "None" << ')';
                     break;
                 case Tag::SOME:
-                    outs << "Optional("
-                         << "Some(" << ')' << ')';
-                    return outs;
+                    fmt << "Optional("
+                        << "Some()" << ')';
                     break;
                 case Tag::INVAL:
-                    outs << "Optional("
-                         << "Inval" << ')';
-                    return outs;
+                    fmt << "Optional("
+                        << "Inval" << ')';
                     break;
                 default:
-                    outs << "Optional("
-                         << "Unknown" << ')';
+                    fmt << "Optional("
+                        << "Unknown" << ')';
             }
-            return outs;
+            return fmt;
         }
 };
 

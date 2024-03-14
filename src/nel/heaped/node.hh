@@ -304,10 +304,9 @@ struct Node
         }
 
     public:
-        friend Log &operator<<(Log &outs, Node const &v)
+        Formatter &dbgfmt(Formatter &fmt) const
         {
-            outs << v.iter();
-            return outs;
+            return iter().dbgfmt(fmt);
         }
 };
 

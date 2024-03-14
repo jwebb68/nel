@@ -290,18 +290,14 @@ struct Array
          * Format/emit a representation of this object as a charstring
          * for debugging purposes.
          *
-         * @param val the value to format
-         * @param outs the stream to dump the representation into.
+         * @param fmt the Formatter to dump the representation into.
          */
-        // TODO: replace <<(Log ) with dbgfmt, so separate out from
-        // any other form of conversion to charstring.
-        // TODO: insert into formatter and not final dest type.
-        friend Log &operator<<(Log &outs, Array const &v)
+        Formatter &dbgfmt(Formatter &fmt) const
         {
-            outs << "Array(" << v.len() << "){";
-            outs << v.iter();
-            outs << '}';
-            return outs;
+            fmt << "Array(" << len() << "){";
+            iter().dbgfmt(fmt);
+            fmt << '}';
+            return fmt;
         }
 };
 

@@ -11,32 +11,48 @@ namespace test
 namespace result
 {
 
-typedef enum _Error {
-    NOERROR = 0,
-    FAIL,
-    NOENT
-} Error;
-
-nel::Log &operator<<(nel::Log &outs, Error const &v)
+struct Error
 {
-    switch (v) {
-        case NOERROR:
-            outs << "NOERROR";
-            return outs;
-            break;
-        case FAIL:
-            outs << "FAIL";
-            return outs;
-            break;
-        case NOENT:
-            outs << "NOENT";
-            return outs;
-            break;
-        default:
-            std::abort();
-    }
-    return outs;
-}
+    public:
+        enum _Error {
+            NOERROR = 0,
+            FAIL,
+            NOENT,
+        };
+
+    private:
+        _Error v_;
+
+    public:
+        constexpr Error(_Error t)
+            : v_(t)
+        {
+        }
+
+        constexpr operator _Error() const
+        {
+            return v_;
+        }
+
+    public:
+        nel::Formatter &fmt(nel::Formatter &fmt) const
+        {
+            switch (v_) {
+                case NOERROR:
+                    fmt << "NOERROR";
+                    break;
+                case FAIL:
+                    fmt << "FAIL";
+                    break;
+                case Error::NOENT:
+                    fmt << "Error::NOENT";
+                    break;
+                default:
+                    std::abort();
+            }
+            return fmt;
+        }
+};
 
 typedef nel::Result<int, Error> TestResult;
 
@@ -52,11 +68,11 @@ TEST_CASE("Result<>::Ok", "[result]")
 
 TEST_CASE("Result<>::Err", "[result]")
 {
-    auto res = TestResult::Err(FAIL);
+    auto res = TestResult::Err(Error::FAIL);
 
     SECTION("must produce a res containing the val")
     {
-        REQUIRE(res.unwrap_err() == FAIL);
+        REQUIRE(res.unwrap_err() == Error::FAIL);
     }
 }
 
@@ -78,13 +94,13 @@ TEST_CASE("Result<>(ok).move-ctor", "[result]")
 
 TEST_CASE("Result<>(err).move-ctor", "[result]")
 {
-    auto src = TestResult::Err(FAIL);
+    auto src = TestResult::Err(Error::FAIL);
 
     auto dst = move(src);
 
     SECTION("must move value to new loc")
     {
-        REQUIRE(dst.unwrap_err() == FAIL);
+        REQUIRE(dst.unwrap_err() == Error::FAIL);
     }
     SECTION("must invalidate src")
     {
@@ -94,7 +110,7 @@ TEST_CASE("Result<>(err).move-ctor", "[result]")
 
 TEST_CASE("Result<>(inval).move-ctor", "[result]")
 {
-    auto src = TestResult::Err(FAIL);
+    auto src = TestResult::Err(Error::FAIL);
     auto tmp1 = move(src);
     nel::unused(tmp1);
 
@@ -130,14 +146,14 @@ TEST_CASE("Result<>(ok).move-ass", "[result]")
 
 TEST_CASE("Result<>(err).move-ass: must move err val to dest", "[result]")
 {
-    auto src = TestResult::Err(FAIL);
+    auto src = TestResult::Err(Error::FAIL);
 
     auto dst = TestResult::Ok(2);
     dst = move(src);
 
     SECTION("must move value to new loc")
     {
-        REQUIRE(dst.unwrap_err() == FAIL);
+        REQUIRE(dst.unwrap_err() == Error::FAIL);
     }
     SECTION("must invalidate src")
     {
@@ -147,7 +163,7 @@ TEST_CASE("Result<>(err).move-ass: must move err val to dest", "[result]")
 
 TEST_CASE("Result<>(inval).move-ass", "[result]")
 {
-    auto src = TestResult::Err(FAIL);
+    auto src = TestResult::Err(Error::FAIL);
     auto tmp1 = move(src);
 
     auto dst = TestResult::Ok(3);
@@ -182,7 +198,7 @@ TEST_CASE("Result<>(ok).ok()", "[result]")
 
 TEST_CASE("Result<>(err).ok(): must produce none", "[result]")
 {
-    auto src = TestResult::Err(FAIL);
+    auto src = TestResult::Err(Error::FAIL);
     auto val = src.ok();
 
     SECTION("must produce a none")
@@ -197,7 +213,7 @@ TEST_CASE("Result<>(err).ok(): must produce none", "[result]")
 
 TEST_CASE("Result<>(inval).ok(): must panic", "[result]")
 {
-    auto src = TestResult::Err(FAIL);
+    auto src = TestResult::Err(Error::FAIL);
     auto tmp1 = move(src);
     nel::unused(tmp1);
 
@@ -226,12 +242,12 @@ TEST_CASE("Result<>(ok).err(): must produce none", "[result]")
 
 TEST_CASE("Result<>(err).err(): must produce err val", "[result]")
 {
-    auto src = TestResult::Err(FAIL);
+    auto src = TestResult::Err(Error::FAIL);
     auto val = src.err();
 
     SECTION("must produce optional holding err value")
     {
-        REQUIRE(val == nel::Some(FAIL));
+        REQUIRE(val == nel::Some(Error(Error::FAIL)));
     }
     SECTION("must invalidate src")
     {
@@ -271,7 +287,7 @@ TEST_CASE("Result<>(ok).is_ok()", "[result]")
 
 TEST_CASE("Result<>(err).is_ok()", "[result]")
 {
-    auto src = TestResult::Err(FAIL);
+    auto src = TestResult::Err(Error::FAIL);
 
     bool is_ok = src.is_ok();
 
@@ -281,7 +297,7 @@ TEST_CASE("Result<>(err).is_ok()", "[result]")
     }
     SECTION("must not change value of src")
     {
-        REQUIRE(src.unwrap_err() == FAIL);
+        REQUIRE(src.unwrap_err() == Error::FAIL);
     }
 }
 
@@ -313,7 +329,7 @@ TEST_CASE("Result<>(ok).is_err()", "[result]")
 
 TEST_CASE("Result<>(err).is_err()", "[result]")
 {
-    auto src = TestResult::Err(FAIL);
+    auto src = TestResult::Err(Error::FAIL);
 
     SECTION("must return true")
     {
@@ -321,7 +337,7 @@ TEST_CASE("Result<>(err).is_err()", "[result]")
     }
     SECTION("must not change value of src")
     {
-        REQUIRE(src.unwrap_err() == FAIL);
+        REQUIRE(src.unwrap_err() == Error::FAIL);
     }
 }
 
@@ -337,26 +353,28 @@ TEST_CASE("Result<>(inval).is_err()", "[result]")
     }
 }
 
-
 TEST_CASE("Result<>(ok).unwrap()", "[result]")
 {
     auto src = TestResult::Ok(1);
 
     auto val = src.unwrap();
 
-    SECTION("must return value") {
+    SECTION("must return value")
+    {
         REQUIRE(val == 1);
     }
-    SECTION("must invalidate src") {
+    SECTION("must invalidate src")
+    {
         REQUIRE(src.is_inval());
     }
 }
 
 TEST_CASE("Result<>(err).unwrap()", "[result]")
 {
-    auto res = TestResult::Err(FAIL);
+    auto res = TestResult::Err(Error::FAIL);
 
-    SECTION("must panic") {
+    SECTION("must panic")
+    {
         REQUIRE_PANIC(res.unwrap());
     }
 }
@@ -366,7 +384,8 @@ TEST_CASE("Result<>(inval).unwrap()", "[result]")
     auto res = TestResult::Ok(1);
     auto res2 = move(res);
 
-    SECTION("must panic") {
+    SECTION("must panic")
+    {
         REQUIRE_PANIC(res.unwrap());
     }
 }
@@ -376,21 +395,24 @@ TEST_CASE("Result<>(ok).unwrap_err()", "[result]")
 {
     auto res = TestResult::Ok(1);
 
-    SECTION("must panic") {
+    SECTION("must panic")
+    {
         REQUIRE_PANIC(res.unwrap_err());
     }
 }
 
 TEST_CASE("Result<>(err).unwrap_err()", "[result]")
 {
-    auto src = TestResult::Err(FAIL);
+    auto src = TestResult::Err(Error::FAIL);
 
     auto val = src.unwrap_err();
 
-    SECTION("must return value") {
-        REQUIRE(val == FAIL);
+    SECTION("must return value")
+    {
+        REQUIRE(val == Error::FAIL);
     }
-    SECTION("must invalidate src") {
+    SECTION("must invalidate src")
+    {
         REQUIRE(src.is_inval());
     }
 }
@@ -400,11 +422,11 @@ TEST_CASE("Result<>(inval).unwrap_err()", "[result]")
     auto res = TestResult::Ok(1);
     auto res2 = move(res);
 
-    SECTION("must panic") {
+    SECTION("must panic")
+    {
         REQUIRE_PANIC(res.unwrap());
     }
 }
-
 
 TEST_CASE("Result<>(ok).unwrap_or(ok2)", "[result]")
 {
@@ -412,34 +434,39 @@ TEST_CASE("Result<>(ok).unwrap_or(ok2)", "[result]")
 
     auto val = src.unwrap_or(2);
 
-    SECTION("must return wrapped value") {
+    SECTION("must return wrapped value")
+    {
         REQUIRE(val == 1);
     }
-    SECTION("must invalidate src") {
+    SECTION("must invalidate src")
+    {
         REQUIRE(src.is_inval());
     }
 }
 
 TEST_CASE("Result<>(err).unwrap_or(ok2)", "[result]")
 {
-    auto src = TestResult::Err(FAIL);
+    auto src = TestResult::Err(Error::FAIL);
 
     auto val = src.unwrap_or(2);
 
-    SECTION("must return supplied value") {
+    SECTION("must return supplied value")
+    {
         REQUIRE(val == 2);
     }
-    SECTION("must invalidate src") {
+    SECTION("must invalidate src")
+    {
         REQUIRE(src.is_inval());
     }
 }
 
 TEST_CASE("Result<>(inval).unwrap_or(ok2)", "[result]")
 {
-    auto src = TestResult::Err(FAIL);
+    auto src = TestResult::Err(Error::FAIL);
     auto res2 = move(src);
 
-    SECTION("must panic") {
+    SECTION("must panic")
+    {
         REQUIRE_PANIC(src.unwrap_or(2));
     }
 }
@@ -448,40 +475,44 @@ TEST_CASE("Result<>(ok).unwrap_err_or(err2)", "[result]")
 {
     auto src = TestResult::Ok(1);
 
-    auto val = src.unwrap_err_or(FAIL);
+    auto val = src.unwrap_err_or(Error::FAIL);
 
-    SECTION("must return the supplied value") {
-        REQUIRE(val == FAIL);
+    SECTION("must return the supplied value")
+    {
+        REQUIRE(val == Error::FAIL);
     }
-    SECTION("must invalidate src") {
+    SECTION("must invalidate src")
+    {
         REQUIRE(src.is_inval());
     }
 }
 
 TEST_CASE("Result.unwrap_err_or for err must give err value", "[result]")
 {
-    auto src = TestResult::Err(FAIL);
+    auto src = TestResult::Err(Error::FAIL);
 
-    auto val = src.unwrap_err_or(NOENT);
+    auto val = src.unwrap_err_or(Error::Error::NOENT);
 
-    SECTION("must return the wrapped value") {
-        REQUIRE(val == FAIL);
+    SECTION("must return the wrapped value")
+    {
+        REQUIRE(val == Error::FAIL);
     }
-    SECTION("must invalidate src") {
+    SECTION("must invalidate src")
+    {
         REQUIRE(src.is_inval());
     }
 }
 
 TEST_CASE("Result<>(inval).unwrap_err_or()", "[result]")
 {
-    auto res = TestResult::Err(FAIL);
+    auto res = TestResult::Err(Error::FAIL);
     auto res2 = move(res);
 
-    SECTION("must panic") {
-        REQUIRE_PANIC(res.unwrap_err_or(NOENT));
+    SECTION("must panic")
+    {
+        REQUIRE_PANIC(res.unwrap_err_or(Error::NOENT));
     }
 }
-
 
 bool map1(int const &e)
 {
@@ -495,13 +526,15 @@ TEST_CASE("Result<>(ok).map()", "[result]")
 
     // TODO: nasty, want bool to be auto-inferred as it's the return type of
     // map1, i.e. want res.map(map1).unwrap();
-    nel::Result<bool, _Error> res2 = src.map<bool>(map1);
+    nel::Result<bool, Error> res2 = src.map<bool>(map1);
 
-    SECTION("remaps value") {
+    SECTION("remaps value")
+    {
         auto val = res2.unwrap();
         REQUIRE(val == true);
     }
-    SECTION("invalidates src") {
+    SECTION("invalidates src")
+    {
         REQUIRE(src.is_inval());
     }
     // auto res3 = res.map<bool>([](int const &e)->bool {return e==1;});
@@ -511,27 +544,30 @@ TEST_CASE("Result<>(ok).map()", "[result]")
 
 TEST_CASE("Result<>(err).map()", "[result]")
 {
-    auto src = TestResult::Err(FAIL);
+    auto src = TestResult::Err(Error::FAIL);
 
     // TODO: nasty, want bool to be auto-inferred as it's the return type of
     // map1, i.e. want res.map(map1).unwrap();
     auto res2 = src.map<bool>(map1);
 
-    SECTION("does not change value") {
+    SECTION("does not change value")
+    {
         auto val = res2.unwrap_err();
-        REQUIRE(val == FAIL);
+        REQUIRE(val == Error::FAIL);
     }
-    SECTION("invalidates src") {
+    SECTION("invalidates src")
+    {
         REQUIRE(src.is_inval());
     }
 }
 
 TEST_CASE("Result<>(inval).map()", "[result]")
 {
-    auto src = TestResult::Err(FAIL);
+    auto src = TestResult::Err(Error::FAIL);
     auto res2 = move(src);
 
-    SECTION("must panic") {
+    SECTION("must panic")
+    {
         // TODO: nasty, want bool to be auto-inferred as it's the return type of
         // map1, i.e. want res.map(map1).unwrap();
         REQUIRE_PANIC(src.map<bool>(map1));
@@ -554,44 +590,48 @@ TEST_CASE("Result<>(ok).map_err() for ok must not change ok val", "[result]")
     // map1, i.e. want res.map(map1).unwrap();
     auto res2 = src.map_err<const char *>(map2);
 
-    SECTION("must not change value") {
+    SECTION("must not change value")
+    {
         auto val = res2.unwrap();
         REQUIRE(val == 1);
     }
-    SECTION("invalidates src") {
+    SECTION("invalidates src")
+    {
         REQUIRE(src.is_inval());
     }
 }
 
 TEST_CASE("Result<>(err).map_err() for err must change err val", "[result]")
 {
-    auto src = TestResult::Err(FAIL);
+    auto src = TestResult::Err(Error::FAIL);
 
     // TODO: nasty, want bool to be auto-inferred as it's the return type of
     // map1, i.e. want res.map(map1).unwrap();
     auto res2 = src.map_err<const char *>(map2);
 
-    SECTION("remaps value") {
+    SECTION("remaps value")
+    {
         auto val = res2.unwrap_err();
         REQUIRE(val == bar);
     }
-    SECTION("invalidates src") {
+    SECTION("invalidates src")
+    {
         REQUIRE(src.is_inval());
     }
 }
 
 TEST_CASE("Result<>(inval).map_err for inval must stay inval", "[result]")
 {
-    auto src = TestResult::Err(FAIL);
+    auto src = TestResult::Err(Error::FAIL);
     auto res2 = move(src);
 
-    SECTION("must panic") {
+    SECTION("must panic")
+    {
         // TODO: nasty, want bool to be auto-inferred as it's the return type of
         // map1, i.e. want res.map(map1).unwrap();
         REQUIRE_PANIC(src.map_err<const char *>(map2));
     }
 }
-
 
 nel::Result<int, Error> foo_ok(void)
 {
@@ -607,7 +647,7 @@ TEST_CASE("Result::Ok auto convert to Result", "[result]")
 
 nel::Result<int, Error> foo_err(void)
 {
-    return TestResult::Err(FAIL);
+    return TestResult::Err(Error::FAIL);
 }
 
 TEST_CASE("Result::Err auto convert to Result", "[result]")
@@ -686,25 +726,32 @@ TEST_CASE("Result<>(ok).is_eq()", "[result]")
 {
     auto src = TestResult::Ok(2);
 
-    SECTION("must return true if eq to wrapped") {
+    SECTION("must return true if eq to wrapped")
+    {
         REQUIRE(src == TestResult::Ok(2));
-        SECTION("must not alter src") {
+        SECTION("must not alter src")
+        {
             REQUIRE(src.unwrap() == 2);
         }
     }
-    SECTION("must return false if not eq to wrapped") {
+    SECTION("must return false if not eq to wrapped")
+    {
         REQUIRE(!(src == TestResult::Ok(3)));
-        SECTION("must not alter src") {
+        SECTION("must not alter src")
+        {
             REQUIRE(src.unwrap() == 2);
         }
     }
-    SECTION("must return false if comparing to err") {
-        REQUIRE(!(src == TestResult::Err(FAIL)));
-        SECTION("must not alter src") {
+    SECTION("must return false if comparing to err")
+    {
+        REQUIRE(!(src == TestResult::Err(Error::FAIL)));
+        SECTION("must not alter src")
+        {
             REQUIRE(src.unwrap() == 2);
         }
     }
-    SECTION("must panic if compared to an inval") {
+    SECTION("must panic if compared to an inval")
+    {
         auto res = TestResult::Ok(2);
         auto res2 = move(res);
         nel::unused(res2);
@@ -715,27 +762,34 @@ TEST_CASE("Result<>(ok).is_eq()", "[result]")
 
 TEST_CASE("Result<>(err).is_eq()", "[result]")
 {
-    auto src = TestResult::Err(FAIL);
+    auto src = TestResult::Err(Error::FAIL);
 
-    SECTION("must return true if eq to wrapped") {
-        REQUIRE(src == TestResult::Err(FAIL));
-        SECTION("must not alter src") {
-            REQUIRE(src.unwrap_err() == FAIL);
+    SECTION("must return true if eq to wrapped")
+    {
+        REQUIRE(src == TestResult::Err(Error::FAIL));
+        SECTION("must not alter src")
+        {
+            REQUIRE(src.unwrap_err() == Error::FAIL);
         }
     }
-    SECTION("must return false if not eq to wrapped") {
-        REQUIRE(!(src == TestResult::Err(NOENT)));
-        SECTION("must not alter src") {
-            REQUIRE(src.unwrap_err() == FAIL);
+    SECTION("must return false if not eq to wrapped")
+    {
+        REQUIRE(!(src == TestResult::Err(Error::NOENT)));
+        SECTION("must not alter src")
+        {
+            REQUIRE(src.unwrap_err() == Error::FAIL);
         }
     }
-    SECTION("must return false if comparing to ok") {
+    SECTION("must return false if comparing to ok")
+    {
         REQUIRE(!(src == TestResult::Ok(1)));
-        SECTION("must not alter src") {
-            REQUIRE(src.unwrap_err() == FAIL);
+        SECTION("must not alter src")
+        {
+            REQUIRE(src.unwrap_err() == Error::FAIL);
         }
     }
-    SECTION("must panic if compared to an inval") {
+    SECTION("must panic if compared to an inval")
+    {
         auto res = TestResult::Ok(2);
         auto res2 = move(res);
         nel::unused(res2);
@@ -746,17 +800,20 @@ TEST_CASE("Result<>(err).is_eq()", "[result]")
 
 TEST_CASE("Result<>(inval).is_eq()", "[result]")
 {
-    auto src = TestResult::Err(FAIL);
+    auto src = TestResult::Err(Error::FAIL);
     auto tmp1 = move(src);
     nel::unused(tmp1);
 
-    SECTION("must panic if compared to an erer") {
-        REQUIRE_PANIC(src == TestResult::Err(FAIL));
+    SECTION("must panic if compared to an erer")
+    {
+        REQUIRE_PANIC(src == TestResult::Err(Error::FAIL));
     }
-    SECTION("must panic if compared to an ok") {
+    SECTION("must panic if compared to an ok")
+    {
         REQUIRE_PANIC(src == TestResult::Ok(1));
     }
-    SECTION("must panic if compared to an inval") {
+    SECTION("must panic if compared to an inval")
+    {
         auto res = TestResult::Ok(2);
         auto res2 = move(res);
         nel::unused(res2);
@@ -765,30 +822,36 @@ TEST_CASE("Result<>(inval).is_eq()", "[result]")
     }
 }
 
-
 TEST_CASE("Result<>(ok).is_ne()", "[result]")
 {
     auto src = TestResult::Ok(2);
 
-    SECTION("must return false if eq to wrapped") {
+    SECTION("must return false if eq to wrapped")
+    {
         REQUIRE(!(src != TestResult::Ok(2)));
-        SECTION("must not alter src") {
+        SECTION("must not alter src")
+        {
             REQUIRE(src.unwrap() == 2);
         }
     }
-    SECTION("must return true if not eq to wrapped") {
+    SECTION("must return true if not eq to wrapped")
+    {
         REQUIRE(src != TestResult::Ok(3));
-        SECTION("must not alter src") {
+        SECTION("must not alter src")
+        {
             REQUIRE(src.unwrap() == 2);
         }
     }
-    SECTION("must return true if comparing to err") {
-        REQUIRE(src != TestResult::Err(FAIL));
-        SECTION("must not alter src") {
+    SECTION("must return true if comparing to err")
+    {
+        REQUIRE(src != TestResult::Err(Error::FAIL));
+        SECTION("must not alter src")
+        {
             REQUIRE(src.unwrap() == 2);
         }
     }
-    SECTION("must panic if compared to an inval") {
+    SECTION("must panic if compared to an inval")
+    {
         auto res = TestResult::Ok(2);
         auto res2 = move(res);
         nel::unused(res2);
@@ -797,30 +860,36 @@ TEST_CASE("Result<>(ok).is_ne()", "[result]")
     }
 }
 
-
 TEST_CASE("Result<>(err).is_ne()", "[result]")
 {
-    auto src = TestResult::Err(FAIL);
+    auto src = TestResult::Err(Error::FAIL);
 
-    SECTION("must return false if eq to wrapped") {
-        REQUIRE(!(src != TestResult::Err(FAIL)));
-        SECTION("must not alter src") {
-            REQUIRE(src.unwrap_err() == FAIL);
+    SECTION("must return false if eq to wrapped")
+    {
+        REQUIRE(!(src != TestResult::Err(Error::FAIL)));
+        SECTION("must not alter src")
+        {
+            REQUIRE(src.unwrap_err() == Error::FAIL);
         }
     }
-    SECTION("must return true if not eq to wrapped") {
-        REQUIRE(src != TestResult::Err(NOENT));
-        SECTION("must not alter src") {
-            REQUIRE(src.unwrap_err() == FAIL);
+    SECTION("must return true if not eq to wrapped")
+    {
+        REQUIRE(src != TestResult::Err(Error::NOENT));
+        SECTION("must not alter src")
+        {
+            REQUIRE(src.unwrap_err() == Error::FAIL);
         }
     }
-    SECTION("must return true if comparing to ok") {
+    SECTION("must return true if comparing to ok")
+    {
         REQUIRE(src != TestResult::Ok(1));
-        SECTION("must not alter src") {
-            REQUIRE(src.unwrap_err() == FAIL);
+        SECTION("must not alter src")
+        {
+            REQUIRE(src.unwrap_err() == Error::FAIL);
         }
     }
-    SECTION("must panic if compared to an inval") {
+    SECTION("must panic if compared to an inval")
+    {
         auto res = TestResult::Ok(2);
         auto res2 = move(res);
         nel::unused(res2);
@@ -831,17 +900,20 @@ TEST_CASE("Result<>(err).is_ne()", "[result]")
 
 TEST_CASE("Result<>(inval).is_ne()", "[result]")
 {
-    auto src = TestResult::Err(FAIL);
+    auto src = TestResult::Err(Error::FAIL);
     auto tmp1 = move(src);
     nel::unused(tmp1);
 
-    SECTION("must panic if compared to an err") {
-        REQUIRE_PANIC(src != TestResult::Err(FAIL));
+    SECTION("must panic if compared to an err")
+    {
+        REQUIRE_PANIC(src != TestResult::Err(Error::FAIL));
     }
-    SECTION("must panic if compared to an ok") {
+    SECTION("must panic if compared to an ok")
+    {
         REQUIRE_PANIC(src != TestResult::Ok(1));
     }
-    SECTION("must panic if compared to an inval") {
+    SECTION("must panic if compared to an inval")
+    {
         auto res = TestResult::Ok(2);
         auto res2 = move(res);
         nel::unused(res2);
@@ -849,7 +921,6 @@ TEST_CASE("Result<>(inval).is_ne()", "[result]")
         REQUIRE_PANIC(src != res);
     }
 }
-
 
 }; // namespace result
 }; // namespace test
