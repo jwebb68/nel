@@ -172,15 +172,16 @@ template<typename T>
 void copy(T d[], T const s[], Length const n)
 {
     // don't copy if dest is same as src.
-    if (d == s) { return; }
+    // if (d == s) { return; }
     T *const e = d + n;
-    for (; d != e; ++d) {
+    for (; d != e; d += 1) {
         *d = *s;
-        ++s;
+        s += 1;
     }
 }
 
-void copy(uint8_t *const d, uint8_t const *const s, Length const n);
+void copy(uint8_t *d, uint8_t const *s, Length const n);
+void copy(char *d, char const *s, Length const n);
 
 #    if 0
 template<typename T>

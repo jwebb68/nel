@@ -23,6 +23,15 @@ void copy(uint8_t *const d, uint8_t const *const s, Length const n)
     std::memcpy(d, s, n);
 }
 
+void copy(char *d, char const *s, Length const n)
+{
+    // char const *is = s;
+    // for (char *id = d, *const e = (d + n); id != e; ++is, ++id) {
+    //     *id = *is;
+    // }
+    std::memcpy(d, s, n);
+}
+
 void set(uint8_t *const d, uint8_t const s, Length const n)
 {
     // for (Index i=0; i < n; ++i) {
