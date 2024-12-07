@@ -62,6 +62,8 @@ struct Vector
         // TODO: adjust for alignment
         // for now assume all types are in same alignment
         Manual<Type[N]> elems_;
+        // TODO: use manual for each, not 1 manual for all.
+        // Manual<Type> elems[N];
 
         constexpr Type *ptr()
         {
