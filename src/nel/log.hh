@@ -19,11 +19,18 @@ class Log
     public:
         friend Log &operator<<(Log &outs, char v);
         friend Log &operator<<(Log &outs, char const *v);
+
+        friend Log &operator<<(Log &outs, bool const v);
+
         friend Log &operator<<(Log &outs, uint8_t const v);
         friend Log &operator<<(Log &outs, uint16_t const v);
         friend Log &operator<<(Log &outs, uint32_t const v);
-        friend Log &operator<<(Log &outs, int const v);
-        friend Log &operator<<(Log &outs, long unsigned int const v);
+        friend Log &operator<<(Log &outs, uint64_t const v);
+
+        friend Log &operator<<(Log &outs, int8_t const v);
+        friend Log &operator<<(Log &outs, int16_t const v);
+        friend Log &operator<<(Log &outs, int32_t const v);
+        friend Log &operator<<(Log &outs, int64_t const v);
 };
 
 extern Log log;

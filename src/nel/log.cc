@@ -19,6 +19,12 @@ Log &operator<<(Log &outs, char const *v)
     return outs;
 }
 
+Log &operator<<(Log &outs, bool const v)
+{
+    fprintf(stderr, "%s", (v)?"true":"false");
+    return outs;
+}
+
 Log &operator<<(Log &outs, uint8_t const v)
 {
     fprintf(stderr, "%" PRIu8, v);
@@ -37,15 +43,34 @@ Log &operator<<(Log &outs, uint32_t const v)
     return outs;
 }
 
-Log &operator<<(Log &outs, int const v)
+Log &operator<<(Log &outs, uint64_t const v)
 {
-    fprintf(stderr, "%u", v);
+    fprintf(stderr, "%" PRIu64, v);
     return outs;
 }
 
-Log &operator<<(Log &outs, long unsigned int const v)
+
+Log &operator<<(Log &outs, int8_t const v)
 {
-    fprintf(stderr, "%lu", v);
+    fprintf(stderr, "%" PRId8, v);
+    return outs;
+}
+
+Log &operator<<(Log &outs, int16_t const v)
+{
+    fprintf(stderr, "%" PRId16, v);
+    return outs;
+}
+
+Log &operator<<(Log &outs, int32_t const v)
+{
+    fprintf(stderr, "%" PRId32, v);
+    return outs;
+}
+
+Log &operator<<(Log &outs, int64_t const v)
+{
+    fprintf(stderr, "%" PRId64, v);
     return outs;
 }
 
