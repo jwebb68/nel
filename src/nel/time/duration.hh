@@ -22,7 +22,7 @@ struct Frequency;
  *
  * negative values may be an issue.
  * TODO: handle -ve values.
-*/
+ */
 struct Timespec
 {
         uint64_t secs;
@@ -31,7 +31,7 @@ struct Timespec
     public:
         /**
          * keep fractionals under their limit.
-        */
+         */
         constexpr Timespec &normalise()
         {
             uint64_t const micros = 1000000UL;
@@ -177,7 +177,7 @@ namespace time
 /**
  * Duration
  * A period of time between two instances of time.
-*/
+ */
 struct Duration
 {
     private:
@@ -390,7 +390,7 @@ struct Duration
 /**
  * Frequency
  * A unit expressing counts per second.
-*/
+ */
 struct Frequency
 {
     private:
