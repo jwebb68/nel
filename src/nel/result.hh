@@ -111,7 +111,7 @@ class Result
                     // mem) if not using eec/ecc mem then that's the prob. But, want to abort/panic
                     // if a unhandled case is encountered at runtime, much how a default hander
                     // would work if it was present.
-                    nel_panic("invalid Result");
+                    nel::panic("invalid Result");
                     break;
             }
         }
@@ -143,7 +143,7 @@ class Result
                     // overruns?) but might not want to for buffer overrun issues. if there is a
                     // memory corruption, then should have been detected by memory hardware (Ecc
                     // mem) if not using eec/ecc mem then that's the prob.
-                    nel_panic("invalid Result");
+                    nel::panic("invalid Result");
                     break;
             }
         }
@@ -176,7 +176,7 @@ class Result
                         // (buffer overruns?) but might not want to for buffer overrun issues. if
                         // there is a memory corruption, then should have been detected by memory
                         // hardware (Ecc mem) if not using eec/ecc mem then that's the prob.
-                        nel_panic("invalid Result");
+                        nel::panic("invalid Result");
                         break;
                 }
             }
@@ -305,10 +305,10 @@ class Result
                     // invalids are not values that should occur
                     // if they do it's a use-after-move-from op so must panic.
                     // or a use-before-initialised so again must panic.
-                    nel_panic("invalid Result");
+                    nel::panic("invalid Result");
                     break;
                 default:
-                    nel_panic("invalid Result");
+                    nel::panic("invalid Result");
                     break;
             }
         }
@@ -402,10 +402,10 @@ class Result
                     // invalids are not values that should occur
                     // if they do it's a use-after-move-from op so must panic.
                     // or a use-before-initialised so again must panic.
-                    nel_panic("invalid Result");
+                    nel::panic("invalid Result");
                     break;
                 default:
-                    nel_panic("invalid Result");
+                    nel::panic("invalid Result");
                     break;
             }
         }
@@ -427,10 +427,10 @@ class Result
                     // if they do it's a use-after-move-from op so must panic.
                     // or a use-before-initialised so again must panic.
                     // fall through to default handler
-                    nel_panic("invalid Result");
+                    nel::panic("invalid Result");
                     break;
                 default:
-                    nel_panic("invalid Result");
+                    nel::panic("invalid Result");
                     break;
             }
         }
@@ -479,7 +479,7 @@ class Result
         constexpr T unwrap(void)
         {
             return consume<T>([](T &&ok) -> T { return T(forward<T>(ok)); },
-                              [](E &&) -> T { nel_panic("not an OK"); });
+                              [&](E &&) -> T { nel::panic("not an OK"); });
         }
 
         /**
@@ -492,7 +492,7 @@ class Result
          */
         constexpr E unwrap_err(void)
         {
-            return consume<E>([](T &&) -> E { nel_panic("not an err"); },
+            return consume<E>([](T &&) -> E { nel::panic("not an err"); },
                               [](E &&err) -> E { return err; });
         }
 
@@ -717,7 +717,7 @@ class Result<void, E>
                     // mem) if not using eec/ecc mem then that's the prob. But, want to abort/panic
                     // if a unhandled case is encountered at runtime, much how a default hander
                     // would work if it was present.
-                    nel_panic("invalid Result");
+                    nel::panic("invalid Result");
                     break;
             }
         }
@@ -750,7 +750,7 @@ class Result<void, E>
                     // overruns?) but might not want to for buffer overrun issues. if there is a
                     // memory corruption, then should have been detected by memory hardware (Ecc
                     // mem) if not using eec/ecc mem then that's the prob.
-                    nel_panic("invalid Result");
+                    nel::panic("invalid Result");
                     break;
             }
         }
@@ -784,7 +784,7 @@ class Result<void, E>
                         // (buffer overruns?) but might not want to for buffer overrun issues. if
                         // there is a memory corruption, then should have been detected by memory
                         // hardware (Ecc mem) if not using eec/ecc mem then that's the prob.
-                        nel_panic("invalid Result");
+                        nel::panic("invalid Result");
                         break;
                 }
             }
@@ -869,10 +869,10 @@ class Result<void, E>
                     // invalids are not values that should occur
                     // if they do it's a use-after-move-from op so must panic.
                     // or a use-before-initialised so again must panic.
-                    nel_panic("invalid Result");
+                    nel::panic("invalid Result");
                     break;
                 default:
-                    nel_panic("invalid Result");
+                    nel::panic("invalid Result");
                     break;
             }
         }
@@ -962,10 +962,10 @@ class Result<void, E>
                     // invalids are not values that should occur
                     // if they do it's a use-after-move-from op so must panic.
                     // or a use-before-initialised so again must panic.
-                    nel_panic("invalid Result");
+                    nel::panic("invalid Result");
                     break;
                 default:
-                    nel_panic("invalid Result");
+                    nel::panic("invalid Result");
                     break;
             }
         }
@@ -986,10 +986,10 @@ class Result<void, E>
                     // invalids are not values that should occur
                     // if they do it's a use-after-move-from op so must panic.
                     // or a use-before-initialised so again must panic.
-                    nel_panic("invalid Result");
+                    nel::panic("invalid Result");
                     break;
                 default:
-                    nel_panic("invalid Result");
+                    nel::panic("invalid Result");
                     break;
             }
         }
@@ -1035,7 +1035,7 @@ class Result<void, E>
          */
         constexpr void unwrap(void)
         {
-            return consumev([](void) {}, [](E &&) { nel_panic("not an ok"); });
+            return consumev([](void) {}, [](E &&) { nel::panic("not an ok"); });
         }
 
         /**
@@ -1048,7 +1048,7 @@ class Result<void, E>
          */
         constexpr E unwrap_err(void)
         {
-            return consume<E>([](void) -> E { nel_panic("not an err"); },
+            return consume<E>([](void) -> E { nel::panic("not an err"); },
                               [](E &&err) -> E { return err; });
         }
 

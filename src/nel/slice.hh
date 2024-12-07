@@ -164,7 +164,7 @@ struct Slice
          */
         constexpr Type &checked_get(Index idx) const
         {
-            nel_panic_if_not(idx < len(), "nel::Slice<T>: index out of range");
+            nel::panic_if_not(idx < len(), "nel::Slice<T>: index out of range");
             return unchecked_get(idx);
         }
 
@@ -256,7 +256,7 @@ struct Slice
         // TODO: use try_move_from as operation can fail.
         void move_from(Slice &src)
         {
-            nel_panic_if_not(len() == src.len(), "nel::Slice:move_from: Different lengths");
+            nel::panic_if_not(len() == src.len(), "nel::Slice:move_from: Different lengths");
             elem::move(ptr(), src.ptr(), len());
         }
 
@@ -274,7 +274,7 @@ struct Slice
         // TODO: use try_copy_from as operation can fail.
         void copy_from(Slice const &o)
         {
-            nel_panic_if_not(len() == o.len(), "nel::Slice:copy_from: Different lengths");
+            nel::panic_if_not(len() == o.len(), "nel::Slice:copy_from: Different lengths");
             elem::copy(ptr(), o.ptr(), len());
         }
 

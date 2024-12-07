@@ -132,7 +132,7 @@ class Optional
                     // overruns?) but might not want to for buffer overrun issues. if there is a
                     // memory corruption, then should have been detected by memory hardware (Ecc
                     // mem) if not using eec/ecc mem then that's the prob.
-                    nel_panic("invalid Optional");
+                    nel::panic("invalid Optional");
                     break;
             }
         }
@@ -173,7 +173,7 @@ class Optional
                     // overruns?) but might not want to for buffer overrun issues. if there is a
                     // memory corruption, then should have been detected by memory hardware (Ecc
                     // mem) if not using eec/ecc mem then that's the prob.
-                    nel_panic("invalid Optional");
+                    nel::panic("invalid Optional");
                     break;
             }
         }
@@ -209,7 +209,7 @@ class Optional
                         // (buffer overruns?) but might not want to for buffer overrun issues. if
                         // there is a memory corruption, then should have been detected by memory
                         // hardware (Ecc mem) if not using eec/ecc mem then that's the prob.
-                        nel_panic("invalid Optional");
+                        nel::panic("invalid Optional");
                         break;
                 }
             }
@@ -292,7 +292,7 @@ class Optional
                     // if they do it's a use-after-move-from op so must panic.
                     // or a use-before-initialised so again must panic.
                     // fall through to default handler
-                    nel_panic("invalid Optional");
+                    nel::panic("invalid Optional");
                     break;
                 default:
                     // For gcc/clang minsize: if this not nell:abort,
@@ -302,7 +302,7 @@ class Optional
                     // TODO: look into stack trace dumper on fail.
                     // But would still like a message..
                     // For arm:minsize: if panic, then does not collapse (func with arg issue)
-                    nel_panic("invalid Optional");
+                    nel::panic("invalid Optional");
                     break;
             }
         }
@@ -397,10 +397,10 @@ class Optional
                     // invalids are not values that should occur
                     // if they do it's a use-after-move-from op so must panic.
                     // or a use-before-initialised so again must panic.
-                    nel_panic("invalid Optional");
+                    nel::panic("invalid Optional");
                     break;
                 default:
-                    nel_panic("invalid Optional");
+                    nel::panic("invalid Optional");
                     break;
             }
         }
@@ -423,10 +423,10 @@ class Optional
                     // invalids are not values that should occur
                     // if they do it's a use-after-move-from op so must panic.
                     // or a use-before-initialised so again must panic.
-                    nel_panic("invalid Optional");
+                    nel::panic("invalid Optional");
                     break;
                 default:
-                    nel_panic("invalid Optional");
+                    nel::panic("invalid Optional");
                     break;
             }
         }
@@ -447,7 +447,7 @@ class Optional
         T unwrap(void)
         {
             return consume<T>([](T &&some) -> T { return some; },
-                              [](void) -> T { nel_panic("not a Some"); });
+                              [](void) -> T { nel::panic("not a Some"); });
         }
 
         /**
@@ -598,7 +598,7 @@ class Optional<void>
                     // overruns?) but might not want to for buffer overrun issues. if there is a
                     // memory corruption, then should have been detected by memory hardware (Ecc
                     // mem) if not using eec/ecc mem then that's the prob.
-                    nel_panic("invalid Optional");
+                    nel::panic("invalid Optional");
                     break;
             }
         }
@@ -638,7 +638,7 @@ class Optional<void>
                     // overruns?) but might not want to for buffer overrun issues. if there is a
                     // memory corruption, then should have been detected by memory hardware (Ecc
                     // mem) if not using eec/ecc mem then that's the prob.
-                    nel_panic("invalid Optional");
+                    nel::panic("invalid Optional");
                     break;
             }
         }
@@ -673,7 +673,7 @@ class Optional<void>
                         // (buffer overruns?) but might not want to for buffer overrun issues. if
                         // there is a memory corruption, then should have been detected by memory
                         // hardware (Ecc mem) if not using eec/ecc mem then that's the prob.
-                        nel_panic("invalid Optional");
+                        nel::panic("invalid Optional");
                         break;
                 }
             }
@@ -740,7 +740,7 @@ class Optional<void>
                     // invalids are not values that should occur
                     // if they do it's a use-after-move-from op so must panic.
                     // or a use-before-initialised so again must panic.
-                    nel_panic("invalid Optional");
+                    nel::panic("invalid Optional");
                     break;
                 default:
                     // For gcc/clang minsize: if this not nell:abort,
@@ -750,7 +750,7 @@ class Optional<void>
                     // TODO: look into stack trace dumper on fail.
                     // But would still like a message..
                     // For arm:minsize: if panic, then does not collapse (func with arg issue)
-                    nel_panic("invalid Optional");
+                    nel::panic("invalid Optional");
                     break;
             }
         }
@@ -846,10 +846,10 @@ class Optional<void>
                     // invalids are not values that should occur
                     // if they do it's a use-after-move-from op so must panic.
                     // or a use-before-initialised so again must panic.
-                    nel_panic("invalid Optional");
+                    nel::panic("invalid Optional");
                     break;
                 default:
-                    nel_panic("invalid Optional");
+                    nel::panic("invalid Optional");
                     break;
             }
         }
@@ -872,10 +872,10 @@ class Optional<void>
                     // invalids are not values that should occur
                     // if they do it's a use-after-move-from op so must panic.
                     // or a use-before-initialised so again must panic.
-                    nel_panic("invalid Optional");
+                    nel::panic("invalid Optional");
                     break;
                 default:
-                    nel_panic("invalid Optional");
+                    nel::panic("invalid Optional");
                     break;
             }
         }
@@ -895,7 +895,7 @@ class Optional<void>
          */
         void unwrap(void)
         {
-            return consumev([](void) {}, [](void) { nel_panic("not a Some"); });
+            return consumev([](void) {}, [](void) { nel::panic("not a Some"); });
         }
 
         /**

@@ -80,7 +80,7 @@ struct RC
                     // Value moved out from value_ on unwrap().
                     // Value_ is eff. destroyed by unwrap().
                     // So release the internal bit as no longer valid.
-                    nel_panic_if_not(v->has_value_, "invalid rc node");
+                    nel::panic_if_not(v->has_value_, "invalid rc node");
                     auto o = move(*(v->value_));
                     v->has_value_ = false;
                     release(v);
@@ -90,13 +90,13 @@ struct RC
             public:
                 Type &deref(void)
                 {
-                    nel_panic_if_not(has_value(), "invalid rc node");
+                    nel::panic_if_not(has_value(), "invalid rc node");
                     return *value_;
                 }
 
                 Type const &deref(void) const
                 {
-                    nel_panic_if_not(has_value(), "invalid rc node");
+                    nel::panic_if_not(has_value(), "invalid rc node");
                     return *value_;
                 }
 
@@ -198,7 +198,7 @@ struct RC
          */
         constexpr Type &operator*(void)
         {
-            nel_panic_if_not(has_value(), "not a value");
+            nel::panic_if_not(has_value(), "not a value");
             return node_->deref();
         }
 
@@ -210,7 +210,7 @@ struct RC
          */
         constexpr Type const &operator*(void) const
         {
-            nel_panic_if_not(has_value(), "not a value");
+            nel::panic_if_not(has_value(), "not a value");
             return node_->deref();
         }
 
@@ -235,7 +235,7 @@ struct RC
          */
         constexpr Type unwrap(void)
         {
-            nel_panic_if_not(has_value(), "not a value");
+            nel::panic_if_not(has_value(), "not a value");
             auto o = Node::unwrap(node_);
             node_ = nullptr;
             return o;

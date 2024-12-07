@@ -136,7 +136,7 @@ struct Node
         constexpr Node(std::initializer_list<Type> &&l)
         {
             // How to fail if not big enough.
-            nel_panic_if_not(l.size() <= capacity(), "not big enough");
+            nel::panic_if_not(l.size() <= capacity(), "not big enough");
             Index i = 0;
             for (auto it = l.begin(); i < capacity() && it != l.end(); ++it, ++i) {
                 new (&values_[i]) Type(forward<T>(*it));
