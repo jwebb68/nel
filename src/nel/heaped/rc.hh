@@ -61,15 +61,17 @@ struct RC
             public:
                 // Could be members, but then it'll end up with 'delete this' in the release impl..
                 // which I don't want.
-                static void grab(Node *const v)
+                constexpr static Node * grab(Node *const v)
                 {
                     if (v != nullptr) { ++v->n_refs_; }
+                    return v;
                 }
 
-                static void release(Node *const v)
+                constexpr static void release(Node *const v)
                 {
                     if (v != nullptr) {
-                        if (--v->n_refs_ == 0) { delete v; }
+                        v->n_refs_ -= 1;
+                        if (v->n_refs_ == 0) { delete v; }
                     }
                 }
 
@@ -86,13 +88,13 @@ struct RC
                 }
 
             public:
-                Type &ref(void)
+                Type &deref(void)
                 {
                     nel_panic_if_not(has_value(), "invalid rc node");
                     return *value_;
                 }
 
-                Type const &ref(void) const
+                Type const &deref(void) const
                 {
                     nel_panic_if_not(has_value(), "invalid rc node");
                     return *value_;
@@ -119,27 +121,21 @@ struct RC
         // It's meant to be shared, so can copy this.
         // much badness, non-const ref for a copy?
         constexpr RC(RC &o)
-            : node_(nullptr)
+            : node_(Node::grab(o.node_))
         {
-            Node::grab(o.node_);
-            node_ = o.node_;
         }
 
         constexpr RC(RC const &o)
-            : node_(nullptr)
+            : node_(Node::grab(o.node_))
         {
-            Node::grab(o.node_);
-            node_ = o.node_;
         }
 
         // constexpr RC &operator=(RC const &o) const
         constexpr RC &operator=(RC &o)
         {
             if (this != &o) {
-                //~RC();
-                // new (this) RC(o);
-                RC t(o);
-                swap(t);
+                Node::release(node_);
+                node_ = Node::grab(o.node_);
             }
             return *this;
         }
@@ -147,10 +143,8 @@ struct RC
         constexpr RC &operator=(RC const &o) const
         {
             if (this != &o) {
-                //~RC();
-                // new (this) RC(o);
-                RC t(o);
-                swap(t);
+                Node::release(node_);
+                node_ = Node::grab(o.node_);
             }
             return *this;
         }
@@ -174,8 +168,9 @@ struct RC
         constexpr RC &operator=(RC &&o)
         {
             if (this != &o) {
-                this->~RC();
-                new (this) RC(move(o));
+                Node::release(node_);
+                node_ = nel::move(o.node_);
+                o.node_ = nullptr;
             }
             return *this;
         }
@@ -204,7 +199,7 @@ struct RC
         constexpr Type &operator*(void)
         {
             nel_panic_if_not(has_value(), "not a value");
-            return node_->ref();
+            return node_->deref();
         }
 
         /**
@@ -216,7 +211,7 @@ struct RC
         constexpr Type const &operator*(void) const
         {
             nel_panic_if_not(has_value(), "not a value");
-            return node_->ref();
+            return node_->deref();
         }
 
         /**

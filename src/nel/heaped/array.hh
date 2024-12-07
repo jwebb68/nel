@@ -18,6 +18,9 @@ struct Array;
 #    include <nel/slice.hh>
 #    include <nel/optional.hh>
 #    include <nel/log.hh>
+
+#    include <nel/panic.hh>
+
 #    include <nel/new.hh> // new
 #    include <nel/defs.hh>
 
@@ -74,7 +77,6 @@ struct Array
         constexpr ~Array(void)
         {
             ArrayNode::free(item_);
-            item_ = nullptr;
         }
 
     private:
@@ -89,15 +91,15 @@ struct Array
         // Moving is allowed since it's a fast O(1) op.
         // and does not create any extra resources..
         constexpr Array(Array &&o)
+            : item_(nel::move(o.item_))
         {
-            item_ = o.item_;
             o.item_ = nullptr;
         }
 
         constexpr Array &operator=(Array &&o)
         {
             if (this != &o) {
-                item_ = o.item_;
+                item_ = nel::move(o.item_);
                 o.item_ = nullptr;
             }
             return *this;
@@ -128,8 +130,10 @@ struct Array
         static constexpr Array filled(Type const &f, Count n)
         {
             if (n == 0) { return Array::empty(); }
-            Array a(ArrayNode::malloc(n));
-            new (a.item_) ArrayNode(f);
+            ArrayNode *node = ArrayNode::malloc(n);
+            if (node == nullptr) { nel_panic(""); }
+            new (node) ArrayNode(f);
+            auto a = Array(node);
             return a;
         }
 #    endif
