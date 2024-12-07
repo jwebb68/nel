@@ -9,8 +9,8 @@ namespace test
 
 struct Stub;
 
-};
-}; // namespace nel
+}
+} // namespace nel
 
 #    include <nel/memory.hh> // move
 
@@ -22,6 +22,7 @@ namespace test
 struct Stub
 {
         static int instances;
+        static int dtor;
         static int move_ctor;
         static int move_assn;
         static int copy_ctor;
@@ -30,6 +31,7 @@ struct Stub
         static void reset()
         {
             instances = 0;
+            dtor = 0;
             move_ctor = 0;
             move_assn = 0;
             copy_ctor = 0;
@@ -41,6 +43,7 @@ struct Stub
 
         ~Stub()
         {
+            dtor += 1;
             instances -= 1;
         }
 
@@ -112,7 +115,7 @@ struct Stub
         }
 };
 
-}; // namespace test
-}; // namespace nel
+} // namespace test
+} // namespace nel
 
 #endif //! defined(NEL_STUB_HH)

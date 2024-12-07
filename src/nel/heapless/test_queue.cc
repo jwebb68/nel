@@ -488,7 +488,7 @@ TEST_CASE("heapless::Queue::iter()", "[heapless][queue]")
 #endif
 }
 
-}; // namespace queue
-}; // namespace heapless
-}; // namespace test
-}; // namespace nel
+} // namespace queue
+} // namespace heapless
+} // namespace test
+} // namespace nel

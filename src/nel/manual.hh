@@ -8,7 +8,7 @@ namespace nel
 template<typename T>
 struct Manual;
 
-};
+}
 
 #    include <nel/memory.hh> // move
 #    include <inttypes.h>
@@ -140,6 +140,6 @@ struct Manual
         // }
 };
 
-}; // namespace nel
+} // namespace nel
 
 #endif //! defined(NEL_MANUAL_HH)

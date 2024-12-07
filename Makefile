@@ -61,11 +61,37 @@ else ifeq ($(TOOLCHAIN),arm)
 CC=arm-none-eabi-gcc
 CXX=arm-none-eabi-g++
 OBJDUMP=arm-none-eabi-objdump
-CFLAGS+=-nostdlib
-CXXFLAGS+=-nostdlib
-LDLIBS+=-lnosys
-LDFLAGS+=--specs=nosys.specs
+
+CFLAGS+=-mthumb
+CXXFLAGS+=-mthumb
+
+# # cortex-m4 -f64 +f32
+CXXFLAGS+=-mcpu=cortex-m4 -mfpu=fpv4-sp-d16 -mfloat-abi=hard
+LDFLAGS+=-mcpu=cortex-m4 -mfpu=fpv4-sp-d16 -mfloat-abi=hard
+# # cortex-m7 -f64 +f32
+# CXXFLAGS+=-mcpu=cortex-m7 -mfpu=fpv5-sp-d16 -mfloat-abi=hard
+# LDFLAGS+=-mcpu=cortex-m7 -mfpu=fpv5-sp-d16 -mfloat-abi=hard
+# cortex-m7 +f64 +f32
+#CXXFLAGS+=-mcpu=cortex-m7 -mfpu=fpv5-d16 -mfloat-abi=hard
+#LDFLAGS+=-mcpu=cortex-m7 -mfpu=fpv5-d16 -mfloat-abi=hard
+
+# CFLAGS+=-nodefaultlibs
+# CXXFLAGS+=-nodefaultlibs
+# LDFLAGS+=-nodefaultlibs
+
+# CFLAGS+=-nostdlib
+# CXXFLAGS+=-nostdlib
+# LDFLAGS+=-nostdlib
+
+CXXFLAGS+=--specs=nosys.specs
+LDFLAGS+=--specs=nosys.specs # includes -lnosys
+
+#CXXFLAGS+=--specs=nano.specs
 #LDFLAGS+=--specs=nano.specs
+
+CXXFLAGS+=-ffunction-sections -fdata-sections
+LDFLAGS+=-Wl,--gc-sections
+
 AR=arm-none-eabi-ar
 AS=arm-none-eabi-as
 LINK=$(CC)
@@ -99,7 +125,7 @@ endif
 
 #CFLAGS already defined
 CFLAGS += -Werror -Wall -Wextra -Wpedantic -Wswitch-default -Wswitch-enum -Wuninitialized
-CXXFLAGS += -Werror -Wall -Wextra -Wpedantic -Wswitch-default -Wswitch-enum -Wuninitialized -std=c++20 -fno-exceptions
+CXXFLAGS += -Werror -Wall -Wextra -Wpedantic -Wswitch-default -Wswitch-enum -Wuninitialized -std=c++20 -fno-exceptions -fno-rtti
 
 # CFLAGS additionals for debug
 # -Og is really bad.. lots of 'vars optimised out' occurrences.
@@ -427,7 +453,7 @@ clean += target/$(2)/examples/$(1)
 
 target/$(2)/examples/$(1).s: | target/$(2)/examples
 target/$(2)/examples/$(1).s: target/$(2)/examples/$(1)
-	$(OBJDUMP) -Sr --demangle $$< > $$@
+	$(OBJDUMP) -Sr --demangle --visualize-jumps $$< > $$@
 examples: target/$(2)/examples/$(1).s
 clean += target/$(2)/examples/$(1).s
 

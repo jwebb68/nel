@@ -61,7 +61,7 @@ struct RC
             public:
                 // Could be members, but then it'll end up with 'delete this' in the release impl..
                 // which I don't want.
-                constexpr static Node * grab(Node *const v)
+                constexpr static Node *grab(Node *const v)
                 {
                     if (v != nullptr) { ++v->n_refs_; }
                     return v;

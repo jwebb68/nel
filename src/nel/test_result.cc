@@ -508,7 +508,6 @@ TEST_CASE("Result.unwrap for err aborts", "[result]")
     REQUIRE_PANIC(res.unwrap());
 }
 
-
 #if 0
 // disabled until panic detection is available.
 TEST_CASE("Result.unwrap for inval aborts", "[result]")

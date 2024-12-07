@@ -57,7 +57,8 @@ struct Slice
         // annoyingly, the type deducing form only works on ctors, not statics
         // so Slice( int ptr, len) gets a Slice<int>(int ptr, len)
         // but a Slice::from(int ptr, len) does not work..
-        constexpr Slice(Type p[], Length len)
+        // constexpr Slice(Type p[], Length len)
+        constexpr Slice(Type *const p, Length len)
             : content_(p)
             , len_(len)
         {
@@ -364,7 +365,7 @@ struct Slice
  */
 // TODO: maybe make length a template param..
 template<typename T>
-class SliceIterator: public Iterator<SliceIterator<T>, T &, T &>
+struct SliceIterator: public Iterator<SliceIterator<T>, T &, T &>
 {
     public:
         typedef T &InT;
@@ -456,6 +457,6 @@ class SliceIterator: public Iterator<SliceIterator<T>, T &, T &>
 #    endif
 };
 
-}; // namespace nel
+} // namespace nel
 
 #endif // defined(NEL_SLICE_HH)

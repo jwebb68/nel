@@ -2,7 +2,7 @@
 #include <nel/panic.hh>
 
 #if defined(TEST)
-#include <sstream>
+#    include <sstream>
 #endif
 
 #include <cstdio> // printf
@@ -12,12 +12,15 @@ namespace nel
 {
 
 #if defined(TEST)
-[[noreturn]] inline void _panic(Context const &ctx) {
+[[noreturn]] inline void _panic(Context const &ctx)
+{
     std::stringstream ss;
     ss << "panic in " << ctx.fn_name_ << ' ' << ctx.file_name_ << ':' << ctx.line_num_ << '\n';
     throw nel::test::PanicError(ss.str());
 }
-[[noreturn]] inline void _panic(Context const &ctx, const char *prefix, std::string expr) {
+
+[[noreturn]] inline void _panic(Context const &ctx, const char *prefix, std::string expr)
+{
     std::stringstream ss;
     ss << "panic in " << ctx.fn_name_ << ' ' << ctx.file_name_ << ':' << ctx.line_num_ << '\n';
     ss << prefix << ": " << expr << '\n';
@@ -33,7 +36,6 @@ namespace nel
     std::abort();
 }
 #endif
-
 
 [[noreturn]] void panic0(Context const &ctx)
 {

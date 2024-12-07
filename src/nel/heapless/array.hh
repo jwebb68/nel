@@ -389,7 +389,7 @@ struct Array
         }
 };
 
-}; // namespace heapless
-}; // namespace nel
+} // namespace heapless
+} // namespace nel
 
 #endif // defined(NEL_HEAPLESS_ARRAY_HH)

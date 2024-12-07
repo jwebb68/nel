@@ -110,6 +110,6 @@ TEST_CASE("iterator::map", "[iterator]")
 #endif
 }
 
-}; // namespace iterator
-}; // namespace test
-}; // namespace nel
+} // namespace iterator
+} // namespace test
+} // namespace nel

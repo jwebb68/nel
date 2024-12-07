@@ -1284,6 +1284,6 @@ TEST_CASE("Slice::copy_from(src)", "[slice]")
     // }
 }
 
-}; // namespace slice
-}; // namespace test
-}; // namespace nel
+} // namespace slice
+} // namespace test
+} // namespace nel

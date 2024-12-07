@@ -215,16 +215,23 @@ TEST_CASE("heapless::Array::initlist-ctor", "[heapless][array]")
     {
         // pod: can create using empty list
         auto a1 = nel::heapless::Array<int, 3> {};
+        nel::unused(a1);
+
         // wants copy ctor..
         // auto a2 = nel::heapless::Array<int, 3>({});
         nel::heapless::Array<int, 3> a3 = {};
         nel::heapless::Array<int, 3> a4 {};
+        nel::unused(a3);
+        nel::unused(a4);
 
         auto const c1 = nel::heapless::Array<int, 3> {};
+        nel::unused(c1);
         // wants copy ctor..
         // auto a2 = nel::heapless::Array<int, 3>({});
         nel::heapless::Array<int, 3> const c3 = {};
         nel::heapless::Array<int, 3> const c4 {};
+        nel::unused(c3);
+        nel::unused(c4);
     }
 
     {
