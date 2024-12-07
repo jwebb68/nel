@@ -80,7 +80,9 @@ struct Node
         static Node *malloc(Count capacity)
         {
             Node *new_n = realloc(nullptr, capacity);
-            new_n->len_ = 0;
+            if (new_n != nullptr) {
+                new_n->len_ = 0;
+            }
             return new_n;
         }
 

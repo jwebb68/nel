@@ -26,8 +26,12 @@ TEST_CASE("heaped::RC::copy", "[heaped][rc]")
     auto a1 = nel::heaped::RC<int>(1);
     auto a2 = a1;
 
-    REQUIRE(*a1 == 1);
-    REQUIRE(*a2 == 1);
+    // seems like the REQUIRE macro is using args unguarded
+    // otherwise compiler spits up
+    // src/nel/heaped/rc.hh:73:28: error: pointer used after
+    //  ‘void operator delete(void*, std::size_t)’ [-Werror=use-after-free]
+    REQUIRE((*a1 == 1));
+    REQUIRE((*a2 == 1));
 }
 
 TEST_CASE("heaped::RC::move", "[heaped][rc]")
