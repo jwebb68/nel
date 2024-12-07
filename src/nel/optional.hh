@@ -132,7 +132,7 @@ class Optional
                     // overruns?) but might not want to for buffer overrun issues. if there is a
                     // memory corruption, then should have been detected by memory hardware (Ecc
                     // mem) if not using eec/ecc mem then that's the prob.
-                    nel::panic("invalid Optional");
+                    nel::panic("bad Optional");
                     break;
             }
         }
@@ -173,7 +173,7 @@ class Optional
                     // overruns?) but might not want to for buffer overrun issues. if there is a
                     // memory corruption, then should have been detected by memory hardware (Ecc
                     // mem) if not using eec/ecc mem then that's the prob.
-                    nel::panic("invalid Optional");
+                    nel::panic("bad Optional");
                     break;
             }
         }
@@ -280,7 +280,7 @@ class Optional
         // constexpr V match(Tag tag, std::function<V(void)> on_some, std::function<V(void)>
         // on_none) const  {
         template<typename V, typename Fn1, typename Fn2>
-        constexpr V match(Fn1 &&on_some, Fn2 &&on_none) const
+        constexpr V match(Fn1 &&on_some, Fn2 &&on_none, Context const &ctx = Context()) const
         {
             switch (tag_) { // optional::match
                 case Tag::SOME:
@@ -292,7 +292,7 @@ class Optional
                     // if they do it's a use-after-move-from op so must panic.
                     // or a use-before-initialised so again must panic.
                     // fall through to default handler
-                    nel::panic("invalid Optional");
+                    nel::panic("invalid Optional", ctx);
                     break;
                 default:
                     // For gcc/clang minsize: if this not nell:abort,
@@ -302,7 +302,7 @@ class Optional
                     // TODO: look into stack trace dumper on fail.
                     // But would still like a message..
                     // For arm:minsize: if panic, then does not collapse (func with arg issue)
-                    nel::panic("invalid Optional");
+                    nel::panic("bad Optional", ctx);
                     break;
             }
         }
@@ -382,7 +382,7 @@ class Optional
         // template<typename V>
         // V consume(std::function<V(void)> on_some, std::function<V(void)> on_none)
         template<typename V, typename Fn1, typename Fn2>
-        constexpr V consume(Fn1 &&on_some, Fn2 &&on_none)
+        constexpr V consume(Fn1 &&on_some, Fn2 &&on_none, Context const &ctx = Context())
         {
             // a consuming matcher..
             // that moves the value to the closures..
@@ -397,16 +397,16 @@ class Optional
                     // invalids are not values that should occur
                     // if they do it's a use-after-move-from op so must panic.
                     // or a use-before-initialised so again must panic.
-                    nel::panic("invalid Optional");
+                    nel::panic("invalid Optional", ctx);
                     break;
                 default:
-                    nel::panic("invalid Optional");
+                    nel::panic("bad Optional", ctx);
                     break;
             }
         }
 
         template<typename Fn1, typename Fn2>
-        constexpr void consumev(Fn1 &&on_some, Fn2 &&on_none)
+        constexpr void consumev(Fn1 &&on_some, Fn2 &&on_none, Context const &ctx = Context())
         {
             // a consuming matcher..
             // that moves the value to the closures..
@@ -423,10 +423,10 @@ class Optional
                     // invalids are not values that should occur
                     // if they do it's a use-after-move-from op so must panic.
                     // or a use-before-initialised so again must panic.
-                    nel::panic("invalid Optional");
+                    nel::panic("invalid Optional", ctx);
                     break;
                 default:
-                    nel::panic("invalid Optional");
+                    nel::panic("bad Optional", ctx);
                     break;
             }
         }
@@ -444,10 +444,11 @@ class Optional
          *
          * @warning If the optional does not contain a Some, then abort/panic.
          */
-        T unwrap(void)
+        T unwrap(Context const &ctx = Context())
         {
             return consume<T>([](T &&some) -> T { return some; },
-                              [](void) -> T { nel::panic("not a Some"); });
+                              [&](void) -> T { nel::panic("not a Some", ctx); },
+                              ctx);
         }
 
         /**
@@ -460,10 +461,11 @@ class Optional
          * @returns value contained by the Optional if it's a 'Some'.
          * @returns value passed in if it's a 'None'.
          */
-        T unwrap_or(T &&v)
+        T unwrap_or(T &&v, Context const &ctx = Context())
         {
             return consume<T>([](T &&some) -> T { return some; },
-                              [&v](void) -> T { return forward<T>(v); });
+                              [&v](void) -> T { return forward<T>(v); },
+                              ctx);
         }
 
         /**
@@ -473,10 +475,11 @@ class Optional
          * @returns if not Some, consumes args and creates value to return.
          */
         template<typename... Args>
-        T unwrap(Args &&...args)
+        T unwrap(Args &&...args, Context const &ctx = Context())
         {
             return consume<T>([](T &&some) -> T { return some; },
-                              [&args...](void) -> T { return T(forward<Args>(args)...); });
+                              [&args...](void) -> T { return T(forward<Args>(args)...); },
+                              ctx);
             // // TODO: are args destroyed if a some?
         }
 
@@ -487,7 +490,7 @@ class Optional
         // template<typename U>
         // Optional<U> map(std::function<U(T &)> fn)
         template<typename U, typename Fn>
-        Optional<U> map(Fn &&fn)
+        Optional<U> map(Fn &&fn, Context const &ctx = Context())
         {
             // optional must be consumed.
             // contained type must be moved.
@@ -499,22 +502,25 @@ class Optional
             return consume<
                 ReturnType>([&fn](T &&some)
                                 -> ReturnType { return ReturnType::Some(fn(forward<T>(some))); },
-                            [](void) -> ReturnType { return None; });
+                            [](void) -> ReturnType { return None; },
+                            ctx);
         }
 
-        Optional or_(Optional &&o)
+        Optional or_(Optional &&o, Context const &ctx = Context())
         {
             return consume<Optional>([](T &&some)
                                          -> Optional { return Optional::Some(forward<T>(some)); },
-                                     [&o](void) -> Optional { return o; });
+                                     [&o](void) -> Optional { return o; },
+                                     ctx);
         }
 
         template<typename Fn>
-        Optional or_else(Fn &&fn)
+        Optional or_else(Fn &&fn, Context const &ctx = Context())
         {
             return consume<Optional>([](T &&some)
                                          -> Optional { return Optional::Some(forward<T>(some)); },
-                                     [&fn](void) -> Optional { return fn(); });
+                                     [&fn](void) -> Optional { return fn(); },
+                                     ctx);
         }
 
     public:
@@ -729,7 +735,7 @@ class Optional<void>
         // constexpr V match(Tag tag, std::function<V(void)> on_some, std::function<V(void)>
         // on_none) const  {
         template<typename V, typename Fn1, typename Fn2>
-        constexpr V match(Fn1 &&on_some, Fn2 &&on_none) const
+        constexpr V match(Fn1 &&on_some, Fn2 &&on_none, Context const &ctx = Context()) const
         {
             switch (tag_) {
                 case Tag::SOME:
@@ -740,7 +746,7 @@ class Optional<void>
                     // invalids are not values that should occur
                     // if they do it's a use-after-move-from op so must panic.
                     // or a use-before-initialised so again must panic.
-                    nel::panic("invalid Optional");
+                    nel::panic("invalid Optional", ctx);
                     break;
                 default:
                     // For gcc/clang minsize: if this not nell:abort,
@@ -750,7 +756,7 @@ class Optional<void>
                     // TODO: look into stack trace dumper on fail.
                     // But would still like a message..
                     // For arm:minsize: if panic, then does not collapse (func with arg issue)
-                    nel::panic("invalid Optional");
+                    nel::panic("bad Optional", ctx);
                     break;
             }
         }
@@ -806,11 +812,12 @@ class Optional<void>
          *
          * The optional is not consumed by the operation.
          */
-        bool is_some(void) const
+        bool is_some(Context const &ctx = Context()) const
 
         {
             return match<bool>([](void) -> bool { return true; },
-                               [](void) -> bool { return false; });
+                               [](void) -> bool { return false; },
+                               ctx);
         }
 
         /**
@@ -820,10 +827,12 @@ class Optional<void>
          *
          * The optional is not consumed by the operation.
          */
-        bool is_none(void) const
+        bool is_none(Context const &ctx = Context()) const
         {
             return match<bool>([](void) -> bool { return false; },
-                               [](void) -> bool { return true; });
+                               [](void) -> bool { return true; },
+
+                               ctx);
         }
 
     public:
@@ -831,7 +840,7 @@ class Optional<void>
         // template<typename V>
         // V consume(std::function<V(void)> on_some, std::function<V(void)> on_none)
         template<typename V, typename Fn1, typename Fn2>
-        constexpr V consume(Fn1 &&on_some, Fn2 &&on_none)
+        constexpr V consume(Fn1 &&on_some, Fn2 &&on_none, Context const &ctx = Context())
         {
             // a consuming matcher..
             // that moves the value to the closures..
@@ -846,16 +855,16 @@ class Optional<void>
                     // invalids are not values that should occur
                     // if they do it's a use-after-move-from op so must panic.
                     // or a use-before-initialised so again must panic.
-                    nel::panic("invalid Optional");
+                    nel::panic("invalid Optional", ctx);
                     break;
                 default:
-                    nel::panic("invalid Optional");
+                    nel::panic("bad Optional", ctx);
                     break;
             }
         }
 
         template<typename Fn1, typename Fn2>
-        constexpr void consumev(Fn1 &&on_some, Fn2 &&on_none)
+        constexpr void consumev(Fn1 &&on_some, Fn2 &&on_none, Context const &ctx = Context())
         {
             // a consuming matcher..
             // that moves the value to the closures..
@@ -872,10 +881,10 @@ class Optional<void>
                     // invalids are not values that should occur
                     // if they do it's a use-after-move-from op so must panic.
                     // or a use-before-initialised so again must panic.
-                    nel::panic("invalid Optional");
+                    nel::panic("invalid Optional", ctx);
                     break;
                 default:
-                    nel::panic("invalid Optional");
+                    nel::panic("bad Optional", ctx);
                     break;
             }
         }
@@ -893,9 +902,9 @@ class Optional<void>
          *
          * If the optional does not contain a Some, then abort/panic.
          */
-        void unwrap(void)
+        void unwrap(Context const &ctx = Context())
         {
-            return consumev([](void) {}, [](void) { nel::panic("not a Some"); });
+            return consumev([](void) {}, [&](void) { nel::panic("not a Some", ctx); }, ctx);
         }
 
         /**
@@ -906,9 +915,9 @@ class Optional<void>
          * @returns if Some, consumes and returns the value contained by the Optional.
          * @returns if not Some, consumes and returns `other`.
          */
-        void unwrap_or(void)
+        void unwrap_or(Context const &ctx = Context())
         {
-            return consumev([](void) {}, [](void) {});
+            return consumev([](void) {}, [](void) {}, ctx);
         }
 
         // Why no access via references?
@@ -918,11 +927,12 @@ class Optional<void>
         // template<typename U>
         // Optional<U> map(std::function<U(void)> fn)
         template<typename U, typename Fn>
-        Optional<U> map(Fn &&fn)
+        Optional<U> map(Fn &&fn, Context const &ctx = Context())
         {
             typedef Optional<U> ReturnType;
             return consume<ReturnType>([&fn](void) -> ReturnType { return ReturnType::Some(fn()); },
-                                       [](void) -> ReturnType { return None; });
+                                       [](void) -> ReturnType { return None; },
+                                       ctx);
         }
 
     public:
