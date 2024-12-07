@@ -111,7 +111,7 @@ class Result
                     // mem) if not using eec/ecc mem then that's the prob. But, want to abort/panic
                     // if a unhandled case is encountered at runtime, much how a default hander
                     // would work if it was present.
-                    nel::panic("invalid Result");
+                    nel::panic("bad Result");
                     break;
             }
         }
@@ -143,7 +143,7 @@ class Result
                     // overruns?) but might not want to for buffer overrun issues. if there is a
                     // memory corruption, then should have been detected by memory hardware (Ecc
                     // mem) if not using eec/ecc mem then that's the prob.
-                    nel::panic("invalid Result");
+                    nel::panic("bad Result");
                     break;
             }
         }
@@ -176,7 +176,7 @@ class Result
                         // (buffer overruns?) but might not want to for buffer overrun issues. if
                         // there is a memory corruption, then should have been detected by memory
                         // hardware (Ecc mem) if not using eec/ecc mem then that's the prob.
-                        nel::panic("invalid Result");
+                        nel::panic("bad Result");
                         break;
                 }
             }
@@ -293,7 +293,7 @@ class Result
         // constexpr V match(Tag tag, std::function<V(void)> &&on_ok, std::function<V(void)>
         // &&on_err) const  {
         template<typename V, typename Fn1, typename Fn2>
-        constexpr V match(Fn1 &&on_ok, Fn2 &&on_err) const
+        constexpr V match(Fn1 &&on_ok, Fn2 &&on_err, Context const &ctx = Context()) const
         {
             // this match is non-consuming, for internal use only.
             switch (tag_) { // result-match
@@ -305,10 +305,10 @@ class Result
                     // invalids are not values that should occur
                     // if they do it's a use-after-move-from op so must panic.
                     // or a use-before-initialised so again must panic.
-                    nel::panic("invalid Result");
+                    nel::panic("invalid Result", ctx);
                     break;
                 default:
-                    nel::panic("invalid Result");
+                    nel::panic("bad Result", ctx);
                     break;
             }
         }
@@ -364,12 +364,13 @@ class Result
          *
          * `this` is not consumed by this op.
          */
-        constexpr bool is_ok(void) const
+        constexpr bool is_ok(Context const &ctx = Context()) const
         {
             // min-size: gets optimised + inlined at call site.
             // release: gets optimised away..
             return match<bool>([](T const &) -> bool { return true; },
-                               [](E const &) -> bool { return false; });
+                               [](E const &) -> bool { return false; },
+                               ctx);
         }
 
         /**
@@ -379,15 +380,16 @@ class Result
          *
          * `this` is not consumed by this op.
          */
-        constexpr bool is_err(void) const
+        constexpr bool is_err(Context const &ctx = Context()) const
         {
             return match<bool>([](T const &) -> bool { return false; },
-                               [](E const &) -> bool { return true; });
+                               [](E const &) -> bool { return true; },
+                               ctx);
         }
 
     public:
         template<typename V, typename Fn1, typename Fn2>
-        constexpr V consume(Fn1 &&on_ok, Fn2 &&on_err)
+        constexpr V consume(Fn1 &&on_ok, Fn2 &&on_err, Context const &ctx = Context())
         {
             // a consuming matcher..
             // that moves the value to the closures..
@@ -402,16 +404,16 @@ class Result
                     // invalids are not values that should occur
                     // if they do it's a use-after-move-from op so must panic.
                     // or a use-before-initialised so again must panic.
-                    nel::panic("invalid Result");
+                    nel::panic("invalid Result", ctx);
                     break;
                 default:
-                    nel::panic("invalid Result");
+                    nel::panic("bad Result", ctx);
                     break;
             }
         }
 
         template<typename Fn1, typename Fn2>
-        constexpr void consumev(Fn1 &&on_ok, Fn2 &&on_err)
+        constexpr void consumev(Fn1 &&on_ok, Fn2 &&on_err, Context const &ctx = Context())
         {
             auto tag = tag_;
             tag_ = Tag::INVAL;
@@ -427,10 +429,10 @@ class Result
                     // if they do it's a use-after-move-from op so must panic.
                     // or a use-before-initialised so again must panic.
                     // fall through to default handler
-                    nel::panic("invalid Result");
+                    nel::panic("invalid Result", ctx);
                     break;
                 default:
-                    nel::panic("invalid Result");
+                    nel::panic("bad Result", ctx);
                     break;
             }
         }
@@ -446,10 +448,11 @@ class Result
          *
          * `this` is consumed and invalidated after.
          */
-        constexpr Optional<T> ok(void)
+        constexpr Optional<T> ok(Context const &ctx = Context())
         {
             return consume<Optional<T>>([](T &&ok) -> Optional<T> { return Some(forward<T>(ok)); },
-                                        [](E &&) -> Optional<T> { return None; });
+                                        [](E &&) -> Optional<T> { return None; },
+                                        ctx);
         }
 
         /**
@@ -460,12 +463,13 @@ class Result
          *
          * `this` is consumed and invalidated after.
          */
-        constexpr Optional<E> err(void)
+        constexpr Optional<E> err(Context const &ctx = Context())
         {
             return consume<Optional<E>>([](T &&) -> Optional<E> { return None; },
                                         [](E &&err) -> Optional<E> {
                                             return Some(forward<E>(err));
-                                        });
+                                        },
+                                        ctx);
         }
 
         /**
@@ -476,10 +480,11 @@ class Result
          *
          * `this` is consumed by the operation.
          */
-        constexpr T unwrap(void)
+        constexpr T unwrap(Context const &ctx = Context())
         {
             return consume<T>([](T &&ok) -> T { return T(forward<T>(ok)); },
-                              [&](E &&) -> T { nel::panic("not an OK"); });
+                              [&](E &&) -> T { nel::panic("not an OK", ctx); },
+                              ctx);
         }
 
         /**
@@ -490,10 +495,11 @@ class Result
          *
          * this is consumed by the operation.
          */
-        constexpr E unwrap_err(void)
+        constexpr E unwrap_err(Context const &ctx = Context())
         {
-            return consume<E>([](T &&) -> E { nel::panic("not an err"); },
-                              [](E &&err) -> E { return err; });
+            return consume<E>([&](T &&) -> E { nel::panic("not an err", ctx); },
+                              [](E &&err) -> E { return err; },
+                              ctx);
         }
 
         /**
@@ -507,10 +513,11 @@ class Result
          * `this` is consumed by the operation.
          * `v` is consumed by the operation.
          */
-        constexpr T unwrap_or(T &&v)
+        constexpr T unwrap_or(T &&v, Context const &ctx = Context())
         {
             return consume<T>([](T &&ok) -> T { return ok; },
-                              [&v](E &&) -> T { return forward<T>(v); });
+                              [&v](E &&) -> T { return forward<T>(v); },
+                              ctx);
         }
 
         /**
@@ -525,10 +532,11 @@ class Result
          * `args` are consumed by the operation.
          */
         template<typename... Args>
-        constexpr T unwrap_or(Args &&...args)
+        constexpr T unwrap_or(Args &&...args, Context const &ctx = Context())
         {
             return consume<T>([](T &&ok) -> T { return ok; },
-                              [&args...](E &&) -> T { return T(forward<Args>(args)...); });
+                              [&args...](E &&) -> T { return T(forward<Args>(args)...); },
+                              ctx);
         }
 
         /**
@@ -542,10 +550,11 @@ class Result
          * `this` is consumed by the operation.
          * `v` is consumed by the operation.
          */
-        constexpr E unwrap_err_or(E &&v)
+        constexpr E unwrap_err_or(E &&v, Context const &ctx = Context())
         {
             return consume<E>([&v](T &&) -> E { return forward<E>(v); },
-                              [](E &&err) -> E { return err; });
+                              [](E &&err) -> E { return err; },
+                              ctx);
         }
 
         /**
@@ -560,10 +569,11 @@ class Result
          * `args` are consumed by the operation.
          */
         template<typename... Args>
-        constexpr E unwrap_err_or(Args &&...args)
+        constexpr E unwrap_err_or(Args &&...args, Context const &ctx = Context())
         {
             return consume<E>([&args...](T &&) -> E { return E(forward<Args>(args)...); },
-                              [](E &&err) -> E { return err; });
+                              [](E &&err) -> E { return err; },
+                              ctx);
         }
 
         /**
@@ -579,14 +589,15 @@ class Result
         // template<class U>
         // Result<U, E> map(std::function<U(T &&)> fn)
         template<class U, typename Fn>
-        constexpr Result<U, E> map(Fn &&fn)
+        constexpr Result<U, E> map(Fn &&fn, Context const &ctx = Context())
         {
             typedef Result<U, E> ReturnType;
             return consume<ReturnType>(
                 [&fn](T &&ok) -> ReturnType {
                     return ReturnType::Ok(forward<U>(fn(forward<T>(ok))));
                 },
-                [](E &&err) -> ReturnType { return ReturnType::Err(forward<E>(err)); });
+                [](E &&err) -> ReturnType { return ReturnType::Err(forward<E>(err)); },
+                ctx);
         }
 
         /**
@@ -602,7 +613,7 @@ class Result
         // template<class F>
         // Result<T, F> map_err(std::function<F(E &&)> fn)
         template<class F, typename Fn>
-        constexpr Result<T, F> map_err(Fn &&fn)
+        constexpr Result<T, F> map_err(Fn &&fn, Context const &ctx = Context())
         {
             // TODO: remove need to explicitly cast to result in each of the
             //       branches.. i.e. the Result<U,E>() bit, should be Ok(..) or Err(..)
@@ -611,7 +622,8 @@ class Result
                                            -> ReturnType { return ReturnType::Ok(forward<T>(ok)); },
                                        [&fn](E &&err) -> ReturnType {
                                            return ReturnType::Err(forward<F>(fn(forward<E>(err))));
-                                       });
+                                       },
+                                       ctx);
         }
 
         /**
@@ -628,7 +640,7 @@ class Result
          */
         template<typename U, typename Fn>
         // Fn: Result<U,E> fn(T&&)
-        constexpr Result<U, E> and_then(Fn &&fn)
+        constexpr Result<U, E> and_then(Fn &&fn, Context const &ctx = Context())
         {
             // TODO: remove need to explicitly cast to result in each of the
             //       branches.. i.e. the Result<U,E>() bit, should be Ok(..) or Err(..)
@@ -637,7 +649,8 @@ class Result
                                        // TODO: check that this is a nop..
                                        [](E &&err) -> ReturnType {
                                            return ReturnType::Err(forward<E>(err));
-                                       });
+                                       },
+                                       ctx);
         }
 
     public:
@@ -717,7 +730,7 @@ class Result<void, E>
                     // mem) if not using eec/ecc mem then that's the prob. But, want to abort/panic
                     // if a unhandled case is encountered at runtime, much how a default hander
                     // would work if it was present.
-                    nel::panic("invalid Result");
+                    nel::panic("bad Result");
                     break;
             }
         }
@@ -750,7 +763,7 @@ class Result<void, E>
                     // overruns?) but might not want to for buffer overrun issues. if there is a
                     // memory corruption, then should have been detected by memory hardware (Ecc
                     // mem) if not using eec/ecc mem then that's the prob.
-                    nel::panic("invalid Result");
+                    nel::panic("bad Result");
                     break;
             }
         }
@@ -784,7 +797,7 @@ class Result<void, E>
                         // (buffer overruns?) but might not want to for buffer overrun issues. if
                         // there is a memory corruption, then should have been detected by memory
                         // hardware (Ecc mem) if not using eec/ecc mem then that's the prob.
-                        nel::panic("invalid Result");
+                        nel::panic("bad Result");
                         break;
                 }
             }
@@ -858,7 +871,7 @@ class Result<void, E>
         // match(Tag tag, std::function<V(void)> on_ok, std::function<V(void)> on_err) const
         //
         template<typename V, typename Fn1, typename Fn2>
-        constexpr V match(Fn1 &&on_ok, Fn2 &&on_err) const
+        constexpr V match(Fn1 &&on_ok, Fn2 &&on_err, Context const &ctx = Context()) const
         {
             switch (tag_) { // result<void>-match
                 case Tag::OK:
@@ -869,10 +882,10 @@ class Result<void, E>
                     // invalids are not values that should occur
                     // if they do it's a use-after-move-from op so must panic.
                     // or a use-before-initialised so again must panic.
-                    nel::panic("invalid Result");
+                    nel::panic("invalid Result", ctx);
                     break;
                 default:
-                    nel::panic("invalid Result");
+                    nel::panic("bad Result", ctx);
                     break;
             }
         }
@@ -928,10 +941,11 @@ class Result<void, E>
          *
          * `this` is not consumed by this op.
          */
-        constexpr bool is_ok(void) const
+        constexpr bool is_ok(Context const &ctx = Context()) const
         {
             return match<bool>([](void) -> bool { return true; },
-                               [](E const &) -> bool { return false; });
+                               [](E const &) -> bool { return false; },
+                               ctx);
         }
 
         /**
@@ -941,15 +955,16 @@ class Result<void, E>
          *
          * `this` is not consumed by this op.
          */
-        constexpr bool is_err(void) const
+        constexpr bool is_err(Context const &ctx = Context()) const
         {
             return match<bool>([](void) -> bool { return false; },
-                               [](E const &) -> bool { return true; });
+                               [](E const &) -> bool { return true; },
+                               ctx);
         }
 
     public:
         template<typename V, typename Fn1, typename Fn2>
-        constexpr V consume(Fn1 &&on_ok, Fn2 &&on_err)
+        constexpr V consume(Fn1 &&on_ok, Fn2 &&on_err, Context const &ctx = Context())
         {
             auto tag = tag_;
             tag_ = Tag::INVAL;
@@ -962,16 +977,16 @@ class Result<void, E>
                     // invalids are not values that should occur
                     // if they do it's a use-after-move-from op so must panic.
                     // or a use-before-initialised so again must panic.
-                    nel::panic("invalid Result");
+                    nel::panic("invalid Result", ctx);
                     break;
                 default:
-                    nel::panic("invalid Result");
+                    nel::panic("bad Result", ctx);
                     break;
             }
         }
 
         template<typename Fn1, typename Fn2>
-        constexpr void consumev(Fn1 &&on_ok, Fn2 &&on_err)
+        constexpr void consumev(Fn1 &&on_ok, Fn2 &&on_err, Context const &ctx = Context())
         {
             auto tag = tag_;
             tag_ = Tag::INVAL;
@@ -986,10 +1001,10 @@ class Result<void, E>
                     // invalids are not values that should occur
                     // if they do it's a use-after-move-from op so must panic.
                     // or a use-before-initialised so again must panic.
-                    nel::panic("invalid Result");
+                    nel::panic("invalid Result", ctx);
                     break;
                 default:
-                    nel::panic("invalid Result");
+                    nel::panic("bad Result", ctx);
                     break;
             }
         }
@@ -1003,10 +1018,11 @@ class Result<void, E>
          *
          * `this` is consumed and invalidated after.
          */
-        constexpr Optional<void> ok(void)
+        constexpr Optional<void> ok(Context const &ctx = Context())
         {
             return consume<Optional<void>>([](void) -> Optional<void> { return Some(); },
-                                           [](E &&) -> Optional<void> { return None; });
+                                           [](E &&) -> Optional<void> { return None; },
+                                           ctx);
         }
 
         /**
@@ -1017,12 +1033,13 @@ class Result<void, E>
          *
          * `this` is consumed and invalidated after.
          */
-        constexpr Optional<E> err(void)
+        constexpr Optional<E> err(Context const &ctx = Context())
         {
             return consume<Optional<E>>([](void) -> Optional<E> { return None; },
                                         [](E &&err) -> Optional<E> {
                                             return Some(nel::forward<E>(err));
-                                        });
+                                        },
+                                        ctx);
         }
 
         /**
@@ -1033,9 +1050,9 @@ class Result<void, E>
          *
          * `this` is consumed by the operation.
          */
-        constexpr void unwrap(void)
+        constexpr void unwrap(Context const &ctx = Context())
         {
-            return consumev([](void) {}, [](E &&) { nel::panic("not an ok"); });
+            return consumev([](void) {}, [](E &&) { nel::panic("not an ok"); }, ctx);
         }
 
         /**
@@ -1046,10 +1063,11 @@ class Result<void, E>
          *
          * `this` is consumed by the operation.
          */
-        constexpr E unwrap_err(void)
+        constexpr E unwrap_err(Context const &ctx = Context())
         {
-            return consume<E>([](void) -> E { nel::panic("not an err"); },
-                              [](E &&err) -> E { return err; });
+            return consume<E>([&](void) -> E { nel::panic("not an err", ctx); },
+                              [](E &&err) -> E { return err; },
+                              ctx);
         }
 
         /**
@@ -1063,14 +1081,16 @@ class Result<void, E>
          * `this` is consumed by the operation.
          * `o` is consumed by the operation.
          */
-        constexpr void unwrap_or(void)
+        constexpr void unwrap_or(Context const &ctx = Context())
         {
-            return consumev([](void) {}, [](E &&) {});
+            return consumev([](void) {}, [](E &&) {}, ctx);
         }
 
-        constexpr E unwrap_err_or(E &&v)
+        constexpr E unwrap_err_or(E &&v, Context const &ctx = Context())
         {
-            return consume<E>([&v](void) -> E { forward<E>(v); }, [](E &&err) -> E { return err; });
+            return consume<E>([&v](void) -> E { forward<E>(v); },
+                              [](E &&err) -> E { return err; },
+                              ctx);
         }
 
         /**
@@ -1085,10 +1105,11 @@ class Result<void, E>
          * `args` are consumed by the operation.
          */
         template<typename... Args>
-        constexpr E unwrap_err_or(Args &&...args)
+        constexpr E unwrap_err_or(Args &&...args, Context const &ctx = Context())
         {
             return consume<E>([&args...](void) -> E { return E(forward<Args>(args)...); },
-                              [](E &&err) -> E { return err; });
+                              [](E &&err) -> E { return err; },
+                              ctx);
         }
 
         /**
@@ -1104,14 +1125,15 @@ class Result<void, E>
         // template<class U>
         // Result<U, E> map(std::function<U(void)> fn)
         template<typename U, typename Fn>
-        constexpr Result<U, E> map(Fn &&fn)
+        constexpr Result<U, E> map(Fn &&fn, Context const &ctx = Context())
         {
             // TODO: remove need to explicitly cast to result in each of the
             //       branches.. i.e. the Result<U,E>() bit, should be Ok(..) or Err(..)
             typedef Result<U, E> ReturnType;
             return consume<
                 ReturnType>([&fn](void) -> ReturnType { return ReturnType::Ok(forward<U>(fn())); },
-                            [](E &&err) -> ReturnType { return ReturnType::Err(forward<E>(err)); });
+                            [](E &&err) -> ReturnType { return ReturnType::Err(forward<E>(err)); },
+                            ctx);
         }
 
         /**
@@ -1127,7 +1149,7 @@ class Result<void, E>
         // template<class F>
         // Result<void, F> map_err(std::function<F(E &&)> fn)
         template<typename F, typename Fn>
-        constexpr Result<void, F> map_err(Fn &&fn)
+        constexpr Result<void, F> map_err(Fn &&fn, Context const &ctx = Context())
         {
             // TODO: remove need to explicitly cast to result in each of the
             //       branches.. i.e. the Result<U,E>() bit, should be Ok(..), Err(..)
@@ -1135,12 +1157,13 @@ class Result<void, E>
             return consume<ReturnType>([](void) -> ReturnType { return ReturnType::Ok(); },
                                        [&fn](E &&err) -> ReturnType {
                                            return ReturnType::Err(forward<F>(fn(forward<E>(err))));
-                                       });
+                                       },
+                                       ctx);
         }
 
         template<typename U, typename Fn>
         // Fn: Result<U,E> op(T&&)
-        constexpr Result<U, E> and_then(Fn &&fn)
+        constexpr Result<U, E> and_then(Fn &&fn, Context const &ctx = Context())
         {
             // TODO: remove need to explicitly cast to result in each of the
             //       branches.. i.e. the Result<U,E>() bit, should be Ok(..) or Err(..)
@@ -1149,7 +1172,8 @@ class Result<void, E>
                                        // TODO: check that this is a nop..
                                        [](E &&err) -> ReturnType {
                                            return ReturnType::Err(forward<E>(err));
-                                       });
+                                       },
+                                       ctx);
         }
 
     public:
