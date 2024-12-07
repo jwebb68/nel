@@ -99,13 +99,23 @@ TEST_CASE("heapless::Array: move-ctor invalidates src", "[heapless][array]")
     auto arr2 = nel::move(arr1);
 
     // all elements of src must be invalidated by move.
+#if 0
     auto arr1_all_invalid
         = !arr1.iter().fold(false, [](bool &acc, auto const &e) { acc = acc || e.valid; });
+#else
+    auto arr1_all_invalid
+        = !arr1.iter().fold(false, [](bool const &acc, auto const &e) { return acc || e.valid; });
+#endif
     REQUIRE(arr1_all_invalid);
 
     // all elements of dst must be valid.
+#if 0
     auto arr2_all_valid
         = arr2.iter().fold(true, [](bool &acc, auto const &e) { acc = acc && e.valid; });
+#else
+    auto arr2_all_valid
+        = arr2.iter().fold(true, [](bool const &acc, auto const &e) { return acc && e.valid; });
+#endif
     REQUIRE(arr2_all_valid);
 
     // move ctor was used not move assn
@@ -122,13 +132,23 @@ TEST_CASE("heapless::Array: move-assn invalidates src", "[heapless][array]")
 
     // all elements of src must be invalidated by move.
     // must call move-assgn oper
+#if 0
     auto arr1_all_invalid
         = !arr1.iter().fold(false, [](bool &acc, auto const &e) { acc = acc || e.valid; });
+#else
+    auto arr1_all_invalid
+        = !arr1.iter().fold(false, [](bool const &acc, auto const &e) { return acc || e.valid; });
+#endif
     REQUIRE(arr1_all_invalid);
 
     // all elements of dst must be valid.
+#if 0
     auto arr2_all_valid
         = arr2.iter().fold(true, [](bool &acc, auto const &e) { acc = acc && e.valid; });
+#else
+    auto arr2_all_valid
+        = arr2.iter().fold(true, [](bool const &acc, auto const &e) { return acc && e.valid; });
+#endif
     REQUIRE(arr2_all_valid);
 
     // move assgn was used not move ctor
@@ -144,7 +164,11 @@ TEST_CASE("heapless::Array::move", "[heapless][array]")
         auto a2 = nel::move(a1);
 
         // moved dst must contain src values..
+#if 0
         auto r = a2.iter().fold(true, [](bool &acc, int const &v) { acc = acc && (v == 3); });
+#else
+        auto r = a2.iter().fold(true, [](bool const &acc, int const &v) { return acc && (v == 3); });
+#endif
         REQUIRE(r);
         // moved src must be invalidated .. cannot check with pods.
     }
@@ -156,7 +180,11 @@ TEST_CASE("heapless::Array::move", "[heapless][array]")
         a2 = nel::move(a1);
 
         // moved dst must contain src values..
+#if 0
         auto r = a2.iter().fold(true, [](bool &acc, int const &v) { acc = acc && (v == 1); });
+#else
+        auto r = a2.iter().fold(true, [](bool const &acc, int const &v) { return acc && (v == 1); });
+#endif
         REQUIRE(r);
         // moved src must be invalidated .. cannot check with pods.
     }

@@ -233,7 +233,11 @@ TEST_CASE("heapless::Vector::move", "[heapless][vector]")
         auto a2 = nel::move(a1);
 
         // moved dst must contain src values..
+#if 0
         auto r = a2.iter().fold(true, [](bool &acc, int const &v) { acc = acc && (v == 3); });
+#else
+        auto r = a2.iter().fold(true, [](bool const &acc, int const &v) { return acc && (v == 3); });
+#endif
         REQUIRE(r);
         // moved src must be invalidated .. cannot check with pods.
     }
@@ -254,7 +258,11 @@ TEST_CASE("heapless::Vector::move", "[heapless][vector]")
         REQUIRE(a2.len() == 2);
         // moved dst must contain src values..
         REQUIRE(a2.len() == 2);
+#if 0
         auto r = a2.iter().fold(true, [](bool &acc, int const &v) { acc = acc && (v == 1); });
+#else
+        auto r = a2.iter().fold(true, [](bool const &acc, int const &v) { return acc && (v == 1); });
+#endif
         REQUIRE(r);
         // TODO: moved src must be invalidated .. cannot check with pods.
     }

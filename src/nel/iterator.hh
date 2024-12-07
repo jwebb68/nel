@@ -157,6 +157,7 @@ enter:
          * @param fn func to apply to each item in iterator
          * @note for fn, acc is the folded value, e is the item to fold into it.
          */
+#if 0
         // template<typename U>
         // U fold(U &&initial, std::function<void(U &acc, OutT e)> fn)
         template<typename U, typename F>
@@ -176,6 +177,17 @@ enter:
             return acc;
         }
 #    endif
+#else
+        template<typename U, typename F>
+        U fold(U &&initial, F &&fn)
+        {
+            U acc = move(initial);
+            for (; self(); ++self()) {
+                acc = fn(acc, *self());
+            }
+            return acc;
+        }
+#endif
 
     public:
         friend Log &operator<<(Log &outs, ItT const &it)
