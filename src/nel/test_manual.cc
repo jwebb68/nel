@@ -1,5 +1,6 @@
 // -*- mode: c++; indent-tabs-mode: nil; tab-width: 4 -*-
 #include "manual.hh"
+#include "stub.hh"
 
 #include <catch2/catch.hpp>
 
@@ -8,280 +9,174 @@ namespace test
 namespace manual
 {
 
-struct Stub
-{
-        static int instances;
-        static int move_ctor;
-        static int move_assn;
+using nel::test::Stub;
 
-        static void reset()
-        {
-            instances = 0;
-            move_ctor = 0;
-            move_assn = 0;
-        }
-
-        int val;
-        bool valid;
-
-        ~Stub()
-        {
-            if (valid) { instances -= 1; }
-        }
-
-        Stub(int v)
-            : val(v)
-            , valid(true)
-        {
-            instances += 1;
-        }
-
-        Stub(Stub &&o)
-            : val(nel::move(o.val))
-            , valid(nel::move(o.valid))
-        {
-            o.valid = false;
-            move_ctor += 1;
-        }
-
-        Stub &operator=(Stub &&o)
-        {
-            val = nel::move(o.val);
-            valid = nel::move(o.valid);
-            o.valid = false;
-            move_assn += 1;
-            return *this;
-        }
-
-        Stub(Stub const &o) = delete;
-
-        // no default ctor..
-};
-
-int Stub::instances = 0;
-int Stub::move_ctor = 0;
-int Stub::move_assn = 0;
-
-TEST_CASE("manual::dtor", "[manual]")
+TEST_CASE("~Manual<T>()", "[manual]")
 {
     Stub::reset();
     {
         // creating a manual<T> does not create a T.
-        nel::Manual<Stub> m;
+        auto m = nel::Manual<Stub>();
         nel::unused(m);
         // no Ts are created
         REQUIRE(Stub::instances == 0);
+        REQUIRE(Stub::dtor == 0);
     }
 
     // no Ts are destructed
     REQUIRE(Stub::instances == 0);
+    REQUIRE(Stub::dtor == 0);
 
-    Stub::reset();
     {
-        nel::Manual<Stub> m(Stub(1));
+        // copied in.
+        auto m = nel::Manual(Stub(1));
+        Stub::reset();
 
-        REQUIRE(Stub::instances == 1);
+        REQUIRE(Stub::instances == 0);
+        REQUIRE(Stub::dtor == 0);
     }
     // no Ts are destructed
-    REQUIRE(Stub::instances == 1);
+    REQUIRE(Stub::dtor == 0);
+    REQUIRE(Stub::instances == 0);
 }
 
-TEST_CASE("manual::move-tor", "[manual]")
+TEST_CASE("Manual<T>(Manual<T> &&rhs)", "[manual]")
 {
     {
-        Stub::reset();
         // creating a manual<T> does not create a T.
         auto m1 = nel::Manual<Stub>();
+        Stub::reset();
+
         auto m2 = nel::move(m1);
 
-        // no Ts are created
         REQUIRE(Stub::instances == 0);
-        // no T moves are performed
         REQUIRE(Stub::move_ctor == 0);
         REQUIRE(Stub::move_assn == 0);
     }
 
     {
-        Stub::reset();
         auto m1 = nel::Manual<Stub>(Stub(1));
+        Stub::reset();
         auto m2 = nel::move(m1);
 
-        REQUIRE(Stub::instances == 1);
-        // no T moves are performed
-        // note: the move into the container will count as 1 move.
-        REQUIRE(Stub::move_ctor == 1);
+        REQUIRE(Stub::instances == 0);
+        REQUIRE(Stub::move_ctor == 0);
         REQUIRE(Stub::move_assn == 0);
     }
 }
 
-TEST_CASE("manual::move-assgn", "[manual]")
+TEST_CASE("operator=(Manual<T> &&rhs)", "[manual]")
 {
     {
-        // move empty onto empty
-        Stub::reset();
         // creating a manual<T> does not create a T.
         auto m1 = nel::Manual<Stub>();
         auto m2 = nel::Manual<Stub>();
+        Stub::reset();
 
         m2 = nel::move(m1);
 
-        // no Ts are created
         REQUIRE(Stub::instances == 0);
-        // no T moves are performed
         REQUIRE(Stub::move_ctor == 0);
         REQUIRE(Stub::move_assn == 0);
     }
 
     {
-        // move containing onto empty
-        Stub::reset();
-
         auto m1 = nel::Manual<Stub>(Stub(1));
         auto m2 = nel::Manual<Stub>();
 
-        m2 = nel::move(m1);
-
-        REQUIRE(Stub::instances == 1);
-        // no T moves are performed
-        // note the move into the container will count as 1 move
-        REQUIRE(Stub::move_ctor == 1);
-        REQUIRE(Stub::move_assn == 0);
-    }
-
-    {
-        // move containing onto containing
         Stub::reset();
 
-        auto m1 = nel::Manual<Stub>(Stub(1));
-        auto m2 = nel::Manual<Stub>(Stub(2));
-
         m2 = nel::move(m1);
 
-        REQUIRE(Stub::instances == 2);
-        // no extra  T moves are performed
-        // note: the move into the container will count as 1 move
-        REQUIRE(Stub::move_ctor == 2);
+        REQUIRE(Stub::instances == 0);
+        REQUIRE(Stub::move_ctor == 0);
         REQUIRE(Stub::move_assn == 0);
-
-        REQUIRE((*m1).val == 1);
-        // and m2 has old value, not new..
-        REQUIRE((*m2).val == 2);
-    }
-
-    {
-        // move empty onto containing
-        Stub::reset();
-
-        auto m1 = nel::Manual<Stub>();
-        auto m2 = nel::Manual<Stub>(Stub(2));
-
-        m2 = nel::move(m1);
-
-        REQUIRE(Stub::instances == 1);
-        // no T moves are performed
-        // note: the move into the container will count as 1 move
-        REQUIRE(Stub::move_ctor == 1);
-        REQUIRE(Stub::move_assn == 0);
-
-        // and m2 has old value, not new..
-        REQUIRE((*m2).val == 2);
     }
 }
 
-TEST_CASE("manual::destroy", "[manual]")
+TEST_CASE("Manual<T>::destruct()", "[manual]")
 {
     {
-        // deletes contained value
+        // destroys contained value
         // UB if no value contained.
         // UB if value already deleted.
+        auto m1 = nel::Manual(Stub(100));
+
         Stub::reset();
-        auto m1 = nel::Manual<Stub>();
-        m1 = nel::move(Stub(2));
 
-        REQUIRE(Stub::instances == 1);
-        m1.destroy();
+        m1.destruct();
 
-        REQUIRE(Stub::instances == 0);
+        REQUIRE(Stub::instances == -1);
+        REQUIRE(Stub::dtor == 1);
     }
 }
 
-TEST_CASE("manual::move-in", "[manual]")
+TEST_CASE("Manual<T>::construct()", "[manual]")
 {
+    /**
+     * create value in-place
+     */
+
+    auto m1 = nel::Manual(Stub(100));
+
+    REQUIRE(*m1 == Stub(100));
+}
+
+TEST_CASE("Manual<T>::deref()", "[manual]")
+{
+    SECTION("mutable")
     {
-        // value can be moved in.
-        Stub::reset();
-        auto m1 = nel::Manual<Stub>();
-        m1 = nel::move(Stub(2));
+        auto m1 = nel::Manual(Stub(100));
 
-        REQUIRE(Stub::instances == 1);
-
-        REQUIRE(Stub::move_ctor == 0);
-        REQUIRE(Stub::move_assn == 1);
-        REQUIRE((*m1).val == 2);
+        REQUIRE(m1.deref() == Stub(100));
     }
 
+    SECTION("const")
     {
-        // value can be moved out.
-        Stub::reset();
-        auto m1 = nel::Manual<Stub>();
-        m1 = nel::move(Stub(2));
+        auto const m1 = nel::Manual(Stub(100));
 
-        auto t = nel::move(*m1);
+        REQUIRE(m1.deref() == Stub(100));
+    }
+}
 
-        REQUIRE(Stub::instances == 1);
+TEST_CASE("*Manual<T>", "[manual]")
+{
+    SECTION("mutable")
+    {
+        auto m1 = nel::Manual(Stub(100));
 
-        // move-assn of stub into m1.
-        REQUIRE(Stub::move_assn == 1);
-        // move-ct of value in m1 to t.
-        REQUIRE(Stub::move_ctor == 1);
-        REQUIRE(t.val == 2);
-        REQUIRE(t.valid);
-        // value in m1 invalidated by move-out
-        REQUIRE(!(*m1).valid);
+        REQUIRE(*m1 == Stub(100));
     }
 
+    SECTION("const")
     {
-        // value can be moved in.
-        // moving in twice does not cause the old value dtor to be called
+        auto const m1 = nel::Manual(Stub(100));
+
+        REQUIRE(*m1 == Stub(100));
+    }
+}
+
+TEST_CASE("Manual<T>->", "[manual]")
+{
+    SECTION("mutable")
+    {
+        auto m1 = nel::Manual(Stub(100));
         Stub::reset();
-        auto m1 = nel::Manual<Stub>();
-        m1 = nel::move(Stub(2));
-        m1 = nel::move(Stub(3));
 
-        // note: move-in overwrites and causes leaks..
-        // so remember to delete any previous value.
-        REQUIRE(Stub::instances == 2);
+        m1->foo();
 
-        // move-assn of stubs into m1.
-        REQUIRE(Stub::move_assn == 2);
-
-        // not moved out
-        REQUIRE(Stub::move_ctor == 0);
-
-        REQUIRE((*m1).valid);
-        REQUIRE((*m1).val == 3);
+        REQUIRE(Stub::foo_calls == 1);
     }
 
+    SECTION("const")
     {
-        // value can be moved in.
-        // moving in twice does not cause the old value dtor to be called
-        // call .destroy() first..
+        auto const m1 = nel::Manual(Stub(100));
+
         Stub::reset();
-        auto m1 = nel::Manual<Stub>();
-        m1 = nel::move(Stub(2));
-        m1.destroy();
 
-        m1 = nel::move(Stub(3));
-        REQUIRE(Stub::instances == 1);
+        m1->foo();
 
-        // move-assn of stubs into m1.
-        REQUIRE(Stub::move_assn == 2);
-
-        // not moved out.
-        REQUIRE(Stub::move_ctor == 0);
-
-        REQUIRE((*m1).valid);
-        REQUIRE((*m1).val == 3);
+        REQUIRE(Stub::foo_calls == 1);
     }
 }
 

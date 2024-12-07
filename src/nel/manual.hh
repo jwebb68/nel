@@ -11,6 +11,8 @@ struct Manual;
 }
 
 #    include <nel/memory.hh> // move
+#    include <nel/new.hh> // new
+
 #    include <inttypes.h>
 
 namespace nel
@@ -25,52 +27,88 @@ template<typename T>
 struct Manual
 {
     public:
-        typedef T Type;
+        using Type = T;
+        using Self = Manual;
 
     private:
         // Use union so inspecting in a debugger is easier..
         // Don't use it for type punning.
-        union {
+        // Also, union handles alignment.
+        union U {
                 uint8_t buf_[sizeof(Type)];
                 Type elem_;
-        };
+
+                constexpr ~U() {};
+                constexpr U() {};
+        } u_;
 
     public:
         // default must not delete..
         // doesn't know if value contained or not.
-        constexpr ~Manual() {};
+        constexpr ~Manual() = default;
 
-        // create unwrapping container
-        constexpr Manual() {};
+        // create empty container
+        // union should prevent ctor call of T.
+        constexpr Manual() = default;
 
-        // move value into container
-        constexpr Manual(Type &&v)
+    public:
+        // construct value in-place given an existing container.
+        template<typename... Args>
+        constexpr Self &construct(Args &&...args)
         {
-            new (ptr()) Type(move(v));
-        }
-
-        constexpr Manual &operator=(Type &&v)
-        {
-            // cannot use assign as that implies there is a value on
-            // the lhs, which there may not be.
-            // so, treat as new.
-            // but don't pun to ctor as that would mess up cotr/assgn tracking.
-            ref() = move(v);
+            new (ptr()) Type(forward<Args>(args)...);
             return *this;
         }
 
+        // destruct contained value
+        constexpr Self &destruct()
+        {
+            deref().~Type();
+            return *this;
+        }
+
+    public:
+        // move value into container
+        constexpr Manual(Type &&v)
+        {
+            // use of this means dev is asserting that there is not a value already
+            // contained.
+            new (ptr()) Type(move(v));
+        }
+
+        constexpr Self &operator=(Type &&v)
+        {
+            // use of this means dev is asserting that there is a value already
+            // contained.
+            return move_from(nel::move(v));
+        }
+
+    public:
+        // create value inplace in new container.
         template<typename... Args>
         constexpr Manual(Args &&...args)
         {
-            new (ptr()) Type(forward<Args>(args)...);
+            construct(forward<Args>(args)...);
         }
 
     public:
         // can move, but it's manual, so not automatic.
         constexpr Manual(Manual &&) {}
 
-        constexpr Manual &operator=(Manual &&)
+        constexpr Self &operator=(Manual &&)
         {
+            return *this;
+        }
+
+        constexpr Self &move_from(Manual &&rhs)
+        {
+            deref() = nel::move(rhs.ref());
+            return *this;
+        }
+
+        constexpr Self &move_from(Type &&v)
+        {
+            deref() = nel::move(v);
             return *this;
         }
 
@@ -80,20 +118,29 @@ struct Manual
         constexpr Manual(Manual const &) = delete;
         constexpr Manual &operator=(Manual const &) = delete;
 
+        constexpr Self &copy_from(Manual const &rhs)
+        {
+            deref() = rhs.ref();
+            return *this;
+        }
+
+        // private:
     public:
         // only if you know there's a value there..
+        // TODO: must have no bare pointers.. safety feature.
         constexpr Type *ptr()
         {
-            // return &elem_;
-            return static_cast<Type *>(static_cast<void *>(buf_));
+            return &u_.elem_;
         }
 
         constexpr Type const *ptr() const
         {
-            // return &elem_;
-            return static_cast<Type const *>(static_cast<void const *>(buf_));
+            return &u_.elem_;
         }
 
+    public:
+        // only if you know there's a value there..
+        // yes, bare pointer, but usually used as a member accessor.
         constexpr Type *operator->()
         {
             return ptr();
@@ -104,40 +151,27 @@ struct Manual
             return ptr();
         }
 
-        constexpr Type &ref()
+        // only if you know there's a value there..
+        constexpr Type &deref()
         {
             return *ptr();
         }
 
-        constexpr Type const &ref() const
+        constexpr Type const &deref() const
         {
             return *ptr();
         }
 
+        // only if you know there's a value there..
         constexpr Type &operator*()
         {
-            return ref();
+            return deref();
         }
 
         constexpr Type const &operator*() const
         {
-            return ref();
+            return deref();
         }
-
-    public:
-        constexpr void destroy()
-        {
-            ref().~Type();
-        }
-
-        // constexpr void move_in(Type &&v)
-        // {
-        //     ref() = move(v);
-        // }
-        // constexpr Type move_out(Type &&v)
-        // {
-        //     return move(ref());
-        // }
 };
 
 } // namespace nel
