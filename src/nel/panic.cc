@@ -12,12 +12,12 @@ namespace nel
 {
 
 #if defined(TEST)
-[[noreturn]] inline void _panic(Context ctx) {
+[[noreturn]] inline void _panic(Context const &ctx) {
     std::stringstream ss;
     ss << "panic in " << ctx.fn_name_ << ' ' << ctx.file_name_ << ':' << ctx.line_num_ << '\n';
     throw nel::test::PanicError(ss.str());
 }
-[[noreturn]] inline void _panic(Context ctx, const char *prefix, std::string expr) {
+[[noreturn]] inline void _panic(Context const &ctx, const char *prefix, std::string expr) {
     std::stringstream ss;
     ss << "panic in " << ctx.fn_name_ << ' ' << ctx.file_name_ << ':' << ctx.line_num_ << '\n';
     ss << prefix << ": " << expr << '\n';
@@ -35,7 +35,7 @@ namespace nel
 #endif
 
 
-[[noreturn]] void panic0(Context ctx)
+[[noreturn]] void panic0(Context const &ctx)
 {
 #if defined(TEST)
     _panic(ctx);
@@ -45,7 +45,7 @@ namespace nel
 #endif
 }
 
-[[noreturn]] void panic(char const *const msg, Context ctx)
+[[noreturn]] void panic(char const *const msg, Context const &ctx)
 {
 #if defined(TEST)
     _panic(ctx, "", msg);
@@ -61,7 +61,7 @@ namespace nel
 #endif
 }
 
-[[noreturn]] void assert_fail(char const *const msg, Context ctx)
+[[noreturn]] void assert_fail(char const *const msg, Context const &ctx)
 {
 #if defined(TEST)
     _panic(ctx, "ASSERT FAIL", msg);
