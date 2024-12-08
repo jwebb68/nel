@@ -78,15 +78,47 @@ struct Optional
     public:
     private:
         // Tagged enum thing.
-        // Similar to std::variant but without the exception throwing behaviour.
-        // Maybe make into a nel::Variant ?
-        enum class Tag {
-            INVAL = 0,
-            NONE,
-            SOME
+        struct Tag
+        {
+            public:
+                enum ETag {
+                    INVAL = 0,
+                    NONE,
+                    SOME
+                } val_;
+
+            public:
+                // When moved, invalidate src.
+                Tag(Tag &&rhs)
+                    : val_(nel::move(rhs.val_))
+                {
+                    rhs.val_ = INVAL;
+                }
+
+                Tag &operator=(Tag &&rhs)
+                {
+                    val_ = nel::move(rhs.val_);
+                    rhs.val_ = INVAL;
+                    return *this;
+                }
+
+            public:
+                Tag(Tag const &) = default;
+                Tag &operator=(Tag const &) = default;
+
+            public:
+                constexpr Tag(ETag t)
+                    : val_(t)
+                {
+                }
+
+                constexpr operator ETag() const
+                {
+                    return val_;
+                }
         } tag_;
 
-        template<enum Tag>
+        template<Tag::ETag const TAG>
         struct Phantom
         {
         };
@@ -148,13 +180,12 @@ struct Optional
         Optional &operator=(Optional const &o) = delete;
 
     public:
-        Optional(Optional &&o)
+        Optional(Optional &&rhs)
+            : tag_(nel::move(rhs.tag_))
         {
-            tag_ = o.tag_;
-            o.tag_ = Tag::INVAL;
             switch (tag_) { // optional::move-ctor
                 case Tag::SOME:
-                    new (&some_) Element<T>(move(o.some_));
+                    new (&some_) Element<T>(move(rhs.some_));
                     break;
                 case Tag::NONE:
                     break;
@@ -191,39 +222,53 @@ struct Optional
             }
         }
 
-        Optional &operator=(Optional &&o)
+        Optional &operator=(Optional &&rhs)
         {
-            if (this != &o) {
-                tag_ = o.tag_;
-                o.tag_ = Tag::INVAL;
-                switch (tag_) { // optional::move-ass
-                    case Tag::SOME:
-                        some_ = move(o.some_);
-                        break;
-                    case Tag::NONE:
-                        break;
-                    case Tag::INVAL:
-                        break;
+            if (this != &rhs) {
+                if (tag_ == rhs.tag_) {
+                    switch (tag_) { // optional::move-ass
+                        case Tag::INVAL:
+                            break;
+                        case Tag::SOME:
+                            some_ = nel::move(rhs.some_);
+                            break;
+                        case Tag::NONE:
+                            break;
+                        default:
+                            // The compile is to fail if an explicit enum case handler
+                            // isn't present (i.e. -Wenum-switch).
+                            // Also, want to abort/panic if an unknown case is encountered
+                            // at runtime, much how a default hander would work if it was
+                            // present.
 
-                    default:
-                        // For gcc/clang minsize: if this not nell:abort,
-                        // then iteration may not collapse into a tight loop.
-                        // It's the  need for arguments that's doing it.
-                        // For O3: does not affect and iteration collapses into tight loop
-                        // TODO: look into stack trace dumper on fail.
-                        // But would still like a message..
-                        // For arm:minsize: if panic, then does not collapse (func with arg issue)
-                        // nel_panic("invalid optional");
+                            // For gcc/clang minsize:
+                            // If this not nell::abort, then iteration may not collapse into
+                            // a tight loop.
+                            // It's the need for arguments that's doing it.
+                            // For O3:
+                            // Does not affect and iteration collapses into tight loop.
+                            // TODO: look into stack trace dumper on fail.
+                            // But would still like a message..
+                            // For arm::minsize:
+                            // If panic, then does not collapse (func with arg issue)
 
-                        // for dtor + moves (but not usage) at runtime:
-                        // does it matter it's not one of the 'special' values?
-                        // yes, since it may have contained one or the others..
-                        // if memory hardware is assumed to be incorruptable then can ignore ?
-                        // (buffer overruns?) but might not want to for buffer overrun issues. if
-                        // there is a memory corruption, then should have been detected by memory
-                        // hardware (Ecc mem) if not using eec/ecc mem then that's the prob.
-                        nel::panic("invalid Optional");
-                        break;
+                            // For dtor + moves (but not usage) at runtime:
+                            // Does it matter it's not one of the 'special' values?
+                            // Yes, since it may have contained one or the others..
+                            // If memory hardware is assumed to be incorruptable then can ignore ?
+                            // (what of buffer overruns?) but might not want to for buffer overrun
+                            // issues.
+                            // If there is a memory corruption, then should have been
+                            // detected/corrected by memory hardware (ECC mem).
+                            // If not using ECC mem then that's the prob.
+                            nel::panic("invalid Optional");
+                            nel::panic("bad Optional");
+                            break;
+                    }
+                    tag_ = nel::move(rhs.tag_);
+                } else {
+                    this->~Optional();
+                    new (this) Optional(nel::move(rhs));
                 }
             }
             return *this;
@@ -484,10 +529,9 @@ struct Optional
         // FNN: V (*)(void)
         constexpr V consume(FNS &&on_some, FNN &&on_none, Context const &ctx = Context())
         {
-            auto tag = tag_;
-            tag_ = Tag::INVAL;
             // A consuming matcher..
             // That moves the value to the closures..
+            auto tag = nel::move(tag_);
             switch (tag) { // optional::consume
                 case Tag::SOME:
                     return on_some(forward<T>(*some_));
@@ -518,10 +562,9 @@ struct Optional
         // FNN: void (*)(void)
         constexpr void consumev(FNS &&on_some, FNN &&on_none, Context const &ctx = Context())
         {
-            auto tag = tag_;
-            tag_ = Tag::INVAL;
             // A consuming matcher..
             // That moves the value to the closures..
+            auto tag = nel::move(tag_);
             switch (tag) { // optional::consumev
                 case Tag::SOME:
                     on_some(forward<T>(*some_));
@@ -726,15 +769,47 @@ struct Optional<void>
 {
     private:
         // Tagged enum thing.
-        // Similar to std::variant but without the exception throwing behaviour.
-        // Maybe make into a nel::Variant ?
-        enum class Tag {
-            INVAL = 0,
-            NONE,
-            SOME
+        struct Tag
+        {
+            public:
+                enum ETag {
+                    INVAL = 0,
+                    NONE,
+                    SOME
+                } val_;
+
+            public:
+                // When moved, invalidate src.
+                Tag(Tag &&rhs)
+                    : val_(nel::move(rhs.val_))
+                {
+                    rhs.val_ = INVAL;
+                }
+
+                Tag &operator=(Tag &&rhs)
+                {
+                    val_ = nel::move(rhs.val_);
+                    rhs.val_ = INVAL;
+                    return *this;
+                }
+
+            public:
+                Tag(Tag const &) = default;
+                Tag &operator=(Tag const &) = default;
+
+            public:
+                constexpr Tag(ETag t)
+                    : val_(t)
+                {
+                }
+
+                constexpr operator ETag() const
+                {
+                    return val_;
+                }
         } tag_;
 
-        template<enum Tag>
+        template<Tag::ETag const TAG>
         struct Phantom
         {
         };
@@ -742,7 +817,7 @@ struct Optional<void>
     public:
         constexpr ~Optional(void)
         {
-            switch (tag_) {
+            switch (tag_) { // optional::~
                 case Tag::SOME:
                     break;
                 case Tag::NONE:
@@ -786,10 +861,9 @@ struct Optional<void>
         Optional &operator=(Optional const &o) = delete;
 
     public:
-        Optional(Optional &&o)
+        Optional(Optional &&rhs)
+            : tag_(nel::move(rhs.tag_))
         {
-            tag_ = o.tag_;
-            o.tag_ = Tag::INVAL;
             switch (tag_) {
                 case Tag::SOME:
                     break;
@@ -828,38 +902,52 @@ struct Optional<void>
             }
         }
 
-        Optional &operator=(Optional &&o)
+        Optional &operator=(Optional &&rhs)
         {
-            if (this != &o) {
-                tag_ = o.tag_;
-                o.tag_ = Tag::INVAL;
-                switch (tag_) {
-                    case Tag::SOME:
-                        break;
-                    case Tag::NONE:
-                        break;
-                    case Tag::INVAL:
-                        break;
+            if (this != &rhs) {
+                if (tag_ == rhs.tag_) {
+                    switch (tag_) { // optional::move-ass
+                        case Tag::INVAL:
+                            break;
+                        case Tag::SOME:
+                            break;
+                        case Tag::NONE:
+                            break;
+                        default:
+                            // The compile is to fail if an explicit enum case handler
+                            // isn't present (i.e. -Wenum-switch).
+                            // Also, want to abort/panic if an unknown case is encountered
+                            // at runtime, much how a default hander would work if it was
+                            // present.
 
-                    default:
-                        // For gcc/clang minsize: if this not nell:abort,
-                        // then iteration may not collapse into a tight loop.
-                        // It's the  need for arguments that's doing it.
-                        // For O3: does not affect and iteration collapses into tight loop
-                        // TODO: look into stack trace dumper on fail.
-                        // But would still like a message..
-                        // For arm:minsize: if panic, then does not collapse (func with arg issue)
-                        // nel_panic("invalid optional");
+                            // For gcc/clang minsize:
+                            // If this not nell::abort, then iteration may not collapse into
+                            // a tight loop.
+                            // It's the need for arguments that's doing it.
+                            // For O3:
+                            // Does not affect and iteration collapses into tight loop.
+                            // TODO: look into stack trace dumper on fail.
+                            // But would still like a message..
+                            // For arm::minsize:
+                            // If panic, then does not collapse (func with arg issue)
 
-                        // for dtor + moves (but not usage) at runtime:
-                        // does it matter it's not one of the 'special' values?
-                        // yes, since it may have contained one or the others..
-                        // if memory hardware is assumed to be incorruptable then can ignore ?
-                        // (buffer overruns?) but might not want to for buffer overrun issues. if
-                        // there is a memory corruption, then should have been detected by memory
-                        // hardware (Ecc mem) if not using eec/ecc mem then that's the prob.
-                        nel::panic("invalid Optional");
-                        break;
+                            // For dtor + moves (but not usage) at runtime:
+                            // Does it matter it's not one of the 'special' values?
+                            // Yes, since it may have contained one or the others..
+                            // If memory hardware is assumed to be incorruptable then can ignore ?
+                            // (what of buffer overruns?) but might not want to for buffer overrun
+                            // issues.
+                            // If there is a memory corruption, then should have been
+                            // detected/corrected by memory hardware (ECC mem).
+                            // If not using ECC mem then that's the prob.
+                            nel::panic("invalid Optional");
+                            nel::panic("bad Optional");
+                            break;
+                    }
+                    tag_ = nel::move(rhs.tag_);
+                } else {
+                    this->~Optional();
+                    new (this) Optional(nel::move(rhs));
                 }
             }
             return *this;
@@ -1053,7 +1141,7 @@ struct Optional<void>
          *
          * @note `this` is not consumed/changed by the operation.
          */
-        bool is_some(Context const &ctx = Context()) const
+        constexpr bool is_some(Context const &ctx = Context()) const
 
         {
             return match<bool>([](void) -> bool { return true; },
@@ -1069,7 +1157,7 @@ struct Optional<void>
          *
          * @note `this` is not consumed/changed by the operation.
          */
-        bool is_none(Context const &ctx = Context()) const
+        constexpr bool is_none(Context const &ctx = Context()) const
         {
             return match<bool>([](void) -> bool { return false; },
                                [](void) -> bool { return true; },
@@ -1098,10 +1186,9 @@ struct Optional<void>
         // FNN: V (*)(void)
         constexpr V consume(FNS &&on_some, FNN &&on_none, Context const &ctx = Context())
         {
-            auto tag = tag_;
-            tag_ = Tag::INVAL;
             // A consuming matcher..
             // That moves the value to the closures..
+            auto tag = nel::move(tag_);
             switch (tag) {
                 case Tag::SOME:
                     return on_some();
@@ -1132,10 +1219,9 @@ struct Optional<void>
         // FNN: void (*)(void)
         constexpr void consumev(FNS &&on_some, FNN &&on_none, Context const &ctx = Context())
         {
-            auto tag = tag_;
-            tag_ = Tag::INVAL;
             // A consuming matcher..
             // That moves the value to the closures..
+            auto tag = nel::move(tag_);
             switch (tag) {
                 case Tag::SOME:
                     on_some();
