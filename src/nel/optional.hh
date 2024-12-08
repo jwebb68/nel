@@ -694,28 +694,24 @@ struct Optional
     public:
         friend Log &operator<<(Log &outs, Optional const &val)
         {
+            outs << "Optional(";
             switch (val.tag_) {
                 case Tag::NONE:
-                    outs << "Optional("
-                         << "None)";
-                    return outs;
+                    outs << "None";
                     break;
                 case Tag::SOME:
-                    outs << "Optional("
-                         << "Some(";
+                    outs << "Some(";
                     outs << *val.some_;
-                    outs << "))";
-                    return outs;
+                    outs << ')';
                     break;
                 case Tag::INVAL:
-                    outs << "Optional("
-                         << "Inval)";
-                    return outs;
+                    outs << "Inval";
                     break;
                 default:
-                    outs << "Optional("
-                         << "Unknown)";
+                    outs << "??";
+                    break;
             }
+            outs << ')';
             return outs;
         }
 };
@@ -1241,26 +1237,21 @@ struct Optional<void>
     public:
         friend Log &operator<<(Log &outs, Optional const &val)
         {
+            outs << "Optional(";
             switch (val.tag_) {
                 case Tag::NONE:
-                    outs << "Optional("
-                         << "None" << ')';
-                    return outs;
+                    outs << "None";
                     break;
                 case Tag::SOME:
-                    outs << "Optional("
-                         << "Some(" << ')' << ')';
-                    return outs;
+                    outs << "Some()";
                     break;
                 case Tag::INVAL:
-                    outs << "Optional("
-                         << "Inval" << ')';
-                    return outs;
+                    outs << "Inval";
                     break;
                 default:
-                    outs << "Optional("
-                         << "Unknown" << ')';
+                    outs << "??";
             }
+            outs<< ')';
             return outs;
         }
 };
