@@ -552,41 +552,6 @@ struct Optional
             }
         }
 
-        // TODO: create concepts to limit FNS, FNN to those func signatures.
-        // If this is a some, call FNS and return value.
-        // If this is a none, call FNN and return value.
-        // If this is inval, panic.
-        // After call this is invalidated.
-        template<typename FNS, typename FNN>
-        // FNS: void (*)(T &&)
-        // FNN: void (*)(void)
-        constexpr void consumev(FNS &&on_some, FNN &&on_none, Context const &ctx = Context())
-        {
-            // A consuming matcher..
-            // That moves the value to the closures..
-            auto tag = nel::move(tag_);
-            switch (tag) { // optional::consumev
-                case Tag::SOME:
-                    on_some(forward<T>(*some_));
-                    break;
-
-                case Tag::NONE:
-                    on_none();
-                    break;
-
-                case Tag::INVAL:
-                    // Invalids are not values that should occur.
-                    // If they do it's a use-after-move-from op so must panic,
-                    // or a use-before-initialised so again must panic.
-                    nel::panic("invalid Optional", ctx);
-                    break;
-
-                default:
-                    nel::panic("bad Optional", ctx);
-                    break;
-            }
-        }
-
     public:
         // Contained value extraction with consumption.
         // i.e. extracting invalidates the container.
@@ -1209,41 +1174,6 @@ struct Optional<void>
             }
         }
 
-        // TODO: create concepts to limit FNS, FNN to those func signatures.
-        // If this is a some, call FNS and return value.
-        // If this is a none, call FNN and return value.
-        // If this is inval, panic.
-        // After call this is invalidated.
-        template<typename FNS, typename FNN>
-        // FNS: void (*)(void)
-        // FNN: void (*)(void)
-        constexpr void consumev(FNS &&on_some, FNN &&on_none, Context const &ctx = Context())
-        {
-            // A consuming matcher..
-            // That moves the value to the closures..
-            auto tag = nel::move(tag_);
-            switch (tag) {
-                case Tag::SOME:
-                    on_some();
-                    break;
-
-                case Tag::NONE:
-                    on_none();
-                    break;
-
-                case Tag::INVAL:
-                    // Invalids are not values that should occur.
-                    // If they do it's a use-after-move-from op so must panic,
-                    // or a use-before-initialised so again must panic.
-                    nel::panic("invalid Optional", ctx);
-                    break;
-
-                default:
-                    nel::panic("bad Optional", ctx);
-                    break;
-            }
-        }
-
     public:
         // Contained value extraction with consumption.
         // i.e. extracting invalidates the container.
@@ -1264,7 +1194,7 @@ struct Optional<void>
          */
         constexpr void unwrap(Context const &ctx = Context())
         {
-            return consumev([](void) {}, [&](void) { nel::panic("not a Some", ctx); }, ctx);
+            return consume<void>([](void) {}, [&](void) { nel::panic("not a Some", ctx); }, ctx);
         }
 
         /**
@@ -1279,7 +1209,7 @@ struct Optional<void>
          */
         constexpr void unwrap_or(Context const &ctx = Context())
         {
-            return consumev([](void) {}, [](void) {}, ctx);
+            return consume<void>([](void) {}, [](void) {}, ctx);
         }
 
         // Why no access via references?
