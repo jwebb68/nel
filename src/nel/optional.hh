@@ -33,14 +33,16 @@ static constexpr NoneT None = NoneT {};
  * A non-exception throwing construct similar to std::optional.
  * Where std::optional throws on access for value is no value is present,
  * this construct panics.
- * c.f. rust Option (but then, if you want rust-like, use rust?)
+ * c.f. rust Option.
  *
  * usage:
+ *
  * ```c++
  *    Optional<int> v1; // compile error
  *
  *    Optional<int> v1 = Optional<int>::Some(1);
- *    Optional<int> v2 = Optional<int>::None();
+ *    Optional<int> v1 = Some(1);
+ *    Optional<int> v2 = None;
  *
  *    bool b1 = v1.is_some(); // true
  *    bool b2 = v1.is_none(); // false
@@ -53,12 +55,12 @@ static constexpr NoneT None = NoneT {};
  *    bool b6 = v1 == Some(1); // true
  *    bool b7 = v1 == Some(2); // false
  *    bool b8 = v1 == Some("ha ha"); // fail to compile, type mismatch
- *    bool b9 = v1 == None(); // false
+ *    bool b9 = v1 == None; // false
  *
  *    bool b10 = v2 == Some(1); // false
  *    bool b11 = v2 == Some(2); // false
  *    bool b12 = v2 == Some("ha ha"); // fail to compile., type mismatch
- *    bool b13 = v2 == None(); // true
+ *    bool b13 = v2 == None; // true
 
  *    int i = v1.unwrap();
  *    // here: v1 is consumed (does not contain value any more)
@@ -110,28 +112,31 @@ struct Optional
                 case Tag::INVAL:
                     break;
 
-                    // I want compile to fail if an explicit enum case handler isn't present.
-                    // But, want to abort/panic if a unhandled case is encountered
+                default:
+                    // The compile is to fail if an explicit enum case handler isn't present.
+                    // (-Wenum-switch).
+                    // Also, want to abort/panic if an unknown case is encountered
                     // at runtime, much how a default hander would work if it was
                     // present.
 
-                default:
-                    // For gcc/clang minsize: if this not nell:abort,
-                    // then iteration may not collapse into a tight loop.
-                    // It's the  need for arguments that's doing it.
-                    // For O3: does not affect and iteration collapses into tight loop
+                    // For gcc/clang minsize:
+                    // If this not nell::abort, then iteration may not collapse into a tight loop.
+                    // It's the need for arguments that's doing it.
+                    // For O3:
+                    // Does not affect and iteration collapses into tight loop.
                     // TODO: look into stack trace dumper on fail.
                     // But would still like a message..
-                    // For arm:minsize: if panic, then does not collapse (func with arg issue)
-                    // nel_panic("invalid optional");
+                    // For arm::minsize:
+                    // If panic, then does not collapse (func with arg issue)
 
-                    // for dtor + moves (but not usage) at runtime:
-                    // does it matter it's not one of the 'special' values?
-                    // yes, since it may have contained one or the others..
-                    // if memory hardware is assumed to be incorruptable then can ignore ? (buffer
-                    // overruns?) but might not want to for buffer overrun issues. if there is a
-                    // memory corruption, then should have been detected by memory hardware (Ecc
-                    // mem) if not using eec/ecc mem then that's the prob.
+                    // For dtor + moves (but not usage) at runtime:
+                    // Does it matter it's not one of the 'special' values?
+                    // Yes, since it may have contained one or the others..
+                    // If memory hardware is assumed to be incorruptable then can ignore ?
+                    // (what of buffer overruns?) but might not want to for buffer overrun issues.
+                    // If there is a memory corruption, then should have been detected/corrected by
+                    // memory hardware (ECC mem).
+                    // If not using ECC mem then that's the prob.
                     nel::panic("bad Optional");
                     break;
             }
@@ -157,22 +162,30 @@ struct Optional
                     break;
 
                 default:
-                    // For gcc/clang minsize: if this not nell:abort,
-                    // then iteration may not collapse into a tight loop.
-                    // It's the  need for arguments that's doing it.
-                    // For O3: does not affect and iteration collapses into tight loop
+                    // The compile is to fail if an explicit enum case handler isn't present.
+                    // (-Wenum-switch).
+                    // Also, want to abort/panic if an unknown case is encountered
+                    // at runtime, much how a default hander would work if it was
+                    // present.
+
+                    // For gcc/clang minsize:
+                    // If this not nell::abort, then iteration may not collapse into a tight loop.
+                    // It's the need for arguments that's doing it.
+                    // For O3:
+                    // Does not affect and iteration collapses into tight loop.
                     // TODO: look into stack trace dumper on fail.
                     // But would still like a message..
-                    // For arm:minsize: if panic, then does not collapse (func with arg issue)
-                    // nel_panic("invalid optional");
+                    // For arm::minsize:
+                    // If panic, then does not collapse (func with arg issue)
 
-                    // for dtor + moves (but not usage) at runtime:
-                    // does it matter it's not one of the 'special' values?
-                    // yes, since it may have contained one or the others..
-                    // if memory hardware is assumed to be incorruptable then can ignore ? (buffer
-                    // overruns?) but might not want to for buffer overrun issues. if there is a
-                    // memory corruption, then should have been detected by memory hardware (Ecc
-                    // mem) if not using eec/ecc mem then that's the prob.
+                    // For dtor + moves (but not usage) at runtime:
+                    // Does it matter it's not one of the 'special' values?
+                    // Yes, since it may have contained one or the others..
+                    // If memory hardware is assumed to be incorruptable then can ignore ?
+                    // (what of buffer overruns?) but might not want to for buffer overrun issues.
+                    // If there is a memory corruption, then should have been detected/corrected by
+                    // memory hardware (ECC mem).
+                    // If not using ECC mem then that's the prob.
                     nel::panic("bad Optional");
                     break;
             }
@@ -228,12 +241,11 @@ struct Optional
         //     : tag_(SOME), some_(forward<Args>(args)...) {}
 
     public:
-        // Default constructor.
-        // Don't want this as there is no default for an optional.
-        // i.e. require a value, even if it's a None (i.e. being explicit).
-        // really? Default to None/Inval?
-        // But use of move-ctor mandates an inval state, so can have a default.
-        // Optional(void) = delete;
+        // Optional<T> t;
+        /**
+         * Default constructor.
+         *
+         */
         constexpr Optional(void)
             : tag_(Tag::INVAL)
         {
@@ -275,14 +287,17 @@ struct Optional
         // }
 
     private:
-        // don't use std::function.. it's bloatware..
-        // template<typename V>
-        // constexpr V match(Tag tag, std::function<V(void)> on_some, std::function<V(void)>
-        // on_none) const  {
-        template<typename V, typename Fn1, typename Fn2>
-        // Fn1: V (*)(T const &)
-        // Fn2: V (*)(void)
-        constexpr V match(Fn1 &&on_some, Fn2 &&on_none, Context const &ctx = Context()) const
+        // Don't use std::function.. it's bloatware..
+
+        // TODO: create concepts to limit FNS, FNN to those func signatures.
+        // If this is a some, call FNS and return value.
+        // If this is a none, call FNN and return value.
+        // If this is inval, panic.
+        // After call this is untouched.
+        template<typename V, typename FNS, typename FNN>
+        // FNS: V (*)(T const &)
+        // FNN: V (*)(void)
+        constexpr V match(FNS &&on_some, FNN &&on_none, Context const &ctx = Context()) const
         {
             switch (tag_) { // optional::match
                 case Tag::SOME:
@@ -290,20 +305,36 @@ struct Optional
                 case Tag::NONE:
                     return on_none();
                 case Tag::INVAL:
-                    // invalids are not values that should occur
-                    // if they do it's a use-after-move-from op so must panic.
+                    // Invalids are not values that should occur.
+                    // If they do it's a use-after-move-from op so must panic,
                     // or a use-before-initialised so again must panic.
-                    // fall through to default handler
                     nel::panic("invalid Optional", ctx);
                     break;
                 default:
-                    // For gcc/clang minsize: if this not nell:abort,
-                    // then iteration may not collapse into a tight loop.
-                    // It's the  need for arguments that's doing it.
-                    // For O3: does not affect and iteration collapses into tight loop
+                    // The compile is to fail if an explicit enum case handler isn't present.
+                    // (-Wenum-switch).
+                    // Also, want to abort/panic if an unknown case is encountered
+                    // at runtime, much how a default hander would work if it was
+                    // present.
+
+                    // For gcc/clang minsize:
+                    // If this not nell::abort, then iteration may not collapse into a tight loop.
+                    // It's the need for arguments that's doing it.
+                    // For O3:
+                    // Does not affect and iteration collapses into tight loop.
                     // TODO: look into stack trace dumper on fail.
                     // But would still like a message..
-                    // For arm:minsize: if panic, then does not collapse (func with arg issue)
+                    // For arm::minsize:
+                    // If panic, then does not collapse (func with arg issue)
+
+                    // For dtor + moves (but not usage) at runtime:
+                    // Does it matter it's not one of the 'special' values?
+                    // Yes, since it may have contained one or the others..
+                    // If memory hardware is assumed to be incorruptable then can ignore ?
+                    // (what of buffer overruns?) but might not want to for buffer overrun issues.
+                    // If there is a memory corruption, then should have been detected/corrected by
+                    // memory hardware (ECC mem).
+                    // If not using ECC mem then that's the prob.
                     nel::panic("bad Optional", ctx);
                     break;
             }
@@ -314,14 +345,17 @@ struct Optional
         // Implemented in terms of the operator on the type,
         // as some types may have more optimal implementations of that operation than the
         // it's negation.
+
         /**
-         * Is this equal by value to the optional given?
+         * Determine if this is equal to other by value.
          *
          * @param o The other optional to compare to.
-         * @returns true if equal by value, false otherwise.
          *
-         * `this` is not consumed by the operation.
-         * `o` is not consumed by the operation.
+         * @returns true if this and o are equal by value.
+         * @returns false if this and o are not equal by value.
+         *
+         * @note `this` is not consumed/changed by the operation.
+         * @note `o` is not consumed/changed by the operation.
          */
         constexpr bool is_eq(Optional const &o, Context const &ctx = Context()) const
         {
@@ -340,13 +374,15 @@ struct Optional
         }
 
         /**
-         * Is this equal by value to the optional given?
+         * Determine if this and other are equal by value.
          *
          * @param o The other optional to compare to.
-         * @returns true if equal by value, false otherwise.
          *
-         * `this` is not consumed by the operation.
-         * `o` is not consumed by the operation.
+         * @returns true if o and this are equal by value.
+         * @returns false if o and this are not equal by value.
+         *
+         * @note `this` is not consumed/changed by the operation.
+         * @note `o` is not consumed/changed by the operation.
          */
         constexpr bool operator==(Optional const &o) const
         {
@@ -354,13 +390,15 @@ struct Optional
         }
 
         /**
-         * Is this not equal by value to the result given?
+         * Determine if this and other are not equal by value.
          *
-         * @param o The other result to compare to.
-         * @returns true if not equal by value, false otherwise.
+         * @param o The other optional to compare to.
          *
-         * `this` is not consumed by the operation.
-         * `o` is not consumed by the operation.
+         * @returns true if o and this are not equal by value.
+         * @returns false if o and this are equal by value.
+         *
+         * @note `this` is not consumed/changed by the operation.
+         * @note `o` is not consumed/changed by the operation.
          */
         constexpr bool is_ne(Optional const &o, Context const &ctx = Context()) const
         {
@@ -379,13 +417,15 @@ struct Optional
         }
 
         /**
-         * Is this not equal by value to the result given?
+         * Determine if this and other are not equal by value.
          *
-         * @param o The other result to compare to.
-         * @returns true if not equal by value, false otherwise.
+         * @param o The other optional to compare to.
          *
-         * `this` is not consumed by the operation.
-         * `o` is not consumed by the operation.
+         * @returns true if o and this are not equal by value.
+         * @returns false if o and this are equal by value.
+         *
+         * @note `this` is not consumed/changed by the operation.
+         * @note `o` is not consumed/changed by the operation.
          */
         constexpr bool operator!=(Optional const &o) const
         {
@@ -396,9 +436,10 @@ struct Optional
         /**
          * Determine if the container contains a Some.
          *
-         * @returns true if container contains a Some, false otherwise.
+         * @returns true if container contains a Some.
+         * @returns false if container does not contain a Some.
          *
-         * The optional is not consumed by the operation.
+         * @note `this` is not consumed/changed by the operation.
          */
         constexpr bool is_some(Context const &ctx = Context()) const
         {
@@ -410,9 +451,10 @@ struct Optional
         /**
          * Determine if the container contains a None.
          *
-         * @returns true if container contains a None, false otherwise.
+         * @returns true if container contains a None.
+         * @returns false if container does not contain a None.
          *
-         * The optional is not consumed by the operation.
+         * @note `this` is not consumed/changed by the operation.
          */
         constexpr bool is_none(Context const &ctx = Context()) const
         {
@@ -430,57 +472,72 @@ struct Optional
 #    endif // defined(TEST)
 
     public:
-        // don't use std::function.. it's bloatware..
-        // template<typename V>
-        // V consume(std::function<V(void)> on_some, std::function<V(void)> on_none)
-        template<typename V, typename Fn1, typename Fn2>
-        // Fn1: V (*)(T &&)
-        // Fn2: V (*)(void)
-        constexpr V consume(Fn1 &&on_some, Fn2 &&on_none, Context const &ctx = Context())
+        // Don't use std::function.. it's bloatware..
+
+        // TODO: create concepts to limit FNS, FNN to those func signatures.
+        // If this is a some, call FNS and return value.
+        // If this is a none, call FNN and return value.
+        // If this is inval, panic.
+        // After call this is invalidated.
+        template<typename V, typename FNS, typename FNN>
+        // FNS: V (*)(T &&)
+        // FNN: V (*)(void)
+        constexpr V consume(FNS &&on_some, FNN &&on_none, Context const &ctx = Context())
         {
-            // a consuming matcher..
-            // that moves the value to the closures..
             auto tag = tag_;
             tag_ = Tag::INVAL;
+            // A consuming matcher..
+            // That moves the value to the closures..
             switch (tag) { // optional::consume
                 case Tag::SOME:
                     return on_some(forward<T>(*some_));
+
                 case Tag::NONE:
                     return on_none();
+
                 case Tag::INVAL:
-                    // invalids are not values that should occur
-                    // if they do it's a use-after-move-from op so must panic.
+                    // Invalids are not values that should occur.
+                    // If they do it's a use-after-move-from op so must panic,
                     // or a use-before-initialised so again must panic.
                     nel::panic("invalid Optional", ctx);
                     break;
+
                 default:
                     nel::panic("bad Optional", ctx);
                     break;
             }
         }
 
-        template<typename Fn1, typename Fn2>
-        // Fn1: void (*)(T &&)
-        // Fn2: void (*)(void)
-        constexpr void consumev(Fn1 &&on_some, Fn2 &&on_none, Context const &ctx = Context())
+        // TODO: create concepts to limit FNS, FNN to those func signatures.
+        // If this is a some, call FNS and return value.
+        // If this is a none, call FNN and return value.
+        // If this is inval, panic.
+        // After call this is invalidated.
+        template<typename FNS, typename FNN>
+        // FNS: void (*)(T &&)
+        // FNN: void (*)(void)
+        constexpr void consumev(FNS &&on_some, FNN &&on_none, Context const &ctx = Context())
         {
-            // a consuming matcher..
-            // that moves the value to the closures..
             auto tag = tag_;
             tag_ = Tag::INVAL;
+            // A consuming matcher..
+            // That moves the value to the closures..
             switch (tag) { // optional::consumev
                 case Tag::SOME:
                     on_some(forward<T>(*some_));
                     break;
+
                 case Tag::NONE:
                     on_none();
                     break;
+
                 case Tag::INVAL:
-                    // invalids are not values that should occur
-                    // if they do it's a use-after-move-from op so must panic.
+                    // Invalids are not values that should occur.
+                    // If they do it's a use-after-move-from op so must panic,
                     // or a use-before-initialised so again must panic.
                     nel::panic("invalid Optional", ctx);
                     break;
+
                 default:
                     nel::panic("bad Optional", ctx);
                     break;
@@ -494,44 +551,61 @@ struct Optional
         // and more access by const ref or copy-out.
 
         /**
-         * Extract and return the contained value if a Some, consuming the optional.
+         * Return the wrapped value or panic.
+         *
+         * If a some, returns wrapped value.
+         * If a none, panics.
          *
          * @returns value contained by the Optional if it's a 'Some'.
          *
-         * @warning If the optional does not contain a Some, then abort/panic.
+         * @warning this is consumed/invalidated.
          */
-        T unwrap(Context const &ctx = Context())
+        constexpr T unwrap(Context const &ctx = Context())
         {
             return consume<T>([](T &&some) -> T { return some; },
                               [&](void) -> T { nel::panic("not a Some", ctx); },
                               ctx);
         }
 
+        // TODO: what happens to o if this is a some?
+        // destroyed?
         /**
          * Return wrapped or supplied value.
+         *
+         * If a some, then return the wrapped value.
+         * If a none, return the other.
+         *
+         * @param o the other value
+         *
+         * @returns value contained by the Optional if it's a 'Some'.
+         * @returns value passed in if it's a 'None'.
+         *
+         * @warning this is consumed/invalidated.
+         */
+        constexpr T unwrap_or(T &&o, Context const &ctx = Context())
+        {
+            return consume<T>([](T &&some) -> T { return some; },
+                              [&o](void) -> T { return forward<T>(o); },
+                              ctx);
+        }
+
+        // TODO: what happens to the args if this is a some?,
+        // they have been moved,
+        // are they destroyed, or ignored?
+        /**
+         * Return wrapped or create supplied value from .
          *
          * If a some, then return the wrapped value.
          * If a none, return the supplied value.
          * The optional is consumed regardless.
          *
-         * @returns value contained by the Optional if it's a 'Some'.
-         * @returns value passed in if it's a 'None'.
-         */
-        T unwrap_or(T &&v, Context const &ctx = Context())
-        {
-            return consume<T>([](T &&some) -> T { return some; },
-                              [&v](void) -> T { return forward<T>(v); },
-                              ctx);
-        }
-
-        /**
-         * Extract and return the contained value if a Some, consuming the optional.
+         * @returns value contained by this if a 'Some'.
+         * @returns value passed in if this is a 'None'.
          *
-         * @returns if Some, consumes and returns the value contained by the Optional.
-         * @returns if not Some, consumes args and creates value to return.
+         * @warning this is consumed/invalidated.
          */
         template<typename... Args>
-        T unwrap(Args &&...args, Context const &ctx = Context())
+        T unwrap_or(Args &&...args, Context const &ctx = Context())
         {
             return consume<T>([](T &&some) -> T { return some; },
                               [&args...](void) -> T { return T(forward<Args>(args)...); },
@@ -543,18 +617,22 @@ struct Optional
         // Because this allows copying of value out which I want to prevent.
 
     public:
-        // template<typename U>
-        // Optional<U> map(std::function<U(T &)> fn)
-        template<typename U, typename Fn>
+        // TODO: create concepts to limit FN to that func signature.
+        /**
+         * Translate Optional<T> into Optional<U>.
+         *
+         * If this is a some, call Fn(T &&)->U.
+         * If this is a none, return optional<U> = None.
+         *
+         * @return Optional<U>
+         *
+         * @warning If this is some, value is moved into func.
+         * @warning this is invalidated/consumed.
+         */
+        template<typename U, typename FN>
         // Fn: U (*)(T &&)
-        Optional<U> map(Fn &&fn, Context const &ctx = Context())
+        Optional<U> map(FN &&fn, Context const &ctx = Context())
         {
-            // optional must be consumed.
-            // contained type must be moved.
-            // if contained is reference, then moving reference.
-            // if contained is ptr, then move ptr.
-            // if contained is value, then move value.
-            // so, fn must always be T (*)(auto &&)
             typedef Optional<U> ReturnType;
             return consume<
                 ReturnType>([&fn](T &&some)
@@ -563,6 +641,18 @@ struct Optional
                             ctx);
         }
 
+        // TODO: What happens to o if this is a some? destroyed/moved/left-alone?
+        /**
+         * Return this optional or other value.
+         *
+         * @param o value to return if this is a none.
+         *
+         * @return If optional is a some, return it untouched.
+         * @return If optional<T> is a none, return o.
+         *
+         * @warning If this is some, value is moved into result.
+         * @warning this is invalidated/consumed.
+         */
         Optional or_(Optional &&o, Context const &ctx = Context())
         {
             return consume<Optional>([](T &&some)
@@ -571,9 +661,21 @@ struct Optional
                                      ctx);
         }
 
-        template<typename Fn>
-        // Fn: T (*)(T &&)
-        Optional or_else(Fn &&fn, Context const &ctx = Context())
+        // TODO: create concepts to limit FN to that func signature.
+        /**
+         * Return this optional or other value from fn.
+         *
+         * @param fn returns a Optional<T> when called.
+         *
+         * @return If optional is a some, return it untouched.
+         * @return If optional<T> is a none, return value from calling fn.
+         *
+         * @warning If this is some, value is moved into result.
+         * @warning this is invalidated/consumed.
+         */
+        template<typename FN>
+        // FN: T (*)(T &&)
+        Optional or_else(FN &&fn, Context const &ctx = Context())
         {
             return consume<Optional>([](T &&some)
                                          -> Optional { return Optional::Some(forward<T>(some)); },
@@ -610,6 +712,9 @@ struct Optional
         }
 };
 
+/**
+ * Create an Optional<T>::Some from a T.
+ */
 template<typename T>
 constexpr Optional<T> Some(T &&v)
 {
@@ -646,22 +751,30 @@ struct Optional<void>
                     break;
 
                 default:
-                    // For gcc/clang minsize: if this not nell:abort,
-                    // then iteration may not collapse into a tight loop.
-                    // It's the  need for arguments that's doing it.
-                    // For O3: does not affect and iteration collapses into tight loop
+                    // The compile is to fail if an explicit enum case handler isn't present.
+                    // (-Wenum-switch).
+                    // Also, want to abort/panic if an unknown case is encountered
+                    // at runtime, much how a default hander would work if it was
+                    // present.
+
+                    // For gcc/clang minsize:
+                    // If this not nell::abort, then iteration may not collapse into a tight loop.
+                    // It's the need for arguments that's doing it.
+                    // For O3:
+                    // Does not affect and iteration collapses into tight loop.
                     // TODO: look into stack trace dumper on fail.
                     // But would still like a message..
-                    // For arm:minsize: if panic, then does not collapse (func with arg issue)
-                    // nel_panic("invalid optional");
+                    // For arm::minsize:
+                    // If panic, then does not collapse (func with arg issue)
 
-                    // for dtor + moves (but not usage) at runtime:
-                    // does it matter it's not one of the 'special' values?
-                    // yes, since it may have contained one or the others..
-                    // if memory hardware is assumed to be incorruptable then can ignore ? (buffer
-                    // overruns?) but might not want to for buffer overrun issues. if there is a
-                    // memory corruption, then should have been detected by memory hardware (Ecc
-                    // mem) if not using eec/ecc mem then that's the prob.
+                    // For dtor + moves (but not usage) at runtime:
+                    // Does it matter it's not one of the 'special' values?
+                    // Yes, since it may have contained one or the others..
+                    // If memory hardware is assumed to be incorruptable then can ignore ?
+                    // (what of buffer overruns?) but might not want to for buffer overrun issues.
+                    // If there is a memory corruption, then should have been detected/corrected by
+                    // memory hardware (ECC mem).
+                    // If not using ECC mem then that's the prob.
                     nel::panic("invalid Optional");
                     break;
             }
@@ -686,22 +799,30 @@ struct Optional<void>
                     break;
 
                 default:
-                    // For gcc/clang minsize: if this not nell:abort,
-                    // then iteration may not collapse into a tight loop.
-                    // It's the  need for arguments that's doing it.
-                    // For O3: does not affect and iteration collapses into tight loop
+                    // The compile is to fail if an explicit enum case handler isn't present.
+                    // (-Wenum-switch).
+                    // Also, want to abort/panic if an unknown case is encountered
+                    // at runtime, much how a default hander would work if it was
+                    // present.
+
+                    // For gcc/clang minsize:
+                    // If this not nell::abort, then iteration may not collapse into a tight loop.
+                    // It's the need for arguments that's doing it.
+                    // For O3:
+                    // Does not affect and iteration collapses into tight loop.
                     // TODO: look into stack trace dumper on fail.
                     // But would still like a message..
-                    // For arm:minsize: if panic, then does not collapse (func with arg issue)
-                    // nel_panic("invalid optional");
+                    // For arm::minsize:
+                    // If panic, then does not collapse (func with arg issue)
 
-                    // for dtor + moves (but not usage) at runtime:
-                    // does it matter it's not one of the 'special' values?
-                    // yes, since it may have contained one or the others..
-                    // if memory hardware is assumed to be incorruptable then can ignore ? (buffer
-                    // overruns?) but might not want to for buffer overrun issues. if there is a
-                    // memory corruption, then should have been detected by memory hardware (Ecc
-                    // mem) if not using eec/ecc mem then that's the prob.
+                    // For dtor + moves (but not usage) at runtime:
+                    // Does it matter it's not one of the 'special' values?
+                    // Yes, since it may have contained one or the others..
+                    // If memory hardware is assumed to be incorruptable then can ignore ?
+                    // (what of buffer overruns?) but might not want to for buffer overrun issues.
+                    // If there is a memory corruption, then should have been detected/corrected by
+                    // memory hardware (ECC mem).
+                    // If not using ECC mem then that's the prob.
                     nel::panic("invalid Optional");
                     break;
             }
@@ -751,21 +872,19 @@ struct Optional<void>
         }
 
     public:
-        // Default constructor.
-        // Don't want this as there is no default for an optional.
-        // i.e. require a value, even if it's a None (i.e. being explicit).
-        // really? Default to None/Inval?
-        // But use of move-ctor mandates an inval state, so can have a default.
-        // Optional(void) = delete;
+        // Optional<void> o;
+        /**
+         * Default constructor.
+         *
+        */
         constexpr Optional(void)
             : tag_(Tag::INVAL)
         {
         }
 
-        // assign/create from None
-        // Optional<T> t = None;
-        // Optional<T> t{None};
-        // Optional<T> t(None);
+        // Optional<void> t = None;
+        // Optional<void> t{None};
+        // Optional<void> t(None);
         /**
          * Create an optional set to none.
          *
@@ -777,25 +896,26 @@ struct Optional<void>
         }
 
         /**
-         * Create an optional set to Some, creating the value to use used inplace.
+         * Create an optional set to Some.
          *
-         * @returns an Optional 'wrapping' the value created from the values given.
          */
-        // Cannot be constexpr since struct has non-trivial dtor..
-        static Optional Some(void)
+        constexpr static Optional Some(void)
         {
             return Optional(Phantom<Tag::SOME>());
         }
 
     private:
-        // don't use std::function.. it's bloatware..
-        // template<typename V>
-        // constexpr V match(Tag tag, std::function<V(void)> on_some, std::function<V(void)>
-        // on_none) const  {
-        template<typename V, typename Fn1, typename Fn2>
-        // Fn1: V (*)(void)
-        // Fn2: V (*)(void)
-        constexpr V match(Fn1 &&on_some, Fn2 &&on_none, Context const &ctx = Context()) const
+        // Don't use std::function.. it's bloatware..
+
+        // TODO: create concepts to limit FNS, FNN to those func signatures.
+        // If this is a some, call FNS and return value.
+        // If this is a none, call FNN and return value.
+        // If this is inval, panic.
+        // After call this is untouched.
+        template<typename V, typename FNS, typename FNN>
+        // FNS: V (*)(void)
+        // FNN: V (*)(void)
+        constexpr V match(FNS &&on_some, FNN &&on_none, Context const &ctx = Context()) const
         {
             switch (tag_) {
                 case Tag::SOME:
@@ -803,19 +923,30 @@ struct Optional<void>
                 case Tag::NONE:
                     return on_none();
                 case Tag::INVAL:
-                    // invalids are not values that should occur
-                    // if they do it's a use-after-move-from op so must panic.
+                    // Invalids are not values that should occur.
+                    // If they do it's a use-after-move-from op so must panic,
                     // or a use-before-initialised so again must panic.
                     nel::panic("invalid Optional", ctx);
                     break;
                 default:
-                    // For gcc/clang minsize: if this not nell:abort,
-                    // then iteration may not collapse into a tight loop.
-                    // It's the  need for arguments that's doing it.
-                    // For O3: does not affect and iteration collapses into tight loop
+                    // For gcc/clang minsize:
+                    // If this not nell::abort, then iteration may not collapse into a tight loop.
+                    // It's the need for arguments that's doing it.
+                    // For O3:
+                    // Does not affect and iteration collapses into tight loop.
                     // TODO: look into stack trace dumper on fail.
                     // But would still like a message..
-                    // For arm:minsize: if panic, then does not collapse (func with arg issue)
+                    // For arm::minsize:
+                    // If panic, then does not collapse (func with arg issue)
+
+                    // For dtor + moves (but not usage) at runtime:
+                    // Does it matter it's not one of the 'special' values?
+                    // Yes, since it may have contained one or the others..
+                    // If memory hardware is assumed to be incorruptable then can ignore ?
+                    // (what of buffer overruns?) but might not want to for buffer overrun issues.
+                    // If there is a memory corruption, then should have been detected/corrected by
+                    // memory hardware (ECC mem).
+                    // If not using ECC mem then that's the prob.
                     nel::panic("bad Optional", ctx);
                     break;
             }
@@ -826,14 +957,17 @@ struct Optional<void>
         // Implemented in terms of the operator on the type,
         // as some types may have more optimal implementations of that operation
         // than the negation of it's opposite.
+
         /**
-         * Is this equal by value to the optional given?
+         * Determine if this is equal to other by value.
          *
          * @param o The other optional to compare to.
-         * @returns true if equal by value, false otherwise.
          *
-         * `this` is not consumed by the operation.
-         * `o` is not consumed by the operation.
+         * @returns true if this and o are equal by value.
+         * @returns false if this and o are not equal by value.
+         *
+         * @note `this` is not consumed/changed by the operation.
+         * @note `o` is not consumed/changed by the operation.
          */
         constexpr bool is_eq(Optional const &o, Context const &ctx = Context()) const
         {
@@ -852,13 +986,15 @@ struct Optional<void>
         }
 
         /**
-         * Is this equal by value to the optional given?
+         * Determine if this and other are equal by value.
          *
          * @param o The other optional to compare to.
-         * @returns true if equal by value, false otherwise.
          *
-         * `this` is not consumed by the operation.
-         * `o` is not consumed by the operation.
+         * @returns true if o and this are equal by value.
+         * @returns false if o and this are not equal by value.
+         *
+         * @note `this` is not consumed/changed by the operation.
+         * @note `o` is not consumed/changed by the operation.
          */
         constexpr bool operator==(Optional const &o) const
         {
@@ -866,13 +1002,15 @@ struct Optional<void>
         }
 
         /**
-         * Is this not equal by value to the result given?
+         * Determine if this and other are not equal by value.
          *
-         * @param o The other result to compare to.
-         * @returns true if not equal by value, false otherwise.
+         * @param o The other optional to compare to.
          *
-         * `this` is not consumed by the operation.
-         * `o` is not consumed by the operation.
+         * @returns true if o and this are not equal by value.
+         * @returns false if o and this are equal by value.
+         *
+         * @note `this` is not consumed/changed by the operation.
+         * @note `o` is not consumed/changed by the operation.
          */
         constexpr bool is_ne(Optional const &o, Context const &ctx = Context()) const
         {
@@ -891,13 +1029,15 @@ struct Optional<void>
         }
 
         /**
-         * Is this not equal by value to the result given?
+         * Determine if this and other are not equal by value.
          *
-         * @param o The other result to compare to.
-         * @returns true if not equal by value, false otherwise.
+         * @param o The other optional to compare to.
          *
-         * `this` is not consumed by the operation.
-         * `o` is not consumed by the operation.
+         * @returns true if o and this are not equal by value.
+         * @returns false if o and this are equal by value.
+         *
+         * @note `this` is not consumed/changed by the operation.
+         * @note `o` is not consumed/changed by the operation.
          */
         constexpr bool operator!=(Optional const &o) const
         {
@@ -908,9 +1048,10 @@ struct Optional<void>
         /**
          * Determine if the container contains a Some.
          *
-         * @returns true if container contains a Some, false otherwise.
+         * @returns true if container contains a Some.
+         * @returns false if container does not contain a Some.
          *
-         * The optional is not consumed by the operation.
+         * @note `this` is not consumed/changed by the operation.
          */
         bool is_some(Context const &ctx = Context()) const
 
@@ -923,9 +1064,10 @@ struct Optional<void>
         /**
          * Determine if the container contains a None.
          *
-         * @returns true if container contains a None, false otherwise.
+         * @returns true if container contains a None.
+         * @returns false if container does not contain a None.
          *
-         * The optional is not consumed by the operation.
+         * @note `this` is not consumed/changed by the operation.
          */
         bool is_none(Context const &ctx = Context()) const
         {
@@ -944,57 +1086,72 @@ struct Optional<void>
 #    endif // defined(TEST)
 
     public:
-        // don't use std::function.. it's bloatware..
-        // template<typename V>
-        // V consume(std::function<V(void)> on_some, std::function<V(void)> on_none)
-        template<typename V, typename Fn1, typename Fn2>
-        // Fn1: V (*)(void)
-        // Fn2: V (*)(void)
-        constexpr V consume(Fn1 &&on_some, Fn2 &&on_none, Context const &ctx = Context())
+        // Don't use std::function.. it's bloatware..
+
+        // TODO: create concepts to limit FNS, FNN to those func signatures.
+        // If this is a some, call FNS and return value.
+        // If this is a none, call FNN and return value.
+        // If this is inval, panic.
+        // After call this is invalidated.
+        template<typename V, typename FNS, typename FNN>
+        // FNS: V (*)(void)
+        // FNN: V (*)(void)
+        constexpr V consume(FNS &&on_some, FNN &&on_none, Context const &ctx = Context())
         {
-            // a consuming matcher..
-            // that moves the value to the closures..
             auto tag = tag_;
             tag_ = Tag::INVAL;
+            // A consuming matcher..
+            // That moves the value to the closures..
             switch (tag) {
                 case Tag::SOME:
                     return on_some();
+
                 case Tag::NONE:
                     return on_none();
+
                 case Tag::INVAL:
-                    // invalids are not values that should occur
-                    // if they do it's a use-after-move-from op so must panic.
+                    // Invalids are not values that should occur.
+                    // If they do it's a use-after-move-from op so must panic,
                     // or a use-before-initialised so again must panic.
                     nel::panic("invalid Optional", ctx);
                     break;
+
                 default:
                     nel::panic("bad Optional", ctx);
                     break;
             }
         }
 
-        template<typename Fn1, typename Fn2>
-        // Fn1: void (*)(void)
-        // Fn2: void (*)(void)
-        constexpr void consumev(Fn1 &&on_some, Fn2 &&on_none, Context const &ctx = Context())
+        // TODO: create concepts to limit FNS, FNN to those func signatures.
+        // If this is a some, call FNS and return value.
+        // If this is a none, call FNN and return value.
+        // If this is inval, panic.
+        // After call this is invalidated.
+        template<typename FNS, typename FNN>
+        // FNS: void (*)(void)
+        // FNN: void (*)(void)
+        constexpr void consumev(FNS &&on_some, FNN &&on_none, Context const &ctx = Context())
         {
-            // a consuming matcher..
-            // that moves the value to the closures..
             auto tag = tag_;
             tag_ = Tag::INVAL;
+            // A consuming matcher..
+            // That moves the value to the closures..
             switch (tag) {
                 case Tag::SOME:
                     on_some();
                     break;
+
                 case Tag::NONE:
                     on_none();
                     break;
+
                 case Tag::INVAL:
-                    // invalids are not values that should occur
-                    // if they do it's a use-after-move-from op so must panic.
+                    // Invalids are not values that should occur.
+                    // If they do it's a use-after-move-from op so must panic,
                     // or a use-before-initialised so again must panic.
                     nel::panic("invalid Optional", ctx);
                     break;
+
                 default:
                     nel::panic("bad Optional", ctx);
                     break;
@@ -1008,26 +1165,33 @@ struct Optional<void>
         // and more access by const ref or copy-out.
 
         /**
-         * Extract and return the contained value if a Some, consuming the optional.
+         * Return the wrapped value or panic.
          *
-         * @returns value contained by the Optional if it's a 'Some'.
+         * If a some, returns wrapped value.
+         * If a none, panics.
          *
-         * If the optional does not contain a Some, then abort/panic.
+         * Which becomes, return if a some, panic if not.
+         *
+         * @returns if a some, returns wrapped value.
+         *
+         * @warning this is consumed/invalidated.
          */
-        void unwrap(Context const &ctx = Context())
+        constexpr void unwrap(Context const &ctx = Context())
         {
             return consumev([](void) {}, [&](void) { nel::panic("not a Some", ctx); }, ctx);
         }
 
         /**
-         * Extract and return the contained value if a Some, consuming the optional.
+         * Return wrapped or supplied value.
          *
-         * @param other The value to return if optional is not a Some.
+         * If a some, then return the wrapped value.
+         * If a none, return the other.
          *
-         * @returns if Some, consumes and returns the value contained by the Optional.
-         * @returns if not Some, consumes and returns `other`.
+         * Which becomes, return if a some, return if not, i.e. null op.
+         *
+         * @warning this is consumed/invalidated.
          */
-        void unwrap_or(Context const &ctx = Context())
+        constexpr void unwrap_or(Context const &ctx = Context())
         {
             return consumev([](void) {}, [](void) {}, ctx);
         }
@@ -1036,11 +1200,21 @@ struct Optional<void>
         // This infers copying of value which I want to prevent.
 
     public:
-        // template<typename U>
-        // Optional<U> map(std::function<U(void)> fn)
-        template<typename U, typename Fn>
+        // TODO: create concepts to limit FN to that func signature.
+        /**
+         * Translate Optional<void> into Optional<U>.
+         *
+         * If this is a some, call Fn()->U.
+         * If this is a none, return Optional<U> = None.
+         *
+         * @return Optional<U>
+         *
+         * @warning If this is some, value is moved into func.
+         * @warning this is invalidated/consumed.
+         */
+        template<typename U, typename FN>
         // Fn: U (*)(void)
-        Optional<U> map(Fn &&fn, Context const &ctx = Context())
+        Optional<U> map(FN &&fn, Context const &ctx = Context())
         {
             typedef Optional<U> ReturnType;
             return consume<ReturnType>([&fn](void) -> ReturnType { return ReturnType::Some(fn()); },
@@ -1075,7 +1249,11 @@ struct Optional<void>
         }
 };
 
-// Optional<void> Some(void)
+/**
+ * Create an Optional<void>::Some.
+ *
+ * Saves having to use the scope prefix.
+ */
 inline Optional<void> Some(void)
 {
     return Optional<void>::Some();
