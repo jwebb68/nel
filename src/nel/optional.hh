@@ -739,6 +739,9 @@ constexpr Optional<T> Some(Args &&...args)
     return Optional<T>::Some(forward<Args>(args)...);
 }
 
+// Cannot remove until platformio moves to c++20.
+// Or drop platformio.
+// Then can use C++ 'concepts' to enable disable ctor T=void vs T=non-void.
 template<>
 struct Optional<void>
 {
