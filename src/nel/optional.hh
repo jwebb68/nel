@@ -281,9 +281,12 @@ struct Optional
         {
         }
 
-        // template<typename... Args>
-        // constexpr Optional(Phantom<SOME> const, Args &&...args)
-        //     : tag_(SOME), some_(forward<Args>(args)...) {}
+        template<typename... Args>
+        constexpr Optional(Phantom<Tag::SOME> const, Args &&...args)
+            : tag_(Tag::SOME)
+            , some_(forward<Args>(args)...)
+        {
+        }
 
     public:
         // Optional<T> t;
@@ -320,16 +323,16 @@ struct Optional
             return Optional(Phantom<Tag::SOME>(), forward<T>(v));
         }
 
-        // /**
-        //  * Create an optional set to Some, creating the value to use used inplace.
-        //  *
-        //  * @returns an Optional 'wrapping' the value created from the values given.
-        //  */
-        // template<typename... Args>
-        // constexpr static Optional Some(Args &&...args)
-        // {
-        //     return Optional(Phantom<Tag::SOME>(), forward<Args>(args)...);
-        // }
+        /**
+         * Create an optional set to Some, creating the value to use used inplace.
+         *
+         * @returns an Optional 'wrapping' the value created from the values given.
+         */
+        template<typename... Args>
+        constexpr static Optional Some(Args &&...args)
+        {
+            return Optional(Phantom<Tag::SOME>(), forward<Args>(args)...);
+        }
 
     private:
         // Don't use std::function.. it's bloatware..
@@ -716,6 +719,7 @@ struct Optional
         }
 };
 
+// auto v = Some(1);
 /**
  * Create an Optional<T>::Some from a T.
  */
@@ -723,6 +727,16 @@ template<typename T>
 constexpr Optional<T> Some(T &&v)
 {
     return Optional<T>::Some(forward<T>(v));
+}
+
+// auto v = Some<int>(1);
+/**
+ * Create an Optional<T>::Some from t create args, creating T inplace in the Optional.
+ */
+template<typename T, typename... Args>
+constexpr Optional<T> Some(Args &&...args)
+{
+    return Optional<T>::Some(forward<Args>(args)...);
 }
 
 template<>

@@ -12,9 +12,36 @@ namespace test
 namespace optional
 {
 
-TEST_CASE("Optional<>::Some()", "[optional]")
+struct UDT_0 {
+    constexpr UDT_0() {}
+};
+
+struct UDT_1 {
+    int v_;
+    constexpr UDT_1(int v): v_(v) {}
+};
+
+
+
+TEST_CASE("Optional<int>::Some()", "[optional]")
 {
     nel::Optional<int> opt1 = nel::Some(1);
+    // checks that does not panic.
+    // and can be created this way.
+    nel::unused(opt1);
+}
+
+TEST_CASE("Optional<UDT_0>::Some()", "[optional]")
+{
+    nel::Optional<UDT_0> opt1 = nel::Some<UDT_0>();
+    // checks that does not panic.
+    // and can be created this way.
+    nel::unused(opt1);
+}
+
+TEST_CASE("Optional<UDT_1>::Some()", "[optional]")
+{
+    nel::Optional<UDT_1> opt1 = nel::Some<UDT_1>(23);
     // checks that does not panic.
     // and can be created this way.
     nel::unused(opt1);
@@ -28,9 +55,26 @@ TEST_CASE("Optional<void>::Some()", "[optional]")
     nel::unused(opt1);
 }
 
-TEST_CASE("Optional<>::None()", "[optional]")
+
+TEST_CASE("Optional<int> = None", "[optional]")
 {
     nel::Optional<int> opt1 = None;
+    // checks that does not panic.
+    // and can be created this way.
+    nel::unused(opt1);
+}
+
+TEST_CASE("Optional<UDT_0> = None", "[optional]")
+{
+    nel::Optional<UDT_0> opt1 = None;
+    // checks that does not panic.
+    // and can be created this way.
+    nel::unused(opt1);
+}
+
+TEST_CASE("Optional<UDT_1> = None", "[optional]")
+{
+    nel::Optional<UDT_1> opt1 = None;
     // checks that does not panic.
     // and can be created this way.
     nel::unused(opt1);
