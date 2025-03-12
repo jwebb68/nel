@@ -139,4 +139,6 @@ int main()
     handlefail1();
     handleok2();
     handlefail2();
+
+    return 0;
 }

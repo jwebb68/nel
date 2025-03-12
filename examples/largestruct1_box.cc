@@ -32,4 +32,6 @@ void box2()
     nel::log << b << '\n';
 }
 
-int main() {}
+int main() {
+    return 0;
+}

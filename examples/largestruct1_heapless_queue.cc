@@ -49,4 +49,6 @@ int main()
     nel::log << "ex3:b" << '\n';
     ex3();
     nel::log << "ex3:e" << '\n';
+
+    return 0;
 }

@@ -31,4 +31,6 @@ void rc2()
     nel::log << rc1 << '\n';
 }
 
-int main() {}
+int main() {
+    return 0;
+}
