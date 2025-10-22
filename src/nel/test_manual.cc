@@ -4,6 +4,8 @@
 
 #include <catch2/catch.hpp>
 
+namespace nel
+{
 namespace test
 {
 namespace manual

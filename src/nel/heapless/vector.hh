@@ -202,13 +202,13 @@ struct Vector
         // want moving not copying.
         // want copying but not via ctor (may not be possible), so it becomes
         // a try_ returning an err.
-        static constexpr Optional<Vector> try_from(std::initializer_list<T> l)
+        constexpr static Optional<Vector> try_from(std::initializer_list<T> l)
         {
             if (l.size() != N) { return None; }
             Vector v = Vector::empty();
             auto r = v.push_back(l);
             if (r.is_err()) { return None; }
-            return Optional<Vector>::Some(move(v));
+            return Some(move(v));
             // TODO: can all of this create the vec inplace in the optional?
         }
 #    endif
@@ -520,7 +520,7 @@ struct Vector
          */
         Optional<Type> pop(void)
         {
-            if (len() == 0) { return None; }
+            if (len() == 0) { return None(); }
             len_ -= 1;
             return Some(move(*end()));
         }

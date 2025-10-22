@@ -260,12 +260,12 @@ struct Queue
          */
         Optional<Type> pop(void)
         {
-            if (is_empty()) { return None; }
+            if (is_empty()) { return None(); }
             len_ -= 1;
             auto rp = rp_;
             rp_ += 1;
             if (rp_ == N) { rp_ = 0; }
-            return Some(move(*ptr(rp)));
+            return Some(move(*(begin() + rp)));
         }
 
         void drain(Length n)

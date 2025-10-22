@@ -282,14 +282,11 @@ struct Node
         // rename to try_pop_back?
         Optional<Type> pop_back(void)
         {
-            if (len() == 0) { return Optional<Type>::None(); }
+            if (len() == 0) { return None; }
 
             len_ -= 1;
             auto &e = values_[len()];
-            auto o = Some(move(e));
-            // should be safe to  destroy, value has been moved out.
-            e.~Type();
-            return o;
+            return Some(move(e));
         }
 
     public:

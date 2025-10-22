@@ -380,7 +380,7 @@ struct Vector
          */
         Optional<Type> pop(void)
         {
-            return (item_ == nullptr) ? Optional<Type>::None() : item_->pop_back();
+            return (item_ == nullptr) ? None : item_->pop_back();
         }
 
         // insert_at(idx, T &&) ?
