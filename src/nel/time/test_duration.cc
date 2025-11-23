@@ -1,5 +1,6 @@
 // -*- mode: c++; indent-tabs-mode: nil; tab-width: 4 -*-
-#include <nel/time/duration.hh>
+#include "duration.hh"
+
 #include <nel/memory.hh> // move
 #include <nel/defs.hh> // nel::unused
 

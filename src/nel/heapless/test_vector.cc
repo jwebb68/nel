@@ -1,5 +1,5 @@
 // -*- mode: c++; indent-tabs-mode: nil; tab-width: 4 -*-
-#include <nel/heapless/vector.hh>
+#include "vector.hh"
 
 #include <nel/memory.hh> // move()
 

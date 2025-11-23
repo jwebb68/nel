@@ -1,6 +1,5 @@
 // -*- mode: c++; indent-tabs-mode: nil; tab-width: 4 -*-
-#include <nel/memory.hh>
-
+#include "memory.hh" //elem_* funcs
 
 #include <nel/stub.hh>
 

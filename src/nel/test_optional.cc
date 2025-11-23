@@ -5,6 +5,7 @@
 
 #include <catch2/catch.hpp>
 #include <catch2/catch2_panic.hh>
+
 #include <cstring> //strcmp
 
 namespace nel

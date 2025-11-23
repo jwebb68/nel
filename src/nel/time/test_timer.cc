@@ -1,5 +1,5 @@
 // -*- mode: c++; indent-tabs-mode: nil; tab-width: 4 -*-
-#include <nel/time/timer.hh>
+#include "timer.hh"
 
 #include <nel/time/instant.hh>
 #include <nel/time/duration.hh>

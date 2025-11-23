@@ -1,5 +1,5 @@
 // -*- mode: c++; indent-tabs-mode: nil; tab-width: 4 -*-
-#include <nel/heaped/box.hh>
+#include "box.hh"
 
 #include <nel/memory.hh> // move/forward
 
