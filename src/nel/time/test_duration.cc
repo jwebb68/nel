@@ -15,7 +15,6 @@ namespace test
 namespace duration
 {
 
-using nel::move;
 using nel::time::Duration;
 using nel::time::Frequency;
 
