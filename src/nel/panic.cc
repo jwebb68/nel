@@ -37,7 +37,7 @@ namespace nel
 }
 #endif
 
-[[noreturn]] void panic0(Context const &ctx)
+[[noreturn]] void panic(Context const &ctx)
 {
 #if defined(TEST)
     _panic(ctx);

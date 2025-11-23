@@ -131,7 +131,7 @@ struct Array
         {
             if (n == 0) { return Array::empty(); }
             ArrayNode *node = ArrayNode::malloc(n);
-            if (node == nullptr) { nel::panic0(); }
+            if (node == nullptr) { nel::panic(ctx); }
             new (node) ArrayNode(f);
             auto a = Array(node);
             return a;

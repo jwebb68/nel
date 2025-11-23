@@ -47,16 +47,26 @@ struct Context
         //     }
 };
 
-[[noreturn]] void panic0(Context const &ctx = Context());
 
+[[noreturn]] void panic(Context const &ctx = Context());
 [[noreturn]] void panic(char const *const msg, Context const &ctx = Context());
 
-inline void panic_if(bool pred, char const *const msg, Context const &ctx = Context())
+constexpr inline void panic_if(bool pred, Context const &ctx = Context())
+{
+    if (pred) { panic(ctx); }
+}
+
+constexpr inline void panic_if(bool pred, char const *const msg, Context const &ctx = Context())
 {
     if (pred) { panic(msg, ctx); }
 }
 
-inline void panic_if_not(bool pred, char const *const msg, Context const &ctx = Context())
+constexpr inline void panic_if_not(bool pred, Context const &ctx = Context())
+{
+    if (!pred) { panic(ctx); }
+}
+
+constexpr inline void panic_if_not(bool pred, char const *const msg, Context const &ctx = Context())
 {
     if (!pred) { panic(msg, ctx); }
 }
