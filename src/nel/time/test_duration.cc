@@ -543,7 +543,7 @@ TEST_CASE("Duration::as_frequency", "[duration]")
         // default could be unset
         // default is 0 for simplicity.
         auto d1 = Duration::from_millis(1);
-        REQUIRE(d1.as_frequency() == Frequency::from_kilo(1));
+        REQUIRE(d1.as_frequency() == 1.0_kHz);
     }
 }
 
@@ -552,8 +552,8 @@ TEST_CASE("Duration::from(frequency)", "[duration]")
     {
         // default could be unset
         // default is 0 for simplicity.
-        auto d1 = Duration::from(Frequency::from_kilo(1));
         REQUIRE(d1 == Duration::from_millis(1));
+        auto d1 = Duration::from(1.0_kHz);
     }
 }
 

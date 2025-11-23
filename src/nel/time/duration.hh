@@ -663,4 +663,19 @@ constexpr Frequency Duration::as_frequency() const
 } // namespace time
 } // namespace nel
 
+
+// literals, which need to be in the global namespace
+consteval nel::time::Frequency operator ""_Hz(long double v)
+{
+    return nel::time::Frequency::from_unit(v);
+}
+consteval nel::time::Frequency operator ""_kHz(long double v)
+{
+    return nel::time::Frequency::from_kilo(v);
+}
+consteval nel::time::Frequency operator ""_MHz(long double v)
+{
+    return nel::time::Frequency::from_mega(v);
+}
+
 #endif // defined(DURATION_HH)
