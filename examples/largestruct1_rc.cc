@@ -4,7 +4,7 @@
 #include <nel/heaped/rc.hh>
 #include <nel/log.hh>
 #include <nel/memory.hh> // move()
-#include <nel/defs.hh> // nel::unused
+#include <nel/defs.hh> // unused
 #include "libnosys_stubs.cx"
 
 typedef nel::heaped::RC<U8Buf<256>> RC1;

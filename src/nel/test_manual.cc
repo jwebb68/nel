@@ -2,7 +2,7 @@
 #include "manual.hh"
 #include "stub.hh"
 
-#include <nel/defs.hh> // nel::unused
+#include <nel/defs.hh> // unused
 
 #include <catch2/catch.hpp>
 #include <catch2/catch2_panic.hh>
