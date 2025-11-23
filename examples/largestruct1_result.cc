@@ -16,27 +16,23 @@ Result_t NEL_WARN_UNUSED_RESULT ok1(void)
 
 Result_t NEL_WARN_UNUSED_RESULT ok2(void)
 {
-    return Result_t::Ok(U8Buf<256>());
+    return nel::Ok(U8Buf<256>());
 }
 
 Result_t NEL_WARN_UNUSED_RESULT ok3(void)
 {
-    return Result_t::Ok(U8Buf<256>((uint8_t)0x22));
+    return nel::Ok(U8Buf<256>((uint8_t)0x22));
 }
 
 Result_t NEL_WARN_UNUSED_RESULT ok4(void)
 {
-    return Result_t::Ok((uint8_t)0x33);
+    return nel::Ok((uint8_t)0x33);
 }
 
 Result_t NEL_WARN_UNUSED_RESULT fail2(void)
-{
-    return Result_t::Err(Error(ErrorCode::Failed, __FILE__, __LINE__));
-}
-
 Result_t NEL_WARN_UNUSED_RESULT fail4(void)
 {
-    return Result_t::Err(ErrorCode::Failed, __FILE__, __LINE__);
+    return nel::Err(Error(ErrorCode::Failed, __FILE__, __LINE__));
 }
 
 Result_t NEL_WARN_UNUSED_RESULT passok3(void)
@@ -56,7 +52,7 @@ Result_t NEL_WARN_UNUSED_RESULT passok31(void)
         // only one thing to move-> better than err+bool separate
         return res;
     }
-    return Result_t::Ok((uint8_t)0x31);
+    return nel::Ok(U8Buf<256>(0x31));
 }
 
 Result_t NEL_WARN_UNUSED_RESULT passok32(void)
@@ -66,28 +62,27 @@ Result_t NEL_WARN_UNUSED_RESULT passok32(void)
         // only one thing to move-> better than err+bool separate
         return res;
     }
-    return Result_t::Ok((uint8_t)0x32);
+    return nel::Ok(U8Buf<256>(0x32));
 }
 
 Result_t NEL_WARN_UNUSED_RESULT passfail31(void)
 {
     Result_t res = fail4();
     if (res.is_ok()) { return res; }
-    return Result_t::Ok((uint8_t)0x41);
+    return nel::Ok(U8Buf<256>(0x41));
 }
 
 Result_t NEL_WARN_UNUSED_RESULT passfail32(void)
 {
     Result_t res = fail4();
     if (res.is_err()) { return res; }
-    return Result_t::Ok((uint8_t)0x42);
+    return nel::Ok(U8Buf<256>(0x42));
 }
 
 Result_t NEL_WARN_UNUSED_RESULT passok33(void)
 {
     Result_t res = ok3();
     NEL_RESULT_TRY(res);
-    return Result_t::Ok((uint8_t)0x33);
 }
 
 Result_t NEL_WARN_UNUSED_RESULT passfail33(void)
@@ -95,6 +90,7 @@ Result_t NEL_WARN_UNUSED_RESULT passfail33(void)
     Result_t res = fail4();
     NEL_RESULT_TRY(res);
     return Result_t::Ok((uint8_t)0x43);
+    return nel::Ok(U8Buf<256>(0x33));
 }
 
 void handleok1(void)
