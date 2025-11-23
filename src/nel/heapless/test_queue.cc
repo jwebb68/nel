@@ -255,7 +255,7 @@ TEST_CASE("heapless::Queue::is_empty", "[heapless][queue]")
         // popting last value makes queue empty again.
         auto v1 = a2.pop().unwrap();
         REQUIRE(a2.is_empty());
-        NEL_UNUSED(v1);
+        nel::unused(v1);
     }
 
     // const queue cannot be push to.. copile fail.. how to test..unwrap().

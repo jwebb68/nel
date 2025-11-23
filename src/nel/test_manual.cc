@@ -2,7 +2,10 @@
 #include "manual.hh"
 #include "stub.hh"
 
+#include <nel/defs.hh> // nel::unused
+
 #include <catch2/catch.hpp>
+
 
 namespace nel
 {
