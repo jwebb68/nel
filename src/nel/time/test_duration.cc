@@ -3,6 +3,7 @@
 
 #include <nel/memory.hh> // move
 #include <nel/defs.hh> // unused
+#include <nel/types.hh> // ""_u64
 
 #include <catch2/catch.hpp>
 #include <catch2/catch2_panic.hh>
