@@ -102,8 +102,8 @@ struct Box
         {
             // for new: on fail, val not moved
             ElementT *const p = new ElementT(move(val));
-            if (p == nullptr) { return Result<Box, Type>::Err(move(val)); }
-            return Result<Box, Type>::Ok(move(Box(p)));
+            if (p == nullptr) { return Err(move(val)); }
+            return Ok(Box(p));
         }
 
     public:

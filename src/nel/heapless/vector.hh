@@ -451,48 +451,48 @@ struct Vector
          * Push a value onto the end of the vec.
          *
          * @param val The value to move into the vec.
-         * @returns if successful, Result<void, T>::Ok()
-         * @returns if unsuccessful, Result<void, T>::Err() holding val
+         * @returns if successful, Result<Void, T>::Ok()
+         * @returns if unsuccessful, Result<Void, T>::Err() holding val
          */
         // move value into vec
         // on fail still move, but return.
         // allow inplace create instead of move.
         // if fails to store, can create be avoided..?
-        Result<void, Type> NEL_WARN_UNUSED_RESULT push(Type &&val)
+        Result<Void, Type> NEL_WARN_UNUSED_RESULT push(Type &&val)
         {
             if (len() >= capacity()) {
                 // Really? must one be created for err?
-                return Result<void, Type>::Err(move(val));
+                return Err(move(val));
             }
             // Remember, values at len and beyond are uninitialised.
             // So need to use new to construct them.
             new (end()) Type(move(val));
             len_ += 1;
-            return Result<void, Type>::Ok();
+            return Ok();
         }
 
 #    if 0
         template<typename... Args>
-        Result<void, Type> push(Args &&...args)
+        Result<Void, Type> push(Args &&...args)
         {
             if (len() >= capacity()) {
                 // Really? must one be created for err?
-                return Result<void, Type>::Err(forward<Args>(args)...);
+                return Err(Type(forward<Args>(args)...));
             }
             // Remember, values at len and beyond are uninitialised.
             // So need to use new to construct them.
             new (end()) Type(forward<Args>(args)...);
             len_ += 1;
-            return Result<void, Type>::Ok();
+            return Ok();
         }
 #    endif
 
 #    if 0
-        Result<void, std::initializer_list<Type>> push(std::initializer_list<Type> l)
+        Result<Void, std::initializer_list<Type>> push(std::initializer_list<Type> l)
         {
             if (len() + l.size() > capacity()) {
                 // Really? must one be created for err?
-                return Result<void, std::initializer_list<Type>>::Err(l);
+                return Err(l);
             }
             // Remember, values at len and beyond are uninitialised.
             // So need to use new to construct them.
@@ -501,7 +501,7 @@ struct Vector
                 new (&values_[i]) Type(move(*it));
             }
             len_ = i;
-            return Result<void, std::initializer_list<Type>>::Ok();
+            return Ok();
         }
 #    endif
 

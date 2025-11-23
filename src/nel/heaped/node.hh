@@ -245,18 +245,18 @@ struct Node
 
         // rename to try-push_back?
         template<typename... Args>
-        Result<void, T> push_back(Args &&...args)
+        Result<Void, Type> push_back(Args &&...args)
         {
             if (len() >= capacity()) {
                 // TODO: don't want to create a T on error though..
                 // but if one is already created then return it.
                 // must the arg be moved on error?
-                return Result<void, Type>::Err(forward<Args>(args)...);
+                return Err(Type(forward<Args>(args)...));
             }
 
             new (&values_[len()]) Type(forward<Args>(args)...);
             len_ += 1;
-            return Result<void, Type>::Ok();
+            return Ok();
         }
 
 #    if 0
@@ -267,7 +267,7 @@ struct Node
                 // TODO: don't want to create a T on error though..
                 // but if one is already created then return it.
                 // must the arg be moved on error?
-                return Result<void, U>::Err(l);
+                return Err(move(l));
             }
 
             Index i = len_;
@@ -275,7 +275,7 @@ struct Node
                 new (&values_[i]) T(move(*it));
             }
             len_ = i;
-            return Result<void, U>::Ok();
+            return Ok();
         }
 #    endif
 

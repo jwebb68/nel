@@ -289,7 +289,7 @@ struct Vector
          * @returns false otherwise.
          */
         // What to return on reserve fail?
-        // Result<void, ?> ?
+        // Result<Void, ?> ?
         // Optional<void> aka bool?
         bool try_reserve(Count new_cap)
         {
@@ -330,16 +330,16 @@ struct Vector
          * Push a value onto the end of the vec.
          *
          * @param val The value to move into the vec.
-         * @returns if successful, Result<void, T>::Ok()
-         * @returns if unsuccessful, Result<void, T>::Err() holding val
+         * @returns if successful, Result<Void, T>::Ok()
+         * @returns if unsuccessful, Result<Void, T>::Err() holding val
          */
-        Result<void, Type> NEL_WARN_UNUSED_RESULT push(Type &&val)
+        Result<Void, Type> NEL_WARN_UNUSED_RESULT push(Type &&val)
         {
             bool ok;
             ok = try_reserve(len() + 1);
-            if (!ok) { return Result<void, Type>::Err(val); }
-            if (item_ == nullptr) { return Result<void, Type>::Err(val); }
-            return item_->push_back(val);
+            if (!ok) { return Err(move(val)); }
+            if (item_ == nullptr) { return Err(move(val)); }
+            return item_->push_back(move(val));
         }
 
 #    if 0

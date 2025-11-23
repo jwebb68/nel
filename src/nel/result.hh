@@ -6,7 +6,7 @@ namespace nel
 {
 
 template<typename T, typename E>
-class Result;
+struct Result;
 
 } // namespace nel
 
@@ -19,6 +19,191 @@ class Result;
 
 namespace nel
 {
+
+template<typename T>
+struct OkT
+{
+    public:
+        using Type = T;
+
+    private:
+        Type val_;
+
+    public:
+        constexpr OkT(Type &&val)
+            : val_(move(val))
+        {
+        }
+
+    public:
+        OkT(OkT &&rhs) = default;
+        OkT &operator=(OkT &&rhs) = default;
+
+        OkT(OkT const &rhs) = delete;
+        OkT &operator=(OkT const &rhs) = default;
+
+    public:
+    //protected:
+        // Problem: Must not be able to access the wrapped value except via
+        // Result<T,E> (if access is allowed then can move the contained value
+        // in/out, which is something that only the result should be able to
+        // do).
+        // Usual fix is to make them private, and make the Result<T,E> a friend.
+        // But for the OkT, E is unknown.
+
+        constexpr Type &deref()
+        {
+            return val_;
+        }
+
+        constexpr Type const &deref() const
+        {
+            return val_;
+        }
+
+    public:
+    //protected:
+        constexpr Type &operator*()
+        {
+            return deref();
+        }
+
+        constexpr Type const &operator*() const
+        {
+            return deref();
+        }
+
+    protected:
+        //  doesn't work if T = reference, so use a Ref<T>.
+        constexpr Type *operator->()
+        {
+            return &deref();
+        }
+
+        constexpr Type const *operator->() const
+        {
+            return &deref();
+        }
+
+        // can't have a release(), since what would be the value of val_?
+        // cannot be default as T may not have a default.
+    public:
+        constexpr bool operator==(OkT const &rhs) const {
+            return val_ == rhs.val_;
+        }
+        constexpr bool operator!=(OkT const &rhs) const {
+            return val_ != rhs.val_;
+        }
+};
+
+template<typename T>
+constexpr inline OkT<T> Ok(T &&t)
+{
+    return OkT(move(t));
+}
+
+// shorthand for Ok(Void())
+// otherwise OkT could be renamed back to Ok.
+constexpr inline OkT<Void> Ok()
+{
+    return OkT(Void());
+}
+
+template<typename T>
+struct ErrT
+{
+    public:
+        using Type = T;
+
+    private:
+        Type val_;
+        Context raise_pt_;
+
+        // TODO: Add location where created.
+        // so can report where originally raised.
+    public:
+        constexpr ErrT(Type &&val, Context const &ctx = Context())
+            : val_(move(val))
+            , raise_pt_(ctx)
+        {
+        }
+
+    public:
+        ErrT(ErrT &&rhs) = default;
+        ErrT &operator=(ErrT &&rhs) = default;
+
+        ErrT(ErrT const &rhs) = delete;
+        ErrT &operator=(ErrT const &rhs) = default;
+
+    public:
+    //protected:
+        // Problem: Must not be able to access the wrapped value except via
+        // Result<T,E> (if access is allowed then can move the contained value
+        // in/out, which is something that only the result should be able to
+        // do).
+        // Usual fix is to make them private, and make the Result<T,E> a friend.
+        // But for the ErrT, T is unknown.
+        // Soln is to make them protected,, then inherit in the using class
+        // and use move operator to move from this type into inherited class.
+
+        constexpr Type &deref()
+        {
+            return val_;
+        }
+
+        constexpr Type const &deref() const
+        {
+            return val_;
+        }
+
+    public:
+    //protected:
+        constexpr Type &operator*()
+        {
+            return deref();
+        }
+
+        constexpr Type const &operator*() const
+        {
+            return deref();
+        }
+
+    protected:
+        //  doesn't work if T = reference, so use a Ref<T>.
+        constexpr Type *operator->()
+        {
+            return &deref();
+        }
+
+        constexpr Type const *operator->() const
+        {
+            return &deref();
+        }
+
+    protected:
+        constexpr Context const &where() const {
+            return raise_pt_;
+        }
+
+        // can't have a release(), since what would be the value of val_?
+        // cannot be default as T may not have a default.
+
+    public:
+        constexpr bool operator==(ErrT const &rhs) const {
+            return val_ == rhs.val_;
+        }
+        constexpr bool operator!=(ErrT const &rhs) const {
+            return val_ != rhs.val_;
+        }
+};
+
+// so can do: auto e = Err(1);
+// Not really needed, only doing it for repeat pattern for Ok case.
+template<typename E>
+constexpr inline ErrT<E> Err(E &&e, Context const &ctx = Context())
+{
+    return ErrT(move(e), ctx);
+}
 
 /**
  * Result<T,E>
@@ -61,42 +246,77 @@ namespace nel
 // T must implement operator==, operator!=
 // E must implement operator==, operator!=
 template<typename T, typename E>
-class Result
+struct Result
 {
-    public:
+    private:
+        // Restrict accessor funcs in OkT/ErrT so they can
+        // only be used by Result, and not by the public.
+        using Ok = OkT<T>;
+
+        using Err = ErrT<E>;
+
     private:
         // Tagged enum thing.
         // Similar to std::variant but without the exception throwing behaviour.
         // Maybe make into a nel::Variant ?
-        enum class Tag {
-            INVAL = 0,
-            OK,
-            ERR
+        struct Tag
+        {
+            public:
+                enum ETag {
+                    inval = 0,
+                    ok,
+                    err,
+                } val_;
+
+            public:
+                // When moved, invalidate src.
+                Tag(Tag &&rhs)
+                    : val_(move(rhs.val_))
+                {
+                    rhs.val_ = inval;
+                }
+
+                Tag &operator=(Tag &&rhs)
+                {
+                    val_ = move(rhs.val_);
+                    rhs.val_ = inval;
+                    return *this;
+                }
+
+            public:
+                Tag(Tag const &) = default;
+                Tag &operator=(Tag const &) = default;
+
+            public:
+                constexpr Tag(ETag t)
+                    : val_(t)
+                {
+                }
+
+                constexpr operator ETag() const
+                {
+                    return val_;
+                }
         } tag_;
 
-        template<enum Tag>
-        struct Phantom
-        {
-        };
-
         union {
-                Element<T> ok_;
-                Element<E> err_;
+            Ok ok_;
+            Err err_;
         };
 
     public:
         constexpr ~Result(void)
         {
             switch (tag_) { // result::dtor
-                case Tag::OK:
-                    ok_.~Element<T>();
+                case Tag::ok:
+                    ok_.~Ok();
                     break;
 
-                case Tag::ERR:
-                    err_.~Element<E>();
+                case Tag::err:
+                    err_.~Err();
                     break;
 
-                case Tag::INVAL:
+                case Tag::inval:
                     // dtor + move:
                     // if invalid, don't panic.. just means value was consumed earlier.
                     break;
@@ -116,21 +336,19 @@ class Result
             }
         }
 
-        constexpr Result(Result &&o)
+        constexpr Result(Result &&rhs)
+            : tag_(move(rhs.tag_))
         {
-            tag_ = o.tag_;
-            o.tag_ = Tag::INVAL;
-
             switch (tag_) { // result::move-ctor
-                case Tag::OK:
-                    new (&ok_) Element<T>(forward<Element<T>>(o.ok_));
+                case Tag::ok:
+                    new (&ok_) Ok(move(rhs.ok_));
                     break;
 
-                case Tag::ERR:
-                    new (&err_) Element<E>(forward<Element<E>>(o.err_));
+                case Tag::err:
+                    new (&err_) Err(move(rhs.err_));
                     break;
 
-                case Tag::INVAL:
+                case Tag::inval:
                     // dtor + move:
                     // if invalid, don't panic.. just means value was consumed earlier.
                     break;
@@ -148,36 +366,36 @@ class Result
             }
         }
 
-        constexpr Result &operator=(Result &&o)
+        constexpr Result &operator=(Result &&rhs)
         {
-            if (this != &o) {
-                tag_ = o.tag_;
-                o.tag_ = Tag::INVAL;
-
-                switch (tag_) { // result-move-ass
-                    case Tag::OK:
-                        ok_ = move(o.ok_);
+            if (this != &rhs) {
+                // Would use destroy+construct always, but want same types to use move-assgn.
+                // Don't use { auto f = Result(move(rhs)); f.swap(*this); } as that results in 1+1.5 moves.
+                if (tag_ == rhs.tag_) {
+                    switch (tag_) { // result-move-ass
+                        case Tag::ok:
+                            ok_ = move(rhs.ok_);
                         break;
-
-                    case Tag::ERR:
-                        err_ = move(o.err_);
+                        case Tag::err:
+                            err_ = move(rhs.err_);
                         break;
-
-                    case Tag::INVAL:
-                        // dtor + move:
-                        // if invalid, don't panic.. just means value was consumed earlier.
+                        case Tag::inval:
                         break;
-
-                    default:
+                        default:
                         // for dtor + moves (but not usage) at runtime:
                         // does it matter it's not one of the 'special' values?
                         // yes, since it may have contained one or the others..
-                        // if memory hardware is assumed to be incorruptable then can ignore ?
+                        // if memory hardware is assumed to be incorruptible then can ignore ?
                         // (buffer overruns?) but might not want to for buffer overrun issues. if
                         // there is a memory corruption, then should have been detected by memory
                         // hardware (Ecc mem) if not using eec/ecc mem then that's the prob.
-                        nel::panic("bad Result");
+                            nel::panic("bad Result");
                         break;
+                    }
+                    tag_ = move(rhs.tag_);
+                } else {
+                    this->~Result();
+                    new (this) Result(move(rhs));
                 }
             }
             return *this;
@@ -185,110 +403,34 @@ class Result
 
     private:
         // Not using copy semantics, results are only moveable..
+        // because T may be expensive to copy, or may not have copy semantics.
         Result(Result const &) = delete;
         Result &operator=(Result const &) const = delete;
 
     public:
-        // Don't really want default ctor, but move semantics brought in a
-        // inval state, which can be used for it.
+        // Don't really want default ctor, but will want to just declare an instance with no value.
         constexpr Result(void)
-            : tag_(Tag::INVAL)
+            : tag_(Tag::inval)
         {
         }
 
-    private:
-        constexpr Result(Phantom<Tag::OK> const, T &&v)
-            : tag_(Tag::OK)
-            , ok_(forward<T>(v))
+        constexpr Result(OkT<T> &&ok)
+            : tag_(Tag::ok)
+            , ok_(move(ok))
         {
         }
 
-#    if 1
-        // seems that the T&& variant is used and gets optimised to inplace create.
-        // removing this prevents moving const objects (or implicit coping).
-        // but if large >512bytes then does not get optimised out)
-        template<typename... Args>
-        constexpr Result(Phantom<Tag::OK> const, Args &&...args)
-            : tag_(Tag::OK)
-            , ok_(forward<Args>(args)...)
+        constexpr Result(ErrT<E> &&err)
+            : tag_(Tag::err)
+            , err_(move(err))
         {
         }
-#    endif
-
-        constexpr Result(Phantom<Tag::ERR> const, E &&v)
-            : tag_(Tag::ERR)
-            , err_(forward<E>(v))
-        {
-        }
-
-#    if 1
-        // seems that the T&& variant is used and gets optimised to inplace create.
-        // removing this prevents moving const objects (or implicit coping).
-        template<typename... Args>
-        constexpr Result(Phantom<Tag::ERR> const, Args &&...args)
-            : tag_(Tag::ERR)
-            , err_(forward<Args>(args)...)
-        {
-        }
-#    endif
-
-    public:
-        /**
-         * Create a result set to Ok value, using the value given.
-         *
-         * @param val The value to move into the result as an ok value.
-         *
-         * @returns a Result 'wrapping' the value given as an ok value.
-         */
-        constexpr static Result Ok(T &&val)
-        {
-            return Result(Phantom<Tag::OK>(), forward<T>(val));
-        }
-
-#    if 1
-        /**
-         * Create a result set to Ok value, using the values to construct the ok value.
-         *
-         * @param args The values to use to construct an Ok value inplace.
-         *
-         * @returns a Result 'wrapping' the values given to construct an ok value inplace.
-         */
-        template<typename... Args>
-        constexpr static Result Ok(Args &&...args)
-        {
-            return Result(Phantom<Tag::OK>(), forward<Args>(args)...);
-        }
-#    endif
-
-        /**
-         * Create a result set to Err value, using the value given.
-         *
-         * @param val The value to move into the result as an err value.
-         *
-         * @returns a Result 'wrapping' the value given as an err value.
-         */
-        constexpr static Result Err(E &&val)
-        {
-            return Result(Phantom<Tag::ERR>(), forward<E>(val));
-        }
-
-#    if 1
-        /**
-         * Create a result set to Err value, using the values to construct the err value.
-         *
-         * @param args The values to use to construct an Err value inplace.
-         *
-         * @returns a Result 'wrapping' the values given to construct an Err value inplace.
-         */
-        template<typename... Args>
-        constexpr static Result Err(Args &&...args)
-        {
-            return Result(Phantom<Tag::ERR>(), forward<Args>(args)...);
-        }
-#    endif
 
     private:
         //  don't use std::function, it's bloatware
+        // May be simpler to just expose the Tag value..
+        // which mush panic if a non-enum value detected..
+
         // template<typename V>
         // constexpr V match(Tag tag, std::function<V(void)> &&on_ok, std::function<V(void)>
         // &&on_err) const  {
@@ -297,11 +439,11 @@ class Result
         {
             // this match is non-consuming, for internal use only.
             switch (tag_) { // result-match
-                case Tag::OK:
+                case Tag::ok:
                     return on_ok(*ok_);
-                case Tag::ERR:
+                case Tag::err:
                     return on_err(*err_);
-                case Tag::INVAL:
+                case Tag::inval:
                     // invalids are not values that should occur
                     // if they do it's a use-after-move-from op so must panic.
                     // or a use-before-initialised so again must panic.
@@ -321,20 +463,68 @@ class Result
         /**
          * Is this equal by value to the result given?
          *
-         * @param o The other result to compare to.
+         * @param rhs The right hand side of the expression.
          * @returns true if equal by value, false otherwise.
          *
          * `this` is not consumed by the operation.
-         * `o` is not consumed by the operation.
+         * `rhs` is not consumed by the operation.
          */
-        constexpr bool operator==(Result const &o) const
+        constexpr bool operator==(Result const &rhs) const
         {
-            if (this == &o) { return true; }
-            if (tag_ == o.tag_) {
-                return match<bool>([&o](T const &ok) -> bool { return ok == *o.ok_; },
-                                   [&o](E const &err) -> bool { return err == *o.err_; });
+            switch (tag_) {
+                case Tag::ok:
+                    return ok_ == rhs;
+                case Tag::err:
+                    return err_ == rhs;
+                case Tag::inval:
+                    nel::panic("invalid Result");
+                    break;
+                default:
+                    nel::panic("bad Result");
+                    break;
             }
-            return false;
+        }
+        constexpr friend bool operator==(Result const &lhs, Ok const &rhs) {
+            // bah, oper== can only take 1 arg..
+            // TODO: fix this.
+            switch (lhs.tag_) {
+                case Tag::ok:
+                    return lhs.ok_ == rhs;
+                    break;
+                case Tag::err:
+                    return false;
+                    break;
+                case Tag::inval:
+                    nel::panic("invalid Result");
+                    break;
+                default:
+                    nel::panic("bad Result");
+                    break;
+            }
+        }
+        constexpr friend bool operator==(Ok const &lhs, Result const &rhs) {
+            return rhs == lhs;
+        }
+        constexpr friend bool operator==(Result const &lhs, Err const &rhs) {
+            // bah, oper== can only take 1 arg..
+            // TODO: fix this.
+            switch (lhs.tag_) {
+                case Tag::ok:
+                    return false;
+                    break;
+                case Tag::err:
+                    return lhs.err_ == rhs;
+                    break;
+                case Tag::inval:
+                    nel::panic("invalid Result");
+                    break;
+                default:
+                    nel::panic("bad Result");
+                    break;
+            }
+        }
+        constexpr friend bool operator==(Err const &lhs, Result const &rhs) {
+            return rhs == lhs;
         }
 
         /**
@@ -346,14 +536,62 @@ class Result
          * `this` is not consumed by the operation.
          * `o` is not consumed by the operation.
          */
-        constexpr bool operator!=(Result const &o) const
+        constexpr bool operator!=(Result const &rhs) const
         {
-            if (this == &o) { return false; }
-            if (tag_ == o.tag_) {
-                return match<bool>([&o](T const &ok) -> bool { return ok != *o.ok_; },
-                                   [&o](E const &err) -> bool { return err != *o.err_; });
+            switch (tag_) {
+                case Tag::ok:
+                    return ok_ != rhs;
+                case Tag::err:
+                    return err_ != rhs;
+                case Tag::inval:
+                    nel::panic("invalid Result");
+                    break;
+                default:
+                    nel::panic("bad Result");
+                    break;
             }
-            return true;
+        }
+        constexpr friend bool operator!=(Result const &lhs, Ok const &rhs) {
+            // bah, != can only take 1 arg..
+            // TODO: fix this.
+            switch (lhs.tag_) {
+                case Tag::ok:
+                    return lhs.ok_ != rhs;
+                    break;
+                case Tag::err:
+                    return true;
+                    break;
+                case Tag::inval:
+                    nel::panic("invalid Result");
+                    break;
+                default:
+                    nel::panic("bad Result");
+                    break;
+            }
+        }
+        constexpr friend bool operator!=(Ok const &lhs, Result const &rhs) {
+            return rhs == lhs;
+        }
+        constexpr friend bool operator!=(Result const &lhs, Err const &rhs) {
+            // bah, != can only take 1 arg..
+            // TODO: fix this.
+            switch (lhs.tag_) {
+                case Tag::ok:
+                    return true;
+                    break;
+                case Tag::err:
+                    return lhs.err_ != rhs;
+                    break;
+                case Tag::inval:
+                    nel::panic("invalid Result");
+                    break;
+                default:
+                    nel::panic("bad Result");
+                    break;
+            }
+        }
+        constexpr friend bool operator!=(Err const &lhs, Result const &rhs) {
+            return rhs == lhs;
         }
 
     public:
@@ -387,48 +625,40 @@ class Result
                                ctx);
         }
 
-    public:
-        template<typename V, typename Fn1, typename Fn2>
-        constexpr V consume(Fn1 &&on_ok, Fn2 &&on_err, Context const &ctx = Context())
+#if defined(TEST)
+        constexpr bool is_inval(Context const &ctx = Context()) const
         {
-            // a consuming matcher..
-            // that moves the value to the closures..
-            auto tag = tag_;
-            tag_ = Tag::INVAL;
-            switch (tag) { // result-consume
-                case Tag::OK:
-                    return on_ok(forward<T>(*ok_));
-                case Tag::ERR:
-                    return on_err(forward<E>(*err_));
-                case Tag::INVAL:
-                    // invalids are not values that should occur
-                    // if they do it's a use-after-move-from op so must panic.
-                    // or a use-before-initialised so again must panic.
-                    nel::panic("invalid Result", ctx);
+            switch (tag_) {
+                case Tag::ok:
+                    return false;
+                case Tag::err:
+                    return false;
+                case Tag::inval:
+                    return true;
                     break;
                 default:
                     nel::panic("bad Result", ctx);
                     break;
             }
         }
+#endif
 
-        template<typename Fn1, typename Fn2>
-        constexpr void consumev(Fn1 &&on_ok, Fn2 &&on_err, Context const &ctx = Context())
+    public:
+        template<typename V, typename Fn1, typename Fn2>
+        constexpr V consume(Fn1 &&on_ok, Fn2 &&on_err, Context const &ctx = Context())
         {
-            auto tag = tag_;
-            tag_ = Tag::INVAL;
-            switch (tag) { // result-consumev
-                case Tag::OK:
-                    on_ok(forward<T>(*ok_));
-                    break;
-                case Tag::ERR:
-                    on_err(forward<E>(*err_));
-                    break;
-                case Tag::INVAL:
+            // a consuming matcher..
+            // that moves the value to the closures..
+            auto tag = move(tag_);
+            switch (tag) { // result-consume
+                case Tag::ok:
+                    return on_ok(move(*ok_));
+                case Tag::err:
+                    return on_err(move(*err_));
+                case Tag::inval:
                     // invalids are not values that should occur
                     // if they do it's a use-after-move-from op so must panic.
                     // or a use-before-initialised so again must panic.
-                    // fall through to default handler
                     nel::panic("invalid Result", ctx);
                     break;
                 default:
@@ -450,8 +680,8 @@ class Result
          */
         constexpr Optional<T> ok(Context const &ctx = Context())
         {
-            return consume<Optional<T>>([](T &&ok) -> Optional<T> { return Some(forward<T>(ok)); },
-                                        [](E &&) -> Optional<T> { return None; },
+            return consume<Optional<T>>([](T &&ok) -> Optional<T> { return Some(move(ok)); },
+                                        [](E &&) -> Optional<T> { return None(); },
                                         ctx);
         }
 
@@ -465,10 +695,8 @@ class Result
          */
         constexpr Optional<E> err(Context const &ctx = Context())
         {
-            return consume<Optional<E>>([](T &&) -> Optional<E> { return None; },
-                                        [](E &&err) -> Optional<E> {
-                                            return Some(forward<E>(err));
-                                        },
+            return consume<Optional<E>>([](T &&) -> Optional<E> { return None(); },
+                                        [](E &&err) -> Optional<E> { return Some(move(err)); },
                                         ctx);
         }
 
@@ -482,8 +710,8 @@ class Result
          */
         constexpr T unwrap(Context const &ctx = Context())
         {
-            return consume<T>([](T &&ok) -> T { return T(forward<T>(ok)); },
-                              [&](E &&) -> T { nel::panic("not an OK", ctx); },
+            return consume<T>([](T &&ok) -> T { return move(ok); },
+                              [&](E &&) -> T { nel::panic("not an ok", ctx); },
                               ctx);
         }
 
@@ -498,7 +726,7 @@ class Result
         constexpr E unwrap_err(Context const &ctx = Context())
         {
             return consume<E>([&](T &&) -> E { nel::panic("not an err", ctx); },
-                              [](E &&err) -> E { return err; },
+                              [](E &&err) -> E { return move(err); },
                               ctx);
         }
 
@@ -515,8 +743,8 @@ class Result
          */
         constexpr T unwrap_or(T &&v, Context const &ctx = Context())
         {
-            return consume<T>([](T &&ok) -> T { return ok; },
-                              [&v](E &&) -> T { return forward<T>(v); },
+            return consume<T>([](T &&ok) -> T { return move(ok); },
+                              [&v](E &&) -> T { return move(v); },
                               ctx);
         }
 
@@ -534,7 +762,7 @@ class Result
         template<typename... Args>
         constexpr T unwrap_or(Args &&...args, Context const &ctx = Context())
         {
-            return consume<T>([](T &&ok) -> T { return ok; },
+            return consume<T>([](T &&ok) -> T { return move(ok); },
                               [&args...](E &&) -> T { return T(forward<Args>(args)...); },
                               ctx);
         }
@@ -552,8 +780,8 @@ class Result
          */
         constexpr E unwrap_err_or(E &&v, Context const &ctx = Context())
         {
-            return consume<E>([&v](T &&) -> E { return forward<E>(v); },
-                              [](E &&err) -> E { return err; },
+            return consume<E>([&v](T &&) -> E { return move(v); },
+                              [](E &&err) -> E { return move(err); },
                               ctx);
         }
 
@@ -572,7 +800,7 @@ class Result
         constexpr E unwrap_err_or(Args &&...args, Context const &ctx = Context())
         {
             return consume<E>([&args...](T &&) -> E { return E(forward<Args>(args)...); },
-                              [](E &&err) -> E { return err; },
+                              [](E &&err) -> E { return move(err); },
                               ctx);
         }
 
@@ -588,16 +816,14 @@ class Result
         // would this be better as a free func?
         // template<class U>
         // Result<U, E> map(std::function<U(T &&)> fn)
-        template<class U, typename Fn>
-        constexpr Result<U, E> map(Fn &&fn, Context const &ctx = Context())
+        template<typename U, typename FN>
+        constexpr Result<U, E> map(FN &&fn, Context const &ctx = Context())
         {
-            typedef Result<U, E> ReturnType;
-            return consume<ReturnType>(
-                [&fn](T &&ok) -> ReturnType {
-                    return ReturnType::Ok(forward<U>(fn(forward<T>(ok))));
-                },
-                [](E &&err) -> ReturnType { return ReturnType::Err(forward<E>(err)); },
-                ctx);
+            using ReturnT = Result<U, E>;
+            return consume<ReturnT>([&fn](
+                                           T &&ok) -> ReturnT { return OkT<U>(fn(move(ok))); },
+                                       [](E &&err) -> ReturnT { return Err(move(err)); },
+                                       ctx);
         }
 
         /**
@@ -617,11 +843,10 @@ class Result
         {
             // TODO: remove need to explicitly cast to result in each of the
             //       branches.. i.e. the Result<U,E>() bit, should be Ok(..) or Err(..)
-            typedef Result<T, F> ReturnType;
-            return consume<ReturnType>([](T &&ok)
-                                           -> ReturnType { return ReturnType::Ok(forward<T>(ok)); },
-                                       [&fn](E &&err) -> ReturnType {
-                                           return ReturnType::Err(forward<F>(fn(forward<E>(err))));
+            using ReturnT = Result<T, F>;
+            return consume<ReturnT>([](T &&ok) -> ReturnT { return Ok(move(ok)); },
+                                       [&fn](E &&err) -> ReturnT {
+                                           return ErrT<F>(fn(move(err)));
                                        },
                                        ctx);
         }
@@ -645,11 +870,9 @@ class Result
             // TODO: remove need to explicitly cast to result in each of the
             //       branches.. i.e. the Result<U,E>() bit, should be Ok(..) or Err(..)
             typedef Result<U, E> ReturnType;
-            return consume<ReturnType>([&fn](T &&ok) -> ReturnType { return fn(forward<T>(ok)); },
+            return consume<ReturnType>([&fn](T &&ok) -> ReturnType { return OkT<U>(fn(move(ok))); },
                                        // TODO: check that this is a nop..
-                                       [](E &&err) -> ReturnType {
-                                           return ReturnType::Err(forward<E>(err));
-                                       },
+                                       [](E &&err) -> ReturnType { return Err(move(err)); },
                                        ctx);
         }
 
@@ -657,545 +880,21 @@ class Result
         friend Log &operator<<(Log &outs, Result const &val)
         {
             switch (val.tag_) { // result-dbgfmt
-                case Tag::OK:
+                case Tag::ok:
                     outs << "Result(Ok(" << *val.ok_ << "))";
                     return outs;
                     break;
-                case Tag::ERR:
+                case Tag::err:
                     outs << "Result(Err(" << *val.err_ << "))";
                     return outs;
                     break;
-                case Tag::INVAL:
+                case Tag::inval:
                     outs << "Result(Inval)";
                     return outs;
                     break;
                 default:
                     outs << "Result(Unknown)";
             }
-            return outs;
-        }
-};
-
-template<typename E>
-class Result<void, E>
-{
-    public:
-    private:
-        // Tagged enum thing.
-        // Similar to std::variant but without the exception throwing behaviour.
-        // Maybe make into a nel::Variant ?
-        enum class Tag {
-            INVAL = 0,
-            OK,
-            ERR
-        } tag_;
-
-        template<enum Tag>
-        struct Phantom
-        {
-        };
-
-        union {
-                Element<E> err_;
-        };
-
-    public:
-        constexpr ~Result(void)
-        {
-            switch (tag_) { // result<void>-dtor
-                case Tag::OK:
-                    break;
-
-                case Tag::ERR:
-                    err_.~Element<E>();
-                    break;
-
-                case Tag::INVAL:
-                    break;
-
-                    // No default as I want compile to fail if an enum case handler
-                    // isn't present.
-
-                default:
-                    // But, want to abort/panic if a unhandled case is encountered
-                    // at runtime, much how a default hander would work if it was
-                    // present.
-
-                    // for dtor + moves (but not usage) at runtime:
-                    // does it matter it's not one of the 'special' values?
-                    // yes, since it may have contained one or the others..
-                    // if memory hardware is assumed to be incorruptable then can ignore ? (buffer
-                    // overruns?) but might not want to for buffer overrun issues. if there is a
-                    // memory corruption, then should have been detected by memory hardware (Ecc
-                    // mem) if not using eec/ecc mem then that's the prob. But, want to abort/panic
-                    // if a unhandled case is encountered at runtime, much how a default hander
-                    // would work if it was present.
-                    nel::panic("bad Result");
-                    break;
-            }
-        }
-
-        constexpr Result(Result &&o)
-        {
-            tag_ = o.tag_;
-            o.tag_ = Tag::INVAL;
-            switch (tag_) { // result<void>-move-ctor
-                case Tag::OK:
-                    break;
-                case Tag::ERR:
-                    new (&err_) Element(move(o.err_));
-                    break;
-                case Tag::INVAL:
-                    break;
-
-                    // No default as I want compile to fail if an enum case handler
-                    // isn't present.
-
-                default:
-                    // But, want to abort/panic if a unhandled case is encountered
-                    // at runtime, much how a default hander would work if it was
-                    // present.
-
-                    // for dtor + moves (but not usage) at runtime:
-                    // does it matter it's not one of the 'special' values?
-                    // yes, since it may have contained one or the others..
-                    // if memory hardware is assumed to be incorruptable then can ignore ? (buffer
-                    // overruns?) but might not want to for buffer overrun issues. if there is a
-                    // memory corruption, then should have been detected by memory hardware (Ecc
-                    // mem) if not using eec/ecc mem then that's the prob.
-                    nel::panic("bad Result");
-                    break;
-            }
-        }
-
-        constexpr Result &operator=(Result &&o)
-        {
-            if (this != &o) {
-                tag_ = o.tag_;
-                o.tag_ = Tag::INVAL;
-                switch (tag_) { // result<void>-move-assn
-                    case Tag::OK:
-                        break;
-                    case Tag::ERR:
-                        err_ = move(o.err_);
-                        break;
-                    case Tag::INVAL:
-                        break;
-
-                        // No default as I want compile to fail if an enum case handler
-                        // isn't present.
-
-                    default:
-                        // But, want to abort/panic if a unhandled case is encountered
-                        // at runtime, much how a default hander would work if it was
-                        // present.
-
-                        // for dtor + moves (but not usage) at runtime:
-                        // does it matter it's not one of the 'special' values?
-                        // yes, since it may have contained one or the others..
-                        // if memory hardware is assumed to be incorruptable then can ignore ?
-                        // (buffer overruns?) but might not want to for buffer overrun issues. if
-                        // there is a memory corruption, then should have been detected by memory
-                        // hardware (Ecc mem) if not using eec/ecc mem then that's the prob.
-                        nel::panic("bad Result");
-                        break;
-                }
-            }
-            return *this;
-        }
-
-        // not using copy semantics, results are only moveable..
-        Result(Result const &) = delete;
-        Result &operator=(Result const &) const = delete;
-
-        // Don't really want default ctor, but move semantics brought in a
-        // inval state, which can be used for it.
-        constexpr Result(void)
-            : tag_(Tag::INVAL)
-        {
-        }
-
-    private:
-        constexpr Result(Phantom<Tag::OK> const)
-            : tag_(Tag::OK)
-        {
-        }
-
-        constexpr Result(Phantom<Tag::ERR> const, E &&v)
-            : tag_(Tag::ERR)
-            , err_(forward<E>(v))
-        {
-        }
-
-        template<typename... Args>
-        constexpr Result(Phantom<Tag::ERR> const, Args &&...args)
-            : tag_(Tag::ERR)
-            , err_(forward<Args>(args)...)
-        {
-        }
-
-    public:
-        /**
-         * Create a result set to Ok value, using the value given.
-         *
-         * @param val The value to move into the result as an ok value.
-         *
-         * @returns a Result 'wrapping' the value given as an ok value.
-         */
-        constexpr static Result Ok(void)
-        {
-            return Result(Phantom<Tag::OK>());
-        }
-
-        constexpr static Result Err(E &&v)
-        {
-            return Result(Phantom<Tag::ERR>(), forward<E>(v));
-        }
-
-        /**
-         * Create a result set to Err value, using the values to construct the err value.
-         *
-         * @param args The values to use to construct an Err value inplace.
-         *
-         * @returns a Result 'wrapping' the values given to construct an Err value inplace.
-         */
-        template<typename... Args>
-        constexpr static Result Err(Args &&...args)
-        {
-            return Result(Phantom<Tag::ERR>(), forward<Args>(args)...);
-        }
-
-    private:
-        // template<typename V>
-        // constexpr V
-        // match(Tag tag, std::function<V(void)> on_ok, std::function<V(void)> on_err) const
-        //
-        template<typename V, typename Fn1, typename Fn2>
-        constexpr V match(Fn1 &&on_ok, Fn2 &&on_err, Context const &ctx = Context()) const
-        {
-            switch (tag_) { // result<void>-match
-                case Tag::OK:
-                    return on_ok();
-                case Tag::ERR:
-                    return on_err(*err_);
-                case Tag::INVAL:
-                    // invalids are not values that should occur
-                    // if they do it's a use-after-move-from op so must panic.
-                    // or a use-before-initialised so again must panic.
-                    nel::panic("invalid Result", ctx);
-                    break;
-                default:
-                    nel::panic("bad Result", ctx);
-                    break;
-            }
-        }
-
-    public:
-        // Comparision operators
-        // Implemented in terms of the operator on the type,
-        // as some types may have more optimal implementations of that
-        // operation than the negation of it's opposite.
-        /**
-         * Is this equal by value to the result given?
-         *
-         * @param o The other result to compare to.
-         * @returns true if equal by value, false otherwise.
-         *
-         * `this` is not consumed by the operation.
-         * `o` is not consumed by the operation.
-         */
-        constexpr bool operator==(Result const &o) const
-        {
-            if (this == &o) { return true; }
-            if (tag_ == o.tag_) {
-                return match<bool>([](void) -> bool { return true; },
-                                   [&o](E const &err) -> bool { return err == *o.err_; });
-            }
-            return false;
-        }
-
-        /**
-         * Is this not equal by value to the result given?
-         *
-         * @param o The other result to compare to.
-         * @returns true if not equal by value, false otherwise.
-         *
-         * `this` is not consumed by the operation.
-         * `o` is not consumed by the operation.
-         */
-        constexpr bool operator!=(Result const &o) const
-        {
-            if (this == &o) { return false; }
-            if (tag_ == o.tag_) {
-                return match<bool>([](void) -> bool { return false; },
-                                   [&o](E const &err) -> bool { return err != *o.err_; });
-            }
-            return true;
-        }
-
-    public:
-        /**
-         * Determine if the container contains a Ok.
-         *
-         * @returns true if container contains a Ok, false otherwise.
-         *
-         * `this` is not consumed by this op.
-         */
-        constexpr bool is_ok(Context const &ctx = Context()) const
-        {
-            return match<bool>([](void) -> bool { return true; },
-                               [](E const &) -> bool { return false; },
-                               ctx);
-        }
-
-        /**
-         * Determine if the container contains a Err.
-         *
-         * @returns true if container contains a Err, false otherwise.
-         *
-         * `this` is not consumed by this op.
-         */
-        constexpr bool is_err(Context const &ctx = Context()) const
-        {
-            return match<bool>([](void) -> bool { return false; },
-                               [](E const &) -> bool { return true; },
-                               ctx);
-        }
-
-    public:
-        template<typename V, typename Fn1, typename Fn2>
-        constexpr V consume(Fn1 &&on_ok, Fn2 &&on_err, Context const &ctx = Context())
-        {
-            auto tag = tag_;
-            tag_ = Tag::INVAL;
-            switch (tag) { // result<void>-consume
-                case Tag::OK:
-                    return on_ok();
-                case Tag::ERR:
-                    return on_err(nel::forward<E>(*err_));
-                case Tag::INVAL:
-                    // invalids are not values that should occur
-                    // if they do it's a use-after-move-from op so must panic.
-                    // or a use-before-initialised so again must panic.
-                    nel::panic("invalid Result", ctx);
-                    break;
-                default:
-                    nel::panic("bad Result", ctx);
-                    break;
-            }
-        }
-
-        template<typename Fn1, typename Fn2>
-        constexpr void consumev(Fn1 &&on_ok, Fn2 &&on_err, Context const &ctx = Context())
-        {
-            auto tag = tag_;
-            tag_ = Tag::INVAL;
-            switch (tag) { // result<void>-consume
-                case Tag::OK:
-                    on_ok();
-                    break;
-                case Tag::ERR:
-                    on_err(nel::forward<E>(*err_));
-                    break;
-                case Tag::INVAL:
-                    // invalids are not values that should occur
-                    // if they do it's a use-after-move-from op so must panic.
-                    // or a use-before-initialised so again must panic.
-                    nel::panic("invalid Result", ctx);
-                    break;
-                default:
-                    nel::panic("bad Result", ctx);
-                    break;
-            }
-        }
-
-    public:
-        /**
-         * Return an optional containing the ok value or none.
-         *
-         * @returns if this is a Ok, returns Optional containing a Some with the ok value.
-         * @returns if this is not a Ok, returns Optional containing a None.
-         *
-         * `this` is consumed and invalidated after.
-         */
-        constexpr Optional<void> ok(Context const &ctx = Context())
-        {
-            return consume<Optional<void>>([](void) -> Optional<void> { return Some(); },
-                                           [](E &&) -> Optional<void> { return None; },
-                                           ctx);
-        }
-
-        /**
-         * Return an optional containing the err value or none.
-         *
-         * @returns if this is a Err, returns Optional containing a Some with the err value.
-         * @returns if this is not a Err, returns Optional containing a None.
-         *
-         * `this` is consumed and invalidated after.
-         */
-        constexpr Optional<E> err(Context const &ctx = Context())
-        {
-            return consume<Optional<E>>([](void) -> Optional<E> { return None; },
-                                        [](E &&err) -> Optional<E> {
-                                            return Some(nel::forward<E>(err));
-                                        },
-                                        ctx);
-        }
-
-        /**
-         * Extract and return the contained value if an Ok, consuming the result.
-         *
-         * @return if Ok, value wrapped/contained.
-         * @return if not Ok, calls abort, there is no return.
-         *
-         * `this` is consumed by the operation.
-         */
-        constexpr void unwrap(Context const &ctx = Context())
-        {
-            return consumev([](void) {}, [](E &&) { nel::panic("not an ok"); }, ctx);
-        }
-
-        /**
-         * Extract and return the contained value if an Err, consuming the result.
-         *
-         * @return if Err, value wrapped/contained.
-         * @return if not Err, calls abort, there is no return.
-         *
-         * `this` is consumed by the operation.
-         */
-        constexpr E unwrap_err(Context const &ctx = Context())
-        {
-            return consume<E>([&](void) -> E { nel::panic("not an err", ctx); },
-                              [](E &&err) -> E { return err; },
-                              ctx);
-        }
-
-        /**
-         * Extract and return the contained value if an Ok, consuming the result.
-         *
-         * @param o The value to return if this is not an Ok.
-         *
-         * @return if Ok, value wrapped/contained.
-         * @return if not Ok, consume and return `o`.
-         *
-         * `this` is consumed by the operation.
-         * `o` is consumed by the operation.
-         */
-        constexpr void unwrap_or(Context const &ctx = Context())
-        {
-            return consumev([](void) {}, [](E &&) {}, ctx);
-        }
-
-        constexpr E unwrap_err_or(E &&v, Context const &ctx = Context())
-        {
-            return consume<E>([&v](void) -> E { forward<E>(v); },
-                              [](E &&err) -> E { return err; },
-                              ctx);
-        }
-
-        /**
-         * Extract and return the contained value if an Err, consuming the result.
-         *
-         * @param args The value to construct an Err if this is not an Err.
-         *
-         * @return if Err, value wrapped/contained.
-         * @return if not Err, consume and return an Err value constructed by args.
-         *
-         * `this` is consumed by the operation.
-         * `args` are consumed by the operation.
-         */
-        template<typename... Args>
-        constexpr E unwrap_err_or(Args &&...args, Context const &ctx = Context())
-        {
-            return consume<E>([&args...](void) -> E { return E(forward<Args>(args)...); },
-                              [](E &&err) -> E { return err; },
-                              ctx);
-        }
-
-        /**
-         * Map the result::ok to a different result::ok.
-         *
-         * @param fn A fn that takes a T and returns a U
-         * @returns if ok, result with ok value after applying fn to ok value.
-         * @returns if err, result with err of same value.
-         *
-         * `this` is consumed by the operation.
-         */
-        // would this be better as a free func?
-        // template<class U>
-        // Result<U, E> map(std::function<U(void)> fn)
-        template<typename U, typename Fn>
-        constexpr Result<U, E> map(Fn &&fn, Context const &ctx = Context())
-        {
-            // TODO: remove need to explicitly cast to result in each of the
-            //       branches.. i.e. the Result<U,E>() bit, should be Ok(..) or Err(..)
-            typedef Result<U, E> ReturnType;
-            return consume<
-                ReturnType>([&fn](void) -> ReturnType { return ReturnType::Ok(forward<U>(fn())); },
-                            [](E &&err) -> ReturnType { return ReturnType::Err(forward<E>(err)); },
-                            ctx);
-        }
-
-        /**
-         * Map the result::err to a different result::err.
-         *
-         * @param fn A fn that takes a E and returns a F
-         * @returns if err, result with err value after applying fn to err value.
-         * @returns if ok, result with ok of same value.
-         *
-         * `this` is consumed by the operation.
-         */
-        // would this be better as a free func?
-        // template<class F>
-        // Result<void, F> map_err(std::function<F(E &&)> fn)
-        template<typename F, typename Fn>
-        constexpr Result<void, F> map_err(Fn &&fn, Context const &ctx = Context())
-        {
-            // TODO: remove need to explicitly cast to result in each of the
-            //       branches.. i.e. the Result<U,E>() bit, should be Ok(..), Err(..)
-            typedef Result<void, F> ReturnType;
-            return consume<ReturnType>([](void) -> ReturnType { return ReturnType::Ok(); },
-                                       [&fn](E &&err) -> ReturnType {
-                                           return ReturnType::Err(forward<F>(fn(forward<E>(err))));
-                                       },
-                                       ctx);
-        }
-
-        template<typename U, typename Fn>
-        // Fn: Result<U,E> op(T&&)
-        constexpr Result<U, E> and_then(Fn &&fn, Context const &ctx = Context())
-        {
-            // TODO: remove need to explicitly cast to result in each of the
-            //       branches.. i.e. the Result<U,E>() bit, should be Ok(..) or Err(..)
-            typedef Result<U, E> ReturnType;
-            return consume<ReturnType>([&fn](void) -> ReturnType { return fn(); },
-                                       // TODO: check that this is a nop..
-                                       [](E &&err) -> ReturnType {
-                                           return ReturnType::Err(forward<E>(err));
-                                       },
-                                       ctx);
-        }
-
-    public:
-        friend Log &operator<<(Log &outs, Result const &val)
-        {
-            switch (val.tag_) {
-                case Tag::OK:
-                    outs << "Result(Ok())";
-                    return outs;
-                    break;
-                case Tag::ERR:
-                    outs << "Result(Err(" << *val.err_ << "))";
-                    return outs;
-                    break;
-                case Tag::INVAL:
-                    outs << "Result(Inval)";
-                    return outs;
-                    break;
-                default:
-                    outs << "Result(Unknown)";
-            }
-
             return outs;
         }
 };
