@@ -16,7 +16,6 @@ namespace test
 namespace instant
 {
 
-using nel::move;
 using nel::time::Instant;
 
 using nel::time::Duration;

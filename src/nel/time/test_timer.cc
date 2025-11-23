@@ -19,7 +19,6 @@ namespace timer
 
 using nel::time::Timer;
 
-using nel::move;
 using nel::time::Duration;
 using nel::time::Instant;
 

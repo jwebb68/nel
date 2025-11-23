@@ -14,7 +14,6 @@ namespace test
 namespace frequency
 {
 
-using nel::move;
 using nel::time::Duration;
 using nel::time::Frequency;
 
