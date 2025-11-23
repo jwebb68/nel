@@ -2,7 +2,7 @@
 #if !defined(NEL_HEAPLESS_ARRAY_HH)
 #    define NEL_HEAPLESS_ARRAY_HH
 
-#    include <nel/defs.hh> //NEL_UNUSED, Length
+#    include <nel/defs.hh> //nel::unused, Length
 
 namespace nel
 {

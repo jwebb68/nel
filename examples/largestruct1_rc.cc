@@ -4,14 +4,14 @@
 #include <nel/heaped/rc.hh>
 #include <nel/log.hh>
 #include <nel/memory.hh> // move()
-#include <nel/defs.hh>
+#include <nel/defs.hh> // nel::unused
 #include "libnosys_stubs.cx"
 
 typedef nel::heaped::RC<U8Buf<256>> RC1;
 
 nel::Log &operator<<(nel::Log &outs, RC1 const &v)
 {
-    NEL_UNUSED(v);
+    nel::unused(v);
     outs << "RC1()";
     return outs;
 }

@@ -1,6 +1,7 @@
 // -*- mode: c++; indent-tabs-mode: nil; tab-width: 4 -*-
 #include <nel/time/duration.hh>
 #include <nel/memory.hh> // move
+#include <nel/defs.hh> // nel::unused
 
 #include <catch2/catch.hpp>
 
@@ -73,14 +74,14 @@ TEST_CASE("Duration::move", "[duration]")
         auto d1 = Duration();
         auto d2 = Duration(move(d1));
 
-        NEL_UNUSED(d2);
+        nel::unused(d2);
     }
 
     {
         auto d1 = Duration();
         auto d2 = move(d1);
 
-        NEL_UNUSED(d2);
+        nel::unused(d2);
     }
 }
 
@@ -90,12 +91,12 @@ TEST_CASE("Duration::copy", "[duration]")
     {
         auto d1 = Duration();
         auto d2 = Duration(d1);
-        NEL_UNUSED(d2);
+        nel::unused(d2);
     }
     {
         auto d1 = Duration();
         auto d2 = d1;
-        NEL_UNUSED(d2);
+        nel::unused(d2);
     }
 }
 
@@ -397,56 +398,56 @@ TEST_CASE("Duration::default", "[duration]")
 {
     // durations can be created without a value.
     auto d1 = Duration();
-    NEL_UNUSED(d1);
+    nel::unused(d1);
 }
 
 TEST_CASE("Duration::from_micros", "[duration]")
 {
     // durations can be created from a  micros value
     auto d1 = Duration::from_micros(1234);
-    NEL_UNUSED(d1);
+    nel::unused(d1);
 }
 
 TEST_CASE("Duration::from_millis", "[duration]")
 {
     // durations can be created from a millis value
     auto d1 = Duration::from_millis(1234);
-    NEL_UNUSED(d1);
+    nel::unused(d1);
 }
 
 TEST_CASE("Duration::from_secs", "[duration]")
 {
     // durations can be created from a secs value
     auto d1 = Duration::from_secs(1234);
-    NEL_UNUSED(d1);
+    nel::unused(d1);
 }
 
 TEST_CASE("Duration::from(secs, usecs)", "[duration]")
 {
     // durations can be created from a secs+usecs value
     auto d1 = Duration::from(1234, 5678);
-    NEL_UNUSED(d1);
+    nel::unused(d1);
 }
 
 TEST_CASE("Duration::from(Timespec)", "[duration]")
 {
     // durations can be created from a Timespec
     auto d1 = Duration::from(Timespec {1234, 5456});
-    NEL_UNUSED(d1);
+    nel::unused(d1);
 }
 
 TEST_CASE("Duration::from(float secs)", "[duration]")
 {
     // durations can be created from a float
     auto d1 = Duration::from(1234.5456f);
-    NEL_UNUSED(d1);
+    nel::unused(d1);
 }
 
 TEST_CASE("Duration::from(double secs)", "[duration]")
 {
     // durations can be created from a float
     auto d1 = Duration::from(1234.5456);
-    NEL_UNUSED(d1);
+    nel::unused(d1);
 }
 
 //=============================================================================

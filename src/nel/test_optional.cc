@@ -1,6 +1,7 @@
 // -*- mode: c++; indent-tabs-mode: nil; tab-width: 4 -*-
 #include "optional.hh"
-#include "defs.hh"
+
+#include <nel/defs.hh> // nel::unused
 
 #include <catch2/catch.hpp>
 #include <cstring> //strcmp

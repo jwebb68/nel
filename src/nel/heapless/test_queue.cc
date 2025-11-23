@@ -3,7 +3,7 @@
 
 #include <nel/heapless/queue.hh>
 #include <nel/memory.hh> // nel::move()
-#include <nel/defs.hh>
+#include <nel/defs.hh> // nel::unused
 
 namespace nel
 {

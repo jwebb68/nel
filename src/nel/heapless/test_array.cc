@@ -2,6 +2,7 @@
 #include <nel/heapless/array.hh>
 
 #include <nel/memory.hh> // movestd::()
+#include <nel/defs.hh> // nel::unused
 
 #include <catch2/catch.hpp>
 

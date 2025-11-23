@@ -3,14 +3,14 @@
 
 #include <nel/heaped/box.hh>
 #include <nel/log.hh>
-#include <nel/defs.hh>
+#include <nel/defs.hh> // nel::unused
 #include "libnosys_stubs.cx"
 
 typedef nel::heaped::Box<U8Buf<256>> Box1;
 
 nel::Log &operator<<(nel::Log &outs, Box1 const &v)
 {
-    NEL_UNUSED(v);
+    nel::unused(v);
     outs << "Box1()";
     return outs;
 }

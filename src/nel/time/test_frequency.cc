@@ -1,6 +1,7 @@
 // -*- mode: c++; indent-tabs-mode: nil; tab-width: 4 -*-
 #include <nel/time/duration.hh>
 #include <nel/memory.hh> // move
+#include <nel/defs.hh> // nel::unused
 
 #include <catch2/catch.hpp>
 
@@ -22,14 +23,14 @@ TEST_CASE("Frequency::move", "[frequency]")
         auto d1 = Frequency(0UL);
         auto d2 = Frequency(move(d1));
 
-        NEL_UNUSED(d2);
+        nel::unused(d2);
     }
 
     {
         auto d1 = Frequency(0UL);
         auto d2 = move(d1);
 
-        NEL_UNUSED(d2);
+        nel::unused(d2);
     }
 }
 
@@ -39,12 +40,12 @@ TEST_CASE("Frequency::copy", "[frequency]")
     {
         auto d1 = Frequency(0UL);
         auto d2 = Frequency(d1);
-        NEL_UNUSED(d2);
+        nel::unused(d2);
     }
     {
         auto d1 = Frequency(0UL);
         auto d2 = d1;
-        NEL_UNUSED(d2);
+        nel::unused(d2);
     }
 }
 
@@ -268,7 +269,7 @@ TEST_CASE("Frequency::default", "[frequency]")
 {
     // frequencies can be created without a value.
     auto d1 = Frequency();
-    NEL_UNUSED(d1);
+    nel::unused(d1);
 }
 
 //=============================================================================

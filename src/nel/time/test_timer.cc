@@ -5,6 +5,7 @@
 #include <nel/time/duration.hh>
 
 #include <nel/memory.hh> // move
+#include <nel/defs.hh> // nel::unused
 
 #include <catch2/catch.hpp>
 
@@ -30,14 +31,14 @@ TEST_CASE("Timer::move", "[timer]")
         auto d1 = Timer(Duration::from_millis(10), Instant());
         auto d2 = Timer(move(d1));
 
-        NEL_UNUSED(d2);
+        nel::unused(d2);
     }
 
     {
         auto d1 = Timer(Duration::from_millis(10), Instant());
         auto d2 = move(d1);
 
-        NEL_UNUSED(d2);
+        nel::unused(d2);
     }
 }
 
@@ -47,12 +48,12 @@ TEST_CASE("Timer::copy", "[timer]")
     {
         auto d1 = Timer(Duration::from_millis(10), Instant());
         auto d2 = Timer(d1);
-        NEL_UNUSED(d2);
+        nel::unused(d2);
     }
     {
         auto d1 = Timer(Duration::from_millis(10), Instant());
         auto d2 = d1;
-        NEL_UNUSED(d2);
+        nel::unused(d2);
     }
 }
 

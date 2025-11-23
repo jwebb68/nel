@@ -2,6 +2,7 @@
 #include "slice.hh"
 
 #include <nel/stub.hh>
+#include <nel/defs.hh> // nel::unused
 
 #include <catch2/catch.hpp>
 
