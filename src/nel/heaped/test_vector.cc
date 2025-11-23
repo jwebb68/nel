@@ -1,6 +1,7 @@
 // -*- mode: c++; indent-tabs-mode: nil; tab-width: 4 -*-
 #include <nel/heaped/vector.hh>
-#include <nel/memory.hh> // movenel::()
+
+#include <nel/memory.hh> // move/forward()
 
 #include <catch2/catch.hpp>
 
@@ -52,7 +53,7 @@ TEST_CASE("heaped::Vector::move", "[heaped][vector]")
     {
         // empty Vector can be moved
         auto a1 = nel::heaped::Vector<int>::empty();
-        auto a2 = nel::move(a1);
+        auto a2 = move(a1);
         REQUIRE(a1.is_empty());
         REQUIRE(a2.is_empty());
     }
@@ -62,7 +63,7 @@ TEST_CASE("heaped::Vector::move", "[heaped][vector]")
         auto a3 = nel::heaped::Vector<int>::empty();
         a3.push(2).is_ok();
 
-        auto a2 = nel::move(a3);
+        auto a2 = move(a3);
         REQUIRE(!a2.is_empty());
         REQUIRE(a3.is_empty());
     }
@@ -71,7 +72,7 @@ TEST_CASE("heaped::Vector::move", "[heaped][vector]")
         // testing const Vector moving, but should fail at compile time.
         // auto const c1 = nel::heaped::Vector<int>::empty();
         // auto const c2 = nel::heaped::Vector<int>::filled(2,1);
-        // c2 = nel::move(c1);
+        // c2 = move(c1);
     }
 }
 
@@ -391,7 +392,7 @@ TEST_CASE("heaped::Vector::slice(b,e)", "[heaped][vector]")
         auto a1 = nel::heaped::Vector<int>::empty();
         a1.push(1).is_ok();
         a1.push(2).is_ok();
-        auto const c1 = nel::move(a1);
+        auto const c1 = move(a1);
 
         auto sc1 = c1.slice(0, 0);
         REQUIRE(sc1.is_empty());

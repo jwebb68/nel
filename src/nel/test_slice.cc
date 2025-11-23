@@ -2,6 +2,7 @@
 #include "slice.hh"
 
 #include <nel/stub.hh>
+#include <nel/memory.hh> // move/forward
 #include <nel/defs.hh> // nel::unused
 
 #include <catch2/catch.hpp>
@@ -72,7 +73,7 @@ TEST_CASE("Slice::move", "[slice]")
         auto p1 = s1.ptr();
         auto l1 = s1.len();
 
-        s2 = nel::move(s1);
+        s2 = move(s1);
 
         // when moved, the src value is 'nullified'/made empty
         REQUIRE((s1.len() == 0 || s1.ptr() == nullptr));

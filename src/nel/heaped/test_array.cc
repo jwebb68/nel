@@ -1,7 +1,7 @@
 // -*- mode: c++; indent-tabs-mode: nil; tab-width: 4 -*-
 #include <nel/heaped/array.hh>
 
-#include <nel/memory.hh> // nel::move()
+#include <nel/memory.hh> // move()
 
 #include <catch2/catch.hpp>
 
@@ -35,21 +35,21 @@ TEST_CASE("heaped::Array::move", "[heaped][array]")
     nel::heaped::Array<int> a1 = nel::heaped::Array<int>::empty();
     // nel::heaped::Array<int> a2 = nel::heaped::Array<int>::try_from({2}).unwrap();
     auto a2 = nel::heaped::Array<int>::filled(2, 1);
-    a2 = nel::move(a1);
+    a2 = move(a1);
     REQUIRE(a1.is_empty());
     REQUIRE(a2.is_empty());
 
     // not empty array can be moved
     // auto a3 = nel::heaped::Array<int>::try_from({2}).unwrap();
     auto a3 = nel::heaped::Array<int>::filled(2, 4);
-    a2 = nel::move(a3);
+    a2 = move(a3);
     REQUIRE(!a2.is_empty());
     REQUIRE(a3.is_empty());
 
     // testing const array moving, but should fail at compile time.
     // auto const c1 = nel::heaped::Array<int>::empty();
     // auto const c2 = nel::heaped::Array<int>::filled(2,1);
-    // c2 = nel::move(c1);
+    // c2 = move(c1);
 }
 
 #if 0

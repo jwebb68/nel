@@ -2,7 +2,7 @@
 #include <catch2/catch.hpp>
 
 #include <nel/heapless/queue.hh>
-#include <nel/memory.hh> // nel::move()
+#include <nel/memory.hh> // move()
 #include <nel/defs.hh> // nel::unused
 
 namespace nel
@@ -43,8 +43,8 @@ struct Stub
         }
 
         Stub(Stub &&o)
-            : val(nel::move(o.val))
-            , valid(nel::move(o.valid))
+            : val(move(o.val))
+            , valid(move(o.valid))
         {
             // move: moves a value, so does not create a new value.
             // move: moves a value, so does create a value in a new location.
@@ -56,8 +56,8 @@ struct Stub
         {
             // move: moves a value, so does not create a new value.
             // move: moves a value, so does create a value in a new location.
-            val = nel::move(o.val);
-            valid = nel::move(o.valid);
+            val = move(o.val);
+            valid = move(o.valid);
             o.valid = false;
             move_assn += 1;
             return *this;
@@ -78,8 +78,8 @@ TEST_CASE("heapless::Queue: dtor deletes contained", "[heapless][queue]")
     Stub::reset();
     {
         nel::heapless::Queue<Stub, 5> q;
-        q.push(nel::move(Stub(1))).unwrap();
-        q.push(nel::move(Stub(2))).unwrap();
+        q.push(move(Stub(1))).unwrap();
+        q.push(move(Stub(2))).unwrap();
 
         // queue: all pushed elements are initialised.
         REQUIRE(Stub::instances == 2);
@@ -96,7 +96,7 @@ TEST_CASE("heapless::Queue: move-ctor invalidates src", "[heapless][queue]")
         auto q1 = nel::heapless::Queue<Stub, 5>();
 
         Stub::reset();
-        auto q2 = nel::move(q1);
+        auto q2 = move(q1);
 
         REQUIRE(q2.len() == 0);
         REQUIRE(q1.len() == 0);
@@ -105,11 +105,11 @@ TEST_CASE("heapless::Queue: move-ctor invalidates src", "[heapless][queue]")
     {
         // move partially filled queue
         auto q1 = nel::heapless::Queue<Stub, 5>();
-        q1.push(nel::move(Stub(1))).unwrap();
-        q1.push(nel::move(Stub(2))).unwrap();
+        q1.push(move(Stub(1))).unwrap();
+        q1.push(move(Stub(2))).unwrap();
 
         Stub::reset();
-        auto q2 = nel::move(q1);
+        auto q2 = move(q1);
 
         // T's was moved using it's move ops.
         // i.e. not using bitcopying.
@@ -134,7 +134,7 @@ TEST_CASE("heapless::Queue: move-assn invalidates src", "[heapless][queue]")
         auto q2 = nel::heapless::Queue<Stub, 5>();
 
         Stub::reset();
-        q2 = nel::move(q1);
+        q2 = move(q1);
 
         REQUIRE(q2.len() == 0);
         REQUIRE(q1.len() == 0);
@@ -150,7 +150,7 @@ TEST_CASE("heapless::Queue: move-assn invalidates src", "[heapless][queue]")
 
         Stub::reset();
 
-        q2 = nel::move(q1);
+        q2 = move(q1);
 
         // T's was moved using it's move ops.
         // i.e. not using bitcopying.
@@ -176,7 +176,7 @@ TEST_CASE("heapless::Queue: move-assn invalidates src", "[heapless][queue]")
 
         Stub::reset();
 
-        q2 = nel::move(q1);
+        q2 = move(q1);
 
         // T's was moved using it's move ops.
         // i.e. not using bitcopying.
@@ -200,7 +200,7 @@ TEST_CASE("heapless::Queue::move", "[heapless][queue]")
         // empty array can be moved to another location
         auto a2 = nel::heapless::Queue<int, 3>::empty();
         auto a1 = nel::heapless::Queue<int, 3>::empty();
-        a2 = nel::move(a1);
+        a2 = move(a1);
         // how to test?
     }
 
@@ -211,7 +211,7 @@ TEST_CASE("heapless::Queue::move", "[heapless][queue]")
         a4.push(0).unwrap();
         a4.push(1).unwrap();
 
-        a3 = nel::move(a4);
+        a3 = move(a4);
 
         REQUIRE(a4.len() == 0);
         REQUIRE(a3.len() == 2);

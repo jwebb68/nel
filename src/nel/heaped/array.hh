@@ -91,7 +91,7 @@ struct Array
         // Moving is allowed since it's a fast O(1) op.
         // and does not create any extra resources..
         constexpr Array(Array &&o)
-            : item_(nel::move(o.item_))
+            : item_(move(o.item_))
         {
             o.item_ = nullptr;
         }
@@ -99,7 +99,7 @@ struct Array
         constexpr Array &operator=(Array &&o)
         {
             if (this != &o) {
-                item_ = nel::move(o.item_);
+                item_ = move(o.item_);
                 o.item_ = nullptr;
             }
             return *this;

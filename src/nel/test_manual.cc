@@ -49,7 +49,7 @@ TEST_CASE("Manual<T>(Manual<T> &&rhs)", "[manual]")
         auto m1 = nel::Manual<Stub>();
         Stub::reset();
 
-        auto m2 = nel::move(m1);
+        auto m2 = move(m1);
 
         REQUIRE(Stub::instances == 0);
         REQUIRE(Stub::move_ctor == 0);
@@ -59,7 +59,7 @@ TEST_CASE("Manual<T>(Manual<T> &&rhs)", "[manual]")
     {
         auto m1 = nel::Manual<Stub>(Stub(1));
         Stub::reset();
-        auto m2 = nel::move(m1);
+        auto m2 = move(m1);
 
         REQUIRE(Stub::instances == 0);
         REQUIRE(Stub::move_ctor == 0);
@@ -75,7 +75,7 @@ TEST_CASE("operator=(Manual<T> &&rhs)", "[manual]")
         auto m2 = nel::Manual<Stub>();
         Stub::reset();
 
-        m2 = nel::move(m1);
+        m2 = move(m1);
 
         REQUIRE(Stub::instances == 0);
         REQUIRE(Stub::move_ctor == 0);
@@ -88,7 +88,7 @@ TEST_CASE("operator=(Manual<T> &&rhs)", "[manual]")
 
         Stub::reset();
 
-        m2 = nel::move(m1);
+        m2 = move(m1);
 
         REQUIRE(Stub::instances == 0);
         REQUIRE(Stub::move_ctor == 0);

@@ -4,6 +4,7 @@
 #include <nel/heapless/array.hh>
 #include <nel/panic.hh>
 #include <nel/log.hh>
+#include <nel/memory.hh> // move/foward
 #include <nel/defs.hh>
 #include "libnosys_stubs.cx"
 
