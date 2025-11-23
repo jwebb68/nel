@@ -260,7 +260,7 @@ struct Node
         }
 
 #    if 0
-        Result<void, std::initializer_list<Type>> push_back(std::initializer_list<Type> l)
+        Result<Void, std::initializer_list<Type>> push_back(std::initializer_list<Type> l)
         {
             typedef std::initializer_list<Type> U;
             if (len() + l.size() > capacity()) {
