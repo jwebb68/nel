@@ -39,7 +39,7 @@ template<typename T>
 struct Vector
 {
     public:
-        typedef T Type;
+        using Type = T;
 
     private:
         // not using unique_ptr as didn't use new to alloc it.
@@ -112,7 +112,7 @@ struct Vector
         static constexpr Vector with_capacity(Count cap)
         {
             if (cap == 0) { return Vector(); }
-            Vector a(VectorNode::malloc(cap));
+            auto a = Vector(VectorNode::malloc(cap));
             return a;
         }
 

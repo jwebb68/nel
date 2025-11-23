@@ -47,7 +47,7 @@ template<typename T>
 struct Array
 {
     public:
-        typedef T Type;
+        using Type = T;
 
     private:
         typedef Node<Type> ArrayNode;

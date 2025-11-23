@@ -43,7 +43,8 @@ template<typename T, Length const N>
 struct Array
 {
     public:
-        typedef T Type;
+        using Type = T;
+        using Self = Array;
 
     private:
         // default ctor does not init this array.

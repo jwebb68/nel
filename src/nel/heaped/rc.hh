@@ -28,7 +28,7 @@ struct RC
         // Contained value on the heap.
         // Single threaded reference counted sharing.
     public:
-        typedef T Type;
+        using Type = T;
 
     private:
         struct Node

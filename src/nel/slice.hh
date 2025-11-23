@@ -39,7 +39,7 @@ template<typename T>
 struct Slice
 {
     public:
-        typedef T Type;
+        using Type = T;
 
     private:
         Type *content_;

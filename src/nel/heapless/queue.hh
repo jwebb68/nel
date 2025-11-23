@@ -51,7 +51,7 @@ template<typename T, Length const N>
 struct Queue
 {
     public:
-        typedef T Type;
+        using Type = T;
 
     private:
         Length len_;

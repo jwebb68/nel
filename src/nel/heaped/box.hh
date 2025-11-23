@@ -32,8 +32,8 @@ struct Box
 {
     public:
         // heh, blatant rust-ism
-        typedef Box Self;
-        typedef T Type;
+        using Type = T;
+        using Self = Box;
 
     private:
         typedef Element<Type> ElementT;

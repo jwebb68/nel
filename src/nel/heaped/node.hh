@@ -34,7 +34,7 @@ template<typename T>
 struct Node
 {
     public:
-        typedef T Type;
+        using Type = T;
 
     private:
         // Number allocated.
@@ -272,7 +272,7 @@ struct Node
 
             Index i = len_;
             for (auto it = l.begin(); it != l.end(); ++i, ++it) {
-                new (&values_[i]) T(move(*it));
+                new (&values_[i]) Type(move(*it));
             }
             len_ = i;
             return Ok();

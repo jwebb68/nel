@@ -51,7 +51,7 @@ template<typename T, Length const N>
 struct Vector
 {
     public:
-        typedef T Type;
+        using Type = T;
 
     private:
         // Number initialised.
