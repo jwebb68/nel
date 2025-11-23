@@ -1,8 +1,10 @@
 // -*- mode: c++; indent-tabs-mode: nil; tab-width: 4 -*-
-#include <catch2/catch.hpp>
 
 #include <nel/result.hh> //nel::ResultT
 #include <nel/defs.hh> // nel::unused
+
+#include <catch2/catch.hpp>
+#include <catch2/catch2_panic.hh>
 
 namespace nel
 {

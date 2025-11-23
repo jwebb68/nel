@@ -1,10 +1,11 @@
 // -*- mode: c++; indent-tabs-mode: nil; tab-width: 4 -*-
 #include <nel/memory.hh>
 
-#include <catch2/catch.hpp>
 
 #include <nel/stub.hh>
 
+#include <catch2/catch.hpp>
+#include <catch2/catch2_panic.hh>
 #include <cstring> // memset/memcmp
 
 namespace nel

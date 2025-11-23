@@ -4,6 +4,7 @@
 #include <nel/memory.hh> // move/forward
 
 #include <catch2/catch.hpp>
+#include <catch2/catch2_panic.hh>
 
 namespace nel
 {

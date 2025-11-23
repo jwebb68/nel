@@ -5,6 +5,8 @@
 #include <nel/memory.hh> // move()
 #include <nel/defs.hh> // nel::unused
 
+#include <catch2/catch.hpp>
+#include <catch2/catch2_panic.hh>
 namespace nel
 {
 namespace test

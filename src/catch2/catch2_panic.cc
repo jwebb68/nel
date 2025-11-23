@@ -1,21 +1,32 @@
 // -*- mode: c++; indent-tabs-mode: nil; tab-width: 4 -*-
 
 #if defined(TEST)
-#    include <catch2/catch2_panic.hh>
 
-[[noreturn]] inline void _panic(Context const &ctx)
+#    include <nel/panic.hh>
+
+#    include <catch2/catch2_panic.hh> // test::PanicError
+#    include <sstream>
+
+
+namespace nel
+{
+
+[[noreturn]] void panic(Context const &ctx)
 {
     std::stringstream ss;
     ss << "panic in " << ctx.fn_name_ << ' ' << ctx.file_name_ << ':' << ctx.line_num_ << '\n';
-    throw nel::test::PanicError(ss.str());
+    //ss << prefix << '\n';
+    throw ::test::PanicError(ss.str());
 }
 
-[[noreturn]] inline void _panic(Context const &ctx, const char *prefix, std::string expr)
+[[noreturn]] void panic(char const *msg, Context const &ctx)
 {
     std::stringstream ss;
     ss << "panic in " << ctx.fn_name_ << ' ' << ctx.file_name_ << ':' << ctx.line_num_ << '\n';
-    ss << prefix << ": " << expr << '\n';
-    throw nel::test::PanicError(ss.str());
+    ss << msg << '\n';
+    throw ::test::PanicError(ss.str());
+}
+
 }
 
 #endif//defined(TEST)

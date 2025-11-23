@@ -4,6 +4,7 @@
 #include <nel/memory.hh> // move()
 
 #include <catch2/catch.hpp>
+#include <catch2/catch2_panic.hh>
 
 // TODO: what of size/cap == 0, i//e Vector<T, 0> ?
 namespace nel
