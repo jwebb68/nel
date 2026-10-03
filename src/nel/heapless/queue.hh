@@ -223,7 +223,7 @@ struct Queue
          * @returns if successful, Result<void, T>::Ok()
          * @returns if unsuccessful, Result<void, T>::Err() holding val
          */
-        Result<Void, Type> NEL_WARN_UNUSED_RESULT push(Type &&val)
+        Result<Void, Type> push(Type &&val)
         {
 #    if 0
 // TODO: separate out behaviour into sep classes.. (or one with traits)

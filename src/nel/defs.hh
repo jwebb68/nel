@@ -5,8 +5,6 @@
 namespace nel
 {
 
-#    define NEL_WARN_UNUSED_RESULT __attribute__((warn_unused_result))
-
 template<typename T>
 constexpr void unused(T &&)
 {

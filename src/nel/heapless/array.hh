@@ -84,12 +84,13 @@ struct Array
         // TODO: make these static constructor funcs, that can fail, returning error if so.
         // maybe want a Result<T,E> i.e. Result<Array<..>, Err>.
         // TODO: error handling using Results
-        bool NEL_WARN_UNUSED_RESULT try_copy_from(Array const &src)
+#if 0
+        bool  try_copy_from(Array const &src) [[nodiscard("bool return must be used")]]
         {
             return try_copy_from(src.values_);
         }
 
-        bool NEL_WARN_UNUSED_RESULT try_copy_from(Type const src[N])
+        bool [[nodiscard]] try_copy_from(Type const src[N])
         {
             Type const *s = src;
             // don't want to use a for_each here as when the copy fails will need to clean up.
@@ -103,6 +104,7 @@ struct Array
             }
             return true;
         }
+#endif
 
     public:
         // no default construction

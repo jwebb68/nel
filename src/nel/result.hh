@@ -246,7 +246,7 @@ constexpr inline ErrT<E> Err(E &&e, Context const &ctx = Context())
 // T must implement operator==, operator!=
 // E must implement operator==, operator!=
 template<typename T, typename E>
-struct Result
+struct [[nodiscard("unused Result that must be used")]] Result
 {
     private:
         // Restrict accessor funcs in OkT/ErrT so they can

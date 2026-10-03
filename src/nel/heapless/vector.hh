@@ -458,7 +458,7 @@ struct Vector
         // on fail still move, but return.
         // allow inplace create instead of move.
         // if fails to store, can create be avoided..?
-        Result<Void, Type> NEL_WARN_UNUSED_RESULT push(Type &&val)
+        Result<Void, Type> push(Type &&val)
         {
             if (len() >= capacity()) {
                 // Really? must one be created for err?

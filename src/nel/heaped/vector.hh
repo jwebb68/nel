@@ -333,7 +333,7 @@ struct Vector
          * @returns if successful, Result<Void, T>::Ok()
          * @returns if unsuccessful, Result<Void, T>::Err() holding val
          */
-        Result<Void, Type> NEL_WARN_UNUSED_RESULT push(Type &&val)
+        Result<Void, Type> push(Type &&val)
         {
             bool ok;
             ok = try_reserve(len() + 1);
@@ -356,7 +356,7 @@ struct Vector
 #    endif
 
         template<typename... Args>
-        Result<void, Type> NEL_WARN_UNUSED_RESULT push(Args &&...args)
+        Result<Void, Type> push(Args &&...args)
         {
             bool ok;
             ok = try_reserve(len() + 1);
