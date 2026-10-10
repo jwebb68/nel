@@ -191,9 +191,21 @@ struct Slice
          * @returns If idx is out-of range, return None.
          * @returns else return ref to item at index..
          */
-        constexpr Optional<Type &> try_get(Index idx) const
+        constexpr Optional<Type &> try_get(Index idx)
         {
-            return (idx >= len_) ? None : Optional<Type &>::Some(content_[idx]);
+            if (idx >= len_) {
+                return None();
+            } else {
+                return SomeT<Type &>(content_[idx]);
+            }
+        }
+        constexpr Optional<Type const &> try_get(Index idx) const
+        {
+            if (idx >= len_) {
+                return None();
+            } else {
+                return SomeT<Type const &>(content_[idx]);
+            }
         }
 
     public:

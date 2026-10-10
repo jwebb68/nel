@@ -258,14 +258,14 @@ struct Queue
          * @returns if successful, Optional<T>::Some(val)
          * @returns if unsuccessful, Optional<T>::None
          */
-        Optional<Type> pop(void)
+        Optional<Type> pop()
         {
             if (is_empty()) { return None(); }
             len_ -= 1;
             auto rp = rp_;
             rp_ += 1;
             if (rp_ == N) { rp_ = 0; }
-            return Some(move(*(begin() + rp)));
+            return Some(move(*ptr(rp)));
         }
 
         void drain(Length n)
