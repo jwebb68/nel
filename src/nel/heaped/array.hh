@@ -127,7 +127,7 @@ struct Array
          *
          * @returns the created array
          */
-        static constexpr Array filled(Type const &f, Count n)
+        static constexpr Array filled(Type const &f, Count n, Context const &ctx = Context())
         {
             if (n == 0) { return Array::empty(); }
             ArrayNode *node = ArrayNode::malloc(n);

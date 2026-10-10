@@ -186,5 +186,6 @@ TEST_CASE("Manual<T>->", "[manual]")
     }
 }
 
+}
 }; // namespace manual
 }; // namespace test

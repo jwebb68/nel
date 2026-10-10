@@ -168,6 +168,7 @@ TEST_CASE("heapless::Array::move", "[heapless][array]")
 // how to test that array cannot be copied?
 // it will fail at compile time.
 
+#if 1
 TEST_CASE("heapless::Array::filled_with", "[heapless][array]")
 {
     {
@@ -203,6 +204,7 @@ TEST_CASE("heapless::Array::filled_with", "[heapless][array]")
         REQUIRE(c2.try_get(2).unwrap().val == 1000);
     }
 }
+#endif
 
 // test that init list works..
 // test with pod (int/bool etc)
