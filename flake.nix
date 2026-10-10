@@ -3,7 +3,7 @@
   description = "A devShell for nel";
 
   inputs = {
-    nixpkgs.url      = "github:NixOS/nixpkgs/nixos-23.11";
+    nixpkgs.url      = "github:NixOS/nixpkgs/nixos-26.05";
     flake-utils.url  = "github:numtide/flake-utils";
   };
 
@@ -17,12 +17,14 @@
         native_build_inputs = [
             pkgs.gcc
             pkgs.gdb
-            pkgs.gcc-arm-embedded-10 #ok
+            #pkgs.gcc-arm-embedded-10 #ok
+            #pkgs.gcc-arm-embedded-15
+            pkgs.gcc-arm-embedded
 
-            pkgs.clang_15
+            pkgs.clang
             # for clang-format,
             # keep in sync with pkgs.clang
-            pkgs.clang-tools_15
+            pkgs.clang-tools
 
             pkgs.catch2
             pkgs.check

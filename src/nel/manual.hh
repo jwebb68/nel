@@ -122,7 +122,7 @@ struct Manual
 
         constexpr Self &copy_from(Manual const &rhs)
         {
-            deref() = rhs.ref();
+            deref() = rhs.deref();
             return *this;
         }
 

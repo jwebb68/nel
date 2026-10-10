@@ -242,77 +242,107 @@ TEST_CASE("heapless::Array::initlist-ctor", "[heapless][array]")
     {
         // pod: can create using full list
         auto a1 = nel::heapless::Array<int, 3> {1, 2, 3};
+        nel::unused(a1);
         // wants copy ctor..
         // auto a2 = nel::heapless::Array<int, 3>({});
         nel::heapless::Array<int, 3> a3 = {5, 6, 7};
+        nel::unused(a3);
         nel::heapless::Array<int, 3> a4 {8, 9, 10};
+        nel::unused(a4);
 
         auto const c1 = nel::heapless::Array<int, 3> {2, 3, 4};
+        nel::unused(c1);
         // wants copy ctor..
         // auto a2 = nel::heapless::Array<int, 3>({});
         nel::heapless::Array<int, 3> const c3 = {5, 6, 7};
+        nel::unused(c3);
         nel::heapless::Array<int, 3> const c4 {8, 9, 10};
+        nel::unused(c4);
     }
 
     {
         // pod: can create using partial list
         auto a1 = nel::heapless::Array<int, 3> {1, 2};
+        nel::unused(a1);
         // wants copy ctor..
         // auto a2 = nel::heapless::Array<int, 3>({});
         nel::heapless::Array<int, 3> a3 = {5, 6};
+        nel::unused(a3);
         nel::heapless::Array<int, 3> a4 {8, 9};
+        nel::unused(a4);
 
         auto const c1 = nel::heapless::Array<int, 3> {2, 3};
+        nel::unused(c1);
         // wants copy ctor..
         // auto a2 = nel::heapless::Array<int, 3>({});
         nel::heapless::Array<int, 3> const c3 = {5, 6};
+        nel::unused(c3);
         nel::heapless::Array<int, 3> const c4 {8, 9};
+        nel::unused(c4);
     }
 
     {
         // pod: can create using full list, narrowing
         auto a1 = nel::heapless::Array<int8_t, 3> {1, 2, 3};
+        nel::unused(a1);
         // wants copy ctor..
         // auto a2 = nel::heapless::Array<int, 3>({});
         nel::heapless::Array<int8_t, 3> a3 = {5, 6, 7};
+        nel::unused(a3);
         nel::heapless::Array<int8_t, 3> a4 {8, 9, 10};
+        nel::unused(a4);
 
         auto const c1 = nel::heapless::Array<int8_t, 3> {2, 3, 4};
+        nel::unused(c1);
         // wants copy ctor..
         // auto a2 = nel::heapless::Array<int8_t, 3>({});
         nel::heapless::Array<int8_t, 3> const c3 = {5, 6, 7};
+        nel::unused(c3);
         nel::heapless::Array<int8_t, 3> const c4 {8, 9, 10};
+        nel::unused(c4);
     }
 
     {
         // pod: can create using full list, expanding
         auto a1 = nel::heapless::Array<long int, 3> {1, 2, 3};
+        nel::unused(a1);
         // wants copy ctor..
         // auto a2 = nel::heapless::Array<int, 3>({});
         nel::heapless::Array<long int, 3> a3 = {5, 6, 7};
+        nel::unused(a3);
         nel::heapless::Array<long int, 3> a4 {8, 9, 10};
+        nel::unused(a4);
 
         auto const c1 = nel::heapless::Array<long int, 3> {2, 3, 4};
+        nel::unused(c1);
         // wants copy ctor..
         // auto a2 = nel::heapless::Array<long int, 3>({});
         nel::heapless::Array<long int, 3> const c3 = {5, 6, 7};
+        nel::unused(c3);
         nel::heapless::Array<long int, 3> const c4 {8, 9, 10};
+        nel::unused(c4);
     }
 
     //---------------------------------------------------------------
     {
         // udt: can create using full list, implicit ctor
         auto a1 = nel::heapless::Array<Stub, 3> {1, 2, 3};
+        nel::unused(a1);
         // wants copy ctor..
         // auto a2 = nel::heapless::Array<int, 3>({});
         nel::heapless::Array<Stub, 3> a3 = {5, 6, 7};
+        nel::unused(a3);
         nel::heapless::Array<Stub, 3> a4 {8, 9, 10};
+        nel::unused(a4);
 
         auto const c1 = nel::heapless::Array<Stub, 3> {2, 3, 4};
+        nel::unused(c1);
         // wants copy ctor..
         // auto a2 = nel::heapless::Array<long int, 3>({});
         nel::heapless::Array<Stub, 3> const c3 = {5, 6, 7};
+        nel::unused(c3);
         nel::heapless::Array<Stub, 3> const c4 {8, 9, 10};
+        nel::unused(c4);
     }
 }
 
