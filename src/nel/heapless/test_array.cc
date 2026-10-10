@@ -1,9 +1,12 @@
 // -*- mode: c++; indent-tabs-mode: nil; tab-width: 4 -*-
-#include <nel/heapless/array.hh>
+#include "array.hh"
 
-#include <nel/memory.hh> // movestd::()
+#include <nel/memory.hh> // move/forward()
+
+#include <nel/defs.hh> // unused
 
 #include <catch2/catch.hpp>
+#include <catch2/catch2_panic.hh>
 
 namespace nel
 {
@@ -49,8 +52,8 @@ struct Stub
         }
 
         Stub(Stub &&o)
-            : valid(nel::move(o.valid))
-            , val(nel::move(o.val))
+            : valid(move(o.valid))
+            , val(move(o.val))
         {
             // move: moves a value, so does not create a new value.
             // move: moves a value, so does create a value in a new location.
@@ -63,8 +66,8 @@ struct Stub
         {
             // move: moves a value, so does not create a new value.
             // move: moves a value, so does create a value in a new location.
-            val = nel::move(o.val);
-            valid = nel::move(o.valid);
+            val = move(o.val);
+            valid = move(o.valid);
             o.valid = false;
             move_assn += 1;
             return *this;
@@ -96,7 +99,7 @@ TEST_CASE("heapless::Array: move-ctor invalidates src", "[heapless][array]")
 {
     Stub::reset();
     auto arr1 = nel::heapless::Array<Stub, 5>();
-    auto arr2 = nel::move(arr1);
+    auto arr2 = move(arr1);
 
     // all elements of src must be invalidated by move.
     auto arr1_all_invalid
@@ -118,7 +121,7 @@ TEST_CASE("heapless::Array: move-assn invalidates src", "[heapless][array]")
     Stub::reset();
     auto arr1 = nel::heapless::Array<Stub, 5>();
     auto arr2 = nel::heapless::Array<Stub, 5>();
-    arr2 = nel::move(arr1);
+    arr2 = move(arr1);
 
     // all elements of src must be invalidated by move.
     // must call move-assgn oper
@@ -141,7 +144,7 @@ TEST_CASE("heapless::Array::move", "[heapless][array]")
     {
         // array of pods can be move-ctord
         auto a1 = nel::heapless::Array<int, 3>::filled_with(3);
-        auto a2 = nel::move(a1);
+        auto a2 = move(a1);
 
         // moved dst must contain src values..
         auto r = a2.iter().fold(true, [](bool &acc, int const &v) { acc = acc && (v == 3); });
@@ -153,7 +156,7 @@ TEST_CASE("heapless::Array::move", "[heapless][array]")
         // array of pods can be move-assgnd
         auto a2 = nel::heapless::Array<int, 3>::filled_with(3);
         auto a1 = nel::heapless::Array<int, 3>::filled_with(1);
-        a2 = nel::move(a1);
+        a2 = move(a1);
 
         // moved dst must contain src values..
         auto r = a2.iter().fold(true, [](bool &acc, int const &v) { acc = acc && (v == 1); });
@@ -165,6 +168,7 @@ TEST_CASE("heapless::Array::move", "[heapless][array]")
 // how to test that array cannot be copied?
 // it will fail at compile time.
 
+#if 1
 TEST_CASE("heapless::Array::filled_with", "[heapless][array]")
 {
     {
@@ -200,6 +204,7 @@ TEST_CASE("heapless::Array::filled_with", "[heapless][array]")
         REQUIRE(c2.try_get(2).unwrap().val == 1000);
     }
 }
+#endif
 
 // test that init list works..
 // test with pod (int/bool etc)
@@ -317,6 +322,8 @@ TEST_CASE("heapless::Array::try_from(initlist)", "[heapless][array]")
     {
         // must fill array with same value
         auto a1 = nel::heapless::Array<int, 3>::try_from({1, 2, 3});
+        nel::unused(a1);
+
         REQUIRE(a1.is_some());
         auto v1 = a1.unwrap();
         REQUIRE(v1.try_get(0).unwrap() == 1);
@@ -327,12 +334,16 @@ TEST_CASE("heapless::Array::try_from(initlist)", "[heapless][array]")
     {
         // init list too small: must fail
         auto a1 = nel::heapless::Array<int, 3>::try_from({1, 2});
+        nel::unused(a1);
+
         REQUIRE(a1.is_none());
     }
 
     {
         // init list too large: must fail
         auto a1 = nel::heapless::Array<int, 3>::try_from({1, 2, 3, 4});
+        nel::unused(a1);
+
         REQUIRE(a1.is_none());
     }
 }
@@ -346,7 +357,10 @@ TEST_CASE("heapless::Array::is_empty", "[heapless][array]")
     // REQUIRE(a0.is_empty());
 
     // auto a1 = nel::heapless::Array<int, 3>::try_from({0, 0, 0}).unwrap();
+    // nel::unused(a1);
+
     auto a1 = nel::heapless::Array<int, 3>::filled_with(0);
+
     REQUIRE(!a1.is_empty());
 
     // auto const c1 = nel::heapless::Array<int, 3>::try_from({2, 2, 2}).unwrap();
@@ -361,7 +375,10 @@ TEST_CASE("heapless::Array::len", "[heapless][array]")
 
     {
         // auto a1 = nel::heapless::Array<int, 3>::try_from({1, 1, 1}).unwrap();
+        // nel::unused(a1);
+
         auto a1 = nel::heapless::Array<int, 3>::filled_with(1);
+
         REQUIRE(a1.len() == 3);
 
         auto const c1 = nel::heapless::Array<int, 3>::filled_with(1);

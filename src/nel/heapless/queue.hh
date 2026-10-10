@@ -2,7 +2,7 @@
 #if !defined(NEL_HEAPLESS_QUEUE_HH)
 #    define NEL_HEAPLESS_QUEUE_HH
 
-#    include <nel/defs.hh> //NEL_UNUSED, Length
+#    include <nel/defs.hh> //nel::unused, Length
 
 namespace nel
 {
@@ -51,7 +51,7 @@ template<typename T, Length const N>
 struct Queue
 {
     public:
-        typedef T Type;
+        using Type = T;
 
     private:
         Length len_;
@@ -223,18 +223,18 @@ struct Queue
          * @returns if successful, Result<void, T>::Ok()
          * @returns if unsuccessful, Result<void, T>::Err() holding val
          */
-        Result<void, Type> NEL_WARN_UNUSED_RESULT push(Type &&val)
+        Result<Void, Type> push(Type &&val)
         {
 #    if 0
 // TODO: separate out behaviour into sep classes.. (or one with traits)
 // one for failing on full
 // one for dropping oldest on full
-            if (is_full()) { return Result<void, Type>::Err(move(val)); }
+            if (is_full()) { return Err(move(val)); }
             len_ += 1;
             new (ptr(wp_)) Type(move(val));
             wp_ += 1;
             if (wp_ == N) { wp_ = 0; }
-            return Result<void, T>::Ok();
+            return Ok();
 #    else
             if (is_full()) {
                 // here , rp_ == wp_.
@@ -247,7 +247,7 @@ struct Queue
             }
             wp_ += 1;
             if (wp_ >= capacity()) { wp_ = 0; }
-            return Result<void, Type>::Ok();
+            return Ok();
 #    endif
         }
 
@@ -258,9 +258,9 @@ struct Queue
          * @returns if successful, Optional<T>::Some(val)
          * @returns if unsuccessful, Optional<T>::None
          */
-        Optional<Type> pop(void)
+        Optional<Type> pop()
         {
-            if (is_empty()) { return None; }
+            if (is_empty()) { return None(); }
             len_ -= 1;
             auto rp = rp_;
             rp_ += 1;

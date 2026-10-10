@@ -15,9 +15,12 @@ struct Frequency;
 
 #    include <inttypes.h> // uint64_t
 
+namespace nel {
+    namespace time {
+        namespace {
 /**
  * Model time as a secs + fractional where the target platform does not have a
- * native type large enough to handle any time value withot wwrapping around
+ * native type large enough to handle any time value without wrapping around
  * over the lifetime of the product.
  *
  * negative values may be an issue.
@@ -168,6 +171,9 @@ struct Timespec
             return secs >= o.secs || usecs >= o.usecs;
         }
 };
+        }
+    }
+}
 
 namespace nel
 {
@@ -662,5 +668,48 @@ constexpr Frequency Duration::as_frequency() const
 
 } // namespace time
 } // namespace nel
+
+
+// literals, which need to be in the global namespace
+consteval nel::time::Frequency operator ""_Hz(long double v)
+{
+    return nel::time::Frequency::from_unit(v);
+}
+consteval nel::time::Frequency operator ""_kHz(long double v)
+{
+    return nel::time::Frequency::from_kilo(v);
+}
+consteval nel::time::Frequency operator ""_MHz(long double v)
+{
+    return nel::time::Frequency::from_mega(v);
+}
+
+consteval nel::time::Duration operator ""_s(long long unsigned int v)
+{
+    return nel::time::Duration::from_secs(v);
+}
+consteval nel::time::Duration operator ""_ms(long long unsigned int v)
+{
+    return nel::time::Duration::from_millis(v);
+}
+consteval nel::time::Duration operator ""_us(long long unsigned int v)
+{
+    return nel::time::Duration::from_micros(v);
+}
+
+consteval nel::time::Duration operator ""_s(long double v)
+{
+    return nel::time::Duration::from(static_cast<double>(v));
+}
+consteval nel::time::Duration operator ""_ms(long double v)
+{
+    return nel::time::Duration::from(static_cast<double>(v/1000.0));
+}
+consteval nel::time::Duration operator ""_us(long double v)
+{
+    return nel::time::Duration::from(static_cast<double>(v/1000000.0));
+}
+
+
 
 #endif // defined(DURATION_HH)

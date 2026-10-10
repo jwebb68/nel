@@ -4,11 +4,14 @@
 #include <nel/heapless/array.hh>
 #include <nel/panic.hh>
 #include <nel/log.hh>
+#include <nel/memory.hh> // move/forward
 #include <nel/defs.hh>
+
 #include "libnosys_stubs.cx"
 
 typedef nel::heapless::Array<U8Buf<256>, 8> Array1;
 
+#if 0
 void ex1()
 {
     // what should this give?
@@ -235,4 +238,10 @@ int main()
     ex72();
     nel::log << "ex72:e" << '\n';
 #endif
+    return 0;
 }
+#else
+int main() {
+    return 0;
+}
+#endif

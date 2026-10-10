@@ -1,11 +1,13 @@
 // -*- mode: c++; indent-tabs-mode: nil; tab-width: 4 -*-
-#include <nel/time/instant.hh>
+#include "instant.hh"
 
 #include <nel/time/duration.hh>
 
 #include <nel/memory.hh> // move
+#include <nel/defs.hh> // unused
 
 #include <catch2/catch.hpp>
+#include <catch2/catch2_panic.hh>
 
 namespace nel
 {
@@ -14,7 +16,6 @@ namespace test
 namespace instant
 {
 
-using nel::move;
 using nel::time::Instant;
 
 using nel::time::Duration;
@@ -28,14 +29,14 @@ TEST_CASE("Instant::move", "[instant]")
         auto d1 = Instant();
         auto d2 = Instant(move(d1));
 
-        NEL_UNUSED(d2);
+        nel::unused(d2);
     }
 
     {
         auto d1 = Instant();
         auto d2 = move(d1);
 
-        NEL_UNUSED(d2);
+        nel::unused(d2);
     }
 }
 
@@ -45,12 +46,12 @@ TEST_CASE("Instant::copy", "[instant]")
     {
         auto d1 = Instant();
         auto d2 = Instant(d1);
-        NEL_UNUSED(d2);
+        nel::unused(d2);
     }
     {
         auto d1 = Instant();
         auto d2 = d1;
-        NEL_UNUSED(d2);
+        nel::unused(d2);
     }
 }
 
@@ -250,7 +251,7 @@ TEST_CASE("Instant::default", "[instant]")
 {
     // instants can be created without a value.
     auto d1 = Instant();
-    NEL_UNUSED(d1);
+    nel::unused(d1);
 }
 
 // instants cannot be initialised with a value.

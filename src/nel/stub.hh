@@ -80,17 +80,16 @@ struct Stub
             // remember, the dtor of o will be called when it goes out of scope.
             if (&rhs != this) {
                 if (valid && rhs.valid) {
-                    val = nel::move(rhs.val);
+                    val = move(rhs.val);
                     // no new value created.
                 } else if (!valid && rhs.valid) {
-                    // new (&val) int(nel::move(rhs.val));
-                    val = nel::move(rhs.val);
+                    val = move(rhs.val);
                 } else if (!valid && !rhs.valid) {
                     // do nothing
                 } else if (valid && !rhs.valid) {
                     // destruct it.
                 }
-                valid = nel::move(rhs.valid);
+                valid = move(rhs.valid);
                 rhs.valid = false;
                 move_assn += 1;
             }

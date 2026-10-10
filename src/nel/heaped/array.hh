@@ -47,7 +47,7 @@ template<typename T>
 struct Array
 {
     public:
-        typedef T Type;
+        using Type = T;
 
     private:
         typedef Node<Type> ArrayNode;
@@ -91,7 +91,7 @@ struct Array
         // Moving is allowed since it's a fast O(1) op.
         // and does not create any extra resources..
         constexpr Array(Array &&o)
-            : item_(nel::move(o.item_))
+            : item_(move(o.item_))
         {
             o.item_ = nullptr;
         }
@@ -99,7 +99,7 @@ struct Array
         constexpr Array &operator=(Array &&o)
         {
             if (this != &o) {
-                item_ = nel::move(o.item_);
+                item_ = move(o.item_);
                 o.item_ = nullptr;
             }
             return *this;
@@ -127,11 +127,11 @@ struct Array
          *
          * @returns the created array
          */
-        static constexpr Array filled(Type const &f, Count n)
+        static constexpr Array filled(Type const &f, Count n, Context const &ctx = Context())
         {
             if (n == 0) { return Array::empty(); }
             ArrayNode *node = ArrayNode::malloc(n);
-            if (node == nullptr) { nel::panic0(); }
+            if (node == nullptr) { nel::panic(ctx); }
             new (node) ArrayNode(f);
             auto a = Array(node);
             return a;

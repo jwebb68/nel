@@ -1,12 +1,14 @@
 // -*- mode: c++; indent-tabs-mode: nil; tab-width: 4 -*-
-#include <nel/time/timer.hh>
+#include "timer.hh"
 
 #include <nel/time/instant.hh>
 #include <nel/time/duration.hh>
 
 #include <nel/memory.hh> // move
+#include <nel/defs.hh> // unused
 
 #include <catch2/catch.hpp>
+#include <catch2/catch2_panic.hh>
 
 namespace nel
 {
@@ -17,7 +19,6 @@ namespace timer
 
 using nel::time::Timer;
 
-using nel::move;
 using nel::time::Duration;
 using nel::time::Instant;
 
@@ -30,14 +31,14 @@ TEST_CASE("Timer::move", "[timer]")
         auto d1 = Timer(Duration::from_millis(10), Instant());
         auto d2 = Timer(move(d1));
 
-        NEL_UNUSED(d2);
+        nel::unused(d2);
     }
 
     {
         auto d1 = Timer(Duration::from_millis(10), Instant());
         auto d2 = move(d1);
 
-        NEL_UNUSED(d2);
+        nel::unused(d2);
     }
 }
 
@@ -47,12 +48,12 @@ TEST_CASE("Timer::copy", "[timer]")
     {
         auto d1 = Timer(Duration::from_millis(10), Instant());
         auto d2 = Timer(d1);
-        NEL_UNUSED(d2);
+        nel::unused(d2);
     }
     {
         auto d1 = Timer(Duration::from_millis(10), Instant());
         auto d2 = d1;
-        NEL_UNUSED(d2);
+        nel::unused(d2);
     }
 }
 

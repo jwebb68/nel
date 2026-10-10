@@ -152,4 +152,6 @@ int main()
     nel::log << "ex52:b" << '\n';
     ex52();
     nel::log << "ex52:e" << '\n';
+
+    return 0;
 }

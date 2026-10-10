@@ -84,4 +84,5 @@ int main()
     nel::log << "ex1:b" << '\n';
     ex1();
     nel::log << "ex1:e" << '\n';
+    return 0;
 }

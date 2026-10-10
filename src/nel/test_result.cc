@@ -1,8 +1,25 @@
 // -*- mode: c++; indent-tabs-mode: nil; tab-width: 4 -*-
-#include <catch2/catch.hpp>
+#include "result.hh" //nel::ResultT
 
-#include <nel/result.hh> //nel::ResultT
-#include <nel/defs.hh> // NEL_UNUSED
+#include <nel/defs.hh> // unused
+
+#include <iostream>
+
+namespace nel
+{
+namespace test
+{
+namespace result
+{
+struct Error;
+std::ostream &operator<<(std::ostream &outs, Error const &v);
+}
+}
+}
+// because need Error declaring before including catch2 headers.
+#include <catch2/catch.hpp>
+#include <catch2/catch2_panic.hh>
+
 
 namespace nel
 {
@@ -11,930 +28,847 @@ namespace test
 namespace result
 {
 
-typedef enum _Error {
-    NOERROR = 0,
-    FAIL,
-    NOENT
-} Error;
+struct Error {
+    public:
+        enum Tag {
+            NOERROR =0,
+            FAIL,
+            NOENT,
+        };
+    private:
+        Tag v_;
+    public:
+        constexpr Error(Tag const &t): v_(t) {}
+        constexpr operator Tag() const {return v_;}
+    public:
+        constexpr char const *to_str() const {
+            switch (v_) {
+                case NOERROR:
+                    return "Error::NOERROR";
+                    break;
+                case FAIL:
+                    return "Error::FAIL";
+                    break;
+                case NOENT:
+                    return "Error::NOENT";
+                    break;
+                default:
+                    nel::panic();
+            }
+            return "??";
+        }
 
-nel::Log &operator<<(nel::Log &outs, Error const &v)
-{
-    switch (v) {
-        case NOERROR:
-            outs << "NOERROR";
+        friend nel::Log &operator<<(nel::Log &outs, Error const &v) {
+            outs << v.to_str();
             return outs;
-            break;
-        case FAIL:
-            outs << "FAIL";
-            return outs;
-            break;
-        case NOENT:
-            outs << "NOENT";
-            return outs;
-            break;
-        default:
-            std::abort();
-    }
+        }
+};
+
+// addition for catch2.
+std::ostream &operator<<(std::ostream &outs, Error const &v) {
+    outs << v.to_str();
     return outs;
 }
 
-typedef nel::Result<int, Error> TestResult;
+using TestResult = nel::Result<int, Error>;
 
-TEST_CASE("Result::Ok for ok must produce ok", "[result]")
+TEST_CASE("Result() must produce inval", "[result]")
 {
-    auto res = TestResult::Ok(1);
+    auto res = TestResult();
 
-    REQUIRE(res.is_ok());
-    REQUIRE(!res.is_err());
+    auto is = res.is_inval();
 
-    REQUIRE(res.unwrap() == 1);
+    REQUIRE(is);
 }
 
-TEST_CASE("Result::Err for err must produce err", "[result]")
+TEST_CASE("Result(Ok) for ok must produce ok", "[result]")
 {
-    auto res = TestResult::Err(FAIL);
+    auto res = TestResult(Ok(1));
 
-    REQUIRE(!res.is_ok());
-    REQUIRE(res.is_err());
+    SECTION("must mark as ok") {
+        auto is_ok = res.is_ok();
+        REQUIRE(is_ok);
+    }
 
-    REQUIRE(res.unwrap_err() == FAIL);
+    SECTION("must produce value given") {
+        auto v = res.unwrap();
+        REQUIRE(v == 1);
+    }
+}
+
+TEST_CASE("Result(Err) for err must produce err", "[result]")
+{
+    auto res = TestResult(Err(Error(Error::FAIL)));
+
+    SECTION("must mark as err") {
+        auto is_ok = res.is_ok();
+        REQUIRE_FALSE(is_ok);
+    }
+
+    SECTION("must produce value given") {
+        auto v = res.unwrap_err();
+        REQUIRE(v == Error(Error::FAIL));
+    }
 }
 
 TEST_CASE("move(Result)-ctor for ok must move ok to dest", "[result]")
 {
-    auto res = TestResult::Ok(1);
+    auto res = TestResult(Ok(1));
 
     auto res2 = move(res);
 
-    REQUIRE(res2.is_ok());
-    REQUIRE(!res2.is_err());
+    SECTION("dest must now be an ok") {
+        auto is_ok = res2.is_ok();
+        REQUIRE(is_ok);
+    }
 
-    auto val = res2.unwrap();
+    SECTION("value must be moved") {
+        auto val = res2.unwrap();
+        REQUIRE(val == 1);
+    }
 
-    REQUIRE(val == 1);
+    SECTION("src must be invalidated") {
+        auto is_inval = res.is_inval();
+        REQUIRE(is_inval);
+    }
+
+    // TODO: value wrapped must not be destructed.
 }
 
 TEST_CASE("move(Result)-ctor for err must move err to dest", "[result]")
 {
-    auto res = TestResult::Err(FAIL);
+    auto res = TestResult(Err(Error(Error::FAIL)));
 
     auto res2 = move(res);
 
-    REQUIRE(!res2.is_ok());
-    REQUIRE(res2.is_err());
+    SECTION("dest must now be an err") {
+        auto is_ok = res2.is_ok();
+        REQUIRE_FALSE(is_ok);
+    }
 
-    auto val = res2.unwrap_err();
+    SECTION("value must be moved") {
+        auto val = res2.unwrap_err();
+        REQUIRE(val == Error(Error::FAIL));
+    }
 
-    REQUIRE(val == FAIL);
+    SECTION("src must be invalidated") {
+        auto is_inval = res.is_inval();
+        REQUIRE(is_inval);
+    }
+
+    // TODO: value wrapped must not be destructed.
 }
 
-#if 0
-// disabled until panic testing is available
 TEST_CASE("move(Result)-ctor for inval must move inval to dest", "[result]")
 {
-    auto res = TestResult::Err(FAIL);
-    auto res2 = move(res);
-    auto res3 = move(res);
+    auto res = TestResult();
 
-    REQUIRE(!res3.is_ok());
-    REQUIRE(!res3.is_err());
-}
-#endif
-
-#if 0
-// disabled until panic testing is available
-TEST_CASE("move(Result)-ctor for ok must invalidate src", "[result]")
-{
-    auto res = TestResult::Ok(1);
     auto res2 = move(res);
 
-    REQUIRE(!res.is_ok());
-    REQUIRE(!res.is_err());
+    SECTION("dest must now be an inval") {
+        auto is = res2.is_inval();
+        REQUIRE(is);
+    }
+
+    SECTION("src must (still) be invalidated") {
+        auto is_inval = res.is_inval();
+        REQUIRE(is_inval);
+    }
 }
-#endif
-
-#if 0
-// disabled until panic testing is available
-TEST_CASE("move(Result)-ctor for err must invalidate src", "[result]")
-{
-    auto res = TestResult::Err(FAIL);
-    auto res2 = move(res);
-
-    REQUIRE(!res.is_ok());
-    REQUIRE(!res.is_err());
-}
-#endif
-
-#if 0
-// disabled until panic testing is available
-TEST_CASE("move(Result)-ctor for inval must invalidate src", "[result]")
-{
-    auto res = TestResult::Err(FAIL);
-    auto res2 = move(res);
-    auto res3 = move(res);
-
-    REQUIRE(!res.is_ok());
-    REQUIRE(!res.is_err());
-}
-#endif
 
 TEST_CASE("move(Result)-ass for ok must move ok val to dest", "[result]")
 {
-    auto res = TestResult::Ok(1);
+    auto res = TestResult(Ok(1));
 
-    auto res2 = TestResult::Ok(2);
+    // TODO: test dest has ok,err,inval
+    auto res2 = TestResult();
+
     res2 = move(res);
 
-    REQUIRE(res2.is_ok());
-    REQUIRE(!res2.is_err());
+    SECTION("dest must now be an ok") {
+        auto is_ok = res2.is_ok();
+        REQUIRE(is_ok);
+    }
 
-    auto val = res2.unwrap();
-    REQUIRE(val == 1);
+    SECTION("dest must have src old value") {
+        auto val = res2.unwrap();
+        REQUIRE(val == 1);
+    }
+
+    SECTION("src must be invalidated") {
+        auto is_inval = res.is_inval();
+        REQUIRE(is_inval);
+    }
+
+    // TODO: value wrapped must not be destructed.
 }
 
 TEST_CASE("move(Result)-ass for err must move err val to dest", "[result]")
 {
-    auto res = TestResult::Err(FAIL);
+    auto res = TestResult(Err(Error(Error::FAIL)));
 
-    auto res2 = TestResult::Ok(2);
+    auto res2 = TestResult();
+
     res2 = move(res);
 
-    REQUIRE(!res2.is_ok());
-    REQUIRE(res2.is_err());
+    SECTION("dest must now be an err") {
+        auto is_ok = res2.is_ok();
+        REQUIRE_FALSE(is_ok);
+    }
 
-    auto val = res2.unwrap_err();
-    REQUIRE(val == FAIL);
+    SECTION("dest must have src old value") {
+        auto val = res2.unwrap_err();
+        REQUIRE(val == Error(Error::FAIL));
+    }
+
+    SECTION("src must be invalidated") {
+        auto is_inval = res.is_inval();
+        REQUIRE(is_inval);
+    }
+
+    // TODO: value wrapped must be moved once (into res2).
 }
 
-#if 0
-// disabled until panic testing is available
 TEST_CASE("move(Result)-ass for inval must move inval to dest", "[result]")
 {
-    auto res = TestResult::Err(FAIL);
-    auto res2 = TestResult::Ok(2);
-    res2 = move(res);
+    // this propagation of inval, which is ok since it's not being
+    // compared against.
+    auto res1 = TestResult();
 
-    auto res3 = TestResult::Ok(3);
+    auto res2 = TestResult(Ok(2));
 
-    res3 = move(res);
+    res2 = move(res1);
 
-    REQUIRE(!res3.is_ok());
-    REQUIRE(!res3.is_err());
+    SECTION("dest must now be an inval") {
+        auto is = res2.is_inval();
+        REQUIRE(is);
+    }
+
+    SECTION("src must be invalidated") {
+        auto is_inval = res1.is_inval();
+        REQUIRE(is_inval);
+    }
 }
-#endif
 
-#if 0
-// disabled until panic testing is available
-TEST_CASE("move(Result)-ass for ok must invalidate src", "[result]")
+TEST_CASE("Result.ok for ok must produce some containing ok val", "[result]")
 {
-    auto res = TestResult::Ok(1);
-    auto res2 = TestResult::Ok(2);
-
-    res2 = move(res);
-
-    REQUIRE(!res.is_ok());
-    REQUIRE(!res.is_err());
-}
-#endif
-
-#if 0
-// disabled until panic testing is available
-TEST_CASE("move(Result)-ass for err must invalidate src", "[result]")
-{
-    auto res = TestResult::Err(FAIL);
-    auto res2 = TestResult::Ok(2);
-
-    res2 = move(res);
-
-    REQUIRE(!res.is_ok());
-    REQUIRE(!res.is_err());
-}
-#endif
-
-#if 0
-// disabled until panic testing is available
-TEST_CASE("move(Result)-ass for inval must invalidate src", "[result]")
-{
-    auto res = TestResult::Err(FAIL);
-    auto res2 = TestResult::Ok(2);
-    res2 = move(res);
-
-    auto res3 = TestResult::Ok(3);
-
-    res3 = move(res);
-
-    REQUIRE(!res.is_ok());
-    REQUIRE(!res.is_err());
-}
-#endif
-
-TEST_CASE("Result.ok for ok must produce ok val", "[result]")
-{
-    auto res = TestResult::Ok(1);
+    auto res = TestResult(Ok(1));
     auto val = res.ok();
 
-    REQUIRE(val.unwrap() == 1);
-}
+    SECTION("must produce an Optional(Some())") {
+        auto is_some = val.is_some();
+        REQUIRE(is_some);
+    }
 
-TEST_CASE("Result.ok for ok must not produce none", "[result]")
-{
-    auto res = TestResult::Ok(1);
-    auto val = res.ok();
+    SECTION("result must hold result's value") {
+        // TODO: value wrapped must be moved once (into val).
 
-    REQUIRE(val.is_some());
-    REQUIRE(!val.is_none());
+        auto v = val.unwrap();
+        REQUIRE(v == 1);
+    }
+
+    SECTION("src must be invalidated") {
+        auto is_inval = res.is_inval();
+        REQUIRE(is_inval);
+    }
 }
 
 TEST_CASE("Result.ok for err must produce none", "[result]")
 {
-    auto res = TestResult::Err(FAIL);
+    auto res = TestResult(Err(Error(Error::FAIL)));
+
     auto val = res.ok();
 
-    REQUIRE(!val.is_some());
-    REQUIRE(val.is_none());
+    SECTION("must produce a None") {
+        auto is_none = val.is_none();
+        REQUIRE(is_none);
+    }
+
+    SECTION("src must be invalidated") {
+        auto is_inval = res.is_inval();
+        REQUIRE(is_inval);
+    }
+
+    // TODO: value wrapped must be destructed.
 }
 
-#if 0
-// disabled until panic testing is available
 TEST_CASE("Result.ok for inval must panic", "[result]")
 {
-    auto res = TestResult::Err(FAIL);
-    auto res2 = move(res);
+    auto res = TestResult();
 
-    // should panic here..
-    auto val = res.ok();
-
-    REQUIRE(!res.is_ok());
-    REQUIRE(!res.is_err());
+    REQUIRE_PANIC(res.ok());
 }
-#endif
-
-#if 0
-// disabled until panic testing is available
-TEST_CASE("Result.ok for ok must invalidate src", "[result]")
-{
-    auto res = TestResult::Ok(1);
-
-    auto val = res.ok();
-    NEL_UNUSED(val);
-
-    REQUIRE(!res.is_ok());
-    REQUIRE(!res.is_err());
-}
-#endif
-
-#if 0
-// disabled until panic testing is available
-TEST_CASE("Result.ok for err must invalidate src", "[result]")
-{
-    auto res = TestResult::Err(FAIL);
-
-    auto val = res.ok();
-    NEL_UNUSED(val);
-
-    REQUIRE(!res.is_ok());
-    REQUIRE(!res.is_err());
-}
-#endif
-
-#if 0
-// disabled until panic catching/suppression is available.
-TEST_CASE("Result.ok for inval must invalidate src", "[result]")
-{
-    auto res = TestResult::Err(FAIL);
-    auto res2 = move(res);
-
-    auto val = res.ok();
-    NEL_UNUSED(val);
-
-    REQUIRE(!res.is_ok());
-    REQUIRE(!res.is_err());
-}
-#endif
 
 TEST_CASE("Result.err for ok must produce none", "[result]")
 {
-    auto res = TestResult::Ok(1);
+    auto res = TestResult(Ok(1));
+
     auto val = res.err();
 
-    REQUIRE(val.is_none());
-    REQUIRE(!val.is_some());
+    SECTION("must produce an Optional(None)") {
+        auto is_none = val.is_none();
+        REQUIRE(is_none);
+    }
+
+    SECTION("src must be invalidated") {
+        auto is_inval = res.is_inval();
+        REQUIRE(is_inval);
+    }
+
+    // TODO: value wrapped must be destructed.
 }
 
-TEST_CASE("Result.err for err must produce err val", "[result]")
+TEST_CASE("Result.err for err must produce some containing err val", "[result]")
 {
-    auto res = TestResult::Err(FAIL);
+    auto res = TestResult(Err(Error(Error::FAIL)));
+
     auto val = res.err();
 
-    REQUIRE(val.unwrap() == FAIL);
+    SECTION("must produce a Some()") {
+        auto is_some = val.is_some();
+        REQUIRE(is_some);
+    }
+
+    SECTION("result must contain original value") {
+        // TODO: value wrapped must be moved once (into val).
+
+        auto v = val.unwrap();
+        REQUIRE(v == Error(Error::FAIL));
+    }
+
+    SECTION("src must be invalidated") {
+        auto is_inval = res.is_inval();
+        REQUIRE(is_inval);
+    }
 }
 
-TEST_CASE("Result.err for err must not produce none", "[result]")
-{
-    auto res = TestResult::Err(FAIL);
-    auto val = res.err();
-
-    REQUIRE(!val.is_none());
-    REQUIRE(val.is_some());
-}
-
-#if 0
-// disabled until panic detection is available.
 TEST_CASE("Result.err for inval must panic", "[result]")
 {
-    auto res = TestResult::Ok(1);
-    auto res2 = move(res);
+    auto res = TestResult();
 
-    auto val = res.err();
-
+    REQUIRE_PANIC(res.err());
 }
-#endif
-
-#if 0
-// disabled until panic testing is available
-TEST_CASE("Result.err for ok must invalidate src", "[result]")
-{
-    auto res = TestResult::Ok(1);
-
-    auto val = res.err();
-    NEL_UNUSED(val);
-
-    REQUIRE(!res.is_ok());
-    REQUIRE(!res.is_err());
-}
-#endif
-
-#if 0
-// disabled until panic testing is available
-TEST_CASE("Result.err for err must invalidate src", "[result]")
-{
-    auto res = TestResult::Err(FAIL);
-
-    auto val = res.err();
-    NEL_UNUSED(val);
-
-    REQUIRE(!res.is_ok());
-    REQUIRE(!res.is_err());
-}
-#endif
-
-#if 0
-// disabled until panic suppression is avail.
-TEST_CASE("Result.err for inval must invalidate src", "[result]")
-{
-    auto res = TestResult::Err(FAIL);
-    auto res2 = move(res);
-
-    auto val = res.err();
-    NEL_UNUSED(val);
-
-    REQUIRE(!res.is_ok());
-    REQUIRE(!res.is_err());
-}
-#endif
 
 TEST_CASE("Result.is_ok for ok must give true", "[result]")
 {
-    auto res = TestResult::Ok(1);
+    auto res = TestResult(Ok(1));
 
-    REQUIRE(res.is_ok());
+    auto is = res.is_ok();
+
+    SECTION("must give true") {
+        REQUIRE(is);
+    }
+
+    SECTION("must stay an ok") {
+        auto is_ok = res.is_ok();
+        REQUIRE(is_ok);
+    }
+
+    SECTION("must not alter the value") {
+        auto v = res.unwrap();
+        REQUIRE(v == 1);
+    }
 }
 
 TEST_CASE("Result.is_ok for err must give false", "[result]")
 {
-    auto res = TestResult::Err(FAIL);
+    auto res = TestResult(Err(Error(Error::FAIL)));
 
-    REQUIRE(!res.is_ok());
+    auto is = res.is_ok();
+
+    SECTION("must give false") {
+        REQUIRE_FALSE(is);
+    }
+
+    SECTION("must stay an err") {
+        auto is_err = res.is_err();
+        REQUIRE(is_err);
+    }
+
+    SECTION("must not alter the value") {
+        auto v = res.unwrap_err();
+        REQUIRE(v == Error(Error::FAIL));
+    }
 }
 
-#if 0
-// disabled until panic testing is available
 TEST_CASE("Result.is_ok for inval must panic", "[result]")
 {
-    auto res = TestResult::Ok(1);
-    auto res2 = move(res);
+    auto res = TestResult();
 
-    REQUIRE(!res.is_ok());
+    // must panic here..
+    // why?
+    REQUIRE_PANIC(res.is_ok());
 }
-#endif
-
-TEST_CASE("Result.is_ok for ok must not alter src", "[result]")
-{
-    auto res = TestResult::Ok(1);
-
-    auto is_ok = res.is_ok();
-    NEL_UNUSED(is_ok);
-
-    REQUIRE(res.unwrap() == 1);
-}
-
-TEST_CASE("Result.is_ok for err must not alter src", "[result]")
-{
-    auto res = TestResult::Err(FAIL);
-
-    auto is_ok = res.is_ok();
-    NEL_UNUSED(is_ok);
-
-    REQUIRE(res.unwrap_err() == FAIL);
-}
-
-#if 0
-// disabled until panic testing is available
-TEST_CASE("Result.is_ok for inval must not alter src", "[result]")
-{
-    auto res = TestResult::Ok(1);
-    auto res2 = move(res);
-
-    auto is_ok = res.is_ok();
-    NEL_UNUSED(is_ok);
-
-    REQUIRE(!res.is_ok());
-    REQUIRE(!res.is_err());
-}
-#endif
 
 TEST_CASE("Result.is_err for ok must give false", "[result]")
 {
-    auto res = TestResult::Ok(1);
+    auto res = TestResult(Ok(1));
 
-    REQUIRE(!res.is_err());
+    auto is = res.is_err();
+
+    SECTION("must give false") {
+        REQUIRE_FALSE(is);
+    }
+
+    SECTION("must stay an ok") {
+        auto is_ok = res.is_ok();
+        REQUIRE(is_ok);
+    }
+
+    SECTION("must not alter the value") {
+        auto v = res.unwrap();
+        REQUIRE(v == 1);
+    }
 }
 
 TEST_CASE("Result.is_err for err must give true", "[result]")
 {
-    auto res = TestResult::Err(FAIL);
+    auto res = TestResult(Err(Error(Error::FAIL)));
 
-    REQUIRE(res.is_err());
+    auto is = res.is_err();
+
+    SECTION("must give true") {
+        REQUIRE(is);
+    }
+
+    SECTION("must stay an err") {
+        auto is_err = res.is_err();
+        REQUIRE(is_err);
+    }
+
+    SECTION("must not alter the value") {
+        auto v = res.unwrap_err();
+        REQUIRE(v == Error(Error::FAIL));
+    }
 }
 
-#if 0
-// disabled until panic testing is available
 TEST_CASE("Result.is_err for inval must panic", "[result]")
 {
-    auto res = TestResult::Ok(1);
-    auto res2 = move(res);
+    auto res = TestResult();
 
-    REQUIRE(!res.is_err());
+    // must panic here..
+    // why?
+    REQUIRE_PANIC(res.is_err());
 }
-#endif
+
+TEST_CASE("Result.is_inval for ok must return false", "[result]")
+{
+    auto res = TestResult(Ok(1));
+
+    auto is = res.is_inval();
+
+    SECTION("must give false") {
+        REQUIRE_FALSE(is);
+    }
+
+    SECTION("must stay an ok") {
+        auto is_ok = res.is_ok();
+        REQUIRE(is_ok);
+    }
+
+    SECTION("must not alter the value") {
+        auto v = res.unwrap();
+        REQUIRE(v == 1);
+    }
+
+}
+
+TEST_CASE("Result.is_inval for err must return false", "[result]")
+{
+    auto res = TestResult(Err(Error(Error::FAIL)));
+
+    auto is = res.is_inval();
+
+    SECTION("must give false") {
+        REQUIRE_FALSE(is);
+    }
+
+    SECTION("must stay an err") {
+        auto is_err = res.is_err();
+        REQUIRE(is_err);
+    }
+
+    SECTION("must not alter the value") {
+        auto v = res.unwrap_err();
+        REQUIRE(v == Error(Error::FAIL));
+    }
+}
+
+TEST_CASE("Result.is_inval for inval must return true", "[result]")
+{
+    auto res = TestResult();
+
+    auto is = res.is_inval();
+
+    SECTION("must give true") {
+        REQUIRE(is);
+    }
+
+    SECTION("must stay an inval") {
+        auto is_inval = res.is_inval();
+        REQUIRE(is_inval);
+    }
+}
+
 
 TEST_CASE("Result.unwrap for Ok must give ok value", "[result]")
 {
-    auto res = TestResult::Ok(1);
+    auto res = TestResult(Ok(1));
 
     auto val = res.unwrap();
 
-    REQUIRE(val == 1);
+    SECTION("must return wrapped value") {
+        REQUIRE(val == 1);
+    }
+
+    SECTION("must invalidate src") {
+        auto is_inval = res.is_inval();
+        REQUIRE(is_inval);
+    }
+
+    // TODO: value wrapped must be moved once (into val).
 }
 
-#if 0
-// disabled until panic testing is available
-TEST_CASE("Result.unwrap for Ok must invalidate src", "[result]")
+TEST_CASE("Result.unwrap for err must panic", "[result]")
 {
-    auto res = TestResult::Ok(1);
+    auto res = TestResult(Err(Error(Error::FAIL)));
 
-    auto val = res.unwrap();
-    NEL_UNUSED(val);
-
-    REQUIRE(!res.is_ok());
-    REQUIRE(!res.is_err());
-}
-#endif
-
-// disabled until panic detection is available.
-TEST_CASE("Result.unwrap for err aborts", "[result]")
-{
-    auto res = TestResult::Err(FAIL);
     REQUIRE_PANIC(res.unwrap());
 }
 
-#if 0
-// disabled until panic detection is available.
-TEST_CASE("Result.unwrap for inval aborts", "[result]")
+TEST_CASE("Result.unwrap for inval must panic", "[result]")
 {
-    auto res = TestResult::Ok(1);
-    auto res2 = move(res);
+    auto res = TestResult();
 
-    auto val = res.unwrap();
-
-    // don't know how to test aborts
-    REQUIRE(true ?);
+    REQUIRE_PANIC(res.unwrap());
 }
-#endif
 
 TEST_CASE("Result.unwrap_err for err must give err value", "[result]")
 {
-    auto res = TestResult::Err(FAIL);
+    auto res = TestResult(Err(Error(Error::FAIL)));
 
     auto val = res.unwrap_err();
 
-    REQUIRE(val == FAIL);
+    SECTION("must give wrapped value") {
+        REQUIRE(val == Error(Error::FAIL));
+    }
+
+    SECTION("must invalidate src") {
+        auto is_inval = res.is_inval();
+        REQUIRE(is_inval);
+    }
+
+    // TODO: value wrapped must be moved once (into val).
 }
 
-#if 0
-// disabled until panic testing is available
-TEST_CASE("Result.unwrap_err for err must invalidate src", "[result]")
+TEST_CASE("Result.unwrap_err for ok must panic", "[result]")
 {
-    auto res = TestResult::Err(FAIL);
+    auto res = TestResult(Ok(1));
 
-    auto val = res.unwrap_err();
-    NEL_UNUSED(val);
-
-    REQUIRE(!res.is_ok());
-    REQUIRE(!res.is_err());
+    REQUIRE_PANIC(res.unwrap_err());
 }
-#endif
 
-#if 0
-// disabled until panic detection is available.
-TEST_CASE("Result.unwrap_err for ok aborts", "[result]")
+
+TEST_CASE("Result.unwrap_err for inval must panic", "[result]")
 {
-    auto res = TestResult::Ok(1);
+    auto res = TestResult();
 
-    auto val = res.unwrap_err();
-
-    // don't know how to test aborts
-    REQUIRE(true ?);
+    REQUIRE_PANIC(res.unwrap());
 }
-
-
-TEST_CASE("Result.unwrap_err for inval aborts", "[result]")
-{
-    auto res = TestResult::Ok(1);
-    auto res2 = move(res);
-
-    auto val = res.unwrap();
-
-    // don't know how to test aborts
-    REQUIRE(true ?);
-}
-#endif
 
 TEST_CASE("Result.unwrap_or for ok must give ok value", "[result]")
 {
-    auto res = TestResult::Ok(1);
+    auto res = TestResult(Ok(1));
 
     auto val = res.unwrap_or(2);
 
-    REQUIRE(val == 1);
+    SECTION("must give wrapped value") {
+        REQUIRE(val == 1);
+    }
+
+    SECTION("must invalidate src") {
+        auto is_inval = res.is_inval();
+        REQUIRE(is_inval);
+    }
+
+    // TODO: value wrapped must be moved once (into val).
+
 }
 
 TEST_CASE("Result.unwrap_or for err must give or value", "[result]")
 {
-    auto res = TestResult::Err(FAIL);
+    auto res = TestResult(Err(Error(Error::FAIL)));
 
     auto val = res.unwrap_or(2);
 
-    REQUIRE(val == 2);
+    SECTION("must give the 'or' value") {
+        REQUIRE(val == 2);
+    }
+
+    SECTION("must invalidate src") {
+        auto is_inval = res.is_inval();
+        REQUIRE(is_inval);
+    }
+
+    // TODO: value wrapped must be destructed.
 }
 
-#if 0
-// disabled until panic detection is available.
-TEST_CASE("Result.unwrap_or for invalid must give or value", "[result]")
+TEST_CASE("Result.unwrap_or for invalid must panic", "[result]")
 {
-    auto res = TestResult::Err(FAIL);
-    auto res2 = move(res);
+    auto res = TestResult();
 
-    auto val = res.unwrap_or(2);
-
-    REQUIRE(val == 2);
+    // panics since it's a use of an invalid.
+    REQUIRE_PANIC(res.unwrap_or(2));
 }
-#endif
-
-#if 0
-// disabled until panic testing is available
-TEST_CASE("Result.unwrap_or for ok must invalidate src", "[result]")
-{
-    auto res = TestResult::Ok(1);
-
-    auto val = res.unwrap_or(2);
-    NEL_UNUSED(val);
-
-    REQUIRE(!res.is_ok());
-    REQUIRE(!res.is_err());
-}
-#endif
-
-#if 0
-// disabled until panic detection is available.
-TEST_CASE("Result.unwrap_or for err must invalidate src", "[result]")
-{
-    auto res = TestResult::Err(FAIL);
-
-    auto val = res.unwrap_or(2);
-    NEL_UNUSED(val);
-
-    REQUIRE(!res.is_ok());
-    REQUIRE(!res.is_err());
-}
-
-TEST_CASE("Result.unwrap_or for invalid must stay invalid", "[result]")
-{
-    auto res = TestResult::Err(FAIL);
-    auto res2 = move(res);
-
-    auto val = res.unwrap_or(2);
-    NEL_UNUSED(val);
-
-    REQUIRE(!res.is_ok());
-    REQUIRE(!res.is_err());
-}
-#endif
 
 TEST_CASE("Result.unwrap_err_or for ok must give or value", "[result]")
 {
-    auto res = TestResult::Ok(1);
+    auto res = TestResult(Ok(1));
 
-    auto val = res.unwrap_err_or(FAIL);
+    auto val = res.unwrap_err_or(Error::FAIL);
 
-    REQUIRE(val == FAIL);
+    SECTION("must give 'or' value") {
+        REQUIRE(val == Error(Error::FAIL));
+    }
+
+    SECTION("must invalidate src") {
+        auto is_inval = res.is_inval();
+        REQUIRE(is_inval);
+    }
+
+    // TODO: value wrapped must be destructed.
 }
 
 TEST_CASE("Result.unwrap_err_or for err must give err value", "[result]")
 {
-    auto res = TestResult::Err(FAIL);
+    auto res = TestResult(Err(Error(Error::FAIL)));
 
-    auto val = res.unwrap_err_or(NOENT);
+    auto val = res.unwrap_err_or(Error::NOENT);
 
-    REQUIRE(val == FAIL);
+    SECTION("must give wrapped value") {
+        REQUIRE(val == Error(Error::FAIL));
+    }
+
+    SECTION("must invalidate src") {
+        auto is_inval = res.is_inval();
+        REQUIRE(is_inval);
+    }
+
+    // TODO: value wrapped must be moved once.
 }
 
-#if 0
-// disabled until panic detection is available.
-TEST_CASE("Result.unwrap_err_or for invalid must give or value", "[result]")
+TEST_CASE("Result.unwrap_err_or for invalid must panic", "[result]")
 {
-    auto res = TestResult::Err(FAIL);
-    auto res2 = move(res);
+    auto res = TestResult();
 
-    auto val = res.unwrap_err_or(NOENT);
-
-    REQUIRE(val == NOENT);
+    REQUIRE_PANIC(res.unwrap_err_or(Error::NOENT));
 }
-#endif
 
-#if 0
-// disabled until panic testing is available
-TEST_CASE("Result.unwrap_err_or for ok must invalidate src", "[result]")
-{
-    auto res = TestResult::Ok(1);
-
-    auto val = res.unwrap_err_or(FAIL);
-    NEL_UNUSED(val);
-
-    REQUIRE(!res.is_ok());
-    REQUIRE(!res.is_err());
-}
-#endif
-
-#if 0
-// disabled until panic testing is available
-TEST_CASE("Result.unwrap_err_or for err must invalidate src", "[result]")
-{
-    auto res = TestResult::Err(FAIL);
-
-    auto val = res.unwrap_err_or(NOENT);
-    NEL_UNUSED(val);
-
-    REQUIRE(!res.is_ok());
-    REQUIRE(!res.is_err());
-}
-#endif
-
-#if 0
-// disabled until panic detection is available.
-TEST_CASE("Result.unwrap_err_or for invalid must invalidate src", "[result]")
-{
-    auto res = TestResult::Err(FAIL);
-    auto res2 = move(res);
-
-    auto val = res.unwrap_err_or(NOENT);
-    NEL_UNUSED(val);
-
-    REQUIRE(!res.is_ok());
-    REQUIRE(!res.is_err());
-}
-#endif
 
 bool map1(int const &e)
 {
-    NEL_UNUSED(e);
+    nel::unused(e);
     return true;
 }
 
 TEST_CASE("Result.map for ok must change ok val", "[result]")
 {
-    auto res = TestResult::Ok(1);
+    auto res = TestResult(Ok(1));
 
-    // TODO: nasty, want bool to be auto-inferred as it's the return type of
-    // map1, i.e. want res.map(map1).unwrap();
-    nel::Result<bool, _Error> res2 = res.map<bool>(map1);
-    auto val = res2.unwrap();
-    REQUIRE(val == true);
+    SECTION("using ptr-to-func") {
+        // TODO: nasty, want bool to be auto-inferred as it's the return type of
+        // map1, i.e. want res.map(map1).unwrap();
+        auto res2 = res.map<bool>(map1);
 
-    // auto res3 = res.map<bool>([](int const &e)->bool {return e==1;});
-    // auto val2 = res3.unwrap();
-    // REQUIRE(val2 == true);
+        SECTION("must invalidate src") {
+            auto is_inval = res.is_inval();
+            REQUIRE(is_inval);
+        }
+
+        SECTION("value must be mapped to expected value") {
+            auto val = res2.unwrap();
+            REQUIRE(val);
+        }
+    }
+
+    SECTION("using closure") {
+        // TODO: nasty, want bool to be auto-inferred as it's the return type of
+        // map1, i.e. want res.map(map1).unwrap();
+        auto res2 = res.map<bool>([](int const &e)->bool {return e == 1;});
+
+        SECTION("must invalidate src") {
+            auto is_inval = res.is_inval();
+            REQUIRE(is_inval);
+        }
+
+        SECTION("value must be mapped to expected value") {
+            auto val = res2.unwrap();
+            REQUIRE(val);
+        }
+    }
 }
 
 TEST_CASE("Result.map for err must not change err val", "[result]")
 {
-    auto res = TestResult::Err(FAIL);
+    auto res = TestResult(Err(Error(Error::FAIL)));
 
-    // TODO: nasty, want bool to be auto-inferred as it's the return type of
-    // map1, i.e. want res.map(map1).unwrap();
-    auto res2 = res.map<bool>(map1);
+    SECTION("using ptr-to-func") {
+        // TODO: nasty, want bool to be auto-inferred as it's the return type of
+        // map1, i.e. want res.map(map1).unwrap();
+        auto res2 = res.map<bool>(map1);
 
-    auto val = res2.unwrap_err();
+        SECTION("must invalidate src") {
+            auto is_inval = res.is_inval();
+            REQUIRE(is_inval);
+        }
 
-    REQUIRE(val == FAIL);
+        SECTION("value must not be changed") {
+            auto val = res2.unwrap_err();
+            REQUIRE(val == Error(Error::FAIL));
+        }
+    }
+
+    SECTION("using closure") {
+        // TODO: nasty, want bool to be auto-inferred as it's the return type of
+        // map1, i.e. want res.map(map1).unwrap();
+        auto res2 = res.map<bool>([](int const &e)->bool {return e == 1;});
+
+        SECTION("must invalidate src") {
+            auto is_inval = res.is_inval();
+            REQUIRE(is_inval);
+        }
+
+        SECTION("value must not be changed") {
+            auto val = res2.unwrap_err();
+            REQUIRE(val == Error(Error::FAIL));
+        }
+    }
 }
 
-#if 0
-// disabled until panic detection is available.
-TEST_CASE("Result.map for inval must stay inval", "[result]")
+TEST_CASE("Result.map for inval must panic", "[result]")
 {
-    auto res = TestResult::Err(FAIL);
-    auto res2 = move(res);
+    auto res = TestResult();
 
-    // TODO: nasty, want bool to be auto-inferred as it's the return type of
-    // map1, i.e. want res.map(map1).unwrap();
-    auto res3 = res.map<bool>(map1);
-
-    REQUIRE(!res3.is_ok());
-    REQUIRE(!res3.is_err());
+    REQUIRE_PANIC(res.map<bool>(map1));
 }
-#endif
 
-#if 0
-// disabled until panic testing is available
-TEST_CASE("Result.map for ok must invalidate src", "[result]")
-{
-    auto res = TestResult::Ok(1);
-
-    // TODO: nasty, want bool to be auto-inferred as it's the return type of
-    // map1, i.e. want res.map(map1).unwrap();
-    auto res2 = res.map<bool>(map1);
-    NEL_UNUSED(res2);
-
-    REQUIRE(!res.is_ok());
-    REQUIRE(!res.is_err());
-}
-#endif
-
-#if 0
-// disabled until panic testing is available
-TEST_CASE("Result.map for err must invalidate src", "[result]")
-{
-    auto res = TestResult::Err(FAIL);
-
-    // TODO: nasty, want bool to be auto-inferred as it's the return type of
-    // map1, i.e. want res.map(map1).unwrap();
-    auto res2 = res.map<bool>(map1);
-    NEL_UNUSED(res2);
-
-    REQUIRE(!res.is_ok());
-    REQUIRE(!res.is_err());
-}
-#endif
-
-#if 0
-// disabled until panic detection is available.
-TEST_CASE("Result.map for inval must invalidate src", "[result]")
-{
-    auto res = TestResult::Err(FAIL);
-    auto res2 = move(res);
-
-    // TODO: nasty, want bool to be auto-inferred as it's the return type of
-    // map1, i.e. want res.map(map1).unwrap();
-    auto res3 = res.map<bool>(map1);
-    NEL_UNUSED(res3);
-
-    REQUIRE(!res.is_ok());
-    REQUIRE(!res.is_err());
-}
-#endif
 
 const char *bar = "bar";
 
 const char *map2(const Error &e)
 {
-    NEL_UNUSED(e);
+    nel::unused(e);
     return bar;
 }
 
 TEST_CASE("Result.map_err for ok must not change ok val", "[result]")
 {
-    auto res = TestResult::Ok(1);
+    auto res = TestResult(Ok(1));
 
-    // TODO: nasty, want bool to be auto-inferred as it's the return type of
-    // map1, i.e. want res.map(map1).unwrap();
-    auto res2 = res.map_err<const char *>(map2);
+    SECTION("using ptr-to-func") {
+        // TODO: nasty, want bool to be auto-inferred as it's the return type of
+        // map1, i.e. want res.map(map1).unwrap();
+        auto res2 = res.map_err<char const *>(map2);
 
-    auto val = res2.unwrap();
+        SECTION("must invalidate src") {
+            auto is_inval = res.is_inval();
+            REQUIRE(is_inval);
+        }
 
-    REQUIRE(val == 1);
+        SECTION("value must not be changed") {
+            auto val = res2.unwrap();
+            REQUIRE(val == 1);
+        }
+    }
+
+    SECTION("using closure") {
+        // TODO: nasty, want bool to be auto-inferred as it's the return type of
+        // map1, i.e. want res.map(map1).unwrap();
+        auto res2 = res.map_err<char const *>([](Error const &/*e*/)->char const * {return bar;});
+
+        SECTION("must invalidate src") {
+            auto is_inval = res.is_inval();
+            REQUIRE(is_inval);
+        }
+
+        SECTION("value must not be changed") {
+            auto val = res2.unwrap();
+            REQUIRE(val == 1);
+        }
+    }
 }
 
 TEST_CASE("Result.map_err for err must change err val", "[result]")
 {
-    auto res = TestResult::Err(FAIL);
+    auto res = TestResult(Err(Error(Error::FAIL)));
 
-    // TODO: nasty, want bool to be auto-inferred as it's the return type of
-    // map1, i.e. want res.map(map1).unwrap();
-    auto res2 = res.map_err<const char *>(map2);
+    SECTION("using ptr-to-func") {
+        // TODO: nasty, want bool to be auto-inferred as it's the return type of
+        // map1, i.e. want res.map(map1).unwrap();
+        auto res2 = res.map_err<char const *>(map2);
 
-    auto val = res2.unwrap_err();
+        SECTION("must invalidate src") {
+            auto is_inval = res.is_inval();
+            REQUIRE(is_inval);
+        }
 
-    REQUIRE(val == bar);
+        SECTION("value must change value") {
+            auto val = res2.unwrap_err();
+            REQUIRE(val == bar);
+        }
+    }
+
+    SECTION("using closure") {
+        // TODO: nasty, want bool to be auto-inferred as it's the return type of
+        // map1, i.e. want res.map(map1).unwrap();
+        auto res2 = res.map_err<char const *>([](Error const &/*e*/)->char const * {return bar;});
+
+        SECTION("must invalidate src") {
+            auto is_inval = res.is_inval();
+            REQUIRE(is_inval);
+        }
+
+        SECTION("value must change value") {
+            auto val = res2.unwrap_err();
+            REQUIRE(val == bar);
+        }
+    }
 }
 
-#if 0
-// disabled until panic detection is available.
-TEST_CASE("Result.map_err for inval must stay inval", "[result]")
+TEST_CASE("Result.map_err for inval must panic", "[result]")
 {
-    auto res = TestResult::Err(FAIL);
-    auto res2 = move(res);
+    auto res = TestResult();
 
     // TODO: nasty, want bool to be auto-inferred as it's the return type of
     // map1, i.e. want res.map(map1).unwrap();
-    auto res3 = res.map_err<const char *>(map2);
-
-    REQUIRE(!res3.is_ok());
-    REQUIRE(!res3.is_err());
+    REQUIRE_PANIC(res.map_err<const char *>(map2));
 }
-#endif
 
-#if 0
-// disabled until panic testing is available
-TEST_CASE("Result.map_err for ok must invalidate src", "[result]")
-{
-    auto res = TestResult::Ok(1);
-
-    // TODO: nasty, want bool to be auto-inferred as it's the return type of
-    // map1, i.e. want res.map(map1).unwrap();
-    auto res2 = res.map_err<const char *>(map2);
-    NEL_UNUSED(res2);
-
-    REQUIRE(!res.is_ok());
-    REQUIRE(!res.is_err());
-}
-#endif
-
-#if 0
-// disabled until panic testing is available
-TEST_CASE("Result.map_err for err must invalidate src", "[result]")
-{
-    auto res = TestResult::Err(FAIL);
-
-    // TODO: nasty, want bool to be auto-inferred as it's the return type of
-    // map1, i.e. want res.map(map1).unwrap();
-    auto res2 = res.map_err<const char *>(map2);
-    NEL_UNUSED(res2);
-
-    REQUIRE(!res.is_ok());
-    REQUIRE(!res.is_err());
-}
-#endif
-
-#if 0
-// disabled until panic detection is available.
-TEST_CASE("Result.map_err for inval must invalidate src", "[result]")
-{
-    auto res = TestResult::Err(FAIL);
-    auto res2 = move(res);
-
-    // TODO: nasty, want bool to be auto-inferred as it's the return type of
-    // map1, i.e. want res.map(map1).unwrap();
-    auto res3 = res.map_err<const char *>(map2);
-    NEL_UNUSED(res3);
-
-    REQUIRE(!res.is_ok());
-    REQUIRE(!res.is_err());
-}
-#endif
 
 nel::Result<int, Error> foo_ok(void)
 {
-    return TestResult::Ok(1);
+    return Ok(1);
 }
 
 TEST_CASE("Result::Ok auto convert to Result", "[result]")
 {
     auto res = foo_ok();
 
-    REQUIRE(res.is_ok());
+    auto is = res.is_ok();
+    REQUIRE(is);
 }
 
 nel::Result<int, Error> foo_err(void)
 {
-    return TestResult::Err(FAIL);
+    return Err(Error(Error::FAIL));
 }
 
 TEST_CASE("Result::Err auto convert to Result", "[result]")
 {
     auto res = foo_err();
 
-    REQUIRE(res.is_err());
+    auto is = res.is_err();
+    REQUIRE(is);
 }
 
 struct Foo
@@ -958,7 +892,7 @@ TEST_CASE("result::~dtor for ok, must call ok dtor", "[result]")
 {
     bool dtor_called = false;
     {
-        nel::Result<Foo, Error> res1 = nel::Result<Foo, Error>::Ok(Foo(dtor_called));
+        nel::Result<Foo, Error> res1 = nel::Ok(Foo(dtor_called));
 
         // REQUIRE(!bar);
         dtor_called = false;
@@ -977,7 +911,7 @@ TEST_CASE("result::~dtor for err, must call err dtor", "[result]")
 {
     bool dtor_called = false;
     {
-        nel::Result<int, Foo> res1 = nel::Result<int, Foo>::Err(Foo(dtor_called));
+        nel::Result<int, Foo> res1 = Err(Foo(dtor_called));
 
         // REQUIRE(!bar);
         dtor_called = false;
@@ -1004,480 +938,368 @@ TEST_CASE("result::~dtor for inval, err not dtor called", "[result]")
 }
 #endif
 
-#if 0
 TEST_CASE("Result::eq for ok with ok must give true", "[result]")
 {
-    auto res1 = TestResult::Ok(2);
+    auto res1 = TestResult(Ok(2));
 
-    REQUIRE(res1 == TestResult::Ok(2));
+    auto is = res1 == Ok(2);
+
+    SECTION("must give true") {
+        REQUIRE(is);
+    }
+
+    SECTION("must not invalidate lhs") {
+        auto is_inval = res1.is_inval();
+        REQUIRE_FALSE(is_inval);
+    }
+
+    SECTION("must not change lhs value") {
+        auto v = res1.unwrap();
+        REQUIRE(v == 2);
+    }
 }
 
 
 TEST_CASE("Result::eq for ok with diff ok must give false", "[result]")
 {
-    auto res1 = TestResult::Ok(2);
+    auto res1 = TestResult(Ok(2));
 
-    REQUIRE(!(res1 == TestResult::Ok(3)));
+    auto is = res1 == Ok(3);
+
+    SECTION("must give false") {
+        REQUIRE_FALSE(is);
+    }
+
+    SECTION("must not invalidate lhs") {
+        auto is_inval = res1.is_inval();
+        REQUIRE_FALSE(is_inval);
+    }
+
+    SECTION("must not change lhs value") {
+        auto v = res1.unwrap();
+        REQUIRE(v == 2);
+    }
 }
 
 
 TEST_CASE("Result::eq for ok with err must give false", "[result]")
 {
-    auto res1 = TestResult::Ok(2);
+    auto res1 = TestResult(Ok(2));
 
-    REQUIRE(!(res1 == TestResult::Err(FAIL)));
+    auto is = res1 == Err(Error(Error::FAIL));
+
+    SECTION("must give false") {
+        REQUIRE_FALSE(is);
+    }
+
+    SECTION("must not invalidate lhs") {
+        auto is_inval = res1.is_inval();
+        REQUIRE_FALSE(is_inval);
+    }
+
+    SECTION("must not change lhs value") {
+        auto v = res1.unwrap();
+        REQUIRE(v == 2);
+    }
 }
 
 
-TEST_CASE("Result::eq for ok with inval must give false", "[result]")
+TEST_CASE("Result::eq for ok with inval must panic", "[result]")
 {
-    auto res1 = TestResult::Ok(1);
+    auto res1 = TestResult(Ok(2));
 
-    auto res2 = TestResult::Ok(2);
-    auto res3 = move(res2);
+    auto res2 = TestResult();
 
-    REQUIRE(!(res1 == res2));
+    REQUIRE_PANIC(res1 == res2);
+
+    // although lhs is required to not change, panicking is a non-recoverable
+    // error so program execution stops, and so res1 changing or not is moot.
 }
-
-
-TEST_CASE("Result::eq for ok with ok must not alter src", "[result]")
-{
-    auto res1 = TestResult::Ok(2);
-
-    auto is_eq = res1 == TestResult::Ok(2);
-    NEL_UNUSED(is_eq);
-
-    REQUIRE(res1.unwrap() == 2);
-}
-
-
-TEST_CASE("Result::eq for ok with diff ok must not alter src", "[result]")
-{
-    auto res1 = TestResult::Ok(2);
-
-    auto is_eq = res1 == TestResult::Ok(3);
-    NEL_UNUSED(is_eq);
-
-    REQUIRE(res1.unwrap() == 2);
-}
-
-
-TEST_CASE("Result::eq for ok with err must not alter src", "[result]")
-{
-    auto res1 = TestResult::Ok(2);
-
-    auto is_eq = res1 == TestResult::Err(FAIL);
-    NEL_UNUSED(is_eq);
-
-    REQUIRE(res1.unwrap() == 2);
-}
-
-
-TEST_CASE("Result::eq for ok with inval must not alter src", "[result]")
-{
-    auto res1 = TestResult::Ok(2);
-
-    auto res2 = TestResult::Ok(1);
-    auto res3 = move(res2);
-
-    auto is_eq = res1 == res2;
-    NEL_UNUSED(is_eq);
-
-    REQUIRE(res1.unwrap() == 2);
-}
-
 
 
 TEST_CASE("Result::eq for err with ok must give false", "[result]")
 {
-    auto res1 = TestResult::Err(FAIL);
+    auto res1 = TestResult(Err(Error(Error::FAIL)));
 
-    REQUIRE(!(res1 == TestResult::Ok(1)));
+    auto is = res1 == Ok(2);
+
+    SECTION("must give false") {
+        REQUIRE_FALSE(is);
+    }
+
+    SECTION("must not invalidate lhs") {
+        auto is_inval = res1.is_inval();
+        REQUIRE_FALSE(is_inval);
+    }
+
+    SECTION("must not change lhs value") {
+        auto v = res1.unwrap_err();
+        REQUIRE(v == Error(Error::FAIL));
+    }
 }
 
 
 TEST_CASE("Result::eq for err with err must give true", "[result]")
 {
-    auto res1 = TestResult::Err(FAIL);
+    auto res1 = TestResult(Err(Error(Error::FAIL)));
 
-    REQUIRE(res1 == TestResult::Err(FAIL));
+    auto is = res1 == Err(Error(Error::FAIL));
+
+    SECTION("must give true") {
+        REQUIRE(is);
+    }
+
+    SECTION("must not invalidate lhs") {
+        auto is_inval = res1.is_inval();
+        REQUIRE_FALSE(is_inval);
+    }
+
+    SECTION("must not change lhs value") {
+        auto v = res1.unwrap_err();
+        REQUIRE(v == Error(Error::FAIL));
+    }
 }
 
 
 TEST_CASE("Result::eq for err with diff err must give false", "[result]")
 {
-    auto res1 = TestResult::Err(NOENT);
+    auto res1 = TestResult(Err(Error(Error::NOENT)));
 
-    REQUIRE(!(res1 == TestResult::Err(FAIL)));
+    auto is = res1 == Err(Error(Error::FAIL));
+
+    SECTION("must give false") {
+        REQUIRE_FALSE(is);
+    }
+
+    SECTION("must not invalidate lhs") {
+        auto is_inval = res1.is_inval();
+        REQUIRE_FALSE(is_inval);
+    }
+
+    SECTION("must not change lhs value") {
+        auto v = res1.unwrap_err();
+        REQUIRE(v == Error::NOENT);
+    }
 }
 
 
-TEST_CASE("Result::eq for err with inval must give false", "[result]")
+TEST_CASE("Result::eq for err with inval must panic", "[result]")
 {
-    auto res1 = TestResult::Err(FAIL);
+    auto res1 = TestResult(Err(Error(Error::FAIL)));
 
-    auto res2 = TestResult::Err(NOENT);
-    auto res3 = move(res2);
+    auto res2 = TestResult();
 
-    REQUIRE(!(res1 == res2));
+    REQUIRE_PANIC(res1 == res2);
+    // although lhs is required to not change, panicking is a non-recoverable
+    // error so program execution stops, and so res1 changing or not is moot.
 }
 
-
-TEST_CASE("Result::eq for err with ok must not alter src", "[result]")
+TEST_CASE("Result::eq for inval with ok must panic", "[result]")
 {
-    auto res1 = TestResult::Err(FAIL);
+    auto res1 = TestResult();
 
-    auto is_eq = res1 == TestResult::Ok(1);
-    NEL_UNUSED(is_eq);
-
-    REQUIRE(res1.unwrap_err() == FAIL);
+    REQUIRE_PANIC(res1 == Ok(1));
 }
 
 
-TEST_CASE("Result::eq for err with err must not alter src", "[result]")
+TEST_CASE("Result::eq for inval with err must panic", "[result]")
 {
-    auto res1 = TestResult::Err(FAIL);
+    auto res1 = TestResult();
 
-    auto is_eq = res1 == TestResult::Err(FAIL);
-    NEL_UNUSED(is_eq);
-
-    REQUIRE(res1.unwrap_err() == FAIL);
+    REQUIRE_PANIC(res1 == Err(Error(Error::FAIL)));
 }
 
 
-TEST_CASE("Result::eq for err with diff err must not alter src", "[result]")
+TEST_CASE("Result::eq for inval with inval must panic", "[result]")
 {
-    auto res1 = TestResult::Err(FAIL);
+    auto res1 = TestResult();
 
-    auto is_eq = res1 == TestResult::Err(NOENT);
-    NEL_UNUSED(is_eq);
+    auto res2 = TestResult();
 
-    REQUIRE(res1.unwrap_err() == FAIL);
+    REQUIRE_PANIC(res1 == res2);
 }
-
-
-TEST_CASE("Result::eq for err with inval must not alter src", "[result]")
-{
-    auto res1 = TestResult::Err(FAIL);
-
-    auto res2 = TestResult::Err(NOENT);
-    auto res3 = move(res2);
-
-    auto is_eq = res1 == res2;
-    NEL_UNUSED(is_eq);
-
-    REQUIRE(res1.unwrap_err() == FAIL);
-}
-
-
-
-TEST_CASE("Result::eq for inval with ok must give false", "[result]")
-{
-    auto res1 = TestResult::Err(FAIL);
-    auto res2 = move(res1);
-
-    REQUIRE(!(res1 == TestResult::Ok(1)));
-}
-
-
-TEST_CASE("Result::eq for inval with err must give false", "[result]")
-{
-    auto res1 = TestResult::Err(FAIL);
-    auto res2 = move(res1);
-
-    REQUIRE(!(res1 == TestResult::Err(FAIL)));
-}
-
-
-TEST_CASE("Result::eq for inval with inval must give true", "[result]")
-{
-    auto res1 = TestResult::Ok(2);
-    auto res2 = move(res1);
-
-    auto res3 = TestResult::Err(FAIL);
-    auto res4 = move(res3);
-
-    REQUIRE(res1 == res3);
-}
-
-
-TEST_CASE("Result::eq for inval with ok must not alter src", "[result]")
-{
-    auto res1 = TestResult::Err(FAIL);
-    auto res2 = move(res1);
-
-    auto is_eq = res1 == TestResult::Ok(1);
-    NEL_UNUSED(is_eq);
-
-    REQUIRE(!res1.is_ok());
-    REQUIRE(!res1.is_err());
-}
-
-
-TEST_CASE("Result::eq for inval with err must not alter src", "[result]")
-{
-    auto res1 = TestResult::Err(FAIL);
-    auto res2 = move(res1);
-
-    auto is_eq = res1 == TestResult::Err(FAIL);
-    NEL_UNUSED(is_eq);
-
-    REQUIRE(!res1.is_ok());
-    REQUIRE(!res1.is_err());
-}
-
-
-TEST_CASE("Result::eq for inval with inval must not alter src", "[result]")
-{
-    auto res1 = TestResult::Ok(2);
-    auto res2 = move(res1);
-
-    auto res3 = TestResult::Err(FAIL);
-    auto res4 = move(res3);
-
-    auto is_eq = res1 == res3;
-    NEL_UNUSED(is_eq);
-
-    REQUIRE(!res1.is_ok());
-    REQUIRE(!res1.is_err());
-}
-
 
 TEST_CASE("Result::neq for ok with ok must give false", "[result]")
 {
-    auto res1 = TestResult::Ok(2);
+    auto res1 = TestResult(Ok(2));
 
-    REQUIRE(!(res1 != TestResult::Ok(2)));
+    auto is = res1 != Ok(2);
+
+    SECTION("must give false") {
+        REQUIRE_FALSE(is);
+    }
+
+    SECTION("must not invalidate lhs") {
+        auto is_inval = res1.is_inval();
+        REQUIRE_FALSE(is_inval);
+    }
+
+    SECTION("must not change lhs value") {
+        auto v = res1.unwrap();
+        REQUIRE(v == 2);
+    }
 }
 
 
 TEST_CASE("Result::neq for ok with diff ok must give true", "[result]")
 {
-    auto res1 = TestResult::Ok(2);
+    auto res1 = TestResult(Ok(2));
 
-    REQUIRE(res1 != TestResult::Ok(3));
+    auto is = res1 != Ok(3);
+
+    SECTION("must give true") {
+        REQUIRE(is);
+    }
+
+    SECTION("must not invalidate lhs") {
+        auto is_inval = res1.is_inval();
+        REQUIRE_FALSE(is_inval);
+    }
+
+    SECTION("must not change lhs value") {
+        auto v = res1.unwrap();
+        REQUIRE(v == 2);
+    }
 }
 
 
 TEST_CASE("Result::neq for ok with err must give true", "[result]")
 {
-    auto res1 = TestResult::Ok(2);
+    auto res1 = TestResult(Ok(2));
 
-    REQUIRE(res1 != TestResult::Err(FAIL));
+    auto is = res1 != Err(Error(Error::FAIL));
+
+    SECTION("must give true") {
+        REQUIRE(is);
+    }
+
+    SECTION("must not invalidate lhs") {
+        auto is_inval = res1.is_inval();
+        REQUIRE_FALSE(is_inval);
+    }
+
+    SECTION("must not change lhs value") {
+        auto v = res1.unwrap();
+        REQUIRE(v == 2);
+    }
 }
 
 
-TEST_CASE("Result::neq for ok with inval must give true", "[result]")
+TEST_CASE("Result::neq for ok with inval must panic", "[result]")
 {
-    auto res1 = TestResult::Ok(2);
+    auto res1 = TestResult(Ok(2));
 
-    auto res2 = TestResult::Ok(2);
-    auto res3 = move(res2);
+    auto res2 = TestResult();
 
-    REQUIRE(res1 != res2);
-}
+    REQUIRE_PANIC(res1 != res2);
 
-
-TEST_CASE("Result::neq for ok with ok must not alter src", "[result]")
-{
-    auto res1 = TestResult::Ok(2);
-
-    auto is_neq = res1 != TestResult::Ok(2);
-    NEL_UNUSED(is_neq);
-
-    REQUIRE(res1.unwrap() == 2);
-}
-
-
-TEST_CASE("Result::neq for ok with diff ok must not alter src", "[result]")
-{
-    auto res1 = TestResult::Ok(2);
-
-    auto is_neq = res1 != TestResult::Ok(3);
-    NEL_UNUSED(is_neq);
-
-    REQUIRE(res1.unwrap() == 2);
-}
-
-
-TEST_CASE("Result::neq for ok with err must not alter src", "[result]")
-{
-    auto res1 = TestResult::Ok(2);
-
-    auto is_neq = res1 != TestResult::Err(FAIL);
-    NEL_UNUSED(is_neq);
-
-    REQUIRE(res1.unwrap() == 2);
-}
-
-
-TEST_CASE("Result::neq for ok with inval must not alter src", "[result]")
-{
-    auto res1 = TestResult::Ok(2);
-
-    auto res2 = TestResult::Ok(3);
-    auto res3 = move(res2);
-
-    auto is_neq = res1 != res2;
-    NEL_UNUSED(is_neq);
-
-    REQUIRE(res1.unwrap() == 2);
+    // although lhs is required to not change, panicking is a non-recoverable
+    // error so program execution stops, and so res1 changing or not is moot.
 }
 
 
 TEST_CASE("Result::neq for err with ok must give true", "[result]")
 {
-    auto res1 = TestResult::Err(FAIL);
+    auto res1 = TestResult(Err(Error(Error::FAIL)));
 
-    REQUIRE(res1 != TestResult::Ok(1));
+    auto is = res1 != Ok(1);
+
+    SECTION("must give true") {
+        REQUIRE(is);
+    }
+
+    SECTION("must not invalidate lhs") {
+        auto is_inval = res1.is_inval();
+        REQUIRE_FALSE(is_inval);
+    }
+
+    SECTION("must not change lhs value") {
+        auto v = res1.unwrap_err();
+        REQUIRE(v == Error(Error::FAIL));
+    }
 }
 
 
 TEST_CASE("Result::neq for err with err must give false", "[result]")
 {
-    auto res1 = TestResult::Err(FAIL);
+    auto res1 = TestResult(Err(Error(Error::FAIL)));
 
-    REQUIRE(!(res1 != TestResult::Err(FAIL)));
+    auto is = res1 != Err(Error(Error::FAIL));
+
+    SECTION("must give false") {
+        REQUIRE_FALSE(is);
+    }
+
+    SECTION("must not invalidate lhs") {
+        auto is_inval = res1.is_inval();
+        REQUIRE_FALSE(is_inval);
+    }
+
+    SECTION("must not change lhs value") {
+        auto v = res1.unwrap_err();
+        REQUIRE(v == Error(Error::FAIL));
+    }
 }
 
 
 TEST_CASE("Result::neq for err with diff err must give true", "[result]")
 {
-    auto res1 = TestResult::Err(NOENT);
+    auto res1 = TestResult(Err(Error(Error::NOENT)));
 
-    REQUIRE(res1 != TestResult::Err(FAIL));
+    auto is = res1 != Err(Error(Error::FAIL));
+
+    SECTION("must give true") {
+        REQUIRE(is);
+    }
+
+    SECTION("must not invalidate lhs") {
+        auto is_inval = res1.is_inval();
+        REQUIRE_FALSE(is_inval);
+    }
+
+    SECTION("must not change lhs value") {
+        auto v = res1.unwrap_err();
+        REQUIRE(v == Error(Error::NOENT));
+    }
 }
 
 
-TEST_CASE("Result::neq for err with inval must give true", "[result]")
+TEST_CASE("Result::neq for err with inval must panic", "[result]")
 {
-    auto res1 = TestResult::Err(FAIL);
+    auto res1 = TestResult(Err(Error(Error::FAIL)));
 
-    auto res2 = TestResult::Ok(2);
-    auto res3 = move(res2);
+    auto res2 = TestResult();
 
-    REQUIRE(res1 != res2);
+    REQUIRE_PANIC(res1 != res2);
+
+    // although lhs is required to not change, panicking is a non-recoverable
+    // error so program execution stops, and so res1 changing or not is moot.
 }
 
-
-TEST_CASE("Result::neq for err with ok must not alter src", "[result]")
+TEST_CASE("Result::neq for inval with ok must panic", "[result]")
 {
-    auto res1 = TestResult::Err(FAIL);
+    auto res1 = TestResult();
 
-    auto is_neq = res1 != TestResult::Ok(1);
-    NEL_UNUSED(is_neq);
-
-    REQUIRE(res1.unwrap_err() == FAIL);
+    REQUIRE_PANIC(res1 != Ok(1));
 }
 
 
-TEST_CASE("Result::neq for err with err must not alter src", "[result]")
+TEST_CASE("Result::neq for inval with err must panic", "[result]")
 {
-    auto res1 = TestResult::Err(FAIL);
+    auto res1 = TestResult();
 
-    auto is_neq = res1 != TestResult::Err(FAIL);
-    NEL_UNUSED(is_neq);
-
-    REQUIRE(res1.unwrap_err() == FAIL);
+    REQUIRE_PANIC(res1 != Err(Error(Error::FAIL)));
 }
 
 
-TEST_CASE("Result::neq for err with diff err must not alter src", "[result]")
+TEST_CASE("Result::neq for inval with inval must panic", "[result]")
 {
-    auto res1 = TestResult::Err(FAIL);
+    auto res1 = TestResult();
 
-    auto is_neq = res1 != TestResult::Err(NOENT);
-    NEL_UNUSED(is_neq);
+    auto res2 = TestResult();
 
-    REQUIRE(res1.unwrap_err() == FAIL);
+    REQUIRE_PANIC(res1 != res2);
 }
-
-
-TEST_CASE("Result::neq for err with inval must not alter src", "[result]")
-{
-    auto res1 = TestResult::Err(FAIL);
-
-    auto res2 = TestResult::Ok(2);
-    auto res3 = move(res2);
-
-    auto is_neq = res1 != res2;
-    NEL_UNUSED(is_neq);
-
-    REQUIRE(res1.unwrap_err() == FAIL);
-}
-
-
-TEST_CASE("Result::neq for inval with ok must give true", "[result]")
-{
-    auto res1 = TestResult::Ok(1);
-    auto res2 = move(res1);
-
-    REQUIRE(res1 != TestResult::Ok(1));
-}
-
-
-TEST_CASE("Result::neq for inval with err must give true", "[result]")
-{
-    auto res1 = TestResult::Err(FAIL);
-    auto res2 = move(res1);
-
-    REQUIRE(res1 != TestResult::Err(FAIL));
-}
-
-
-TEST_CASE("Result::neq for inval with inval must give false", "[result]")
-{
-    auto res1 = TestResult::Ok(2);
-    auto res2 = move(res1);
-
-    auto res3 = TestResult::Err(FAIL);
-    auto res4 = move(res3);
-
-    REQUIRE(!(res1 != res3));
-}
-
-
-TEST_CASE("Result::neq for inval with ok must not alter src", "[result]")
-{
-    auto res1 = TestResult::Err(FAIL);
-    auto res2 = move(res1);
-
-    auto is_neq = res1 != TestResult::Ok(1);
-    NEL_UNUSED(is_neq);
-
-    REQUIRE(!res1.is_ok());
-    REQUIRE(!res1.is_err());
-}
-
-
-TEST_CASE("Result::neq for inval with err must not alter src", "[result]")
-{
-    auto res1 = TestResult::Err(FAIL);
-    auto res2 = move(res1);
-
-    auto is_neq = res1 != TestResult::Err(FAIL);
-    NEL_UNUSED(is_neq);
-
-    REQUIRE(!res1.is_ok());
-    REQUIRE(!res1.is_err());
-}
-
-
-TEST_CASE("Result::neq for inval with inval must not alter src", "[result]")
-{
-    auto res1 = TestResult::Ok(2);
-    auto res2 = move(res1);
-
-    auto res3 = TestResult::Err(FAIL);
-    auto res4 = move(res3);
-
-    auto is_neq = res1 != res4;
-    NEL_UNUSED(is_neq);
-
-    REQUIRE(!res1.is_ok());
-    REQUIRE(!res1.is_err());
-}
-#endif // 0
 
 }; // namespace result
 }; // namespace test

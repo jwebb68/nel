@@ -32,8 +32,8 @@ struct Box
 {
     public:
         // heh, blatant rust-ism
-        typedef Box Self;
-        typedef T Type;
+        using Type = T;
+        using Self = Box;
 
     private:
         typedef Element<Type> ElementT;
@@ -83,12 +83,14 @@ struct Box
         {
         }
 
+#if 0
         // works for moving-into as well.
         template<typename... Args>
         constexpr Box(Args &&...args)
             : value_(new ElementT(forward<Args>(args)...))
         {
         }
+#endif
 
     public:
         /**
@@ -102,8 +104,8 @@ struct Box
         {
             // for new: on fail, val not moved
             ElementT *const p = new ElementT(move(val));
-            if (p == nullptr) { return Result<Box, Type>::Err(move(val)); }
-            return Result<Box, Type>::Ok(move(Box(p)));
+            if (p == nullptr) { return Err(move(val)); }
+            return Ok(Box(p));
         }
 
     public:

@@ -131,4 +131,6 @@ int main()
     ex44();
     nel::log << "ex44:e" << '\n';
 #endif
+
+    return 0;
 }

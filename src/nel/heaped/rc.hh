@@ -28,7 +28,7 @@ struct RC
         // Contained value on the heap.
         // Single threaded reference counted sharing.
     public:
-        typedef T Type;
+        using Type = T;
 
     private:
         struct Node
@@ -169,7 +169,7 @@ struct RC
         {
             if (this != &o) {
                 Node::release(node_);
-                node_ = nel::move(o.node_);
+                node_ = move(o.node_);
                 o.node_ = nullptr;
             }
             return *this;

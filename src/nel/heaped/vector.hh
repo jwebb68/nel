@@ -39,7 +39,7 @@ template<typename T>
 struct Vector
 {
     public:
-        typedef T Type;
+        using Type = T;
 
     private:
         // not using unique_ptr as didn't use new to alloc it.
@@ -112,7 +112,7 @@ struct Vector
         static constexpr Vector with_capacity(Count cap)
         {
             if (cap == 0) { return Vector(); }
-            Vector a(VectorNode::malloc(cap));
+            auto a = Vector(VectorNode::malloc(cap));
             return a;
         }
 
@@ -289,7 +289,7 @@ struct Vector
          * @returns false otherwise.
          */
         // What to return on reserve fail?
-        // Result<void, ?> ?
+        // Result<Void, ?> ?
         // Optional<void> aka bool?
         bool try_reserve(Count new_cap)
         {
@@ -330,16 +330,16 @@ struct Vector
          * Push a value onto the end of the vec.
          *
          * @param val The value to move into the vec.
-         * @returns if successful, Result<void, T>::Ok()
-         * @returns if unsuccessful, Result<void, T>::Err() holding val
+         * @returns if successful, Result<Void, T>::Ok()
+         * @returns if unsuccessful, Result<Void, T>::Err() holding val
          */
-        Result<void, Type> NEL_WARN_UNUSED_RESULT push(Type &&val)
+        Result<Void, Type> push(Type &&val)
         {
             bool ok;
             ok = try_reserve(len() + 1);
-            if (!ok) { return Result<void, Type>::Err(val); }
-            if (item_ == nullptr) { return Result<void, Type>::Err(val); }
-            return item_->push_back(val);
+            if (!ok) { return Err(move(val)); }
+            if (item_ == nullptr) { return Err(move(val)); }
+            return item_->push_back(move(val));
         }
 
 #    if 0
@@ -355,15 +355,17 @@ struct Vector
         }
 #    endif
 
+#if 0
         template<typename... Args>
-        Result<void, Type> NEL_WARN_UNUSED_RESULT push(Args &&...args)
+        Result<Void, Type> push(Args &&...args)
         {
             bool ok;
             ok = try_reserve(len() + 1);
-            if (!ok) { return Result<void, Type>::Err(forward<Args>(args)...); }
-            if (item_ == nullptr) { return Result<void, Type>::Err(forward<Args>(args)...); }
+            if (!ok) { return nel::Err(forward<Args>(args)...); }
+            if (item_ == nullptr) { return nel::Err(forward<Args>(args)...); }
             return item_->push_back(forward<Args>(args)...);
         }
+#endif
 
         // move contents of vec into this?
         // Result<void, Vector<T>> push_back(Vector<T> &l) ?
@@ -380,7 +382,7 @@ struct Vector
          */
         Optional<Type> pop(void)
         {
-            return (item_ == nullptr) ? Optional<Type>::None() : item_->pop_back();
+            return (item_ == nullptr) ? None : item_->pop_back();
         }
 
         // insert_at(idx, T &&) ?

@@ -2,7 +2,7 @@
 #if !defined(NEL_HEAPLESS_VECTOR_HH)
 #    define NEL_HEAPLESS_VECTOR_HH
 
-#    include <nel/defs.hh> //NEL_UNUSED, Length
+#    include <nel/defs.hh> //nel::unused, Length
 
 namespace nel
 {
@@ -51,7 +51,7 @@ template<typename T, Length const N>
 struct Vector
 {
     public:
-        typedef T Type;
+        using Type = T;
 
     private:
         // Number initialised.
@@ -202,13 +202,13 @@ struct Vector
         // want moving not copying.
         // want copying but not via ctor (may not be possible), so it becomes
         // a try_ returning an err.
-        static constexpr Optional<Vector> try_from(std::initializer_list<T> l)
+        constexpr static Optional<Vector> try_from(std::initializer_list<T> l)
         {
             if (l.size() != N) { return None; }
             Vector v = Vector::empty();
             auto r = v.push_back(l);
             if (r.is_err()) { return None; }
-            return Optional<Vector>::Some(move(v));
+            return Some(move(v));
             // TODO: can all of this create the vec inplace in the optional?
         }
 #    endif
@@ -451,48 +451,48 @@ struct Vector
          * Push a value onto the end of the vec.
          *
          * @param val The value to move into the vec.
-         * @returns if successful, Result<void, T>::Ok()
-         * @returns if unsuccessful, Result<void, T>::Err() holding val
+         * @returns if successful, Result<Void, T>::Ok()
+         * @returns if unsuccessful, Result<Void, T>::Err() holding val
          */
         // move value into vec
         // on fail still move, but return.
         // allow inplace create instead of move.
         // if fails to store, can create be avoided..?
-        Result<void, Type> NEL_WARN_UNUSED_RESULT push(Type &&val)
+        Result<Void, Type> push(Type &&val)
         {
             if (len() >= capacity()) {
                 // Really? must one be created for err?
-                return Result<void, Type>::Err(move(val));
+                return Err(move(val));
             }
             // Remember, values at len and beyond are uninitialised.
             // So need to use new to construct them.
             new (end()) Type(move(val));
             len_ += 1;
-            return Result<void, Type>::Ok();
+            return Ok();
         }
 
 #    if 0
         template<typename... Args>
-        Result<void, Type> push(Args &&...args)
+        Result<Void, Type> push(Args &&...args)
         {
             if (len() >= capacity()) {
                 // Really? must one be created for err?
-                return Result<void, Type>::Err(forward<Args>(args)...);
+                return Err(Type(forward<Args>(args)...));
             }
             // Remember, values at len and beyond are uninitialised.
             // So need to use new to construct them.
             new (end()) Type(forward<Args>(args)...);
             len_ += 1;
-            return Result<void, Type>::Ok();
+            return Ok();
         }
 #    endif
 
 #    if 0
-        Result<void, std::initializer_list<Type>> push(std::initializer_list<Type> l)
+        Result<Void, std::initializer_list<Type>> push(std::initializer_list<Type> l)
         {
             if (len() + l.size() > capacity()) {
                 // Really? must one be created for err?
-                return Result<void, std::initializer_list<Type>>::Err(l);
+                return Err(l);
             }
             // Remember, values at len and beyond are uninitialised.
             // So need to use new to construct them.
@@ -501,7 +501,7 @@ struct Vector
                 new (&values_[i]) Type(move(*it));
             }
             len_ = i;
-            return Result<void, std::initializer_list<Type>>::Ok();
+            return Ok();
         }
 #    endif
 
@@ -520,7 +520,7 @@ struct Vector
          */
         Optional<Type> pop(void)
         {
-            if (len() == 0) { return None; }
+            if (len() == 0) { return None(); }
             len_ -= 1;
             return Some(move(*end()));
         }

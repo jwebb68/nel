@@ -1,8 +1,11 @@
 // -*- mode: c++; indent-tabs-mode: nil; tab-width: 4 -*-
 #include "optional.hh"
-#include "defs.hh"
+
+#include <nel/defs.hh> // unused
 
 #include <catch2/catch.hpp>
+#include <catch2/catch2_panic.hh>
+
 #include <cstring> //strcmp
 
 namespace nel
@@ -12,864 +15,974 @@ namespace test
 namespace optional
 {
 
-TEST_CASE("optional(Some): unwrap for some must produce some's value", "[optional]")
+struct UDT_0 {
+    constexpr UDT_0() {}
+};
+
+struct UDT_1 {
+    int v_;
+    constexpr UDT_1(int v): v_(v) {}
+};
+
+TEST_CASE("Some<int>() creates a Optional(some)", "[optional]")
 {
-    nel::Optional<int> opt1a = nel::Some(1);
-
-    auto val = opt1a.unwrap();
-
-    REQUIRE(val == 1);
-}
-
-TEST_CASE("optional(None): unwrap_or(2) must produce 2", "[optional]")
-{
-    nel::Optional<int> opt1b = nel::None;
-
-    auto val = opt1b.unwrap_or(2);
-
-    REQUIRE(val == 2);
-}
-
-TEST_CASE("move(optional)-ctor for some must move val to dest", "[optional]")
-{
-    nel::Optional<int> opt1c = nel::Some(1);
-    auto opt2 = move(opt1c);
-
-    auto val = opt2.unwrap();
-
-    REQUIRE(val == 1);
-}
-
-TEST_CASE("move(optional)-ctor for none must move val to dest", "[optional]")
-{
-    nel::Optional<int> opt1d = nel::None;
-
-    auto val = opt1d.unwrap_or(2);
-
-    REQUIRE(val == 2);
-}
-
-#if 0
-// disabled until panic testing is available
-TEST_CASE("move(optional)-ctor for inval must move val to dest", "[optional]")
-{
-    nel::Optional<int> opt1e = nel::None;
-    auto opt2 = move(opt1e);
-    auto opt3 = move(opt1e);
-
-    REQUIRE(!opt3.is_some());
-    REQUIRE(!opt3.is_none());
-}
-#endif
-
-#if 0
-// disabled until panic testing is available
-TEST_CASE("move(optional)-ctor for some must invalidate src", "[optional]")
-{
-    nel::Optional<int> opt1f = nel::Some(1);
-    auto opt2 = move(opt1f);
-
-    REQUIRE(!opt1f.is_some());
-    REQUIRE(!opt1f.is_none());
-}
-#endif
-
-#if 0
-// disabled until panic testing is available
-TEST_CASE("move(optional)-ctor for none must invalidate src", "[optional]")
-{
-    nel::Optional<int> opt1g = nel::None;
-    auto opt2 = move(opt1g);
-
-    REQUIRE(!opt1g.is_some());
-    REQUIRE(!opt1g.is_none());
-}
-#endif
-
-#if 0
-// disabled until panic testing is available
-TEST_CASE("move(optional)-ctor for inval must invalidate src", "[optional]")
-{
-    nel::Optional<int> opt1 = nel::None;
-    auto opt2 = move(opt1);
-    auto opt3 = move(opt1);
-
-    REQUIRE(!opt1.is_some());
-    REQUIRE(!opt1.is_none());
-}
-#endif
-
-TEST_CASE("move(optional)-ass for some must move val to dest", "[optional]")
-{
-    nel::Optional<int> opt1 = nel::Some(1);
-    nel::Optional<int> opt2 = nel::Some(2);
-    opt2 = move(opt1);
-
-    auto val = opt2.unwrap();
-
-    REQUIRE(val == 1);
-}
-
-TEST_CASE("move(optional)-ass for none must move val to dest", "[optional]")
-{
-    nel::Optional<int> opt1 = nel::None;
-    nel::Optional<int> opt2 = nel::Some(1);
-    opt2 = move(opt1);
-
-    auto val = opt2.unwrap_or(2);
-
-    REQUIRE(val == 2);
-}
-
-#if 0
-// disabled until panic testing is available
-TEST_CASE("move(optional)-ass for inval must move val to dest", "[optional]")
-{
-    nel::Optional<int> opt1 = nel::None;
-    auto opt2 = move(opt1);
-
-    nel::Optional<int> opt3 = nel::Some(1);
-    opt3 = move(opt1);
-
-    REQUIRE(!opt3.is_some());
-    REQUIRE(!opt3.is_none());
-}
-#endif
-
-#if 0
-// disabled until panic testing is available
-TEST_CASE("move(optional)-ass for some must invalidate src", "[optional]")
-{
-    nel::Optional<int> opt1 = nel::Some(1);
-
-    nel::Optional<int> opt2 = nel::Some(2);
-    opt2 = move(opt1);
-
-    REQUIRE(!opt1.is_some());
-    REQUIRE(!opt1.is_none());
-}
-#endif
-
-#if 0
-// disabled until panic testing is available
-TEST_CASE("move(optional)-ass for none must invalidate src", "[optional]")
-{
-    nel::Optional<int> opt1 = nel::None;
-
-    nel::Optional<int> opt2 = nel::Some(2);
-    opt2 = move(opt1);
-
-    REQUIRE(!opt1.is_some());
-    REQUIRE(!opt1.is_none());
-}
-#endif
-
-#if 0
-// disabled until panic testing is available
-TEST_CASE("move(optional)-ass for inval must invalidate src", "[optional]")
-{
-    nel::Optional<int> opt1 = nel::None;
-    auto opt2 = move(opt1);
-
-    nel::Optional<int> opt3 = nel::Some(2);
-    opt3 = move(opt1);
-
-    REQUIRE(!opt1.is_some());
-    REQUIRE(!opt1.is_none());
-}
-#endif
-
-TEST_CASE("Optional.is_some for some must give true", "[optional]")
-{
-    nel::Optional<int> opt1 = nel::Some(1);
-
+    auto opt1 = Some(1);
+    // checks that does not panic.
+    // and can be created this way.
     REQUIRE(opt1.is_some());
 }
 
-TEST_CASE("Optional.is_some for none must give false", "[optional]")
-{
-    nel::Optional<int> opt1 = nel::None;
 
-    REQUIRE(!opt1.is_some());
+TEST_CASE("Optional<int>::Some()", "[optional]")
+{
+    auto opt1 = Optional<int>(Some(1));
+    // checks that does not panic.
+    // and can be created this way.
+    REQUIRE(opt1.is_some());
 }
 
-#if 0
-// disabled until panic testing is available
-TEST_CASE("Optional.is_some for inval must panic", "[optional]")
+TEST_CASE("Optional<UDT_0>::Some()", "[optional]")
 {
-    nel::Optional<int> opt1 = nel::None;
-    auto opt2 = move(opt1);
-
-    REQUIRE(!opt1.is_some());
-}
-#endif
-
-TEST_CASE("Optional.is_some for some must not alter src", "[optional]")
-{
-    nel::Optional<int> opt1 = nel::Some(1);
-
-    auto is = opt1.is_some();
-    NEL_UNUSED(is);
-
-    auto val = opt1.unwrap();
-    REQUIRE(val == 1);
+    auto opt1 = Optional<UDT_0>(Some(UDT_0()));
+    // checks that does not panic.
+    // and can be created this way.
+    REQUIRE(opt1.is_some());
 }
 
-TEST_CASE("Optional.is_some for none must not alter src", "[optional]")
+TEST_CASE("Optional<UDT_1>::Some()", "[optional]")
 {
-    nel::Optional<int> opt1 = nel::None;
+    auto opt1 = Optional<UDT_1>(Some(UDT_1(23)));
+    // checks that does not panic.
+    // and can be created this way.
+    REQUIRE(opt1.is_some());
+}
 
-    auto is = opt1.is_some();
-    NEL_UNUSED(is);
+TEST_CASE("Optional<Void>::Some()", "[optional]")
+{
+    auto opt1 = Optional<Void>(Some());
+    // checks that does not panic.
+    // and can be created this way.
+    REQUIRE(opt1.is_some());
+}
 
+
+TEST_CASE("Optional<int> = None", "[optional]")
+{
+    auto opt1 = Optional<int>(None());
+    // checks that does not panic.
+    // and can be created this way.
     REQUIRE(opt1.is_none());
 }
 
-#if 0
-// disabled until panic testing is available
-TEST_CASE("Optional.is_some for inval must not alter src", "[optional]")
+TEST_CASE("Optional<UDT_0> = None", "[optional]")
 {
-    nel::Optional<int> opt1 = nel::None;
-    auto opt2 = move(opt1);
-
-    auto is = opt1.is_some();
-    NEL_UNUSED(is);
-
-    REQUIRE(!opt1.is_some());
-    REQUIRE(!opt1.is_none());
-}
-#endif
-
-TEST_CASE("Optional.is_none for some must give false", "[optional]")
-{
-    nel::Optional<int> opt1 = nel::Some(1);
-
-    REQUIRE(!opt1.is_none());
-}
-
-TEST_CASE("Optional.is_none for none must give true", "[optional]")
-{
-    nel::Optional<int> opt1 = nel::None;
-
+    auto opt1 = Optional<UDT_0>(None());
+    // checks that does not panic.
+    // and can be created this way.
     REQUIRE(opt1.is_none());
 }
 
-#if 0
-// disabled until panic testing is available
-TEST_CASE("Optional.is_none for inval must panic", "[optional]")
+TEST_CASE("Optional<UDT_1> = None", "[optional]")
 {
-    nel::Optional<int> opt1 = nel::None;
-    auto opt2 = move(opt1);
-
-    REQUIRE(!opt1.is_none());
-}
-#endif
-
-TEST_CASE("Optional.is_none for some must not alter src", "[optional]")
-{
-    nel::Optional<int> opt1 = nel::Some(1);
-
-    auto is = opt1.is_none();
-    NEL_UNUSED(is);
-
-    auto val = opt1.unwrap();
-    REQUIRE(val == 1);
-}
-
-TEST_CASE("Optional.is_none for none must not alter src", "[optional]")
-{
-    nel::Optional<int> opt1 = nel::None;
-
-    auto is = opt1.is_none();
-    NEL_UNUSED(is);
-
+    auto opt1 = Optional<UDT_1>(None());
+    // checks that does not panic.
+    // and can be created this way.
     REQUIRE(opt1.is_none());
 }
 
-#if 0
-// disabled until panic testing is available
-TEST_CASE("Optional.is_none for inval must not alter src", "[optional]")
+TEST_CASE("Optional<Void>::None()", "[optional]")
 {
-    nel::Optional<int> opt1 = nel::None;
-    auto opt2 = move(opt1);
-
-    auto is = opt1.is_none();
-    NEL_UNUSED(is);
-
-    REQUIRE(!opt1.is_none());
-    REQUIRE(!opt1.is_some());
-}
-#endif
-
-TEST_CASE("Optional.unwrap for Some must give some value", "[optional]")
-{
-    nel::Optional<int> opt1 = nel::Some(1);
-
-    auto val = opt1.unwrap();
-
-    REQUIRE(val == 1);
-}
-
-#if 0
-TEST_CASE("Optional.unwrap for None aborts", "[optional]")
-{
-// how do I do this?
-}
-
-TEST_CASE("Optional.unwrap for Inval aborts", "[optional]")
-{
-// how do I do this?
-}
-#endif
-
-#if 0
-// disabled until panic testing is available
-TEST_CASE("Optional.unwrap for Some must invalidate src", "[optional]")
-{
-    nel::Optional<int> opt1 = nel::Some(1);
-
-    auto val = opt1.unwrap();
-    NEL_UNUSED(val);
-
-    REQUIRE(!opt1.is_some());
-    REQUIRE(!opt1.is_none());
-}
-#endif
-
-TEST_CASE("Optional.unwrap with default for Some must give some value", "[optional]")
-{
-    nel::Optional<int> opt1a = nel::Some(1);
-
-    auto val = opt1a.unwrap_or(2);
-
-    REQUIRE(val == 1);
-}
-
-TEST_CASE("Optional.unwrap with default for None must give or value", "[optional]")
-{
-    nel::Optional<int> opt1b = nel::None;
-
-    auto val = opt1b.unwrap_or(2);
-
-    REQUIRE(val == 2);
-}
-
-#if 0
-// disabled until panic testing is available
-TEST_CASE("Optional.unwrap with default for Inval must give or value", "[optional]")
-{
-    nel::Optional<int> opt1c = nel::None;
-    auto opt2 = move(opt1c);
-
-    auto val = opt1c.unwrap_or(2);
-
-    REQUIRE(val == 2);
-}
-#endif
-
-#if 0
-// disabled until panic testing is available
-TEST_CASE("Optional.unwrap with default for Some must invalidate src", "[optional]")
-{
-    nel::Optional<int> opt1d = nel::Some(1);
-
-    auto val = opt1d.unwrap_or(2);
-    NEL_UNUSED(val);
-
-    REQUIRE(!opt1d.is_some());
-    REQUIRE(!opt1d.is_none());
-}
-#endif
-
-#if 0
-// disabled until panic testing is available
-TEST_CASE("Optional.unwrap with default for None must invalidate src", "[optional]")
-{
-    nel::Optional<int> opt1e = nel::None;
-
-    auto val = opt1e.unwrap_or(2);
-    NEL_UNUSED(val);
-
-    REQUIRE(!opt1e.is_some());
-    REQUIRE(!opt1e.is_none());
-}
-#endif
-
-#if 0
-// disabled until panic testing is available
-TEST_CASE("Optional.unwrap with default for Inval must invalidate src", "[optional]")
-{
-    nel::Optional<int> opt1f = nel::None;
-    auto opt2 = move(opt1f);
-
-    auto val = opt1f.unwrap_or(2);
-    NEL_UNUSED(val);
-
-    REQUIRE(!opt1f.is_some());
-    REQUIRE(!opt1f.is_none());
-}
-#endif
-
-#if 0
-TEST_CASE("Optional.eq for some with some must give true", "[optional]")
-{
-    nel::Optional<int> opt1 = nel::Some(1);
-
-    REQUIRE(opt1 == nel::Some(1));
-}
-
-
-TEST_CASE("Optional.eq for some with diff some must give false", "[optional]")
-{
-    nel::Optional<int> opt1 = nel::Some(1);
-
-    REQUIRE(!(opt1 == nel::Some(2)));
-}
-
-
-TEST_CASE("Optional.eq for some with none must give false", "[optional]")
-{
-    nel::Optional<int> opt1 = nel::Some(1);
-
-    REQUIRE(!(opt1 == None));
-}
-
-
-TEST_CASE("Optional.eq for some with inval must give false", "[optional]")
-{
-    nel::Optional<int> opt1 = nel::Some(1);
-
-    auto opt2 = nel::Some(1);
-    auto opt3 = move(opt2);
-
-    REQUIRE(!(opt1 == opt2));
-}
-
-
-TEST_CASE("Optional.eq for some with some must not change src", "[optional]")
-{
-    nel::Optional<int> opt1 = nel::Some(1);
-
-    auto is_eq = opt1 == nel::Some(1);
-    NEL_UNUSED(is_eq);
-
-    REQUIRE(opt1.unwrap() == 1);
-}
-
-
-TEST_CASE("Optional.eq for some with diff some must not change src",
-          "[optional]")
-{
-    nel::Optional<int> opt1 = nel::Some(1);
-
-    auto is_eq = opt1 == nel::Some(2);
-    NEL_UNUSED(is_eq);
-
-    REQUIRE(opt1.unwrap() == 1);
-}
-
-
-TEST_CASE("Optional.eq for some with none must not change src", "[optional]")
-{
-    nel::Optional<int> opt1 = nel::Some(1);
-
-    nel::Optional<int> is_eq = opt1 == nel::None;
-    NEL_UNUSED(is_eq);
-
-    REQUIRE(opt1.unwrap() == 1);
-}
-
-
-TEST_CASE("Optional.eq for some with inval must not change src", "[optional]")
-{
-    nel::Optional<int> opt1 = nel::Some(1);
-
-    auto opt2 = nel::Some(1);
-    auto opt3 = move(opt2);
-
-    auto is_eq = opt1 == opt2;
-    NEL_UNUSED(is_eq);
-
-    REQUIRE(opt1.unwrap() == 1);
-}
-
-
-TEST_CASE("Optional.eq for none with some must give false", "[optional]")
-{
-    nel::Optional<int> opt1 = nel::None;
-
-    REQUIRE(!(opt1 == nel::Some(1)));
-}
-
-
-TEST_CASE("Optional.eq for none with none must give true", "[optional]")
-{
-    nel::Optional<int> opt1 = nel::None;
-
-    REQUIRE(opt1 == None);
-}
-
-
-TEST_CASE("Optional.eq for none with inval must give false", "[optional]")
-{
-    nel::Optional<int> opt1 = nel::None;
-
-    auto opt2 = nel::Some(1);
-    auto opt3 = move(opt2);
-
-    REQUIRE(!(opt1 == opt2));
-}
-
-
-
-TEST_CASE("Optional.eq for none with some must not change src", "[optional]")
-{
-    nel::Optional<int> opt1 = nel::None;
-
-    nel::Optional<int> is_eq = opt1 == nel::Some(1);
-    NEL_UNUSED(is_eq);
-
+    auto opt1 = Optional<Void>(None());
+    // checks that does not panic.
+    // and can be created this way.
     REQUIRE(opt1.is_none());
 }
 
-
-TEST_CASE("Optional.eq for none with none must not change src", "[optional]")
+TEST_CASE("Optional<int>::Optional()", "[optional]")
 {
-    nel::Optional<int> opt1 = nel::None;
+    // can declare optional.
+    auto opt1  = Optional<int>();
 
-    nel::Optional<int> is_eq = opt1 == nel::None;
-    NEL_UNUSED(is_eq);
-
-    REQUIRE(opt1.is_none());
+    // checks that does not panic.
+    // and can be created this way.
+    REQUIRE(opt1.is_inval());
 }
 
-
-TEST_CASE("Optional.eq for none with inval must not change src", "[optional]")
+TEST_CASE("Optional<UDT_0>::Optional()", "[optional]")
 {
-    nel::Optional<int> opt1 = nel::None;
+    // can declare optional.
+    auto opt1  = Optional<UDT_0>();
 
-    nel::Optional<int> opt2 = nel::Some(1);
-    auto opt3 = move(opt2);
-
-    auto is_eq = opt1 == opt2;
-    NEL_UNUSED(is_eq);
-
-    REQUIRE(opt1.is_none());
+    // checks that does not panic.
+    // and can be created this way.
+    REQUIRE(opt1.is_inval());
 }
 
-
-
-TEST_CASE("Optional.eq for inval with some must give false", "[optional]")
+TEST_CASE("Optional<UDT_1>::Optional()", "[optional]")
 {
-    nel::Optional<int> opt1 = nel::None;
+    // can declare optional.
+    auto opt1  = Optional<UDT_1>();
+
+    // checks that does not panic.
+    // and can be created this way.
+    REQUIRE(opt1.is_inval());
+}
+
+TEST_CASE("Optional<Void>::Optional()", "[optional]")
+{
+    // can declare optional.
+    auto opt1  = Optional<Void>();
+
+    // checks that does not panic.
+    // and can be created this way.
+    REQUIRE(opt1.is_inval());
+}
+
+TEST_CASE("Optional<>(some).move-ctor", "[optional]")
+{
+    auto opt1 = Some(1);
+
     auto opt2 = move(opt1);
 
-    REQUIRE(!(opt1 == nel::Some(1)));
+    SECTION("must move val to dest")
+    {
+        REQUIRE(opt2.is_some());
+        auto val = opt2.unwrap();
+        REQUIRE(val == 1);
+    }
+    SECTION("must invalidate src")
+    {
+        auto val = opt2.unwrap();
+        nel::unused(val);
+        REQUIRE(opt1.is_inval());
+    }
 }
 
-
-
-TEST_CASE("Optional.eq for inval with none must give false", "[optional]")
+TEST_CASE("Optional<Void>(some).move-ctor", "[optional]")
 {
-    nel::Optional<int> opt1 = nel::None;
+    auto opt1 = Some();
+
     auto opt2 = move(opt1);
 
-    REQUIRE(!(opt1 == None));
+    SECTION("must move val to dest")
+    {
+        REQUIRE(opt2.is_some());
+        // check that it does not panic.
+        opt2.unwrap();
+    }
+    SECTION("must invalidate src")
+    {
+        REQUIRE(opt1.is_inval());
+    }
 }
 
-
-TEST_CASE("Optional.eq for inval with inval must give true", "[optional]")
+TEST_CASE("Optional<>(none).move-ctor", "[optional]")
 {
-    nel::Optional<int> opt1 = nel::None;
+    auto opt1 = Optional<int>(None());
+
     auto opt2 = move(opt1);
 
-    nel::Optional<int> opt3 = nel::Some(1);
-    auto opt4 = move(opt3);
-
-    REQUIRE(opt1 == opt3);
+    SECTION("must move val to dest")
+    {
+        REQUIRE(opt2.is_none());
+    }
+    SECTION("must invalidate src")
+    {
+        REQUIRE(opt1.is_inval());
+    }
 }
 
-
-
-TEST_CASE("Optional.eq for inval with some must not change src", "[optional]")
+TEST_CASE("Optional<Void>(none).move-ctor: must move val to dest", "[optional]")
 {
-    nel::Optional<int> opt1 = nel::None;
+    auto opt1 = Optional<Void>(None());
+
     auto opt2 = move(opt1);
 
-    nel::Optional<int> is_eq = opt1 == nel::Some(1);
-    NEL_UNUSED(is_eq);
-
-    REQUIRE(!opt1.is_some());
-    REQUIRE(!opt1.is_none());
+    SECTION("must move val to dest")
+    {
+        REQUIRE(opt2.is_none());
+    }
+    SECTION("must invalidate src")
+    {
+        REQUIRE(opt1.is_inval());
+    }
 }
 
-
-
-TEST_CASE("Optional.eq for inval with none must not change src", "[optional]")
+TEST_CASE("Optional<>(inval).move-ctor: must move val to dest", "[optional]")
 {
-    nel::Optional<int> opt1 = nel::None;
+    // moves value to dest (dest is now inval)
+    // doesn't panic.
+    auto opt1 = nel::Optional<int>();
+
     auto opt2 = move(opt1);
 
-    nel::Optional<int> is_eq = opt1 == nel::None;
-    NEL_UNUSED(is_eq);
-
-    REQUIRE(!opt1.is_some());
-    REQUIRE(!opt1.is_none());
+    SECTION("must move val to dest")
+    {
+        REQUIRE(opt2.is_inval());
+    }
+    SECTION("must invalidate src")
+    {
+        REQUIRE(opt1.is_inval());
+    }
 }
 
-
-TEST_CASE("Optional.eq for inval with inval must not change src", "[optional]")
+TEST_CASE("Optional<Void>(inval).move-ctor: must move val to dest", "[optional]")
 {
-    nel::Optional<int> opt1 = nel::None;
+    // moves value to dest (dest is now inval)
+    // doesn't panic.
+    auto opt1 = Optional<Void>();
+
     auto opt2 = move(opt1);
 
-    nel::Optional<int> opt3 = nel::Some(1);
-    auto opt4 = move(opt3);
-
-    auto is_eq = opt1 == opt3;
-    NEL_UNUSED(is_eq);
-
-    REQUIRE(!opt1.is_some());
-    REQUIRE(!opt1.is_none());
+    SECTION("must move val to dest")
+    {
+        REQUIRE(opt2.is_inval());
+    }
+    SECTION("must invalidate src")
+    {
+        REQUIRE(opt1.is_inval());
+    }
 }
 
-
-
-TEST_CASE("Optional.neq for some with some must give false", "[optional]")
+TEST_CASE("Optional<>(some).move-ass", "[optional]")
 {
-    nel::Optional<int> opt1 = nel::Some(1);
+    auto opt1 = Optional<int>(Some(1));
+    auto opt2 = Optional<int>(Some(2));
 
-    REQUIRE(!(opt1 != nel::Some(1)));
+    opt2 = move(opt1);
+
+    SECTION("must move val to dest")
+    {
+        auto val = opt2.unwrap();
+        REQUIRE(val == 1);
+    }
+    SECTION("must invalidate src")
+    {
+        REQUIRE(opt1.is_inval());
+    }
 }
 
-
-TEST_CASE("Optional.neq for some with diff some must give true", "[optional]")
+TEST_CASE("Optional<Void>(some).move-ass", "[optional]")
 {
-    nel::Optional<int> opt1 = nel::Some(1);
+    auto opt1 = Optional<Void>(Some());
+    auto opt2 = Optional<Void>(Some());
 
-    REQUIRE(opt1 != nel::Some(2));
+    opt2 = move(opt1);
+
+    SECTION("must move val to dest")
+    {
+        REQUIRE(opt2.is_some());
+    }
+    SECTION("must invalidate src")
+    {
+        REQUIRE(opt1.is_inval());
+    }
 }
 
-
-TEST_CASE("Optional.neq for some with none must give true", "[optional]")
+TEST_CASE("Optional<>(none).move-ass", "[optional]")
 {
-    nel::Optional<int> opt1 = nel::Some(1);
+    auto opt1 = Optional<int>(Some(10));
+    auto opt2 = Optional<int>(Some(2));
+    opt2 = move(opt1);
 
-    REQUIRE(opt1 != None);
+    SECTION("must move val to dest")
+    {
+        REQUIRE(opt2.unwrap() == 10);
+    }
+    SECTION("must invalidate src")
+    {
+        REQUIRE(opt1.is_inval());
+    }
 }
 
-
-TEST_CASE("Optional.neq for some with inval must give true", "[optional]")
+TEST_CASE("Optional<Void>(none).move-ass", "[optional]")
 {
-    nel::Optional<int> opt1 = nel::Some(1);
+    auto opt1 = Optional<Void>(Some());
+    auto opt2 = Optional<Void>(None());
+    opt2 = move(opt1);
 
-    nel::Optional<int> opt2 = nel::Some(1);
-    auto opt3 = move(opt2);
-
-    REQUIRE(opt1 != opt2);
+    SECTION("must move val to dest")
+    {
+        REQUIRE(opt2.is_some());
+    }
+    SECTION("must invalidate src")
+    {
+        REQUIRE(opt1.is_inval());
+    }
 }
 
-
-TEST_CASE("Optional.neq for some with some must not alter src", "[optional]")
+TEST_CASE("Optional<>(inval).move-ass: must move val to dest", "[optional]")
 {
-    nel::Optional<int> opt1 = nel::Some(1);
+    // inval state moed to dest.
+    // does not panic.
+    auto opt1 = nel::Optional<int>();
 
-    auto is_neq = opt1 != nel::Some(1);
-    NEL_UNUSED(is_neq);
+    auto opt2 = nel::Optional<int>();
 
-    REQUIRE(opt1.unwrap() == 1);
+    opt2 = move(opt1);
+
+    SECTION("must move val to dest")
+    {
+        REQUIRE(opt2.is_inval());
+    }
+    SECTION("must invalidate src")
+    {
+        REQUIRE(opt1.is_inval());
+    }
 }
 
-
-TEST_CASE("Optional.neq for some with diff must not alter src", "[optional]")
+TEST_CASE("Optional<>(some).is_some()", "[optional]")
 {
-    nel::Optional<int> opt1 = nel::Some(1);
+    auto opt1 = Optional<int>(Some(1));
 
-    auto is_neq = opt1 != nel::Some(2);
-    NEL_UNUSED(is_neq);
-
-    REQUIRE(opt1.unwrap() == 1);
+    SECTION("must return true")
+    {
+        REQUIRE(opt1.is_some());
+    }
+    SECTION("must not alter src")
+    {
+        // check has not been invalidated.
+        // check has not changed value.
+        REQUIRE(opt1.unwrap() == 1);
+    }
 }
 
-
-TEST_CASE("Optional.neq for some with none must not alter src", "[optional]")
+TEST_CASE("Optional<Void>(some).is_some()", "[optional]")
 {
-    nel::Optional<int> opt1 = nel::Some(1);
+    auto opt1 = Optional<Void>(Some());
 
-    auto is_neq = opt1 != nel::None;
-    NEL_UNUSED(is_neq);
-
-    REQUIRE(opt1.unwrap() == 1);
+    SECTION("must return true")
+    {
+        REQUIRE(opt1.is_some());
+    }
+    SECTION("must not alter src")
+    {
+        // check value has not been invalidated
+        REQUIRE(opt1.is_some());
+    }
 }
 
-
-TEST_CASE("Optional.neq for some with inval must not alter src", "[optional]")
+TEST_CASE("Optional<>(none).is_some()", "[optional]")
 {
-    nel::Optional<int> opt1 = nel::Some(1);
+    auto opt1 = Optional<int>(None());
 
-    nel::Optional<int> opt2 = nel::Some(2);
-    auto opt3 = move(opt2);
-
-    auto is_neq = opt1 != opt2;
-    NEL_UNUSED(is_neq);
-
-    REQUIRE(opt1.unwrap() == 1);
+    SECTION("must return false")
+    {
+        REQUIRE_FALSE(opt1.is_some());
+    }
+    SECTION("must not alter src")
+    {
+        // check value has not been invalidated
+        REQUIRE(opt1.is_none());
+    }
 }
 
-
-
-TEST_CASE("Optional.neq for none with some must give true", "[optional]")
+TEST_CASE("Optional<Void>(none).is_some()", "[optional]")
 {
-    nel::Optional<int> opt1 = nel::None;
+    auto opt1 = Optional<Void>(None());
 
-    REQUIRE(opt1 != nel::Some(1));
+    SECTION("must return false")
+    {
+        REQUIRE_FALSE(opt1.is_some());
+    }
+    SECTION("must not alter src")
+    {
+        // check value has not been invalidated
+        REQUIRE(opt1.is_none());
+    }
 }
 
-
-TEST_CASE("Optional.neq for none with none must give false", "[optional]")
+TEST_CASE("Optional<>(inval).is_some()", "[optional]")
 {
-    nel::Optional<int> opt1 = nel::None;
-
-    REQUIRE(!(opt1 != None));
-}
-
-
-TEST_CASE("Optional.neq for none with inval must give true", "[optional]")
-{
-    nel::Optional<int> opt1 = nel::None;
-
-    nel::Optional<int> opt2 = nel::Some(1);
-    auto opt3 = move(opt2);
-
-    REQUIRE(opt1 != opt2);
-}
-
-
-TEST_CASE("Optional.neq for none with some must not alter src", "[optional]")
-{
-    nel::Optional<int> opt1 = nel::None;
-
-    auto is_neq = opt1 != nel::Some(1);
-    NEL_UNUSED(is_neq);
-
-    REQUIRE(opt1.is_none());
-}
-
-
-TEST_CASE("Optional.neq for none with none must not alter src", "[optional]")
-{
-    nel::Optional<int> opt1 = nel::None;
-
-    auto is_neq = opt1 != nel::None;
-    NEL_UNUSED(is_neq);
-
-    REQUIRE(opt1.is_none());
-}
-
-
-TEST_CASE("Optional.neq for none with inval must not alter src", "[optional]")
-{
-    nel::Optional<int> opt1 = nel::None;
-
-    nel::Optional<int> opt2 = nel::Some(1);
-    auto opt3 = move(opt2);
-
-    auto is_neq = opt1 != opt2;
-    NEL_UNUSED(is_neq);
-
-    REQUIRE(opt1.is_none());
-}
-
-
-TEST_CASE("Optional.neq for inval with some must give true", "[optional]")
-{
-    nel::Optional<int> opt1 = nel::None;
+    auto opt1 = Optional<int>(None());
     auto opt2 = move(opt1);
 
-    REQUIRE(opt1 != nel::Some(1));
+    SECTION("must panic")
+    {
+        REQUIRE_PANIC(opt1.is_some());
+    }
 }
 
-
-TEST_CASE("Optional.neq for inval with none must give true", "[optional]")
+TEST_CASE("Optional<Void>(inval).is_some()", "[optional]")
 {
-    nel::Optional<int> opt1 = nel::None;
+    auto opt1 = Optional<Void>(None());
     auto opt2 = move(opt1);
 
-    REQUIRE(opt1 != None);
+    SECTION("must panic")
+    {
+        REQUIRE_PANIC(opt1.is_some());
+    }
 }
 
-
-TEST_CASE("Optional.neq for inval with inval must give false", "[optional]")
+TEST_CASE("Optional<>(some).is_none()", "[optional]")
 {
-    nel::Optional<int> opt1 = nel::None;
-    auto opt2 = move(opt1);
+    auto opt1 = Optional<int>(Some(1));
 
-    nel::Optional<int> opt3 = nel::Some(1);
-    auto opt4 = move(opt3);
-
-    REQUIRE(!(opt1 != opt3));
+    SECTION("must return false")
+    {
+        REQUIRE_FALSE(opt1.is_none());
+    }
+    SECTION("must not alter src")
+    {
+        // check value has not been invalidated.
+        REQUIRE(opt1.is_some());
+        // check value has not been changed.
+        REQUIRE(opt1.unwrap() == 1);
+    }
 }
 
-
-TEST_CASE("Optional.neq for inval with some must not alter src", "[optional]")
+TEST_CASE("Optional<Void>(some).is_none()", "[optional]")
 {
-    nel::Optional<int> opt1 = nel::None;
-    auto opt2 = move(opt1);
+    auto opt1 = Optional<Void>(Some());
 
-    auto is_neq = opt1 != nel::Some(1);
-    NEL_UNUSED(is_neq);
-
-    REQUIRE(!opt1.is_none());
-    REQUIRE(!opt1.is_some());
+    SECTION("must return false")
+    {
+        REQUIRE_FALSE(opt1.is_none());
+    }
+    SECTION("must not alter src")
+    {
+        // check value has not been invalidated.
+        // check value has not been changed.
+        REQUIRE(opt1.is_some());
+    }
 }
 
-
-TEST_CASE("Optional.neq for inval with none must not alter src", "[optional]")
+TEST_CASE("Optional<>(none).is_none()", "[optional]")
 {
-    nel::Optional<int> opt1 = nel::None;
-    auto opt2 = move(opt1);
+    auto opt1 = Optional<int>(None());
 
-    nel::Optional<int> is_neq = opt1 != nel::None;
-    NEL_UNUSED(is_neq);
-
-    REQUIRE(!opt1.is_none());
-    REQUIRE(!opt1.is_some());
+    SECTION("must return true")
+    {
+        REQUIRE(opt1.is_none());
+    }
+    SECTION("must not alter src")
+    {
+        // check value has not been invalidated.
+        // check value has not been changed.
+        REQUIRE(opt1.is_none());
+    }
 }
 
-
-TEST_CASE("Optional.neq for inval with inval must not alter src", "[optional]")
+TEST_CASE("Optional<Void>(none).is_none()", "[optional]")
 {
-    nel::Optional<int> opt1 = nel::None;
-    auto opt2 = move(opt1);
+    auto opt1 = Optional<Void>(None());
 
-    nel::Optional<int> opt3 = nel::Some(1);
-    auto opt4 = move(opt3);
-
-    auto is_neq = opt1 != opt3;
-    NEL_UNUSED(is_neq);
-
-    REQUIRE(!opt1.is_none());
-    REQUIRE(!opt1.is_some());
+    SECTION("must return true")
+    {
+        REQUIRE(opt1.is_none());
+    }
+    SECTION("must not alter src")
+    {
+        // check value has not been invalidated.
+        // check value has not been changed.
+        REQUIRE(opt1.is_none());
+    }
 }
-#endif
+
+TEST_CASE("Optional<>(inval).is_none()", "[optional]")
+{
+    auto opt1 = Optional<int>();
+
+    SECTION("must panic")
+    {
+        REQUIRE_PANIC(opt1.is_none());
+    }
+}
+
+TEST_CASE("Optional<Void>(inval).is_none()", "[optional]")
+{
+    auto opt1 = Optional<Void>();
+
+    SECTION("must panic")
+    {
+        REQUIRE_PANIC(opt1.is_none());
+    }
+}
+
+TEST_CASE("Optional<>(some).unwrap()", "[optional]")
+{
+    auto opt1 = Optional<int>(Some(1));
+
+    SECTION("must return wrapped value")
+    {
+        auto val = opt1.unwrap();
+        REQUIRE(val == 1);
+    }
+    SECTION("must invalidate src")
+    {
+        auto val = opt1.unwrap();
+        nel::unused(val);
+        REQUIRE(opt1.is_inval());
+    }
+}
+
+TEST_CASE("Optional<Void>(some).unwrap()", "[optional]")
+{
+    auto opt1 = Optional<Void>(Some());
+
+    SECTION("must return wrapped value")
+    {
+        // check that unwrap does not panic
+        opt1.unwrap();
+    }
+    SECTION("must invalidate src")
+    {
+        opt1.unwrap();
+        REQUIRE(opt1.is_inval());
+    }
+}
+
+TEST_CASE("Optional<>(none).unwrap()", "[optional]")
+{
+    auto opt1 = Optional<int>(None());
+
+    SECTION("panics")
+    {
+        REQUIRE_PANIC(opt1.unwrap());
+    }
+}
+
+TEST_CASE("Optional<Void>(none).unwrap()", "[optional]")
+{
+    auto opt1 = Optional<Void>(None());
+
+    SECTION("panics")
+    {
+        REQUIRE_PANIC(opt1.unwrap());
+    }
+}
+
+TEST_CASE("Optional<>(inval).unwrap()", "[optional]")
+{
+    auto opt1 = Optional<int>();
+
+    SECTION("panics")
+    {
+        REQUIRE_PANIC(opt1.unwrap());
+    }
+}
+
+TEST_CASE("Optional<Void>(inval).unwrap()", "[optional]")
+{
+    auto opt1 = Optional<Void>();
+
+    SECTION("panics")
+    {
+        REQUIRE_PANIC(opt1.unwrap());
+    }
+}
+
+TEST_CASE("Optional<>(some).unwrap_or(other)", "[optional]")
+{
+    auto opt1 = Optional<int>(Some(1));
+
+    SECTION("returns original value")
+    {
+        auto val = opt1.unwrap_or(2);
+        REQUIRE(val == 1);
+    }
+    SECTION("invalidates src")
+    {
+        opt1.unwrap_or(2);
+        REQUIRE(opt1.is_inval());
+    }
+}
+
+TEST_CASE("Optional<Void>(some).unwrap_or(other)", "[optional]")
+{
+    auto opt1 = Optional<Void>(Some());
+
+    SECTION("returns original value")
+    {
+        // check that it doesn't panic..
+        opt1.unwrap_or(Void());
+    }
+    SECTION("invalidates src")
+    {
+        opt1.unwrap_or(Void());
+        REQUIRE(opt1.is_inval());
+    }
+}
+
+TEST_CASE("Optional<>(none).unwrap_or(other)", "[optional]")
+{
+    auto opt1 = Optional<int>(None());
+
+    SECTION("returns other value")
+    {
+        auto val = opt1.unwrap_or(2);
+        REQUIRE(val == 2);
+    }
+    SECTION("invalidates src")
+    {
+        opt1.unwrap_or(2);
+        REQUIRE(opt1.is_inval());
+    }
+}
+
+TEST_CASE("Optional<Void>(none).unwrap_or(other)", "[optional]")
+{
+    auto opt1 = Optional<Void>(None());
+
+    SECTION("returns other value")
+    {
+        // check that it doesn't panic..
+        opt1.unwrap_or(Void());
+    }
+    SECTION("invalidates src")
+    {
+        opt1.unwrap_or(Void());
+        REQUIRE(opt1.is_inval());
+    }
+}
+
+TEST_CASE("Optional<>(inval).unwrap_or(other)", "[optional]")
+{
+    auto opt1 = Optional<int>();
+
+    SECTION("must panic")
+    {
+        // i.e. use after move.
+        REQUIRE_PANIC(opt1.unwrap_or(2));
+    }
+}
+
+TEST_CASE("Optional<>(some).eq()", "[optional]")
+{
+    auto opt1 = Optional<int>(Some(1));
+
+    SECTION("must return true if compared to same value")
+    {
+        REQUIRE(opt1 == nel::Some(1));
+    }
+    SECTION("must return true if compared to same obj")
+    {
+        REQUIRE(opt1 == opt1);
+    }
+    SECTION("must not change src")
+    {
+        REQUIRE(opt1.unwrap() == 1);
+    }
+    SECTION("must return false if compared to diff value")
+    {
+        REQUIRE_FALSE(opt1 == nel::Some(2));
+    }
+    SECTION("must return false if compared to none")
+    {
+        REQUIRE_FALSE(opt1 == None());
+    }
+    SECTION("must panic if compared to invalid")
+    {
+        auto opt2 = nel::Optional<int>();
+        REQUIRE_PANIC(opt1 == opt2);
+    }
+}
+
+TEST_CASE("Optional<Void>(some).eq()", "[optional]")
+{
+    auto opt1 = Optional<Void>(Some());
+
+    SECTION("must return true if compared to same value")
+    {
+        REQUIRE(opt1 == nel::Some());
+    }
+    SECTION("must return true if compared to same obj")
+    {
+        REQUIRE(opt1 == opt1);
+    }
+    SECTION("must not change src")
+    {
+        /// check that does not panic
+        opt1.unwrap();
+    }
+    // SECTION("must return false for diff value") {
+    //     REQUIRE_FALSE(opt1 == nel::Some(2));
+    // }
+    SECTION("must return false if compared to none")
+    {
+        REQUIRE_FALSE(opt1 == None());
+    }
+    SECTION("must panic if compared to invalid")
+    {
+        auto opt2 = Optional<Void>();
+        REQUIRE_PANIC(opt1 == opt2);
+    }
+}
+
+TEST_CASE("Optional<>(none).eq()", "[optional]")
+{
+    auto opt1 = Optional<int>(None());
+
+    SECTION("must return true for same value")
+    {
+        REQUIRE(opt1 == nel::Optional<int>(None()));
+    }
+    SECTION("must return true if compared to same obj")
+    {
+        REQUIRE(opt1 == opt1);
+    }
+    SECTION("must not change src")
+    {
+        REQUIRE(opt1.is_none());
+    }
+    // SECTION("must return false for diff value") {
+    //     REQUIRE_FALSE(opt1 == nel::Some(2));
+    // }
+    SECTION("must return false for Some value")
+    {
+        REQUIRE_FALSE(opt1 == nel::Some(2));
+    }
+    SECTION("must panic if compared to invalid")
+    {
+        auto opt2 = nel::Optional<int>();
+        REQUIRE_PANIC(opt1 == opt2);
+    }
+}
+
+TEST_CASE("Optional<Void>(none).eq()", "[optional]")
+{
+    auto opt1 = nel::Optional<Void>(None());
+
+    SECTION("must return true for same value")
+    {
+        REQUIRE(opt1 == None());
+    }
+    SECTION("must return true if compared to same obj")
+    {
+        REQUIRE(opt1 == opt1);
+    }
+    SECTION("must not change src")
+    {
+        REQUIRE(opt1.is_none());
+    }
+    // SECTION("must return false for diff value") {
+    //     REQUIRE_FALSE(opt1 == nel::Some(2));
+    // }
+    SECTION("must return false for Some value")
+    {
+        REQUIRE_FALSE(opt1 == nel::Some());
+    }
+    SECTION("must panic if compared to invalid")
+    {
+        auto opt2 = Optional<Void>();
+        REQUIRE_PANIC(opt1 == opt2);
+    }
+}
+
+TEST_CASE("Optional<>(inval).eq()", "[optional]")
+{
+    auto opt1 = Optional<int>();
+
+    SECTION("must panic if compared to same value")
+    {
+        auto opt10 = Optional<int>();
+        REQUIRE_PANIC(opt1 == opt10);
+    }
+    SECTION("must panic if compared to same obj")
+    {
+        REQUIRE_PANIC(opt1 == opt1);
+    }
+    SECTION("must panic if compared to Some value")
+    {
+        REQUIRE_PANIC(opt1 == Some(1));
+    }
+}
+
+TEST_CASE("Optional<Void>(inval).eq()", "[optional]")
+{
+    auto opt1 = nel::Optional<Void>();
+
+    SECTION("must panic if compared to same value")
+    {
+        auto opt10 = Optional<Void>();
+        REQUIRE_PANIC(opt1 == opt10);
+    }
+    SECTION("must panic if compared to same obj")
+    {
+        REQUIRE_PANIC(opt1 == opt1);
+    }
+    SECTION("must panic if compared to Some value")
+    {
+        REQUIRE_PANIC(opt1 == nel::Some());
+    }
+}
+
+TEST_CASE("Optional<>(some).ne()", "[optional]")
+{
+    auto opt1 = Optional<int>(Some(1));
+
+    SECTION("must return false if compared to same value")
+    {
+        REQUIRE_FALSE(opt1 != nel::Some(1));
+    }
+    SECTION("must return false if compared to same obj")
+    {
+        REQUIRE_FALSE(opt1 != opt1);
+    }
+    SECTION("must not change src")
+    {
+        REQUIRE(opt1.unwrap() == 1);
+    }
+    SECTION("must return true if compared to diff value")
+    {
+        REQUIRE(opt1 != nel::Some(2));
+    }
+    SECTION("must return true if compared to none")
+    {
+        REQUIRE(opt1 != None());
+    }
+    SECTION("must panic if compared to invalid")
+    {
+        auto opt2 = nel::Optional<int>();
+        REQUIRE_PANIC(opt1 != opt2);
+    }
+}
+
+TEST_CASE("Optional<Void>(some).ne()", "[optional]")
+{
+    auto opt1 = Optional<Void>(Some());
+
+    SECTION("must return false if compared to same value")
+    {
+        REQUIRE_FALSE(opt1 != nel::Some());
+    }
+    SECTION("must return false if compared to same obj")
+    {
+        REQUIRE_FALSE(opt1 != opt1);
+    }
+    SECTION("must not change src")
+    {
+        /// check that does not panic
+        opt1.unwrap();
+    }
+    // SECTION("must return false for diff value") {
+    //     REQUIRE_FALSE(opt1 == nel::Some(2));
+    // }
+    SECTION("must return true if compared to none")
+    {
+        REQUIRE(opt1 != None());
+    }
+    SECTION("must panic if compared to invalid")
+    {
+        auto opt2 = nel::Optional<Void>();
+        REQUIRE_PANIC(opt1 != opt2);
+    }
+}
+
+TEST_CASE("Optional<>(none).ne()", "[optional]")
+{
+    auto opt1 = Optional<int>(None());
+
+    SECTION("must return false for same value")
+    {
+        REQUIRE_FALSE(opt1 != nel::Optional<int>(None()));
+    }
+    SECTION("must return false if compared to same obj")
+    {
+        REQUIRE_FALSE(opt1 != opt1);
+    }
+    SECTION("must not change src")
+    {
+        REQUIRE(opt1.is_none());
+    }
+    // SECTION("must return false for diff value") {
+    //     REQUIRE_FALSE(opt1 == nel::Some(2));
+    // }
+    SECTION("must return true for Some value")
+    {
+        REQUIRE_FALSE(opt1 == nel::Some(2));
+    }
+    SECTION("must panic if compared to invalid")
+    {
+        auto opt2 = nel::Optional<int>();
+        REQUIRE_PANIC(opt1 != opt2);
+    }
+}
+
+TEST_CASE("Optional<Void>(none).ne()", "[optional]")
+{
+    auto opt1 = nel::Optional<Void>(None());
+
+    SECTION("must return false for same value")
+    {
+        REQUIRE_FALSE(opt1 != nel::Optional<Void>(None()));
+    }
+    SECTION("must return false if compared to same obj")
+    {
+        REQUIRE_FALSE(opt1 != opt1);
+    }
+    SECTION("must not change src")
+    {
+        REQUIRE(opt1.is_none());
+    }
+    // SECTION("must return false for diff value") {
+    //     REQUIRE_FALSE(opt1 == nel::Some(2));
+    // }
+    SECTION("must return true for Some value")
+    {
+        REQUIRE(opt1 != nel::Some());
+    }
+    SECTION("must panic if compared to invalid")
+    {
+        auto opt2 = nel::Optional<Void>();
+        REQUIRE_PANIC(opt1 != opt2);
+    }
+}
+
+TEST_CASE("Optional<>(inval).ne()", "[optional]")
+{
+    auto opt1 = Optional<int>();
+
+    SECTION("must panic if compared to same value")
+    {
+        auto opt10 = nel::Optional<int>();
+        REQUIRE_PANIC(opt1 != opt10);
+    }
+    SECTION("must panic if compared to same obj")
+    {
+        REQUIRE_PANIC(opt1 != opt1);
+    }
+    SECTION("must panic if compared to Some value")
+    {
+        REQUIRE_PANIC(opt1 != nel::Some(1));
+    }
+}
+
+TEST_CASE("Optional<Void>(inval).ne()", "[optional]")
+{
+    auto opt1 = nel::Optional<Void>();
+
+    SECTION("must panic if compared to same value")
+    {
+        auto opt10 = nel::Optional<Void>();
+        REQUIRE_PANIC(opt1 != opt10);
+    }
+    SECTION("must panic if compared to same obj")
+    {
+        REQUIRE_PANIC(opt1 != opt1);
+    }
+    SECTION("must panic if compared to Some value")
+    {
+        REQUIRE_PANIC(opt1 != nel::Some());
+    }
+}
 
 nel::Optional<int> foo_some()
 {
     return nel::Some(1);
-    // return nel::nel::Some(1);
 }
 
-TEST_CASE("optional::Some auto into Optional", "[optional]")
+TEST_CASE("Optional(some).?  into Optional", "[optional]")
 {
     REQUIRE(foo_some().is_some());
 }
 
 nel::Optional<int> foo_none()
 {
-    return nel::None;
+    return nel::None();
 }
 
-TEST_CASE("optional::None auto into Optional", "[optional]")
+TEST_CASE("Optional(none()) auto into Optional", "[optional]")
 {
     REQUIRE(foo_none().is_none());
 }
@@ -891,7 +1004,7 @@ struct Foo
         bool &dtor_called;
 };
 
-TEST_CASE("optional::~dtor for some, must call some dtor", "[optional]")
+TEST_CASE("Optional(some)::~dtor, must call some dtor", "[optional]")
 {
     bool dtor_called = false;
     {
@@ -902,20 +1015,80 @@ TEST_CASE("optional::~dtor for some, must call some dtor", "[optional]")
     REQUIRE(dtor_called);
 }
 
-TEST_CASE("optional::map for some must produce a some", "[optional]")
+TEST_CASE("Optional<>(some).map()", "[optional]")
 {
-    nel::Optional<int> opt1a = nel::Some(1);
-    auto opt2a = opt1a.map<char const *>([](auto &&) -> char const * { return "haha"; });
-    auto val = opt2a.unwrap();
+    auto opt1 = Optional<int>(Some(1));
+    auto opt2 = opt1.map<char const *>([](auto &&) -> char const * { return "haha"; });
 
-    REQUIRE(strcmp(val, "haha") == 0);
+    SECTION("must produce mapped value")
+    {
+        auto val = opt2.unwrap();
+        REQUIRE(strcmp(val, "haha") == 0);
+    }
+    SECTION("must invalidate src")
+    {
+        REQUIRE(opt1.is_inval());
+    }
 }
 
-TEST_CASE("optional::map for none must produce a none", "[optional]")
+TEST_CASE("Optional<Void>(some).map()", "[optional]")
 {
-    nel::Optional<int> opt1a = nel::None;
-    auto opt2a = opt1a.map<char const *>([](auto &&) -> char const * { return "haha"; });
-    REQUIRE(opt2a.is_none());
+    auto opt1 = Optional<Void>(Some());
+    auto opt2 = opt1.map<char const *>([](Void &&) -> char const * { return "haha"; });
+
+    SECTION("must produce mapped value")
+    {
+        auto val = opt2.unwrap();
+        REQUIRE(strcmp(val, "haha") == 0);
+    }
+    SECTION("must invalidate src")
+    {
+        REQUIRE(opt1.is_inval());
+    }
+}
+
+TEST_CASE("Optional<>(none).map", "[optional]")
+{
+    auto opt1 = Optional<int>(None());
+    auto opt2 = opt1.map<char const *>([](auto &&) -> char const * { return "haha"; });
+
+    SECTION("must not change value")
+    {
+        REQUIRE(opt2.is_none());
+    }
+    SECTION("must invalidate src")
+    {
+        REQUIRE(opt1.is_inval());
+    }
+}
+
+TEST_CASE("Optional<Void>(none).map", "[optional]")
+{
+    auto opt1 = Optional<Void>(None());
+    auto opt2 = opt1.map<char const *>([](Void &&) -> char const * { return "haha"; });
+
+    SECTION("must not change value")
+    {
+        REQUIRE(opt2.is_none());
+    }
+    SECTION("must invalidate src")
+    {
+        REQUIRE(opt1.is_inval());
+    }
+}
+
+TEST_CASE("Optional<>(inval).map: panics", "[optional]")
+{
+    auto opt1 = Optional<int>();
+
+    REQUIRE_PANIC(opt1.map<char const *>([](auto &&) -> char const * { return "haha"; }));
+}
+
+TEST_CASE("Optional<Void>(inval).map: panics", "[optional]")
+{
+    auto opt1 = Optional<Void>();
+
+    REQUIRE_PANIC(opt1.map<char const *>([](Void &&) -> char const * { return "haha"; }));
 }
 
 }; // namespace optional

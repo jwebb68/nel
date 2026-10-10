@@ -5,4 +5,6 @@
 #include <nel/defs.hh>
 #include "libnosys_stubs.cx"
 
-int main() {}
+int main() {
+    return 0;
+}

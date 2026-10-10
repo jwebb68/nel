@@ -80,7 +80,7 @@ struct Manual
         {
             // use of this means dev is asserting that there is a value already
             // contained.
-            return move_from(nel::move(v));
+            return move_from(move(v));
         }
 
     public:
@@ -102,13 +102,15 @@ struct Manual
 
         constexpr Self &move_from(Manual &&rhs)
         {
-            deref() = nel::move(rhs.ref());
+            // cannot use construct as this has a value..
+            deref() = move(rhs.deref());
             return *this;
         }
 
         constexpr Self &move_from(Type &&v)
         {
-            deref() = nel::move(v);
+            // cannot use construct as this has a value..
+            deref() = move(v);
             return *this;
         }
 

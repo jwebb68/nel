@@ -1,9 +1,10 @@
 // -*- mode: c++; indent-tabs-mode: nil; tab-width: 4 -*-
-#include <nel/heapless/vector.hh>
+#include "vector.hh"
 
-#include <nel/memory.hh> // nel::move()
+#include <nel/memory.hh> // move()
 
 #include <catch2/catch.hpp>
+#include <catch2/catch2_panic.hh>
 
 // TODO: what of size/cap == 0, i//e Vector<T, 0> ?
 namespace nel
@@ -44,8 +45,8 @@ struct Stub
         }
 
         Stub(Stub &&o)
-            : val(nel::move(o.val))
-            , valid(nel::move(o.valid))
+            : val(move(o.val))
+            , valid(move(o.valid))
         {
             // move: moves a value, so does not create a new value.
             // move: moves a value, so does create a value in a new location.
@@ -58,8 +59,8 @@ struct Stub
         {
             // move: moves a value, so does not create a new value.
             // move: moves a value, so does create a value in a new location.
-            val = nel::move(o.val);
-            valid = nel::move(o.valid);
+            val = move(o.val);
+            valid = move(o.valid);
             o.valid = false;
             move_assn += 1;
             return *this;
@@ -80,8 +81,8 @@ TEST_CASE("heapless::Vector: dtor deletes contained", "[heapless][vector]")
     Stub::reset();
     {
         nel::heapless::Vector<Stub, 5> vec;
-        vec.push(nel::move(Stub(1))).unwrap();
-        vec.push(nel::move(Stub(2))).unwrap();
+        vec.push(move(Stub(1))).unwrap();
+        vec.push(move(Stub(2))).unwrap();
 
         // vec: all pushed elements are initialised.
         REQUIRE(Stub::instances == 2);
@@ -98,7 +99,7 @@ TEST_CASE("heapless::Vector: move-ctor invalidates src", "[heapless][vector]")
         auto vec1 = nel::heapless::Vector<Stub, 5>();
 
         Stub::reset();
-        auto vec2 = nel::move(vec1);
+        auto vec2 = move(vec1);
 
         REQUIRE(vec2.len() == 0);
         REQUIRE(vec1.len() == 0);
@@ -107,11 +108,11 @@ TEST_CASE("heapless::Vector: move-ctor invalidates src", "[heapless][vector]")
     {
         // move partially filled vector
         auto vec1 = nel::heapless::Vector<Stub, 5>();
-        vec1.push(nel::move(Stub(1))).unwrap();
-        vec1.push(nel::move(Stub(2))).unwrap();
+        vec1.push(move(Stub(1))).unwrap();
+        vec1.push(move(Stub(2))).unwrap();
 
         Stub::reset();
-        auto vec2 = nel::move(vec1);
+        auto vec2 = move(vec1);
 
         // T's was moved using it's move ops.
         // i.e. not using bitcopying.
@@ -136,7 +137,7 @@ TEST_CASE("heapless::Vector: move-assn invalidates src", "[heapless][vector]")
         auto vec2 = nel::heapless::Vector<Stub, 5>();
 
         Stub::reset();
-        vec2 = nel::move(vec1);
+        vec2 = move(vec1);
 
         REQUIRE(vec2.len() == 0);
         REQUIRE(vec1.len() == 0);
@@ -152,7 +153,8 @@ TEST_CASE("heapless::Vector: move-assn invalidates src", "[heapless][vector]")
 
         Stub::reset();
 
-        vec2 = nel::move(vec1);
+        vec2 = move(vec1);
+
 
         // T's was moved using it's move ops.
         // i.e. not using bitcopying.
@@ -178,7 +180,7 @@ TEST_CASE("heapless::Vector: move-assn invalidates src", "[heapless][vector]")
 
         Stub::reset();
 
-        vec2 = nel::move(vec1);
+        vec2 = move(vec1);
 
         // T's was moved using it's move ops.
         // i.e. not using bitcopying.
@@ -201,7 +203,7 @@ TEST_CASE("heapless::Vector::move", "[heapless][vector]")
     {
         // empty Vector can be moved
         auto a1 = nel::heapless::Vector<int, 3>::empty();
-        auto a2 = nel::move(a1);
+        auto a2 = move(a1);
         REQUIRE(a1.is_empty());
         REQUIRE(a2.is_empty());
     }
@@ -211,7 +213,7 @@ TEST_CASE("heapless::Vector::move", "[heapless][vector]")
         auto a3 = nel::heapless::Vector<int, 3>::empty();
         a3.push(2).is_ok();
 
-        auto a2 = nel::move(a3);
+        auto a2 = move(a3);
         REQUIRE(!a2.is_empty());
         REQUIRE(a3.is_empty());
     }
@@ -220,7 +222,7 @@ TEST_CASE("heapless::Vector::move", "[heapless][vector]")
         // testing const Vector moving, but should fail at compile time.
         // auto const c1 = nel::heapless::Vector<int, 3>::empty();
         // auto const c2 = nel::heapless::Vector<int, 3>::fill(2,1);
-        // c2 = nel::move(c1);
+        // c2 = move(c1);
     }
 
     {
@@ -230,7 +232,7 @@ TEST_CASE("heapless::Vector::move", "[heapless][vector]")
         a1.push(3).unwrap();
         a1.push(3).unwrap();
 
-        auto a2 = nel::move(a1);
+        auto a2 = move(a1);
 
         // moved dst must contain src values..
         auto r = a2.iter().fold(true, [](bool &acc, int const &v) { acc = acc && (v == 3); });
@@ -249,7 +251,7 @@ TEST_CASE("heapless::Vector::move", "[heapless][vector]")
         a1.push(1).unwrap();
         a1.push(1).unwrap();
 
-        a2 = nel::move(a1);
+        a2 = move(a1);
 
         REQUIRE(a2.len() == 2);
         // moved dst must contain src values..
@@ -492,7 +494,7 @@ TEST_CASE("heapless::Vector::slice()", "[heapless][Vector]")
         REQUIRE(!sa2.is_empty());
         REQUIRE(sa2.len() == 1);
 
-        auto const ca2 = nel::move(a2);
+        auto const ca2 = move(a2);
         auto sca2 = ca2.slice();
         REQUIRE(!sca2.is_empty());
         REQUIRE(sca2.len() == 1);
@@ -542,7 +544,7 @@ TEST_CASE("heapless::Vector::slice(b,e)", "[heapless][vector]")
         auto a1 = nel::heapless::Vector<int, 3>::empty();
         a1.push(1).is_ok();
         a1.push(2).is_ok();
-        auto const c1 = nel::move(a1);
+        auto const c1 = move(a1);
 
         auto sc1 = c1.slice(0, 0);
         REQUIRE(sc1.is_empty());
@@ -680,7 +682,7 @@ TEST_CASE("heapless::Vector::try_get()", "[heapless][Vector]")
         REQUIRE(sa2.is_some());
         REQUIRE(sa2.unwrap() == 1);
 
-        auto const ca2 = nel::move(a2);
+        auto const ca2 = move(a2);
         auto sca2 = ca2.try_get(0);
         REQUIRE(sca2.is_some());
         REQUIRE(sca2.unwrap() == 1);
@@ -693,7 +695,7 @@ TEST_CASE("heapless::Vector::try_get()", "[heapless][Vector]")
         auto sa2 = a2.try_get(1);
         REQUIRE(sa2.is_none());
 
-        auto const ca2 = nel::move(a2);
+        auto const ca2 = move(a2);
         auto sca2 = ca2.try_get(1);
         REQUIRE(sca2.is_none());
     }

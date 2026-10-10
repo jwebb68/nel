@@ -2,15 +2,26 @@
 #if !defined(NEL_MEMORY_HH)
 #    define NEL_MEMORY_HH
 
+// #define FEATURE_USE_STD_MOVE_FORWARD
+
 #    include <nel/defs.hh> // Length
 
 #    include <inttypes.h> // uint8_t
 
 #    include <cstddef> // std::nullptr_t
 
+
+#if defined(FEATURE_USE_STD_MOVE_FORWARD)
+#    include <utility> // std::move, std::forward
+#endif
+
 namespace nel
 {
 
+#if defined(FEATURE_USE_STD_MOVE_FORWARD)
+using std::move;
+using std::forward;
+#else
 /**
  * Convert arg into a r-reference
  *
@@ -78,6 +89,7 @@ constexpr U &&forward(T &&t)
 {
     return static_cast<U &&>(t);
 }
+#endif// defined(FEATURE_USE_STD_MOVE_FORWARD)
 
 namespace elem
 {

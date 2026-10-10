@@ -1,7 +1,10 @@
 // -*- mode: c++; indent-tabs-mode: nil; tab-width: 4 -*-
-#include <nel/stub.hh>
+#include "stub.hh"
+
+#include <nel/memory.hh> // move/forward
 
 #include <catch2/catch.hpp>
+#include <catch2/catch2_panic.hh>
 
 namespace nel
 {
@@ -41,7 +44,7 @@ TEST_CASE("Stub::move-ctor", "[stub]")
     {
         auto s = Stub(100);
         Stub::reset();
-        auto s2 = nel::move(s);
+        auto s2 = move(s);
 
         REQUIRE(Stub::instances == 0);
         REQUIRE(Stub::ctor == 0);
@@ -58,9 +61,9 @@ TEST_CASE("Stub::move-ctor", "[stub]")
     SECTION("rhs invalid")
     {
         auto s = Stub(100);
-        auto s1 = nel::move(s);
+        auto s1 = move(s);
         Stub::reset();
-        auto s2 = nel::move(s);
+        auto s2 = move(s);
 
         REQUIRE(Stub::instances == 0);
         REQUIRE(Stub::ctor == 0);
@@ -88,7 +91,7 @@ TEST_CASE("Stub::move-assn", "[stub]")
         auto s = Stub(100);
         auto s2 = Stub(200);
         Stub::reset();
-        s2 = nel::move(s);
+        s2 = move(s);
 
         REQUIRE(Stub::instances == 0);
         REQUIRE(Stub::ctor == 0);
@@ -106,9 +109,9 @@ TEST_CASE("Stub::move-assn", "[stub]")
     {
         auto s = Stub(100);
         auto s2 = Stub(200);
-        auto s1 = nel::move(s);
+        auto s1 = move(s);
         Stub::reset();
-        s2 = nel::move(s);
+        s2 = move(s);
 
         REQUIRE(Stub::instances == 0);
         REQUIRE(Stub::ctor == 0);
@@ -152,7 +155,7 @@ TEST_CASE("Stub::copy-ctor", "[stub]")
     SECTION("rhs invalid")
     {
         auto s = Stub(100);
-        auto s1 = nel::move(s);
+        auto s1 = move(s);
         Stub::reset();
         auto s2 = s;
 
@@ -200,7 +203,7 @@ TEST_CASE("Stub::copy-assn", "[stub]")
     {
         auto s = Stub(100);
         auto s2 = Stub(200);
-        auto s1 = nel::move(s);
+        auto s1 = move(s);
         Stub::reset();
         s2 = s;
 
@@ -235,14 +238,14 @@ TEST_CASE("Stub::lhs == Stub::rhs", "[stub]")
     SECTION("lhs invalid, rhs valid")
     {
         auto s1 = Stub(100);
-        auto s = nel::move(s1);
+        auto s = move(s1);
         auto s2 = Stub(100);
         REQUIRE(!(s1 == s2));
     }
     SECTION("lhs invalid, rhs invalid")
     {
         auto s1 = Stub(100);
-        auto s = nel::move(s1);
+        auto s = move(s1);
         auto s2 = Stub(100);
         REQUIRE(!(s1 == s2));
     }
@@ -250,7 +253,7 @@ TEST_CASE("Stub::lhs == Stub::rhs", "[stub]")
     {
         auto s1 = Stub(100);
         auto s2 = Stub(100);
-        auto s = nel::move(s2);
+        auto s = move(s2);
         REQUIRE(!(s1 == s2));
     }
 }
@@ -272,23 +275,23 @@ TEST_CASE("Stub::lhs != Stub::rhs", "[stub]")
     SECTION("lhs invalid, rhs valid")
     {
         auto s1 = Stub(100);
-        auto s = nel::move(s1);
+        auto s = move(s1);
         auto s2 = Stub(100);
         REQUIRE(!(s1 != s2));
     }
     SECTION("lhs invalid, rhs invalid")
     {
         auto s1 = Stub(100);
-        auto s = nel::move(s1);
+        auto s = move(s1);
         auto s2 = Stub(100);
-        auto s3 = nel::move(s2);
+        auto s3 = move(s2);
         REQUIRE(!(s1 != s2));
     }
     SECTION("lhs valid, rhs invalid")
     {
         auto s1 = Stub(100);
         auto s2 = Stub(100);
-        auto s = nel::move(s2);
+        auto s = move(s2);
         REQUIRE(!(s1 != s2));
     }
 }
