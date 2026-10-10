@@ -221,7 +221,7 @@ struct Node
                 // growing.. no excess
                 Node *p;
                 size_t newalloc = newsize;
-                if (old == nullptr || newalloc > old->alloc()) {
+                if (old == nullptr || newalloc > old->capacity()) {
                     p = Node::realloc(old, newalloc);
                     if (p == nullptr) {
                         Node::free(old);
