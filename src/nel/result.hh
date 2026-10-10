@@ -21,7 +21,7 @@ namespace nel
 {
 
 template<typename T>
-struct OkT
+struct OkT final
 {
     public:
         using Type = T;
@@ -31,7 +31,7 @@ struct OkT
 
     public:
         constexpr OkT(Type &&val)
-            : val_(move(val))
+            : val_(forward<Type>(val))
         {
         }
 
@@ -89,10 +89,31 @@ struct OkT
         // cannot be default as T may not have a default.
     public:
         constexpr bool operator==(OkT const &rhs) const {
-            return val_ == rhs.val_;
+            return val_ == rhs;
         }
+        constexpr bool operator==(T const &rhs)  const {
+            return val_ == rhs;
+        }
+        constexpr friend bool operator==(T const &lhs, OkT const &rhs) {
+            return rhs == lhs;
+        }
+
         constexpr bool operator!=(OkT const &rhs) const {
             return val_ != rhs.val_;
+        }
+        constexpr bool operator!=(T const &rhs)  const {
+            return val_ != rhs;
+        }
+        constexpr friend bool operator!=(T const &lhs, OkT const &rhs) {
+            return rhs != lhs;
+        }
+
+    public:
+        friend Log &operator<<(Log &outs, OkT const &val) {
+            outs << "Ok(";
+            outs <<  val.val_;
+            outs << ')';
+            return outs;
         }
 };
 
@@ -110,7 +131,7 @@ constexpr inline OkT<Void> Ok()
 }
 
 template<typename T>
-struct ErrT
+struct ErrT final
 {
     public:
         using Type = T;
@@ -192,8 +213,29 @@ struct ErrT
         constexpr bool operator==(ErrT const &rhs) const {
             return val_ == rhs.val_;
         }
+        constexpr bool operator==(T const &rhs)  const {
+            return val_ == rhs;
+        }
+        constexpr friend bool operator==(T const &lhs, ErrT const &rhs) {
+            return rhs == lhs;
+        }
+
         constexpr bool operator!=(ErrT const &rhs) const {
             return val_ != rhs.val_;
+        }
+        constexpr bool operator!=(T const &rhs)  const {
+            return val_ != rhs;
+        }
+        constexpr friend bool operator!=(T const &lhs, ErrT const &rhs) {
+            return rhs != lhs;
+        }
+
+    public:
+        friend Log &operator<<(Log &outs, ErrT const &val) {
+            outs << "Err(";
+            outs <<  val.val_;
+            outs << ')';
+            return outs;
         }
 };
 
@@ -246,7 +288,7 @@ constexpr inline ErrT<E> Err(E &&e, Context const &ctx = Context())
 // T must implement operator==, operator!=
 // E must implement operator==, operator!=
 template<typename T, typename E>
-struct [[nodiscard("unused Result that must be used")]] Result
+struct [[nodiscard("unused Result that must be used")]] Result final
 {
     private:
         // Restrict accessor funcs in OkT/ErrT so they can
@@ -263,7 +305,7 @@ struct [[nodiscard("unused Result that must be used")]] Result
         {
             public:
                 enum ETag {
-                    inval = 0,
+                    invalid = 0,
                     ok,
                     err,
                 } val_;
@@ -273,13 +315,13 @@ struct [[nodiscard("unused Result that must be used")]] Result
                 Tag(Tag &&rhs)
                     : val_(move(rhs.val_))
                 {
-                    rhs.val_ = inval;
+                    rhs.val_ = invalid;
                 }
 
                 Tag &operator=(Tag &&rhs)
                 {
                     val_ = move(rhs.val_);
-                    rhs.val_ = inval;
+                    rhs.val_ = invalid;
                     return *this;
                 }
 
@@ -304,6 +346,22 @@ struct [[nodiscard("unused Result that must be used")]] Result
             Err err_;
         };
 
+        template<typename V>
+        struct AutoInvalidator {
+            private:
+                Tag &t_;
+                V &v_;
+            public:
+                constexpr ~AutoInvalidator() {
+                    t_ = Tag::invalid;
+                    v_.~V();
+                }
+                constexpr AutoInvalidator(Tag &t, V &v):
+                    t_(t),
+                    v_(v)
+                {}
+        };
+
     public:
         constexpr ~Result(void)
         {
@@ -316,7 +374,7 @@ struct [[nodiscard("unused Result that must be used")]] Result
                     err_.~Err();
                     break;
 
-                case Tag::inval:
+                case Tag::invalid:
                     // dtor + move:
                     // if invalid, don't panic.. just means value was consumed earlier.
                     break;
@@ -348,7 +406,7 @@ struct [[nodiscard("unused Result that must be used")]] Result
                     new (&err_) Err(move(rhs.err_));
                     break;
 
-                case Tag::inval:
+                case Tag::invalid:
                     // dtor + move:
                     // if invalid, don't panic.. just means value was consumed earlier.
                     break;
@@ -379,7 +437,7 @@ struct [[nodiscard("unused Result that must be used")]] Result
                         case Tag::err:
                             err_ = move(rhs.err_);
                         break;
-                        case Tag::inval:
+                        case Tag::invalid:
                         break;
                         default:
                         // for dtor + moves (but not usage) at runtime:
@@ -410,7 +468,7 @@ struct [[nodiscard("unused Result that must be used")]] Result
     public:
         // Don't really want default ctor, but will want to just declare an instance with no value.
         constexpr Result(void)
-            : tag_(Tag::inval)
+            : tag_(Tag::invalid)
         {
         }
 
@@ -429,31 +487,7 @@ struct [[nodiscard("unused Result that must be used")]] Result
     private:
         //  don't use std::function, it's bloatware
         // May be simpler to just expose the Tag value..
-        // which mush panic if a non-enum value detected..
-
-        // template<typename V>
-        // constexpr V match(Tag tag, std::function<V(void)> &&on_ok, std::function<V(void)>
-        // &&on_err) const  {
-        template<typename V, typename Fn1, typename Fn2>
-        constexpr V match(Fn1 &&on_ok, Fn2 &&on_err, Context const &ctx = Context()) const
-        {
-            // this match is non-consuming, for internal use only.
-            switch (tag_) { // result-match
-                case Tag::ok:
-                    return on_ok(*ok_);
-                case Tag::err:
-                    return on_err(*err_);
-                case Tag::inval:
-                    // invalids are not values that should occur
-                    // if they do it's a use-after-move-from op so must panic.
-                    // or a use-before-initialised so again must panic.
-                    nel::panic("invalid Result", ctx);
-                    break;
-                default:
-                    nel::panic("bad Result", ctx);
-                    break;
-            }
-        }
+        // which must panic if a non-enum value detected..
 
     public:
         // Comparision operators
@@ -476,7 +510,7 @@ struct [[nodiscard("unused Result that must be used")]] Result
                     return ok_ == rhs;
                 case Tag::err:
                     return err_ == rhs;
-                case Tag::inval:
+                case Tag::invalid:
                     nel::panic("invalid Result");
                     break;
                 default:
@@ -484,17 +518,13 @@ struct [[nodiscard("unused Result that must be used")]] Result
                     break;
             }
         }
-        constexpr friend bool operator==(Result const &lhs, Ok const &rhs) {
-            // bah, oper== can only take 1 arg..
-            // TODO: fix this.
-            switch (lhs.tag_) {
+        constexpr bool operator==(Ok const &rhs) const {
+            switch (tag_) {
                 case Tag::ok:
-                    return lhs.ok_ == rhs;
-                    break;
+                    return ok_ == rhs;
                 case Tag::err:
                     return false;
-                    break;
-                case Tag::inval:
+                case Tag::invalid:
                     nel::panic("invalid Result");
                     break;
                 default:
@@ -505,17 +535,16 @@ struct [[nodiscard("unused Result that must be used")]] Result
         constexpr friend bool operator==(Ok const &lhs, Result const &rhs) {
             return rhs == lhs;
         }
-        constexpr friend bool operator==(Result const &lhs, Err const &rhs) {
-            // bah, oper== can only take 1 arg..
-            // TODO: fix this.
-            switch (lhs.tag_) {
+
+        constexpr bool operator==(Err const &rhs) const {
+            switch (tag_) {
                 case Tag::ok:
                     return false;
                     break;
                 case Tag::err:
-                    return lhs.err_ == rhs;
+                    return err_ == rhs;
                     break;
-                case Tag::inval:
+                case Tag::invalid:
                     nel::panic("invalid Result");
                     break;
                 default:
@@ -543,7 +572,7 @@ struct [[nodiscard("unused Result that must be used")]] Result
                     return ok_ != rhs;
                 case Tag::err:
                     return err_ != rhs;
-                case Tag::inval:
+                case Tag::invalid:
                     nel::panic("invalid Result");
                     break;
                 default:
@@ -551,17 +580,16 @@ struct [[nodiscard("unused Result that must be used")]] Result
                     break;
             }
         }
-        constexpr friend bool operator!=(Result const &lhs, Ok const &rhs) {
+        constexpr bool operator!=(Ok const &rhs) const {
             // bah, != can only take 1 arg..
-            // TODO: fix this.
-            switch (lhs.tag_) {
+            switch (tag_) {
                 case Tag::ok:
-                    return lhs.ok_ != rhs;
+                    return ok_ != rhs;
                     break;
                 case Tag::err:
                     return true;
                     break;
-                case Tag::inval:
+                case Tag::invalid:
                     nel::panic("invalid Result");
                     break;
                 default:
@@ -572,17 +600,16 @@ struct [[nodiscard("unused Result that must be used")]] Result
         constexpr friend bool operator!=(Ok const &lhs, Result const &rhs) {
             return rhs == lhs;
         }
-        constexpr friend bool operator!=(Result const &lhs, Err const &rhs) {
+        constexpr bool operator!=(Err const &rhs) const {
             // bah, != can only take 1 arg..
-            // TODO: fix this.
-            switch (lhs.tag_) {
+            switch (tag_) {
                 case Tag::ok:
                     return true;
                     break;
                 case Tag::err:
-                    return lhs.err_ != rhs;
+                    return err_ != rhs;
                     break;
-                case Tag::inval:
+                case Tag::invalid:
                     nel::panic("invalid Result");
                     break;
                 default:
@@ -604,11 +631,20 @@ struct [[nodiscard("unused Result that must be used")]] Result
          */
         constexpr bool is_ok(Context const &ctx = Context()) const
         {
-            // min-size: gets optimised + inlined at call site.
-            // release: gets optimised away..
-            return match<bool>([](T const &) -> bool { return true; },
-                               [](E const &) -> bool { return false; },
-                               ctx);
+            switch (tag_) {
+                case Tag::ok:
+                    return true;
+                    break;
+                case Tag::err:
+                    return false;
+                    break;
+                case Tag::invalid:
+                    nel::panic("invalid Result", ctx);
+                    break;
+                default:
+                    nel::panic("bad Result", ctx);
+                    break;
+            }
         }
 
         /**
@@ -620,9 +656,20 @@ struct [[nodiscard("unused Result that must be used")]] Result
          */
         constexpr bool is_err(Context const &ctx = Context()) const
         {
-            return match<bool>([](T const &) -> bool { return false; },
-                               [](E const &) -> bool { return true; },
-                               ctx);
+            switch (tag_) {
+                case Tag::ok:
+                    return false;
+                    break;
+                case Tag::err:
+                    return true;
+                    break;
+                case Tag::invalid:
+                    nel::panic("invalid Result", ctx);
+                    break;
+                default:
+                    nel::panic("bad Result", ctx);
+                    break;
+            }
         }
 
 #if defined(TEST)
@@ -633,7 +680,7 @@ struct [[nodiscard("unused Result that must be used")]] Result
                     return false;
                 case Tag::err:
                     return false;
-                case Tag::inval:
+                case Tag::invalid:
                     return true;
                     break;
                 default:
@@ -642,30 +689,6 @@ struct [[nodiscard("unused Result that must be used")]] Result
             }
         }
 #endif
-
-    public:
-        template<typename V, typename Fn1, typename Fn2>
-        constexpr V consume(Fn1 &&on_ok, Fn2 &&on_err, Context const &ctx = Context())
-        {
-            // a consuming matcher..
-            // that moves the value to the closures..
-            auto tag = move(tag_);
-            switch (tag) { // result-consume
-                case Tag::ok:
-                    return on_ok(move(*ok_));
-                case Tag::err:
-                    return on_err(move(*err_));
-                case Tag::inval:
-                    // invalids are not values that should occur
-                    // if they do it's a use-after-move-from op so must panic.
-                    // or a use-before-initialised so again must panic.
-                    nel::panic("invalid Result", ctx);
-                    break;
-                default:
-                    nel::panic("bad Result", ctx);
-                    break;
-            }
-        }
 
     public:
         /**
@@ -680,9 +703,25 @@ struct [[nodiscard("unused Result that must be used")]] Result
          */
         constexpr Optional<T> ok(Context const &ctx = Context())
         {
-            return consume<Optional<T>>([](T &&ok) -> Optional<T> { return Some(move(ok)); },
-                                        [](E &&) -> Optional<T> { return None(); },
-                                        ctx);
+            switch (tag_) { // result-ok()
+                case Tag::ok: {
+                    auto ad = AutoInvalidator(tag_, ok_);
+                    return Some(move(*ok_));
+                } break;
+                case Tag::err: {
+                    auto ad = AutoInvalidator(tag_, err_);
+                    return None();
+                } break;
+                case Tag::invalid:
+                    // invalids are not values that should occur
+                    // if they do it's a use-after-move-from op so must panic.
+                    // or a use-before-initialised so again must panic.
+                    nel::panic("invalid Result", ctx);
+                    break;
+                default:
+                    nel::panic("bad Result", ctx);
+                    break;
+            }
         }
 
         /**
@@ -695,9 +734,25 @@ struct [[nodiscard("unused Result that must be used")]] Result
          */
         constexpr Optional<E> err(Context const &ctx = Context())
         {
-            return consume<Optional<E>>([](T &&) -> Optional<E> { return None(); },
-                                        [](E &&err) -> Optional<E> { return Some(move(err)); },
-                                        ctx);
+            switch (tag_) { // result-err()
+                case Tag::ok: {
+                    auto ad = AutoInvalidator(tag_, ok_);
+                    return None();
+                } break;
+                case Tag::err: {
+                    auto ad = AutoInvalidator(tag_, err_);
+                    return Some(move(*err_));
+                } break;
+                case Tag::invalid:
+                    // invalids are not values that should occur
+                    // if they do it's a use-after-move-from op so must panic.
+                    // or a use-before-initialised so again must panic.
+                    nel::panic("invalid Result", ctx);
+                    break;
+                default:
+                    nel::panic("bad Result", ctx);
+                    break;
+            }
         }
 
         /**
@@ -710,9 +765,25 @@ struct [[nodiscard("unused Result that must be used")]] Result
          */
         constexpr T unwrap(Context const &ctx = Context())
         {
-            return consume<T>([](T &&ok) -> T { return move(ok); },
-                              [&](E &&) -> T { nel::panic("not an ok", ctx); },
-                              ctx);
+            switch (tag_) { // result-unwrap()
+                case Tag::ok: {
+                    auto ad = AutoInvalidator(tag_, ok_);
+                    return T(move(*ok_));
+                } break;
+                case Tag::err: {
+                    auto ad = AutoInvalidator(tag_, err_);
+                    nel::panic("Unwrap Err Result", ctx);
+                } break;
+                case Tag::invalid:
+                    // invalids are not values that should occur
+                    // if they do it's a use-after-move-from op so must panic.
+                    // or a use-before-initialised so again must panic.
+                    nel::panic("invalid Result", ctx);
+                    break;
+                default:
+                    nel::panic("bad Result", ctx);
+                    break;
+            }
         }
 
         /**
@@ -725,9 +796,25 @@ struct [[nodiscard("unused Result that must be used")]] Result
          */
         constexpr E unwrap_err(Context const &ctx = Context())
         {
-            return consume<E>([&](T &&) -> E { nel::panic("not an err", ctx); },
-                              [](E &&err) -> E { return move(err); },
-                              ctx);
+            switch (tag_) { // result-unwrap_err()
+                case Tag::ok: {
+                    auto ad = AutoInvalidator(tag_, ok_);
+                    nel::panic("Unwrap_err Ok Result", ctx);
+                } break;
+                case Tag::err: {
+                    auto ad = AutoInvalidator(tag_, err_);
+                    return E(move(*err_));
+                } break;
+                case Tag::invalid:
+                    // invalids are not values that should occur
+                    // if they do it's a use-after-move-from op so must panic.
+                    // or a use-before-initialised so again must panic.
+                    nel::panic("invalid Result", ctx);
+                    break;
+                default:
+                    nel::panic("bad Result", ctx);
+                    break;
+            }
         }
 
         /**
@@ -743,9 +830,27 @@ struct [[nodiscard("unused Result that must be used")]] Result
          */
         constexpr T unwrap_or(T &&v, Context const &ctx = Context())
         {
-            return consume<T>([](T &&ok) -> T { return move(ok); },
-                              [&v](E &&) -> T { return move(v); },
-                              ctx);
+            switch (tag_) { // result-unwrap_or()
+                case Tag::ok: {
+                    auto v2 = move(v); // v dtord at end of call..
+                    (void)v2;
+                    auto ad = AutoInvalidator(tag_, ok_);
+                    return T(move(*ok_));
+                } break;
+                case Tag::err: {
+                    auto ad = AutoInvalidator(tag_, err_);
+                    return move(v);
+                } break;
+                case Tag::invalid:
+                    // invalids are not values that should occur
+                    // if they do it's a use-after-move-from op so must panic.
+                    // or a use-before-initialised so again must panic.
+                    nel::panic("invalid Result", ctx);
+                    break;
+                default:
+                    nel::panic("bad Result", ctx);
+                    break;
+            }
         }
 
         /**
@@ -780,9 +885,27 @@ struct [[nodiscard("unused Result that must be used")]] Result
          */
         constexpr E unwrap_err_or(E &&v, Context const &ctx = Context())
         {
-            return consume<E>([&v](T &&) -> E { return move(v); },
-                              [](E &&err) -> E { return move(err); },
-                              ctx);
+            switch (tag_) { // result-unwrap_err_or()
+                case Tag::ok: {
+                    auto ad = AutoInvalidator(tag_, ok_);
+                    return move(v);
+                } break;
+                case Tag::err: {
+                    auto v2 = move(v); // v dtord at end of call.
+                    (void)v2;
+                    auto ad = AutoInvalidator(tag_, err_);
+                    return E(move(*err_));
+                } break;
+                case Tag::invalid:
+                    // invalids are not values that should occur
+                    // if they do it's a use-after-move-from op so must panic.
+                    // or a use-before-initialised so again must panic.
+                    nel::panic("invalid Result", ctx);
+                    break;
+                default:
+                    nel::panic("bad Result", ctx);
+                    break;
+            }
         }
 
         /**
@@ -819,11 +942,25 @@ struct [[nodiscard("unused Result that must be used")]] Result
         template<typename U, typename FN>
         constexpr Result<U, E> map(FN &&fn, Context const &ctx = Context())
         {
-            using ReturnT = Result<U, E>;
-            return consume<ReturnT>([&fn](
-                                           T &&ok) -> ReturnT { return OkT<U>(fn(move(ok))); },
-                                       [](E &&err) -> ReturnT { return Err(move(err)); },
-                                       ctx);
+            switch (tag_) { // result-map()
+                case Tag::ok: {
+                    auto ad = AutoInvalidator(tag_, ok_);
+                    return OkT<U>(fn(move(*ok_)));
+                } break;
+                case Tag::err: {
+                    auto ad = AutoInvalidator(tag_, err_);
+                    return Err(move(err_));
+                } break;
+                case Tag::invalid:
+                    // invalids are not values that should occur
+                    // if they do it's a use-after-move-from op so must panic.
+                    // or a use-before-initialised so again must panic.
+                    nel::panic("invalid Result", ctx);
+                    break;
+                default:
+                    nel::panic("bad Result", ctx);
+                    break;
+            }
         }
 
         /**
@@ -841,14 +978,25 @@ struct [[nodiscard("unused Result that must be used")]] Result
         template<class F, typename Fn>
         constexpr Result<T, F> map_err(Fn &&fn, Context const &ctx = Context())
         {
-            // TODO: remove need to explicitly cast to result in each of the
-            //       branches.. i.e. the Result<U,E>() bit, should be Ok(..) or Err(..)
-            using ReturnT = Result<T, F>;
-            return consume<ReturnT>([](T &&ok) -> ReturnT { return Ok(move(ok)); },
-                                       [&fn](E &&err) -> ReturnT {
-                                           return ErrT<F>(fn(move(err)));
-                                       },
-                                       ctx);
+            switch (tag_) { // result-map_err()
+                case Tag::ok: {
+                    auto ad = AutoInvalidator(tag_, ok_);
+                    return move(ok_);
+                } break;
+                case Tag::err: {
+                    auto ad = AutoInvalidator(tag_, err_);
+                    return ErrT<F>(fn(move(*err_)));
+                } break;
+                case Tag::invalid:
+                    // invalids are not values that should occur
+                    // if they do it's a use-after-move-from op so must panic.
+                    // or a use-before-initialised so again must panic.
+                    nel::panic("invalid Result", ctx);
+                    break;
+                default:
+                    nel::panic("bad Result", ctx);
+                    break;
+            }
         }
 
         /**
@@ -867,13 +1015,25 @@ struct [[nodiscard("unused Result that must be used")]] Result
         // Fn: Result<U,E> fn(T&&)
         constexpr Result<U, E> and_then(Fn &&fn, Context const &ctx = Context())
         {
-            // TODO: remove need to explicitly cast to result in each of the
-            //       branches.. i.e. the Result<U,E>() bit, should be Ok(..) or Err(..)
-            typedef Result<U, E> ReturnType;
-            return consume<ReturnType>([&fn](T &&ok) -> ReturnType { return OkT<U>(fn(move(ok))); },
-                                       // TODO: check that this is a nop..
-                                       [](E &&err) -> ReturnType { return Err(move(err)); },
-                                       ctx);
+            switch (tag_) { // result-and_then()
+                case Tag::ok: {
+                    auto ad = AutoInvalidator(tag_, ok_);
+                    return fn(move(*ok_));
+                } break;
+                case Tag::err: {
+                    auto ad = AutoInvalidator(tag_, err_);
+                    return move(err_);
+                } break;
+                case Tag::invalid:
+                    // invalids are not values that should occur
+                    // if they do it's a use-after-move-from op so must panic.
+                    // or a use-before-initialised so again must panic.
+                    nel::panic("invalid Result", ctx);
+                    break;
+                default:
+                    nel::panic("bad Result", ctx);
+                    break;
+            }
         }
 
     public:
@@ -881,14 +1041,14 @@ struct [[nodiscard("unused Result that must be used")]] Result
         {
             switch (val.tag_) { // result-dbgfmt
                 case Tag::ok:
-                    outs << "Result(Ok(" << *val.ok_ << "))";
+                    outs << "Result(" << val.ok_ << ')';
                     return outs;
                     break;
                 case Tag::err:
-                    outs << "Result(Err(" << *val.err_ << "))";
+                    outs << "Result(" << val.err_ << ')';
                     return outs;
                     break;
-                case Tag::inval:
+                case Tag::invalid:
                     outs << "Result(Inval)";
                     return outs;
                     break;
