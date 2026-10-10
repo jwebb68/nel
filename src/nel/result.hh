@@ -853,6 +853,7 @@ struct [[nodiscard("unused Result that must be used")]] Result final
             }
         }
 
+#if 0
         /**
          * Extract and return the contained value if an Ok, consuming the result.
          *
@@ -871,6 +872,7 @@ struct [[nodiscard("unused Result that must be used")]] Result final
                               [&args...](E &&) -> T { return T(forward<Args>(args)...); },
                               ctx);
         }
+#endif
 
         /**
          * Extract and return the contained value if an Err, consuming the result.
@@ -908,6 +910,7 @@ struct [[nodiscard("unused Result that must be used")]] Result final
             }
         }
 
+#if 0
         /**
          * Extract and return the contained value if an Err, consuming the result.
          *
@@ -926,7 +929,7 @@ struct [[nodiscard("unused Result that must be used")]] Result final
                               [](E &&err) -> E { return move(err); },
                               ctx);
         }
-
+#endif
         /**
          * Map the result::ok to a different result::ok.
          *

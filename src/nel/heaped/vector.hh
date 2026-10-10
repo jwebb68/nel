@@ -355,15 +355,17 @@ struct Vector
         }
 #    endif
 
+#if 0
         template<typename... Args>
         Result<Void, Type> push(Args &&...args)
         {
             bool ok;
             ok = try_reserve(len() + 1);
-            if (!ok) { return Result<void, Type>::Err(forward<Args>(args)...); }
-            if (item_ == nullptr) { return Result<void, Type>::Err(forward<Args>(args)...); }
+            if (!ok) { return nel::Err(forward<Args>(args)...); }
+            if (item_ == nullptr) { return nel::Err(forward<Args>(args)...); }
             return item_->push_back(forward<Args>(args)...);
         }
+#endif
 
         // move contents of vec into this?
         // Result<void, Vector<T>> push_back(Vector<T> &l) ?
